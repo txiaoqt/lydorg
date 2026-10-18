@@ -496,7 +496,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
       const { buildOrganizationReport, generateOrganizationReportPdf } = await import("@/lib/yorp-organization-report");
       const report = buildOrganizationReport(entry, openPeriod, openPeriodEntry,
         buildRegistryYpopDetail(org, openPeriod, openPeriodEntry, detail, state), files, state.templates);
-      const pdf = await generateOrganizationReportPdf(report);
+      const pdf = await generateOrganizationReportPdf(report, { generatedBy: user?.displayName || "Administrator" });
       if (currentExportScope.current === requestedScope) pdf.save(report.filename);
     } catch (error) {
       if (currentExportScope.current === requestedScope) toast({

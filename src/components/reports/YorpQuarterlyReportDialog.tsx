@@ -42,6 +42,7 @@ type ReportFormat = "pdf" | "xlsx";
 type YorpQuarterlyReportDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  generatedBy?: string;
 };
 
 const AVAILABLE_YEARS = [2026, 2025, 2024];
@@ -55,6 +56,7 @@ const QUARTERS = [
 export function YorpQuarterlyReportDialog({
   open,
   onOpenChange,
+  generatedBy,
 }: YorpQuarterlyReportDialogProps) {
   const [reportType, setReportType] = useState<ReportType>("summary");
   const [year, setYear] = useState<number>(() => getCurrentAdminReportPeriod().year);
@@ -104,13 +106,13 @@ export function YorpQuarterlyReportDialog({
       );
 
       if (reportType === "summary") {
-        await exportYorpQuarterlySummary(reportData, format);
+        await exportYorpQuarterlySummary(reportData, format, { generatedBy });
         toast({
           title: "Report Exported",
           description: "Quarterly Summary exported successfully.",
         });
       } else {
-        await exportYorpDisaggregatedReport(reportData, format);
+        await exportYorpDisaggregatedReport(reportData, format, { generatedBy });
         toast({
           title: "Report Exported",
           description: "Disaggregated Report exported successfully.",

@@ -1,6 +1,6 @@
 import { AdminReportingPeriodSelector, type AdminPeriodFilter } from "./AdminReportingPeriodSelector";
 import { getAdminReportPeriodError, type AdminReportPeriod } from "@/lib/admin-report-period";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Check,
   ChevronRight,
@@ -57,6 +57,7 @@ export interface AdminExportDialogProps {
   periodFilter?: AdminPeriodFilter;
   initialPaperSize?: PdfPaperSize;
   initialOrientation?: PdfOrientation;
+  filterContent?: ReactNode;
 }
 
 const DEFAULT_FORMAT_CONFIGS: Record<
@@ -101,6 +102,7 @@ export function AdminExportDialog({
   onExport,
   initialPaperSize = "a4",
   initialOrientation = "portrait",
+  filterContent,
 }: AdminExportDialogProps) {
   const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
   const [paperSize, setPaperSize] = useState<PdfPaperSize>(initialPaperSize);
@@ -185,6 +187,8 @@ export function AdminExportDialog({
         </div>
 
         {periodFilter?.enabled && periodFilter.showSelector !== false && <AdminReportingPeriodSelector {...periodFilter} disabled={isSubmitting} />}
+
+        {filterContent && <fieldset disabled={isSubmitting}>{filterContent}</fieldset>}
 
         {/* Format Selection Cards */}
         <div className="flex flex-col gap-2.5">

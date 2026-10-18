@@ -1,4 +1,5 @@
 import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowStatusHelper";
+import { LiquidationCertificateNotice } from "@/components/portal/LiquidationCertificateNotice";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -149,7 +150,9 @@ export function PwaLiquidationDetail({ data }: { data: PortalData }) {
   return (
     <div className="pwa-stack">
       <PwaBackButton fallback={PWA_ROUTES.liquidations} label="Liquidation" />
-      <PortalWorkflowStatusHelper workflow="liquidation" status={report.status} />
+      {report.status === "completed_liquidated" ? (
+        <LiquidationCertificateNotice organization={data.profile} report={report} budget={budget} />
+      ) : <PortalWorkflowStatusHelper workflow="liquidation" status={report.status} />}
       <section className="pwa-card pwa-transaction-detail">
         <div className="pwa-detail-title"><div><small>Liquidation report</small><h2>{budget?.activityTitle || "Approved budget"}</h2></div><StatusBadge status={report.status} /></div>
         <strong className="pwa-detail-amount">{money.format(budget?.releasedAmount || budget?.approvedAmount || 0)} released</strong>

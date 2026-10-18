@@ -44,6 +44,7 @@ import {
   yorpRegistryExportConfig,
 } from "@/lib/report-export-configs";
 import { exportReport, type ExportFormat, type PdfPageConfig } from "@/lib/report-export";
+import { buildAdminReportHeading, describeReportOrder, reportFilterValue } from "@/lib/admin-report-heading";
 import { toast } from "@/hooks/use-toast";
 
 const yorpStatusFilterLabel: Record<YorpStatusFilter, string> = {
@@ -64,7 +65,7 @@ const getYorpStatus = (expiryDate: Date, now: Date): YorpStatus => {
   return "active";
 };
 
-export function YorpRegistryPage() {
+export function YorpRegistryPage({ generatedBy }: { generatedBy?: string } = {}) {
   const {
     state,
     removeOrganizationAccountFromCache,
@@ -282,6 +283,19 @@ export function YorpRegistryPage() {
             ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "yorp-registry" }, exportPeriod),
           },
           rows: exportRows,
+          pdfHeading: buildAdminReportHeading({
+            program: "yorp", title: "Registry Report", period: exportPeriod, generatedBy,
+            filters: [
+              `District: ${reportFilterValue(districtFilter)}`,
+              `Barangay: ${reportFilterValue(barangayFilter)}`,
+              `Classification: ${reportFilterValue(classificationFilter)}`,
+              `Status: ${yorpStatusFilter === "all" ? "All" : yorpStatusFilterLabel[yorpStatusFilter]}`,
+              ...(search.trim() ? [`Search: ${search.trim()}`] : []),
+            ],
+            sortedBy: describeReportOrder(exportRows, [
+              { label: "Organization Name (A-Z)", compare: (a, b) => a.organizationName.localeCompare(b.organizationName) },
+            ], "Current registry order"),
+          }),
           metadataLines: [
             `Total Records: ${exportRows.length}`,
           ],
@@ -556,6 +570,7 @@ export function YorpRegistryPage() {
       />
 
       <YorpQuarterlyReportDialog
+        generatedBy={generatedBy}
         open={reportDialogOpen}
         onOpenChange={setReportDialogOpen}
       />

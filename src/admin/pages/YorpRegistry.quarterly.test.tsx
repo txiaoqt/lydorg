@@ -33,12 +33,12 @@ beforeEach(() => {
 afterEach(cleanup);
 describe("raw YORP quarterly exports", () => {
   it("intersects quarter with semester and all registry filters using accreditation date", async () => {
-    render(<MemoryRouter><YorpRegistryPage /></MemoryRouter>);
+    render(<MemoryRouter><YorpRegistryPage generatedBy="Example Administrator" /></MemoryRouter>);
     fireEvent.click(screen.getByRole("button", { name: "Set registry filters" }));
-    fireEvent.click(screen.getByRole("button", { name: "Export" }));
     fireEvent.change(screen.getByLabelText("Year"), { target: { value: "2026" } });
     fireEvent.change(screen.getByLabelText("Period"), { target: { value: "q1" } });
     expect(exportReport).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Export" }));
     fireEvent.click(screen.getByRole("button", { name: /generate export/i }));
     await waitFor(() => expect(exportReport).toHaveBeenCalledTimes(1));
     const options = vi.mocked(exportReport).mock.calls[0][1];
@@ -47,5 +47,9 @@ describe("raw YORP quarterly exports", () => {
     expect(options.config.title).toContain("Q1 2026");
     expect(options.config.filenamePrefix).toBe("yorp-registry-2026-q1");
     expect(options.filterSummaryLines).toEqual(expect.arrayContaining(["Reporting Period: Q1 2026", "District: District I", "Barangay: Bagong Ilog"]));
+    expect(options.pdfHeading).toMatchObject({
+      programTitle: "Youth Organization Registration Program", title: "Registry Report — Q1 2026", generatedBy: "Example Administrator",
+      filters: ["District: District I", "Barangay: Bagong Ilog", "Classification: Youth Organization", "Status: Active", "Search: Match"],
+    });
   });
 });

@@ -12,6 +12,7 @@ import {
   buildCsvContent,
   formatDateDisplay,
   getExcelColumnLetter,
+  generateReportPdfDocument,
   type ReportExportConfig,
 } from "@/lib/report-export";
 
@@ -99,33 +100,39 @@ describe("budget request export config", () => {
       config: budgetRequestExportConfig,
       rows: [
         {
+          requestId: "BR-2026-001",
           organizationName: "Alpha Youth Council",
           activity: "Leadership Training",
+          requestedAmount: 18000,
           approvedAmount: 15000,
           releasedAmount: 12300,
           releasedDate: "2026-06-14T08:14:00.000Z",
+          status: "Budget Released",
         },
       ],
     });
 
     expect(csv).toContain(
-      '"No.","Organization Name","Activity","Approved Amount","Released Amount","Released Date"',
+      '"No.","Request ID","Organization","Activity","Requested Amount","Approved Amount","Released Amount","Released Date","Status"',
     );
-    expect(csv).toContain('"1","Alpha Youth Council","Leadership Training","15000.00","12300.00","Jun 14, 2026"');
+    expect(csv).toContain('"1","BR-2026-001","Alpha Youth Council","Leadership Training","18000.00","15000.00","12300.00","Jun 14, 2026","Budget Released"');
   });
 
   it("builds the expected totals row shape", () => {
     expect(
       buildBudgetRequestTotalsRow([
         {
+          requestId: "BR-2026-001",
           organizationName: "Alpha Youth Council",
           activity: "Leadership Training",
+          requestedAmount: 18000,
           approvedAmount: 15000,
           releasedAmount: 12300,
           releasedDate: "2026-06-14T08:14:00.000Z",
+          status: "Budget Released",
         },
       ]),
-    ).toEqual(["", "TOTAL", "", "15000.00", "12300.00", ""]);
+    ).toEqual(["", "TOTAL", "", "", "18000.00", "15000.00", "12300.00", "", ""]);
   });
 });
 
@@ -137,6 +144,7 @@ describe("allocation by barangay export config", () => {
         {
           district: "District 1",
           barangay: "Bagong Ilog",
+          organizationCount: 2,
           organizationNames: ["Organization Alpha", "Organization Beta"],
           approvedAmount: 15000,
           releasedAmount: 15300,
@@ -145,10 +153,10 @@ describe("allocation by barangay export config", () => {
     });
 
     expect(csv).toContain(
-      '"No.","District","Barangay","Organization Names","Approved Total Amount","Released Total Amount"',
+      '"No.","District","Barangay","No. of Organizations","Organization","Approved Total Amount","Released Total Amount"',
     );
     expect(csv).toContain(
-      '"1","District 1","Bagong Ilog","Organization Alpha; Organization Beta","15000.00","15300.00"',
+      '"1","District 1","Bagong Ilog","2","Organization Alpha; Organization Beta","15000.00","15300.00"',
     );
   });
 
@@ -158,12 +166,13 @@ describe("allocation by barangay export config", () => {
         {
           district: "District 1",
           barangay: "Bagong Ilog",
+          organizationCount: 2,
           organizationNames: ["Organization Alpha", "Organization Beta"],
           approvedAmount: 15000,
           releasedAmount: 15300,
         },
       ]),
-    ).toEqual(["", "TOTAL", "", "", "15000.00", "15300.00"]);
+    ).toEqual(["", "", "TOTAL", 2, "", "15000.00", "15300.00"]);
   });
 });
 
@@ -190,10 +199,10 @@ describe("budget monitoring export config", () => {
     });
 
     expect(csv).toContain(
-      '"No.","Organization","Record Code","Activity","Approved Amount","Released Amount","Remaining Amount","Utilization","Budget Status","Liquidation Status","Release Date","Go Signal Date","Deadline","Hard-Copy Date","Completion Date","Remarks","Risk Level"',
+      '"No.","Organization","Activity","Approved Amount","Released Amount","Remaining Amount","Utilization","Deadline","Risk Level"',
     );
     expect(csv).toContain(
-      '"1","Youth Leaders Org","BR-2026-001","Summer Leadership Camp","50000.00","40000.00","10000.00","80%","Partially Released","Pending Liquidation","","","Jul 30, 2026","","","First tranche released","Low Risk"',
+      '"1","Youth Leaders Org","Summer Leadership Camp","50000.00","40000.00","10000.00","80%","Jul 30, 2026","Low Risk"',
     );
   });
 
@@ -215,30 +224,21 @@ describe("budget monitoring export config", () => {
           riskLabel: "Low Risk",
         },
       ]),
-    ).toEqual([
-      "",
-      "TOTAL",
-      "",
-      "",
-      "50000.00",
-      "40000.00",
-      "10000.00",
-      "80%",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ]);
+    ).toEqual(["", "TOTAL", "", "50000.00", "40000.00", "10000.00", "80%", "", ""]);
   });
 });
 
-describe("A4 Portrait orientation and width geometry across all configs", () => {
-  it("configures all report configs for portrait with width <= 535.28 pt", () => {
+describe("A4 report orientation and proportional width geometry", () => {
+  it("renders the actual registry PDF within A4 landscape margins", async () => {
+    const doc = await generateReportPdfDocument({ config: yorpRegistryExportConfig, rows: [] });
+    expect(doc.internal.pageSize.getWidth()).toBeCloseTo(841.89, 1);
+    expect(doc.internal.pageSize.getHeight()).toBeCloseTo(595.28, 1);
+    const table = (doc as unknown as { lastAutoTable: { columns: Array<{ width: number }> } }).lastAutoTable;
+    expect(table.columns).toHaveLength(10);
+    expect(table.columns.every(column => column.width > 0)).toBe(true);
+    expect(table.columns.reduce((sum, column) => sum + column.width, 0)).toBeCloseTo(doc.internal.pageSize.getWidth() - 60, 1);
+  });
+  it("preserves landscape registry and portrait financial reports with positive width weights", () => {
     const configs = [
       yorpRegistryExportConfig,
       budgetRequestExportConfig,
@@ -247,12 +247,17 @@ describe("A4 Portrait orientation and width geometry across all configs", () => 
     ];
 
     for (const config of configs) {
-      expect(config.orientation).toBe("portrait");
-      const totalWidth = config.columns.reduce(
+      expect(config.orientation).toBe(config === yorpRegistryExportConfig ? "landscape" : "portrait");
+      const pdfColumns = config.columns.filter(column => !column.excludeFromPdf);
+      const totalWidth = pdfColumns.reduce(
         (sum, column) => sum + (column.pdfWidth ?? 0),
         0,
       );
-      expect(totalWidth).toBeLessThanOrEqual(535.28);
+      expect(totalWidth).toBeGreaterThan(0);
+      const availableWidth = (config.orientation === "landscape" ? 841.89 : 595.28) - 60;
+      const scaled = pdfColumns.map(column => (column.pdfWidth! / totalWidth) * availableWidth);
+      expect(scaled.every(width => width > 0)).toBe(true);
+      expect(scaled.reduce((sum, width) => sum + width, 0)).toBeCloseTo(availableWidth, 2);
     }
   });
 });

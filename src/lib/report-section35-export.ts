@@ -6,11 +6,14 @@ import {
   downloadBlob,
   formatReportGeneratedAt,
   getExcelColumnLetter,
+  buildPdfHeaderLayout,
+  ensurePdfFonts,
   PDF_COLORS,
   renderPdfPageDecoration,
   resolveExcelJsWorkbook,
-  type PdfHeaderLayout,
+  type ReportGenerationContext,
 } from "@/lib/report-export";
+import { buildAdminReportHeading } from "./admin-report-heading";
 import {
   PCYDO_HEADER_ASPECT_RATIO,
   PCYDO_FOOTER_ASPECT_RATIO,
@@ -60,6 +63,7 @@ const createBaseReportPdf = () => {
  */
 export const generateSection35QuarterlySummaryPdf = async (
   report: YorpQuarterlyReport,
+  context: ReportGenerationContext = {},
 ): Promise<jsPDF> => {
   const doc = createBaseReportPdf();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -71,38 +75,19 @@ export const generateSection35QuarterlySummaryPdf = async (
   const headerHeight = pageWidth / PCYDO_HEADER_ASPECT_RATIO;
   const footerHeight = pageWidth / PCYDO_FOOTER_ASPECT_RATIO;
 
-  const periodLabel = getQuarterPeriodLabel(report.year, report.quarter);
-  const detailLines = [
-    `Reporting Period: Quarter ${report.quarter}, ${report.year} (${periodLabel})`,
-    `Quarter-End Point-in-Time Date: ${report.quarter_end_date}`,
-    `Timezone: Asia/Manila (PST, UTC+08:00)`,
-    `Generated: ${formatReportGeneratedAt()}`,
-  ];
-
-  // Calculate start position for body
-  const titleY = headerHeight + 14;
-  let currentY = titleY + 16;
-  detailLines.forEach((line) => {
-    currentY += 11;
-  });
-  const dividerY = currentY + 4;
-  const startY = dividerY + 10;
-
-  const layout: PdfHeaderLayout = {
-    headerTitle: DEFAULT_HEADER_TITLE,
-    reportTitle: SUMMARY_REPORT_TITLE,
-    footerText: `Pasig City Youth Development Office - YORP Quarterly Summary Report (Q${report.quarter} ${report.year})`,
-    detailLines,
-    pageWidth,
-    pageHeight,
-    marginLeft,
-    marginRight,
-    headerHeight,
-    footerHeight,
-    dividerY,
-    startY,
-    continuationTop: headerHeight + 14,
-  };
+  await ensurePdfFonts(doc);
+  (doc as jsPDF & { __yTraceUseUnicodeFont?: boolean; __yTraceSegoeFontLoaded?: boolean }).__yTraceUseUnicodeFont =
+    Boolean((doc as jsPDF & { __yTraceSegoeFontLoaded?: boolean }).__yTraceSegoeFontLoaded);
+  const layout = await buildPdfHeaderLayout(doc, {
+    config: { title: SUMMARY_REPORT_TITLE, filenamePrefix: "yorp-summary", columns: [],
+      footerText: `Pasig City Youth Development Office - YORP Quarterly Summary Report (Q${report.quarter} ${report.year})` },
+    rows: [],
+    pdfHeading: buildAdminReportHeading({
+      program: "yorp", title: "Quarterly Summary Report", period: { mode: "quarter", year: report.year, quarter: report.quarter as 1 | 2 | 3 | 4 },
+      ...context, contextLines: [`Quarter-End Point-in-Time Date: ${report.quarter_end_date}`, "Timezone: Asia/Manila (PST, UTC+08:00)"],
+    }),
+  }, marginLeft, marginRight);
+  layout.continuationTop = headerHeight + 14;
 
   // Statutory Core Metrics Table
   const coreMetricsRows = [
@@ -230,6 +215,7 @@ export const generateSection35QuarterlySummaryPdf = async (
  */
 export const generateSection35DisaggregatedPdf = async (
   report: YorpQuarterlyReport,
+  context: ReportGenerationContext = {},
 ): Promise<jsPDF> => {
   const doc = createBaseReportPdf();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -241,38 +227,24 @@ export const generateSection35DisaggregatedPdf = async (
   const headerHeight = pageWidth / PCYDO_HEADER_ASPECT_RATIO;
   const footerHeight = pageWidth / PCYDO_FOOTER_ASPECT_RATIO;
 
-  const periodLabel = getQuarterPeriodLabel(report.year, report.quarter);
   const metricATotal = report.metrics.registered_verified_at_quarter_end;
-
-  const detailLines = [
-    `Reporting Period: Quarter ${report.quarter}, ${report.year} (${periodLabel})`,
-    `Authoritative Population Base (Metric A): ${metricATotal} registered and verified organizations at quarter end`,
-    `Timezone: Asia/Manila (PST, UTC+08:00) | Generated: ${formatReportGeneratedAt()}`,
-  ];
-
-  const titleY = headerHeight + 14;
-  let currentY = titleY + 16;
-  detailLines.forEach(() => {
-    currentY += 11;
-  });
-  const dividerY = currentY + 4;
-  const startY = dividerY + 10;
-
-  const layout: PdfHeaderLayout = {
-    headerTitle: DEFAULT_HEADER_TITLE,
-    reportTitle: DISAGGREGATED_REPORT_TITLE,
-    footerText: `Pasig City Youth Development Office - YORP Disaggregated Report (Q${report.quarter} ${report.year})`,
-    detailLines,
-    pageWidth,
-    pageHeight,
-    marginLeft,
-    marginRight,
-    headerHeight,
-    footerHeight,
-    dividerY,
-    startY,
-    continuationTop: headerHeight + 14,
-  };
+  await ensurePdfFonts(doc);
+  (doc as jsPDF & { __yTraceUseUnicodeFont?: boolean; __yTraceSegoeFontLoaded?: boolean }).__yTraceUseUnicodeFont =
+    Boolean((doc as jsPDF & { __yTraceSegoeFontLoaded?: boolean }).__yTraceSegoeFontLoaded);
+  const layout = await buildPdfHeaderLayout(doc, {
+    config: { title: DISAGGREGATED_REPORT_TITLE, filenamePrefix: "yorp-disaggregated", columns: [],
+      footerText: `Pasig City Youth Development Office - YORP Disaggregated Report (Q${report.quarter} ${report.year})` },
+    rows: [],
+    pdfHeading: buildAdminReportHeading({
+      program: "yorp", title: "Disaggregated Report", period: { mode: "quarter", year: report.year, quarter: report.quarter as 1 | 2 | 3 | 4 },
+      ...context,
+      contextLines: [
+        `Authoritative Population Base (Metric A): ${metricATotal} registered and verified organizations at quarter end`,
+        "Timezone: Asia/Manila (PST, UTC+08:00)",
+      ],
+    }),
+  }, marginLeft, marginRight);
+  layout.continuationTop = headerHeight + 14;
 
   let nextY = layout.startY;
 
@@ -1086,11 +1058,12 @@ export const generateSection35DisaggregatedXlsx = async (
 export const exportYorpQuarterlySummary = async (
   report: YorpQuarterlyReport,
   format: "pdf" | "xlsx",
+  context: ReportGenerationContext = {},
 ): Promise<void> => {
   const filename = getSummaryFilename(report.year, report.quarter, format);
 
   if (format === "pdf") {
-    const doc = await generateSection35QuarterlySummaryPdf(report);
+    const doc = await generateSection35QuarterlySummaryPdf(report, context);
     doc.save(filename);
     return;
   }
@@ -1110,11 +1083,12 @@ export const exportYorpQuarterlySummary = async (
 export const exportYorpDisaggregatedReport = async (
   report: YorpQuarterlyReport,
   format: "pdf" | "xlsx",
+  context: ReportGenerationContext = {},
 ): Promise<void> => {
   const filename = getDisaggregatedFilename(report.year, report.quarter, format);
 
   if (format === "pdf") {
-    const doc = await generateSection35DisaggregatedPdf(report);
+    const doc = await generateSection35DisaggregatedPdf(report, context);
     doc.save(filename);
     return;
   }

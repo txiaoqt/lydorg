@@ -68,11 +68,14 @@ describe("Admin PDF Export System - Sample Generation & Verification", () => {
 
   it("generates multi-page A4 portrait PDF for Budget Requests with official letterhead", async () => {
     const sampleBudgetRequests: BudgetRequestExportRow[] = Array.from({ length: 20 }, (_, i) => ({
+      requestId: `BR-2026-${String(i + 1).padStart(3, "0")}`,
       organizationName: `Organization Alpha ${i + 1}`,
       activity: `Youth Skills Training Seminar and Environmental Workshop Phase ${i + 1}`,
+      requestedAmount: 30000 + i * 5000,
       approvedAmount: 25000 + i * 5000,
       releasedAmount: 20000 + i * 4000,
       releasedDate: "2026-06-15T08:00:00.000Z",
+      status: "Budget Released",
     }));
 
     const doc = await generateReportPdfDocument({
@@ -148,6 +151,7 @@ describe("Admin PDF Export System - Sample Generation & Verification", () => {
     const sampleAllocations: AllocationByBarangayExportRow[] = Array.from({ length: 30 }, (_, i) => ({
       district: i < 15 ? "District 1" : "District 2",
       barangay: `Barangay Sample ${i + 1}`,
+      organizationCount: 3,
       organizationNames: [
         `Youth Org Alpha ${i + 1}`,
         `Student Council Beta ${i + 1}`,

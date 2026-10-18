@@ -4397,6 +4397,7 @@ export default function UserPortal({ section }: { section: string }) {
         return (
           <UserPortalLiquidationWorkspaceView
             organizationId={currentProfile?.id ?? ""}
+            organizationProfile={currentProfile}
             organizationDashboardSummary={state.organizationDashboardSummary}
             liquidationWorkflowEligibility={liquidationWorkflowEligibility}
             budgetWorkflowEligibility={budgetWorkflowEligibility}

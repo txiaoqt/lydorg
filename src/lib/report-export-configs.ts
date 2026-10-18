@@ -1,5 +1,8 @@
 import {
   type OrganizationProfile,
+  type BudgetRequest,
+  getBudgetRequestStatusLabel,
+  statusLabelMap,
   getOrganizationAddressDisplay,
   getRepresentativeDisplayName,
   getAdviserDisplayName,
@@ -47,20 +50,43 @@ export type YorpRegistryExportRow = {
 };
 
 export type BudgetRequestExportRow = {
+  requestId: string;
   organizationName: string;
   activity: string;
+  requestedAmount: number;
   approvedAmount: number;
   releasedAmount: number;
   releasedDate: string;
+  status: string;
 };
+
+export const mapBudgetRequestToExportRow = (request: BudgetRequest, organizationName: string): BudgetRequestExportRow => ({
+  requestId: request.publicRecordCode || request.id,
+  organizationName,
+  activity: request.activityTitle,
+  requestedAmount: Number(request.requestedAmount ?? 0),
+  approvedAmount: Number(request.approvedAmount ?? 0),
+  releasedAmount: Number(request.releasedAmount ?? 0),
+  releasedDate: request.releaseDate || "",
+  status: getBudgetRequestStatusLabel(request.status) ?? statusLabelMap[request.status]
+    ?? String(request.status).replaceAll("_", " ").replace(/\b\w/g, character => character.toUpperCase()),
+});
+
+export const compareBudgetRequestExportRows = (a: BudgetRequestExportRow, b: BudgetRequestExportRow) =>
+  Number(b.status === "Awaiting Release") - Number(a.status === "Awaiting Release")
+  || a.organizationName.localeCompare(b.organizationName) || a.requestId.localeCompare(b.requestId);
 
 export type AllocationByBarangayExportRow = {
   district: string;
   barangay: string;
+  organizationCount: number;
   organizationNames: string[];
   approvedAmount: number;
   releasedAmount: number;
 };
+
+export const compareAllocationByBarangayExportRows = (a: AllocationByBarangayExportRow, b: AllocationByBarangayExportRow) =>
+  a.district.localeCompare(b.district) || a.barangay.localeCompare(b.barangay);
 
 const normalizeMultiValue = (value?: string | null) =>
   (value || "")
@@ -309,12 +335,12 @@ export const YORP_REGISTRY_AVAILABLE_COLUMNS: YorpRegistryColumnDef[] = [
   },
   {
     key: "organizationHead",
-    label: "Organization Head",
+    label: "Head of Organization",
     description: "President or authorized head representative",
     group: "organization_details",
     isDefault: true,
     column: {
-      label: "Organization Head",
+      label: "Head of Organization",
       value: (row) => row.organizationHead || "",
       pdfWidth: 90,
       xlsxWidth: 24,
@@ -476,7 +502,7 @@ export const YORP_REGISTRY_AVAILABLE_COLUMNS: YorpRegistryColumnDef[] = [
     label: "Verified Date",
     description: "Date accreditation was verified by Administrator",
     group: "registration_status",
-    isDefault: true,
+    isDefault: false,
     column: {
       label: "Verified Date",
       value: (row) =>
@@ -497,7 +523,7 @@ export const YORP_REGISTRY_AVAILABLE_COLUMNS: YorpRegistryColumnDef[] = [
     label: "Expiration Date",
     description: "3-Year YORP accreditation validity expiration date",
     group: "registration_status",
-    isDefault: false,
+    isDefault: true,
     column: {
       label: "Expiration Date",
       value: (row) => row.expiryDate || "",
@@ -557,14 +583,14 @@ export const YORP_REGISTRY_AVAILABLE_COLUMNS_MAP: Record<string, YorpRegistryCol
 export const DEFAULT_YORP_REGISTRY_COLUMN_KEYS: string[] = [
   "no",
   "organizationName",
-  "majorClassification",
-  "address",
   "urn",
+  "majorClassification",
   "organizationHead",
-  "contactNumber",
   "email",
+  "contactNumber",
+  "address",
   "registrationDate",
-  "verifiedDate",
+  "expiryDate",
 ];
 
 export const YORP_REGISTRY_REQUIRED_COLUMN_KEYS: string[] = [
@@ -576,22 +602,22 @@ export const YORP_REGISTRY_REQUIRED_COLUMN_KEYS: string[] = [
 export const YORP_REGISTRY_COLUMN_ORDER: string[] = [
   "no",
   "organizationName",
+  "urn",
+  "referenceId",
   "majorClassification",
   "subClassification",
   "registrationType",
+  "organizationHead",
+  "adviserName",
+  "email",
+  "contactNumber",
   "address",
   "district",
   "barangay",
-  "urn",
-  "referenceId",
-  "organizationHead",
-  "adviserName",
-  "contactNumber",
-  "email",
   "facebookPageUrl",
   "registrationDate",
-  "verifiedDate",
   "expiryDate",
+  "verifiedDate",
   "status",
 ];
 
@@ -644,20 +670,30 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
   footerText: "Pasig City Youth Development Office - Budget Request Report",
   xlsxSheetName: "Budget Requests",
   pdfUseUnicodeFont: true,
+  pdfFontSize: 7,
+  pdfCellPadding: 3.5,
   columns: [
     {
       label: "No.",
       value: (_row, index) => index + 1,
-      pdfWidth: 28,
+      pdfWidth: 23,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxType: "integer",
       xlsxWidth: 8,
     },
     {
-      label: "Organization Name",
+      label: "Request ID",
+      value: (row) => row.requestId,
+      pdfWidth: 62,
+      xlsxWidth: 25,
+      xlsxWrap: true,
+      preserveSpreadsheetText: true,
+    },
+    {
+      label: "Organization",
       value: (row) => row.organizationName,
-      pdfWidth: 135,
+      pdfWidth: 80,
       xlsxWidth: 30,
       xlsxMinWidth: 24,
       xlsxMaxWidth: 34,
@@ -666,11 +702,23 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
     {
       label: "Activity",
       value: (row) => row.activity,
-      pdfWidth: 152,
+      pdfWidth: 84,
       xlsxWidth: 45,
       xlsxMinWidth: 34,
       xlsxMaxWidth: 50,
       xlsxWrap: true,
+    },
+    {
+      label: "Requested Amount",
+      value: (row) => row.requestedAmount,
+      csvValue: (row) => formatCurrencyCsv(row.requestedAmount),
+      pdfValue: (row) => formatCurrencyPdf(row.requestedAmount),
+      xlsxValue: (row) => row.requestedAmount,
+      pdfWidth: 57,
+      pdfAlign: "right",
+      xlsxAlign: "right",
+      xlsxType: "currency",
+      xlsxWidth: 20,
     },
     {
       label: "Approved Amount",
@@ -678,7 +726,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
       csvValue: (row) => formatCurrencyCsv(row.approvedAmount),
       pdfValue: (row) => formatCurrencyPdf(row.approvedAmount),
       xlsxValue: (row) => row.approvedAmount,
-      pdfWidth: 72,
+      pdfWidth: 57,
       pdfAlign: "right",
       xlsxAlign: "right",
       xlsxType: "currency",
@@ -690,7 +738,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
       csvValue: (row) => formatCurrencyCsv(row.releasedAmount),
       pdfValue: (row) => formatCurrencyPdf(row.releasedAmount),
       xlsxValue: (row) => row.releasedAmount,
-      pdfWidth: 72,
+      pdfWidth: 57,
       pdfAlign: "right",
       xlsxAlign: "right",
       xlsxType: "currency",
@@ -701,7 +749,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
       value: (row) => formatDateDisplay(row.releasedDate),
       csvValue: (row) => formatDateDisplay(row.releasedDate),
       pdfValue: (row) => formatDateDisplay(row.releasedDate),
-      pdfWidth: 76,
+      pdfWidth: 55,
       pdfAlign: "center",
       xlsxValue: (row) => row.releasedDate,
       xlsxAlign: "center",
@@ -709,6 +757,13 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
       xlsxWidth: 18,
       xlsxMinWidth: 16,
       xlsxMaxWidth: 20,
+    },
+    {
+      label: "Status",
+      value: (row) => row.status,
+      pdfWidth: 60,
+      xlsxWidth: 22,
+      xlsxWrap: true,
     },
   ],
 };
@@ -734,7 +789,7 @@ export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBa
     {
       label: "District",
       value: (row) => row.district,
-      pdfWidth: 72,
+      pdfWidth: 62,
       xlsxWidth: 20,
       xlsxMinWidth: 16,
       xlsxMaxWidth: 24,
@@ -750,11 +805,21 @@ export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBa
       xlsxWrap: true,
     },
     {
-      label: "Organization Names",
+      label: "No. of Organizations",
+      value: (row) => row.organizationCount,
+      pdfWidth: 65,
+      pdfAlign: "center",
+      xlsxAlign: "center",
+      xlsxType: "integer",
+      xlsxWidth: 20,
+      xlsxWrap: true,
+    },
+    {
+      label: "Organization",
       value: (row) => row.organizationNames,
       csvValue: (row) => row.organizationNames.join("; "),
       xlsxValue: (row) => row.organizationNames.join("\n"),
-      pdfWidth: 190,
+      pdfWidth: 135,
       xlsxAlign: "left",
       xlsxType: "text",
       xlsxWidth: 45,
@@ -808,6 +873,12 @@ export type BudgetMonitoringExportRow = {
   riskLabel: string;
 };
 
+export const compareBudgetMonitoringExportRows = (a: BudgetMonitoringExportRow, b: BudgetMonitoringExportRow) => {
+  const deadline = (value: string) => Number.isFinite(Date.parse(value)) ? Date.parse(value) : Number.POSITIVE_INFINITY;
+  return deadline(a.deadlineAt) - deadline(b.deadlineAt)
+    || a.organizationName.localeCompare(b.organizationName) || a.recordCode.localeCompare(b.recordCode);
+};
+
 export const budgetMonitoringExportConfig: ReportExportConfig<BudgetMonitoringExportRow> = {
   title: "Budget Monitoring Report",
   filenamePrefix: "budget-monitoring",
@@ -836,15 +907,9 @@ export const budgetMonitoringExportConfig: ReportExportConfig<BudgetMonitoringEx
       xlsxWrap: true,
     },
     {
-      label: "Record Code",
-      value: (row) => row.recordCode,
-      xlsxWidth: 18,
-      excludeFromPdf: true,
-    },
-    {
       label: "Activity",
       value: (row) => row.activity,
-      pdfWidth: 105,
+      pdfWidth: 97,
       xlsxWidth: 35,
       xlsxMinWidth: 26,
       xlsxMaxWidth: 45,
@@ -893,40 +958,11 @@ export const budgetMonitoringExportConfig: ReportExportConfig<BudgetMonitoringEx
       pdfValue: (row) => `${row.utilizationRate}%`,
       xlsxValue: (row) => row.utilizationRate / 100,
       xlsxType: "decimal",
-      pdfWidth: 42,
+      xlsxNumberFormat: "0%",
+      pdfWidth: 50,
       pdfAlign: "center",
       xlsxAlign: "center",
       xlsxWidth: 14,
-    },
-    {
-      label: "Budget Status",
-      value: (row) => row.budgetStatus,
-      xlsxWidth: 18,
-      excludeFromPdf: true,
-    },
-    {
-      label: "Liquidation Status",
-      value: (row) => row.liquidationStatus,
-      xlsxWidth: 22,
-      excludeFromPdf: true,
-    },
-    {
-      label: "Release Date",
-      value: (row) => formatDateDisplay(row.releaseDate),
-      csvValue: (row) => formatDateDisplay(row.releaseDate),
-      xlsxValue: (row) => row.releaseDate,
-      xlsxType: "date",
-      xlsxWidth: 16,
-      excludeFromPdf: true,
-    },
-    {
-      label: "Go Signal Date",
-      value: (row) => formatDateDisplay(row.goSignalAt),
-      csvValue: (row) => formatDateDisplay(row.goSignalAt),
-      xlsxValue: (row) => row.goSignalAt,
-      xlsxType: "date",
-      xlsxWidth: 16,
-      excludeFromPdf: true,
     },
     {
       label: "Deadline",
@@ -941,31 +977,6 @@ export const budgetMonitoringExportConfig: ReportExportConfig<BudgetMonitoringEx
       xlsxWidth: 16,
     },
     {
-      label: "Hard-Copy Date",
-      value: (row) => formatDateDisplay(row.hardCopySubmittedAt),
-      csvValue: (row) => formatDateDisplay(row.hardCopySubmittedAt),
-      xlsxValue: (row) => row.hardCopySubmittedAt,
-      xlsxType: "date",
-      xlsxWidth: 16,
-      excludeFromPdf: true,
-    },
-    {
-      label: "Completion Date",
-      value: (row) => formatDateDisplay(row.completedAt),
-      csvValue: (row) => formatDateDisplay(row.completedAt),
-      xlsxValue: (row) => row.completedAt,
-      xlsxType: "date",
-      xlsxWidth: 16,
-      excludeFromPdf: true,
-    },
-    {
-      label: "Remarks",
-      value: (row) => row.remarks,
-      xlsxWidth: 26,
-      xlsxWrap: true,
-      excludeFromPdf: true,
-    },
-    {
       label: "Risk Level",
       value: (row) => row.riskLabel,
       pdfWidth: 48,
@@ -977,39 +988,45 @@ export const budgetMonitoringExportConfig: ReportExportConfig<BudgetMonitoringEx
 };
 
 export const buildBudgetRequestTotalsRow = (rows: BudgetRequestExportRow[]) => {
+  const totalRequested = rows.reduce((sum, row) => sum + row.requestedAmount, 0);
   const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
   const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
-  return ["", "TOTAL", "", formatCurrencyCsv(totalApproved), formatCurrencyCsv(totalReleased), ""];
+  return ["", "TOTAL", "", "", formatCurrencyCsv(totalRequested), formatCurrencyCsv(totalApproved), formatCurrencyCsv(totalReleased), "", ""];
 };
 
 export const buildBudgetRequestPdfTotalsRow = (rows: BudgetRequestExportRow[]) => {
+  const totalRequested = rows.reduce((sum, row) => sum + row.requestedAmount, 0);
   const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
   const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
-  return ["", "TOTAL", "", formatCurrencyPdf(totalApproved), formatCurrencyPdf(totalReleased), ""];
+  return ["", "TOTAL", "", "", formatCurrencyPdf(totalRequested), formatCurrencyPdf(totalApproved), formatCurrencyPdf(totalReleased), "", ""];
 };
 
 export const buildBudgetRequestXlsxTotalsRow = (rows: BudgetRequestExportRow[]) => {
+  const totalRequested = rows.reduce((sum, row) => sum + row.requestedAmount, 0);
   const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
   const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
-  return ["", "TOTAL", "", totalApproved, totalReleased, ""];
+  return ["", "TOTAL", "", "", totalRequested, totalApproved, totalReleased, "", ""];
 };
 
 export const buildAllocationTotalsRow = (rows: AllocationByBarangayExportRow[]) => {
+  const totalOrganizations = rows.reduce((sum, row) => sum + row.organizationCount, 0);
   const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
   const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
-  return ["", "TOTAL", "", "", formatCurrencyCsv(totalApproved), formatCurrencyCsv(totalReleased)];
+  return ["", "", "TOTAL", totalOrganizations, "", formatCurrencyCsv(totalApproved), formatCurrencyCsv(totalReleased)];
 };
 
 export const buildAllocationPdfTotalsRow = (rows: AllocationByBarangayExportRow[]) => {
+  const totalOrganizations = rows.reduce((sum, row) => sum + row.organizationCount, 0);
   const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
   const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
-  return ["", "TOTAL", "", "", formatCurrencyPdf(totalApproved), formatCurrencyPdf(totalReleased)];
+  return ["", "", "TOTAL", totalOrganizations, "", formatCurrencyPdf(totalApproved), formatCurrencyPdf(totalReleased)];
 };
 
 export const buildAllocationXlsxTotalsRow = (rows: AllocationByBarangayExportRow[]) => {
+  const totalOrganizations = rows.reduce((sum, row) => sum + row.organizationCount, 0);
   const totalApproved = rows.reduce((sum, row) => sum + row.approvedAmount, 0);
   const totalReleased = rows.reduce((sum, row) => sum + row.releasedAmount, 0);
-  return ["", "TOTAL", "", "", totalApproved, totalReleased];
+  return ["", "", "TOTAL", totalOrganizations, "", totalApproved, totalReleased];
 };
 
 export const buildBudgetMonitoringTotalsRow = (rows: BudgetMonitoringExportRow[]) => {
@@ -1019,25 +1036,8 @@ export const buildBudgetMonitoringTotalsRow = (rows: BudgetMonitoringExportRow[]
   const avgUtilization = rows.length
     ? Math.round(rows.reduce((sum, row) => sum + row.utilizationRate, 0) / rows.length)
     : 0;
-  return [
-    "",
-    "TOTAL",
-    "",
-    "",
-    formatCurrencyCsv(totalApproved),
-    formatCurrencyCsv(totalReleased),
-    formatCurrencyCsv(totalRemaining),
-    `${avgUtilization}%`,
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-  ];
+  return ["", "TOTAL", "", formatCurrencyCsv(totalApproved), formatCurrencyCsv(totalReleased),
+    formatCurrencyCsv(totalRemaining), `${avgUtilization}%`, "", ""];
 };
 
 export const buildBudgetMonitoringPdfTotalsRow = (rows: BudgetMonitoringExportRow[]) => {
@@ -1067,23 +1067,5 @@ export const buildBudgetMonitoringXlsxTotalsRow = (rows: BudgetMonitoringExportR
   const avgUtilization = rows.length
     ? Math.round(rows.reduce((sum, row) => sum + row.utilizationRate, 0) / rows.length)
     : 0;
-  return [
-    "",
-    "TOTAL",
-    "",
-    "",
-    totalApproved,
-    totalReleased,
-    totalRemaining,
-    avgUtilization / 100,
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-  ];
+  return ["", "TOTAL", "", totalApproved, totalReleased, totalRemaining, avgUtilization / 100, "", ""];
 };

@@ -1,10 +1,15 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { YorpQuarterlyReportDialog } from "./YorpQuarterlyReportDialog";
 import { fetchYorpQuarterlyReportInSupabase } from "@/lib/lydo-connect-supabase";
 
 vi.mock("@/lib/lydo-connect-supabase", () => ({ fetchYorpQuarterlyReportInSupabase: vi.fn().mockResolvedValue(null) }));
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+beforeEach(() => {
+  // Pin the fixture's quarter while leaving timers real for async controls.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-09-17T10:00:00Z"));
+});
+afterEach(() => { cleanup(); vi.clearAllMocks(); vi.useRealTimers(); });
 describe("official Section 35 workflow stays separate", () => {
   it("retains default year and quarter, both report types, and official year/quarter RPC arguments", async () => {
     HTMLElement.prototype.scrollIntoView = vi.fn();

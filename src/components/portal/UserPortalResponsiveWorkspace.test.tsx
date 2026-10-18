@@ -967,6 +967,7 @@ describe("PortalAttachedDocumentDrawer Responsive Behavior", () => {
     const revisionFile = {
       ...mockFile,
       adminStatus: "needs_revision",
+      uploadedAt: new Date().toISOString(),
       adminRemarks: "Please provide the notarized signature page on page 3.",
     };
 

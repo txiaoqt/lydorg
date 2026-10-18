@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { UserPortalLiquidationWorkspaceView } from "./UserPortalLiquidationWorkspaceView";
+import { certificateInput } from "@/test/fixtures/liquidation-certificate";
 
 // Mock resize observer and matchMedia for environment
 beforeEach(() => {
@@ -90,6 +91,23 @@ describe("UserPortal Liquidation Upload & Submission Workflow (TEST A - TEST J)"
     formatDateTimeLabel: () => "Aug 11, 2026",
     formatStatusLabel: (s: string) => s,
     ...overrides,
+  });
+
+  it.each([true, false])("offers the certificate in a completed report on desktop=%s", desktop => {
+    window.innerWidth = desktop ? 1280 : 390;
+    window.matchMedia = vi.fn().mockImplementation(query => ({
+      matches: desktop && query.includes("min-width: 1024px"), media: query,
+      addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    }));
+    const input = certificateInput();
+    render(<UserPortalLiquidationWorkspaceView {...buildProps({
+      organizationProfile: input.organization,
+      liquidationReports: [{ ...input.report, createdAt: "2026-10-01T00:00:00Z" }],
+      budgetRequests: [input.budget],
+      searchParams: new URLSearchParams(`reportId=${input.report.id}`),
+    })} />);
+    expect(screen.getByRole("button", { name: "Download certificate of budget liquidation" })).toBeEnabled();
+    expect(screen.queryByText("Liquidation complete")).not.toBeInTheDocument();
   });
 
   it("TEST A — File selection stages draft without submitting report or calling remote mutations", () => {

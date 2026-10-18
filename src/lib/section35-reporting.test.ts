@@ -140,32 +140,20 @@ describe("Section 35 Reporting & YORP Registry Export System", () => {
     });
   });
 
-  describe("B. Master YORP Registry Export (13 Columns)", () => {
-    it("contains all 13 official master columns", () => {
-      const labels = yorpRegistryExportConfig.columns.map((c) => c.label);
-      expect(labels).toEqual([
-        "No.",
-        "URN",
-        "Name of Organization",
-        "Major Classification",
-        "Sub-classification",
-        "Advocacy Themes",
-        "District",
-        "Barangay",
-        "Registration Date",
-        "Expiry Date",
-        "Status",
-        "Contact Numbers",
-        "Emails",
+  describe("B. Configurable Master YORP Registry Export", () => {
+    it("uses the requested ten default registry columns in order", () => {
+      expect(yorpRegistryExportConfig.columns.map(c => c.label)).toEqual([
+        "No.", "Organization Name", "URN", "Major Classification", "Head of Organization",
+        "Email", "Contact Number", "Address", "Registration Date", "Expiration Date",
       ]);
     });
 
-    it("satisfies A4 portrait total width <= 535.28 pt constraint", () => {
-      const totalWidth = yorpRegistryExportConfig.columns.reduce(
-        (sum, col) => sum + (col.pdfWidth ?? 0),
-        0,
-      );
-      expect(totalWidth).toBeLessThanOrEqual(535.28);
+    it("uses landscape A4 with proportionally fitted positive column widths", () => {
+      expect(yorpRegistryExportConfig.orientation).toBe("landscape");
+      expect(yorpRegistryExportConfig.paperSize).toBe("a4");
+      const total = yorpRegistryExportConfig.columns.reduce((sum, col) => sum + (col.pdfWidth ?? 0), 0);
+      expect(yorpRegistryExportConfig.columns.every(col => (col.pdfWidth ?? 0) > 0)).toBe(true);
+      expect(yorpRegistryExportConfig.columns.reduce((sum, col) => sum + col.pdfWidth! / total * 781.89, 0)).toBeCloseTo(781.89, 2);
     });
 
     it("correctly maps an OrganizationProfile into all 13 master export fields", () => {

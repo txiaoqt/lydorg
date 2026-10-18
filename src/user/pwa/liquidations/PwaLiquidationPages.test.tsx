@@ -1,8 +1,10 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PwaLiquidationEligibilityNotice, PwaLiquidationList } from "./PwaLiquidationPages";
+import { PwaLiquidationDetail, PwaLiquidationEligibilityNotice, PwaLiquidationList } from "./PwaLiquidationPages";
+import { certificateInput } from "@/test/fixtures/liquidation-certificate";
+import { loadOrganizationLiquidationReportById, loadOrganizationLiquidationReportFiles } from "@/lib/lydo-connect-supabase";
 
 const mockNavigate = vi.fn();
 
@@ -106,5 +108,23 @@ describe("PwaLiquidationPages - Amber Eligibility Notice Alignment", () => {
     );
 
     expect(document.querySelector(".pwa-eligibility-notice")).toBeNull();
+  });
+
+  it("offers the same certificate in the completed PWA report detail", async () => {
+    const input = certificateInput();
+    const data = {
+      ...createMockData(true), profile: input.organization,
+      liquidationReports: [input.report], budgetRequests: [input.budget],
+      store: { state: { liquidationReportFiles: [] } },
+    } as any;
+    vi.mocked(loadOrganizationLiquidationReportById).mockResolvedValue(input.report as any);
+    vi.mocked(loadOrganizationLiquidationReportFiles).mockResolvedValue([]);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter initialEntries={[`/app/liquidations/${input.report.id}`]}>
+        <Routes><Route path="/app/liquidations/:reportId" element={<PwaLiquidationDetail data={data} />} /></Routes>
+      </MemoryRouter>
+    </QueryClientProvider>);
+    expect(await screen.findByRole("button", { name: "Download certificate of budget liquidation" })).toBeEnabled();
+    expect(screen.getByText("Congratulations! Your budget has been successfully liquidated.")).toBeInTheDocument();
   });
 });

@@ -1,4 +1,5 @@
 import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowStatusHelper";
+import { LiquidationCertificateNotice } from "@/components/portal/LiquidationCertificateNotice";
 import React, { useState, useEffect, useMemo } from "react";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
@@ -65,10 +66,12 @@ import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewM
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 import { PortalAttachedFileRow } from "@/components/portal/PortalAttachedFileRow";
 import { formatAdvocacyLabel } from "@/lib/lydo-connect-data";
+import type { OrganizationProfile } from "@/lib/lydo-connect-data";
 import { queryClient } from "@/lib/query-client";
 
 export interface UserPortalLiquidationWorkspaceViewProps {
   organizationId?: string;
+  organizationProfile?: OrganizationProfile | null;
   organizationDashboardSummary?: any;
   liquidationWorkflowEligibility?: any;
   budgetWorkflowEligibility?: any;
@@ -126,6 +129,7 @@ const useIsDesktop = () => {
 
 const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationWorkspaceViewProps> = ({
   organizationId = "",
+  organizationProfile = null,
   organizationDashboardSummary,
   liquidationWorkflowEligibility,
   budgetWorkflowEligibility,
@@ -978,7 +982,9 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                           )}
                         </div>
                       )}
-                      <PortalWorkflowStatusHelper workflow="liquidation" status={selectedReport.status} />
+                      {selectedReport.status === "completed_liquidated" ? (
+                        <LiquidationCertificateNotice organization={organizationProfile} report={selectedReport} budget={selectedBudget} />
+                      ) : <PortalWorkflowStatusHelper workflow="liquidation" status={selectedReport.status} />}
                       {/* 1. Key Summary: Financial Overview */}
                       <div className="rounded-xl border border-border/60 bg-card p-3.5 sm:p-4 shadow-2xs space-y-2">
                         <p className="text-xs font-bold text-foreground">Financial Overview</p>
@@ -1427,7 +1433,9 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                           )}
                         </div>
                       )}
-                      <PortalWorkflowStatusHelper workflow="liquidation" status={selectedReport.status} />
+                      {selectedReport.status === "completed_liquidated" ? (
+                        <LiquidationCertificateNotice organization={organizationProfile} report={selectedReport} budget={selectedBudget} />
+                      ) : <PortalWorkflowStatusHelper workflow="liquidation" status={selectedReport.status} />}
                       {/* 1. Key Summary: Financial Overview */}
                       <div className="rounded-xl border border-border/70 bg-card/80 p-3.5 sm:p-4 shadow-2xs space-y-2">
                         <p className="text-xs font-bold text-foreground">Financial Overview</p>
