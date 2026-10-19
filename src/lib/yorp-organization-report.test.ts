@@ -31,7 +31,7 @@ describe("organization dossier", () => {
   });
   it("uses safe unique organization filenames", () => {
     const data = buildOrganizationReport({ ...reportEntry, org: { ...reportEntry.org, organizationName: '../Youth: Ñ / Council?' } }, null, null, null, [], []);
-    expect(data.filename).toBe("yorp-organization-report-youth-n-council-01-26-103.pdf");
+    expect(data.filename).toBe("YORP_Organization_Report_Youth_N_Council_01-26-103.pdf");
   });
   it("supports an open period without participation, or no open period", () => {
     const empty = { ypopCityActivities: [], ypopEventParticipations: [], ypopOrgActivities: [] };

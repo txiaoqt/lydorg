@@ -42,7 +42,7 @@ const getSummaryFilename = (year: number, quarter: number, format: "pdf" | "xlsx
   `YORP_Quarterly_Summary_${year}_Q${quarter}.${format}`;
 
 const getDisaggregatedFilename = (year: number, quarter: number, format: "pdf" | "xlsx") =>
-  `YORP_Disaggregated_${year}_Q${quarter}.${format}`;
+  `YORP_Disaggregated_Report_${year}_Q${quarter}.${format}`;
 
 // ==============================================================================
 // 1. PDF EXPORT GENERATORS

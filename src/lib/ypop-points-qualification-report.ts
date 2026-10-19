@@ -58,7 +58,7 @@ export function buildYpopPointsQualificationReportOptions(sources: YpopParticipa
     config: withAdminReportPeriod({
       ...ypopParticipationExportConfig,
       title: "YPOP Points and Qualification Report",
-      filenamePrefix: "ypop-points-qualification",
+      filenamePrefix: "YPOP_Qualification",
       xlsxSheetName: "YPOP Points & Qualification",
       footerText: "Pasig City Youth Development Office - YPOP Points and Qualification",
     }, filters.period),

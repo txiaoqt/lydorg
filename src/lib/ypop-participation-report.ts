@@ -61,7 +61,7 @@ const numericColumn = (label: string, field: "mandatoryPoints" | "invitationalPo
 });
 
 export const ypopParticipationExportConfig: ReportExportConfig<YpopParticipationExportRow> = {
-  title: "YPOP Participation Report", filenamePrefix: "ypop-participation", xlsxSheetName: "YPOP Participation",
+  title: "YPOP Participation Report", filenamePrefix: "YPOP_Participation", xlsxSheetName: "YPOP Participation",
   orientation: "portrait", paperSize: "a4", pdfUseUnicodeFont: true, pdfFontSize: 6.5, pdfCellPadding: 2.5,
   footerText: "Pasig City Youth Development Office - YPOP Participation",
   columns: [

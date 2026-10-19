@@ -48,15 +48,15 @@ export function getAdminReportPeriodLabel(period: AdminReportPeriod): string {
   return `${period.startDate} – ${period.endDate}`;
 }
 export function getAdminReportFilenameToken(period: AdminReportPeriod): string {
-  if (period.mode === "all") return "";
-  if (period.mode === "quarter_all_years") return `all-years-q${period.quarter}`;
-  if (period.mode === "year") return `${period.year}-all-year`;
-  if (period.mode === "quarter") return `${period.year}-q${period.quarter}`;
-  return `${period.startDate}-to-${period.endDate}`;
+  if (period.mode === "all") return "All_Periods";
+  if (period.mode === "quarter_all_years") return `All_Years_Q${period.quarter}`;
+  if (period.mode === "year") return `${period.year}_All`;
+  if (period.mode === "quarter") return `${period.year}_Q${period.quarter}`;
+  return `${period.startDate}_to_${period.endDate}`;
 }
 export function adminReportFilename(prefix: string, period: AdminReportPeriod): string {
   const token = getAdminReportFilenameToken(period);
-  return token ? `${prefix}-${token}` : prefix;
+  return `${prefix}_${token}`;
 }
 export const adminReportTitle = (title: string, period: AdminReportPeriod) => period.mode === "all" ? title : `${title} - ${getAdminReportPeriodLabel(period)}`;
 export function adminReportMetadata(period: AdminReportPeriod): string[] {
@@ -103,5 +103,5 @@ export function fromBudgetMonitoringPeriod(period: { mode: "fiscal_year" | "cust
 
 export function withAdminReportPeriod<T extends { title: string; filenamePrefix: string }>(config: T, period: AdminReportPeriod): T & { filenameDateSuffix?: boolean } {
   return { ...config, title: adminReportTitle(config.title, period), filenamePrefix: adminReportFilename(config.filenamePrefix, period),
-    ...(period.mode !== "all" ? { filenameDateSuffix: false } : {}) };
+    filenameDateSuffix: false };
 }

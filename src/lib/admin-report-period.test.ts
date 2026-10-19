@@ -16,7 +16,7 @@ describe("Admin reporting periods", () => {
     const period = { mode: "quarter", year: 2026, quarter } as const;
     expect(getAdminReportRange(period)).toEqual({ startDate, endDateExclusive });
     expect(getAdminReportPeriodLabel(period)).toBe(`Q${quarter} 2026`);
-    expect(getAdminReportFilenameToken(period)).toBe(`2026-q${quarter}`);
+    expect(getAdminReportFilenameToken(period)).toBe(`2026_Q${quarter}`);
     expect(matchesAdminReportPeriod(startDate, period)).toBe(true);
     expect(matchesAdminReportPeriod(endDate, period)).toBe(true);
     expect(matchesAdminReportPeriod(endDateExclusive, period)).toBe(false);
@@ -37,15 +37,15 @@ describe("Admin reporting periods", () => {
   it("supports All Periods, All Year and custom including leap days", () => {
     expect(getAdminReportRange({ mode: "all" })).toEqual({ startDate: null, endDateExclusive: null });
     expect(matchesAdminReportPeriod(null, { mode: "all" })).toBe(true);
-    expect(getAdminReportFilenameToken({ mode: "all" })).toBe("");
-    expect(adminReportFilename("budgets", { mode: "all" })).toBe("budgets");
+    expect(getAdminReportFilenameToken({ mode: "all" })).toBe("All_Periods");
+    expect(adminReportFilename("budgets", { mode: "all" })).toBe("budgets_All_Periods");
     const year = { mode: "year", year: 2026 } as const;
     expect(getAdminReportRange(year)).toEqual({ startDate: "2026-01-01", endDateExclusive: "2027-01-01" });
-    expect(adminReportFilename("budget-requests", year)).toBe("budget-requests-2026-all-year");
+    expect(adminReportFilename("budget-requests", year)).toBe("budget-requests_2026_All");
     const custom = { mode: "custom", startDate: "2024-02-29", endDate: "2024-02-29" } as const;
     expect(getAdminReportRange(custom).endDateExclusive).toBe("2024-03-01");
     expect(getAdminReportPeriodLabel(custom)).toBe("2024-02-29 – 2024-02-29");
-    expect(getAdminReportFilenameToken(custom)).toBe("2024-02-29-to-2024-02-29");
+    expect(getAdminReportFilenameToken(custom)).toBe("2024-02-29_to_2024-02-29");
     expect(fromBudgetMonitoringPeriod(toBudgetMonitoringPeriod(custom, 2024))).toEqual(custom);
   });
   it.each([
@@ -54,11 +54,11 @@ describe("Admin reporting periods", () => {
     { mode: "custom", startDate: "2026-04-01", endDate: "2026-03-31" },
     { mode: "year", year: NaN },
   ] as AdminReportPeriod[])("rejects invalid periods %j", period => expect(() => getAdminReportRange(period)).toThrow());
-  it("adds consistent titles, range metadata and exact quarterly filenames without changing legacy names", () => {
+  it("adds consistent titles and range metadata with exact quarterly filenames", () => {
     const period = { mode: "quarter", year: 2026, quarter: 2 } as const;
     const config = withAdminReportPeriod({ title: "Liquidation Reports", filenamePrefix: "liquidation-reports" }, period);
     expect(config.title).toBe("Liquidation Reports - Q2 2026");
-    expect(getExportFilename(config.filenamePrefix, "xlsx", config.filenameDateSuffix)).toBe("liquidation-reports-2026-q2.xlsx");
+    expect(getExportFilename(config.filenamePrefix, "xlsx", config.filenameDateSuffix)).toBe("liquidation-reports_2026_Q2.xlsx");
     expect(adminReportMetadata(period)).toEqual(["Reporting Period: Q2 2026", "Date Range: 2026-04-01 – 2026-06-30 (Asia/Manila)"]);
     expect(getExportFilename("administrators", "pdf")).toMatch(/^administrators-\d{4}-\d{2}-\d{2}\.pdf$/);
   });

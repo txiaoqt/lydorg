@@ -69,7 +69,7 @@ const currencyColumn = (label: string, field: AmountField) => ({
 });
 
 export const liquidationReportExportConfig: ReportExportConfig<LiquidationReportExportRow> = {
-  title: "Liquidation Reports", filenamePrefix: "liquidation-reports", xlsxSheetName: "Liquidation Reports",
+  title: "Liquidation Reports", filenamePrefix: "YPOP_Liquidation_Reports", xlsxSheetName: "Liquidation Reports",
   orientation: "portrait", paperSize: "a4", pdfUseUnicodeFont: true, pdfFontSize: 6.5, pdfCellPadding: 2,
   footerText: "Pasig City Youth Development Office - Liquidation Reports",
   columns: [

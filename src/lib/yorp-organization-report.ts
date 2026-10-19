@@ -22,8 +22,13 @@ const date = (input?: string | Date) => {
   const parsed = input ? new Date(input) : null;
   return parsed && !Number.isNaN(parsed.getTime()) ? format(parsed, "d MMM yyyy") : "Not available";
 };
-const slug = (input: string) => input.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-  .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 100) || "organization";
+const filenameSegment = (input: string, separator: "_" | "-") => {
+  const normalized = input.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+  const safe = separator === "_"
+    ? normalized.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_+|_+$/g, "")
+    : normalized.replace(/[^a-zA-Z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+  return safe.slice(0, 100);
+};
 export type OrganizationReportSection = { title: string; columns?: string[]; rows: string[][] };
 export type OrganizationReport = { organizationName: string; urn: string; filename: string; sections: OrganizationReportSection[] };
 
@@ -98,8 +103,10 @@ export function buildOrganizationReport(
         date(f.uploadedAt || f.createdAt), statusLabelMap[f.adminStatus] || "Not available"];
     }),
   });
+  const organizationFilename = filenameSegment(org.organizationName, "_") || "Organization";
+  const urnFilename = filenameSegment(org.urn || org.id, "-") || "Unknown_URN";
   return { organizationName: org.organizationName, urn: value(org.urn),
-    filename: `yorp-organization-report-${slug(org.organizationName)}-${slug(org.urn || org.id)}.pdf`, sections };
+    filename: `YORP_Organization_Report_${organizationFilename}_${urnFilename}.pdf`, sections };
 }
 
 export async function generateOrganizationReportPdf(report: OrganizationReport, context: ReportGenerationContext = {}) {

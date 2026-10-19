@@ -2879,7 +2879,7 @@ function AdminPortalContent({ section }: { section: string }) {
           {
             config: {
               ...budgetRequestExportConfig,
-              ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "budget-requests" }, budgetReportPeriod),
+              ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "YPOP_Budget_Requests" }, budgetReportPeriod),
             },
             rows: budgetRequestExportRows,
             pdfHeading: buildAdminReportHeading({
@@ -4478,7 +4478,7 @@ function AdminPortalContent({ section }: { section: string }) {
         {
           config: {
             title: "Administrators",
-            filenamePrefix: "administrators",
+            filenamePrefix: "Y-TRACE_Administrators",
             pdfUseUnicodeFont: true,
             columns: [
               { label: "No.", value: (_row: AdministratorRecord, index: number) => index + 1, pdfWidth: 30, pdfAlign: "center", xlsxWidth: 6, xlsxType: "integer", xlsxAlign: "center" },

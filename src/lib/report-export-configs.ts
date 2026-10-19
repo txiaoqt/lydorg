@@ -649,7 +649,7 @@ export const buildYorpRegistryExportConfig = (
 
 export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow> = {
   title: "YORP Registry",
-  filenamePrefix: "YORP_Registry_Master",
+  filenamePrefix: "YORP_Registry",
   orientation: "landscape",
   paperSize: "a4",
   headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
@@ -664,7 +664,7 @@ export const yorpRegistryExportConfig: ReportExportConfig<YorpRegistryExportRow>
 
 export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRow> = {
   title: "Budget Request Report",
-  filenamePrefix: "budget-requests",
+  filenamePrefix: "YPOP_Budget_Requests",
   orientation: "portrait",
   headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
   footerText: "Pasig City Youth Development Office - Budget Request Report",
@@ -770,7 +770,7 @@ export const budgetRequestExportConfig: ReportExportConfig<BudgetRequestExportRo
 
 export const allocationByBarangayExportConfig: ReportExportConfig<AllocationByBarangayExportRow> = {
   title: "Allocation by Barangay",
-  filenamePrefix: "allocation-by-barangay",
+  filenamePrefix: "PCYDO_Budget_Allocation_by_Barangay",
   orientation: "portrait",
   headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
   footerText: "Pasig City Youth Development Office - Allocation by Barangay",
@@ -881,7 +881,7 @@ export const compareBudgetMonitoringExportRows = (a: BudgetMonitoringExportRow, 
 
 export const budgetMonitoringExportConfig: ReportExportConfig<BudgetMonitoringExportRow> = {
   title: "Budget Monitoring Report",
-  filenamePrefix: "budget-monitoring",
+  filenamePrefix: "PCYDO_Budget_Monitoring",
   orientation: "portrait",
   headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
   footerText: "Pasig City Youth Development Office - Budget Monitoring Report",

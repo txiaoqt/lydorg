@@ -94,7 +94,7 @@ export const mapAuditLogToExportRow = (
 
 export const activityLogExportConfig: ReportExportConfig<ExportActivityRow> = {
   title: "Admin Activity Log Report",
-  filenamePrefix: "Y-TRACE-Activity-Logs",
+  filenamePrefix: "Y-TRACE_Activity_Logs",
   orientation: "portrait",
   headerTitle: "PASIG CITY YOUTH DEVELOPMENT OFFICE",
   footerText: "Pasig City Youth Development Office - Activity Logs",

@@ -280,7 +280,7 @@ export function YorpRegistryPage({ generatedBy }: { generatedBy?: string } = {})
         {
           config: {
             ...exportConfig,
-            ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "yorp-registry" }, exportPeriod),
+            ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "YORP_Registry" }, exportPeriod),
           },
           rows: exportRows,
           pdfHeading: buildAdminReportHeading({

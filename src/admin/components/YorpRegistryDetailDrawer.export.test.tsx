@@ -37,7 +37,7 @@ describe("drawer organization report export", () => {
     const data = mocks.pdf.mock.calls[0][0];
     expect(data.organizationName).toBe("Pasig Youth Council");
     expect(JSON.stringify(data)).toContain("Community Garden"); expect(JSON.stringify(data)).toContain("Constitution.pdf");
-    expect(mocks.save).toHaveBeenCalledWith("yorp-organization-report-pasig-youth-council-01-26-103.pdf");
+    expect(mocks.save).toHaveBeenCalledWith("YORP_Organization_Report_Pasig_Youth_Council_01-26-103.pdf");
     expect(mocks.resolve).not.toHaveBeenCalled(); expect(network).not.toHaveBeenCalled();
     network.mockRestore();
   });
