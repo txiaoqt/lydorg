@@ -14,6 +14,8 @@ import Contacts from "@/pages/Contacts";
 import { PwaContactPage } from "@/user/pwa/PwaInformationPages";
 import { supabase } from "@/lib/supabase";
 
+vi.mock("@/components/public/YTracePromotionalVideo", () => ({ default: () => null }));
+
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: any) => <div data-testid="map-container">{children}</div>,
   TileLayer: () => <div data-testid="tile-layer" />,

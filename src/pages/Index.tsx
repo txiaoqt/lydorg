@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-image-upscaled.jpeg";
-import overviewWorkshop from "@/assets/ytrace-overview-upscaled.jpeg";
+import YTracePromotionalVideo from "@/components/public/YTracePromotionalVideo";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
@@ -290,12 +290,8 @@ const Index = () => {
       <section className="bg-white px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-5 sm:gap-6 lg:gap-[24px] xl:flex-row xl:items-center">
 
-          {/* Left column — overview image */}
-          <img
-            src={overviewWorkshop}
-            alt="Youth organization representatives completing documents with PCYDO staff"
-            className="block h-auto w-full max-w-[540px] rounded-lg sm:rounded-[12px] object-cover xl:shrink-0"
-          />
+          {/* Left column — autoplay preview with its own expanded player */}
+          <YTracePromotionalVideo />
 
           {/* Right column */}
           <div className="flex w-full flex-col gap-4 sm:gap-6 lg:gap-[24px] xl:px-[24px]">
