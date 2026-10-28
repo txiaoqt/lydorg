@@ -3,6 +3,11 @@ import {
   fetchAdminDashboardSummary,
   fetchAdminPortalListPage,
   fetchAdminYpopPeriodSubmissionPage,
+  fetchAdminRenewalReviewContext,
+  fetchAdminYorpRegistrationDocuments,
+  fetchAdminRegistrationDetail,
+  updateDocumentSubmissionFileReviewInSupabase,
+  userReplaceDocumentSubmissionFileInSupabase,
   fetchAdminRecentNotifications,
   createAdminTemplateCategoryInSupabase,
   deleteAdminTemplateCategoryInSupabase,
@@ -28,6 +33,37 @@ const setAdminSession = (sessionToken = "valid_admin_token_xyz") => {
     sessionToken,
     expiresAt: new Date(Date.now() + 86400000).toISOString(),
   }));
+};
+
+const preservedDocumentFileRow = () => ({
+  id: "file-preserved-rpc",
+  submission_id: "submission-cycle-1",
+  document_type_id: "type-retained-identity",
+  file_url: "storage://organization-documents/cycle-1.pdf",
+  file_name: "cycle-1.pdf",
+  file_type: "application/pdf",
+  file_size: 1024,
+  validation_status: "valid",
+  admin_status: "approved",
+  admin_remarks: "Reviewed",
+  revision_history: [],
+  uploaded_at: "2026-10-03T00:00:00.000Z",
+  reviewed_at: "2026-10-03T00:00:00.000Z",
+  created_at: "2026-10-03T00:00:00.000Z",
+  updated_at: "2026-10-03T00:00:00.000Z",
+  required_document_types: null,
+});
+
+const mockRetainedDocumentTypeLookup = () => {
+  const query = {
+    select: vi.fn().mockReturnThis(),
+    in: vi.fn().mockResolvedValue({
+      data: [{ id: "type-retained-identity", name: "Cycle 1 Registration Packet" }],
+      error: null,
+    }),
+  };
+  (supabase!.from as ReturnType<typeof vi.fn>).mockReturnValueOnce(query);
+  return query;
 };
 
 describe("Admin Portal scoped data contracts", () => {
@@ -60,6 +96,179 @@ describe("Admin Portal scoped data contracts", () => {
     expect(mapped).not.toHaveProperty("ocrText");
     expect(mapped).not.toHaveProperty("ocrStatus");
     expect(mapped).not.toHaveProperty("ocrConfidence");
+  });
+
+  it("maps preserved submission files through their retained document-type identity", () => {
+    const mapped = mapDocumentFile({
+      id: "file-preserved-1",
+      submission_id: "submission-cycle-1",
+      document_type_id: "type-deleted-from-catalog",
+      file_url: "storage://organization-documents/cycle-1.pdf",
+      file_name: "cycle-1.pdf",
+      file_type: "application/pdf",
+      file_size: 1024,
+      validation_status: "valid",
+      admin_status: "approved",
+      admin_remarks: "Reviewed",
+      uploaded_at: "2026-10-03T00:00:00.000Z",
+      reviewed_at: "2026-10-03T00:00:00.000Z",
+      created_at: "2026-10-03T00:00:00.000Z",
+      updated_at: "2026-10-03T00:00:00.000Z",
+      document_type_identities: {
+        id: "type-deleted-from-catalog",
+        name: "Cycle 1 Registration Packet",
+      },
+    });
+
+    expect(mapped).toMatchObject({
+      documentTypeId: "type-deleted-from-catalog",
+      documentTypeName: "Cycle 1 Registration Packet",
+      fileName: "cycle-1.pdf",
+      fileUrl: "storage://organization-documents/cycle-1.pdf",
+      adminStatus: "approved",
+      adminRemarks: "Reviewed",
+    });
+  });
+
+  it("resolves retained document-type labels missing from the section-state RPC", async () => {
+    setAdminSession();
+    const preservedFile = preservedDocumentFileRow();
+    (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: { document_submission_files: [preservedFile] },
+      error: null,
+    });
+    const identityQuery = mockRetainedDocumentTypeLookup();
+
+    const result = await loadAdminPortalSectionState("renewals");
+
+    expect(supabase!.from).toHaveBeenCalledWith("document_type_identities");
+    expect(identityQuery.select).toHaveBeenCalledWith("id,name");
+    expect(identityQuery.in).toHaveBeenCalledWith("id", ["type-retained-identity"]);
+    expect(result?.documentSubmissionFiles?.[0]).toMatchObject({
+      documentTypeId: "type-retained-identity",
+      documentTypeName: "Cycle 1 Registration Packet",
+      fileName: "cycle-1.pdf",
+      adminStatus: "approved",
+    });
+  });
+
+  it("hydrates retained labels in the renewal review context RPC", async () => {
+    setAdminSession();
+    (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: { files: [preservedDocumentFileRow()] },
+      error: null,
+    });
+    mockRetainedDocumentTypeLookup();
+
+    const result = await fetchAdminRenewalReviewContext("renewal-1");
+
+    expect(result.documentSubmissionFiles?.[0]).toMatchObject({
+      documentTypeId: "type-retained-identity",
+      documentTypeName: "Cycle 1 Registration Packet",
+    });
+  });
+
+  it("hydrates retained labels in the YORP registry documents RPC", async () => {
+    setAdminSession();
+    const signal = new AbortController().signal;
+    const rpcBuilder = {
+      abortSignal: vi.fn().mockResolvedValue({
+        data: { files: [preservedDocumentFileRow()] },
+        error: null,
+      }),
+    };
+    (supabase!.rpc as ReturnType<typeof vi.fn>).mockReturnValueOnce(rpcBuilder);
+    mockRetainedDocumentTypeLookup();
+
+    const result = await fetchAdminYorpRegistrationDocuments("organization-1", signal);
+
+    expect(rpcBuilder.abortSignal).toHaveBeenCalledWith(signal);
+    expect(result[0]).toMatchObject({
+      documentTypeId: "type-retained-identity",
+      documentTypeName: "Cycle 1 Registration Packet",
+    });
+  });
+
+  it("hydrates retained labels in the registration detail RPC", async () => {
+    setAdminSession();
+    (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: {
+        profile: {
+          id: "organization-1",
+          user_id: "user-1",
+          organization_name: "Test Organization",
+          organization_email: "test@example.invalid",
+          contact_number: "",
+          district: "District I",
+          barangay: "San Antonio",
+          created_at: "2026-10-03T00:00:00.000Z",
+          updated_at: "2026-10-03T00:00:00.000Z",
+        },
+        submission: null,
+        files: [preservedDocumentFileRow()],
+        activity: [],
+        templates: [],
+      },
+      error: null,
+    });
+    mockRetainedDocumentTypeLookup();
+
+    const result = await fetchAdminRegistrationDetail("organization-1");
+
+    expect(result.documentSubmissionFiles?.[0]).toMatchObject({
+      documentTypeId: "type-retained-identity",
+      documentTypeName: "Cycle 1 Registration Packet",
+    });
+  });
+
+  it("preserves retained labels when an administrator updates a submission-file review", async () => {
+    setAdminSession();
+    (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: [preservedDocumentFileRow()],
+      error: null,
+    });
+    mockRetainedDocumentTypeLookup();
+
+    const result = await updateDocumentSubmissionFileReviewInSupabase({
+      fileId: "file-preserved-rpc",
+      status: "approved",
+      adminRemarks: "Reviewed",
+    });
+
+    expect(result).toMatchObject({
+      documentTypeId: "type-retained-identity",
+      documentTypeName: "Cycle 1 Registration Packet",
+      adminStatus: "approved",
+    });
+  });
+
+  it("preserves retained labels when an organization replaces a submission file", async () => {
+    (supabase!.rpc as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: {
+        ...preservedDocumentFileRow(),
+        file_url: "storage://organization-documents/replacement.pdf",
+        file_name: "replacement.pdf",
+        file_size: 2048,
+      },
+      error: null,
+    });
+    mockRetainedDocumentTypeLookup();
+
+    const result = await userReplaceDocumentSubmissionFileInSupabase({
+      fileId: "file-preserved-rpc",
+      newFileUrl: "storage://organization-documents/replacement.pdf",
+      newFileName: "replacement.pdf",
+      newFileType: "application/pdf",
+      newFileSize: 2048,
+      submitForReview: false,
+      notifyAdmin: false,
+    });
+
+    expect(result).toMatchObject({
+      documentTypeId: "type-retained-identity",
+      documentTypeName: "Cycle 1 Registration Packet",
+      fileName: "replacement.pdf",
+    });
   });
 
   it("does not make an admin request before an admin session exists", async () => {

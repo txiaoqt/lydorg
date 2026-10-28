@@ -269,6 +269,10 @@ type DocumentSubmissionFileRow = {
   revision_unlocked_by?: string | null;
   created_at: string;
   updated_at: string;
+  document_type_identities?: {
+    id?: string | null;
+    name?: string | null;
+  } | Array<{ id?: string | null; name?: string | null }> | null;
   required_document_types?: {
     id?: string | null;
     name?: string | null;
@@ -793,7 +797,8 @@ export const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null
 };
 
 export const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile | null => {
-  const related = Array.isArray(row.required_document_types) ? row.required_document_types[0] : row.required_document_types;
+  const relatedDocumentType = row.document_type_identities ?? row.required_document_types;
+  const related = Array.isArray(relatedDocumentType) ? relatedDocumentType[0] : relatedDocumentType;
   const documentName = related?.name ?? "";
   const localDocumentType = localDocumentTypeByName.get(documentName);
   const databaseId = row.document_type_id || related?.id;
@@ -825,6 +830,42 @@ export const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile 
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+};
+
+/** Resolve retained template labels for RPC payloads that still join the active catalog. */
+const hydrateDocumentTypeIdentityNames = async (
+  rows: DocumentSubmissionFileRow[],
+): Promise<DocumentSubmissionFileRow[]> => {
+  const identityIds = [...new Set(rows.flatMap((row) => {
+    const relation = row.document_type_identities ?? row.required_document_types;
+    const related = Array.isArray(relation) ? relation[0] : relation;
+    return row.document_type_id && !related?.name ? [row.document_type_id] : [];
+  }))];
+  if (!identityIds.length) return rows;
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const { data, error } = await supabase
+    .from("document_type_identities")
+    .select("id,name")
+    .in("id", identityIds);
+  if (error) throw toQueryError(error);
+
+  const identities = new Map<string, { id: string; name: string }>();
+  for (const identity of data ?? []) {
+    if (typeof identity.id === "string" && typeof identity.name === "string") {
+      identities.set(identity.id, { id: identity.id, name: identity.name });
+    }
+  }
+  if (identityIds.some((id) => !identities.has(id))) {
+    throw new Error("Unable to resolve document type metadata for a submitted file.");
+  }
+
+  return rows.map((row) => {
+    const relation = row.document_type_identities ?? row.required_document_types;
+    const related = Array.isArray(relation) ? relation[0] : relation;
+    const identity = row.document_type_id ? identities.get(row.document_type_id) : undefined;
+    return related?.name || !identity ? row : { ...row, document_type_identities: identity };
+  });
 };
 
 const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
@@ -1705,7 +1746,7 @@ export const loadOrganizationDocumentSubmissionState = async (
 
   const { data: fileRows, error: filesError } = await supabase!
     .from("document_submission_files")
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
     .eq("submission_id", latestSubmission.id);
 
   if (filesError) throw toQueryError(filesError);
@@ -2770,12 +2811,13 @@ export const fetchAdminRenewalReviewContext = async (renewalId: string): Promise
     renewal?: OrganizationRenewalRow;
     submission?: DocumentSubmissionRow | null; files?: DocumentSubmissionFileRow[];
   };
+  const fileRows = await hydrateDocumentTypeIdentityNames(payload.files ?? []);
   return {
     ...(payload.organization?.id ? { organizationProfiles: [mapOrganizationProfile(payload.organization)] } : {}),
     ...(payload.accreditation?.id ? { organizationAccreditations: [mapOrganizationAccreditation(payload.accreditation)] } : {}),
     ...(payload.renewal?.id ? { organizationRenewals: [mapOrganizationRenewal(payload.renewal)] } : {}),
     ...(payload.submission?.id ? { documentSubmissions: [mapDocumentSubmission(payload.submission)] } : {}),
-    documentSubmissionFiles: (payload.files ?? []).flatMap((row) => {
+    documentSubmissionFiles: fileRows.flatMap((row) => {
       const file = mapDocumentFile(row);
       return file ? [file] : [];
     }),
@@ -3285,7 +3327,8 @@ export const fetchAdminYorpRegistrationDocuments = async (
   if (!data || typeof data !== "object" || !Array.isArray(data.files)) {
     throw new Error("The registry documents response was invalid.");
   }
-  return (data.files as DocumentSubmissionFileRow[]).flatMap(row => {
+  const fileRows = await hydrateDocumentTypeIdentityNames(data.files as DocumentSubmissionFileRow[]);
+  return fileRows.flatMap(row => {
     const file = mapDocumentFile(row);
     return file ? [file] : [];
   });
@@ -3315,11 +3358,12 @@ export const fetchAdminRegistrationDetail = async (organizationId: string): Prom
   if (!response.profile?.id || !response.profile.user_id) {
     throw new Error("The registration detail response did not contain its profile.");
   }
+  const fileRows = await hydrateDocumentTypeIdentityNames(response.files ?? []);
 
   return {
     organizationProfiles: [mapOrganizationProfile(response.profile)],
     documentSubmissions: response.submission ? [mapDocumentSubmission(response.submission)] : [],
-    documentSubmissionFiles: (response.files ?? []).flatMap((row) => {
+    documentSubmissionFiles: fileRows.flatMap((row) => {
       const file = mapDocumentFile(row);
       return file ? [file] : [];
     }),
@@ -3565,7 +3609,7 @@ export const loadAdminPortalSectionState = async (
   if (Array.isArray(sectionData.organization_profiles)) state.organizationProfiles = sectionData.organization_profiles.map(mapOrganizationProfile);
   if (Array.isArray(sectionData.document_submissions)) state.documentSubmissions = sectionData.document_submissions.map(mapDocumentSubmission);
   if (Array.isArray(sectionData.document_submission_files)) {
-    state.documentSubmissionFiles = sectionData.document_submission_files
+    state.documentSubmissionFiles = (await hydrateDocumentTypeIdentityNames(sectionData.document_submission_files))
       .map(mapDocumentFile)
       .filter((file): file is SubmissionFile => Boolean(file));
   }
@@ -3848,7 +3892,8 @@ export const updateDocumentSubmissionFileReviewInSupabase = async (params: {
 
   const updatedRow = Array.isArray(data) ? data[0] : null;
   if (error || !updatedRow) throw new Error(error?.message ?? "Failed to update the document file review.");
-  return mapDocumentFile(updatedRow as DocumentSubmissionFileRow);
+  const [hydratedRow] = await hydrateDocumentTypeIdentityNames([updatedRow as DocumentSubmissionFileRow]);
+  return mapDocumentFile(hydratedRow);
 };
 
 export const reviewOrganizationUrnInSupabase = async (params: {
@@ -4103,7 +4148,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
         onConflict: "submission_id,document_type_id",
       },
     )
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
     .single().then((result) => result, (error) => ({ data: null, error }));
 
   if (error || !data) {
@@ -4114,7 +4159,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
     if (!canCleanUp) {
       try {
         const check = await supabase.from("document_submission_files")
-          .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+          .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
           .eq("submission_id", submission.id).eq("document_type_id", documentTypeRow.id).maybeSingle();
         if (!check.error) {
           if (check.data?.file_url === storageUri) { data = check.data; error = null; }
@@ -8546,7 +8591,10 @@ export const userReplaceDocumentSubmissionFileInSupabase = async (params: {
   });
 
   if (error || !data) throw new Error(error?.message ?? "Failed to replace document file.");
-  const mapped = mapDocumentFile((Array.isArray(data) ? data[0] : data) as DocumentSubmissionFileRow)!;
+  const [hydratedRow] = await hydrateDocumentTypeIdentityNames([
+    (Array.isArray(data) ? data[0] : data) as DocumentSubmissionFileRow,
+  ]);
+  const mapped = mapDocumentFile(hydratedRow)!;
 
   if (submitForReview && params.notifyAdmin !== false) {
     void dispatchAdminNotificationInSupabase({
@@ -8582,7 +8630,7 @@ export const fetchRenewalPacketInSupabase = async (
 
   const { data: fileRows, error: filesError } = await supabase
     .from("document_submission_files")
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
     .eq("submission_id", submission.id);
 
   if (filesError) throw new Error(filesError.message);
@@ -8795,7 +8843,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
         onConflict: "submission_id,document_type_id",
       },
     )
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,required_document_types(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to save the uploaded renewal document.");
