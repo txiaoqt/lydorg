@@ -17,7 +17,7 @@
     },
     {
       "path": "vite.config.ts",
-      "sha256": "af7a41680f23aa7c979c37c6b7aaea87ccccc75ee4cd78f50a896c8804a9f7ff"
+      "sha256": "97620ee0cd7e827e9f43b36850437d3ad416affbbb955e79b27397cd5b2940e1"
     },
     {
       "path": "api/sync-run-once.py",
@@ -41,7 +41,7 @@
     },
     {
       "path": "src/lib/lydo-connect-supabase.ts",
-      "sha256": "1575e18e2e9e90288d8b37e3ecd1c44a7911b20c569fa3581d47ae9870b527ca"
+      "sha256": "48d28064120898f920f926c79dbdee7e0a842364463e27e2a5537f202e71216b"
     },
     {
       "path": "src/lib/query-client.ts",

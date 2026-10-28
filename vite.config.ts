@@ -40,6 +40,12 @@ export default defineConfig(({ mode }) => {
   return {
     envPrefix: 'VITE_',
     plugins: [react()],
+    // The repository keeps standalone previews and historical builds under
+    // scratch/, tmp/, output/, and similar folders. Only the app shell is a
+    // Vite dependency-scan entry; scanning those HTML files breaks dev startup.
+    optimizeDeps: {
+      entries: ['index.html'],
+    },
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },

@@ -248,6 +248,11 @@ type DocumentSubmissionRow = {
   updated_at: string;
 };
 
+type DocumentTypeIdentityRelation = {
+  id?: string | null;
+  name?: string | null;
+};
+
 type DocumentSubmissionFileRow = {
   id: string;
   submission_id: string;
@@ -269,15 +274,15 @@ type DocumentSubmissionFileRow = {
   revision_unlocked_by?: string | null;
   created_at: string;
   updated_at: string;
-  document_type_identities?: {
-    id?: string | null;
-    name?: string | null;
-  } | Array<{ id?: string | null; name?: string | null }> | null;
-  required_document_types?: {
-    id?: string | null;
-    name?: string | null;
-  } | Array<{ id?: string | null; name?: string | null }> | null;
+  document_type_identities?: DocumentTypeIdentityRelation | DocumentTypeIdentityRelation[] | null;
+  document_type_identity?: DocumentTypeIdentityRelation | DocumentTypeIdentityRelation[] | null;
+  /** Legacy shape returned by older section-state snapshots during rollout. */
+  required_document_types?: DocumentTypeIdentityRelation | DocumentTypeIdentityRelation[] | null;
 };
+
+const firstDocumentTypeIdentity = (
+  relation: DocumentTypeIdentityRelation | DocumentTypeIdentityRelation[] | null | undefined,
+): DocumentTypeIdentityRelation | undefined => (Array.isArray(relation) ? relation[0] : relation) ?? undefined;
 
 type BudgetRequestRow = {
   id: string;
@@ -797,9 +802,10 @@ export const mapTemplate = (row: RequiredDocumentTypeRow): TemplateRecord | null
 };
 
 export const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile | null => {
-  const relatedDocumentType = row.document_type_identities ?? row.required_document_types;
-  const related = Array.isArray(relatedDocumentType) ? relatedDocumentType[0] : relatedDocumentType;
-  const documentName = related?.name ?? "";
+  const related = firstDocumentTypeIdentity(row.document_type_identities)
+    ?? firstDocumentTypeIdentity(row.document_type_identity)
+    ?? firstDocumentTypeIdentity(row.required_document_types);
+  const documentName = related?.name ?? row.file_name ?? "";
   const localDocumentType = localDocumentTypeByName.get(documentName);
   const databaseId = row.document_type_id || related?.id;
   // Canonical persisted database UUID is authoritative whenever available.
@@ -832,14 +838,16 @@ export const mapDocumentFile = (row: DocumentSubmissionFileRow): SubmissionFile 
   };
 };
 
-/** Resolve retained template labels for RPC payloads that still join the active catalog. */
+/** Resolve retained template labels when an RPC still joins only the active template catalog. */
 const hydrateDocumentTypeIdentityNames = async (
   rows: DocumentSubmissionFileRow[],
 ): Promise<DocumentSubmissionFileRow[]> => {
   const identityIds = [...new Set(rows.flatMap((row) => {
-    const relation = row.document_type_identities ?? row.required_document_types;
-    const related = Array.isArray(relation) ? relation[0] : relation;
-    return row.document_type_id && !related?.name ? [row.document_type_id] : [];
+    const related = firstDocumentTypeIdentity(row.document_type_identities)
+      ?? firstDocumentTypeIdentity(row.document_type_identity)
+      ?? firstDocumentTypeIdentity(row.required_document_types);
+    const identityId = row.document_type_id ?? related?.id;
+    return identityId && !related?.name ? [identityId] : [];
   }))];
   if (!identityIds.length) return rows;
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -850,7 +858,7 @@ const hydrateDocumentTypeIdentityNames = async (
     .in("id", identityIds);
   if (error) throw toQueryError(error);
 
-  const identities = new Map<string, { id: string; name: string }>();
+  const identities = new Map<string, DocumentTypeIdentityRelation>();
   for (const identity of data ?? []) {
     if (typeof identity.id === "string" && typeof identity.name === "string") {
       identities.set(identity.id, { id: identity.id, name: identity.name });
@@ -861,10 +869,15 @@ const hydrateDocumentTypeIdentityNames = async (
   }
 
   return rows.map((row) => {
-    const relation = row.document_type_identities ?? row.required_document_types;
-    const related = Array.isArray(relation) ? relation[0] : relation;
-    const identity = row.document_type_id ? identities.get(row.document_type_id) : undefined;
-    return related?.name || !identity ? row : { ...row, document_type_identities: identity };
+    const related = firstDocumentTypeIdentity(row.document_type_identities)
+      ?? firstDocumentTypeIdentity(row.document_type_identity)
+      ?? firstDocumentTypeIdentity(row.required_document_types);
+    if (related?.name) return row;
+    const identityId = row.document_type_id ?? related?.id;
+    const identity = identityId ? identities.get(identityId) : undefined;
+    return identity
+      ? { ...row, document_type_identities: identity, document_type_identity: identity }
+      : row;
   });
 };
 
@@ -1746,7 +1759,7 @@ export const loadOrganizationDocumentSubmissionState = async (
 
   const { data: fileRows, error: filesError } = await supabase!
     .from("document_submission_files")
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identity:document_type_identities(id,name)")
     .eq("submission_id", latestSubmission.id);
 
   if (filesError) throw toQueryError(filesError);
@@ -3181,17 +3194,43 @@ export const subscribeToOrganizationYpopFileChangesInSupabase = (
   const table = isCity ? "ypop_event_files" : "ypop_org_activity_files";
   const parentColumn = isCity ? "participation_id" : "org_activity_id";
   const fileQueryKey = ["user", organizationId, "ypop", isCity ? "event-files" : "org-activity-files", parentId] as const;
+  let disposed = false;
+  let refreshing = false;
+  let dirty = false;
+  let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+  // Collapse bulk-upload events without cancelling a refresh already in flight.
+  // An event during that refresh schedules one more pass, so it cannot be lost.
+  const scheduleRefresh = () => {
+    if (disposed) return;
+    dirty = true;
+    if (refreshing || refreshTimer !== undefined) return;
+    refreshTimer = setTimeout(() => { void refreshFiles(); }, 60);
+  };
   const refreshFiles = async () => {
-    await queryClient.cancelQueries({ queryKey: fileQueryKey, exact: true });
-    await queryClient.invalidateQueries({ queryKey: fileQueryKey, exact: true });
-    onChange();
+    refreshTimer = undefined;
+    if (disposed) return;
+    refreshing = true;
+    dirty = false;
+    try {
+      await queryClient.cancelQueries({ queryKey: fileQueryKey, exact: true });
+      if (disposed) return;
+      await queryClient.invalidateQueries({ queryKey: fileQueryKey, exact: true });
+      if (!disposed) onChange();
+    } finally {
+      refreshing = false;
+      if (dirty && !disposed) scheduleRefresh();
+    }
   };
   const channel = supabase.channel(`organization-ypop-${lane}-files-${organizationId}-${parentId}`);
   channel
-    .on("postgres_changes", { event: "INSERT", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, () => { void refreshFiles(); })
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, () => { void refreshFiles(); })
+    .on("postgres_changes", { event: "INSERT", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, scheduleRefresh)
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table, filter: `${parentColumn}=eq.${parentId}` }, scheduleRefresh)
     .subscribe((status, error) => onStatus?.(status, error));
-  return () => { void supabase?.removeChannel(channel); };
+  return () => {
+    disposed = true;
+    if (refreshTimer !== undefined) clearTimeout(refreshTimer);
+    void supabase?.removeChannel(channel);
+  };
 };
 
 export type AdminDashboardSummary = {
@@ -4148,7 +4187,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
         onConflict: "submission_id,document_type_id",
       },
     )
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identity:document_type_identities(id,name)")
     .single().then((result) => result, (error) => ({ data: null, error }));
 
   if (error || !data) {
@@ -4159,7 +4198,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
     if (!canCleanUp) {
       try {
         const check = await supabase.from("document_submission_files")
-          .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
+          .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identity:document_type_identities(id,name)")
           .eq("submission_id", submission.id).eq("document_type_id", documentTypeRow.id).maybeSingle();
         if (!check.error) {
           if (check.data?.file_url === storageUri) { data = check.data; error = null; }
@@ -4787,9 +4826,9 @@ const getAuthenticatedAdminSession = () => {
 
 const uploadFileToStorage = async (bucket: string, pathPrefix: string, file: File) => {
   const safeFileName = sanitizeFileName(file.name);
-  const objectPath = `${pathPrefix}/${Date.now()}-${safeFileName}`;
+  const objectPath = `${pathPrefix}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
   const { error: uploadError } = await supabase!.storage.from(bucket).upload(objectPath, file, {
-    upsert: true,
+    upsert: false,
     contentType: file.type || "application/octet-stream",
   });
 
@@ -8630,7 +8669,7 @@ export const fetchRenewalPacketInSupabase = async (
 
   const { data: fileRows, error: filesError } = await supabase
     .from("document_submission_files")
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identity:document_type_identities(id,name)")
     .eq("submission_id", submission.id);
 
   if (filesError) throw new Error(filesError.message);
@@ -8792,7 +8831,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
     throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
   }
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${safeFileName}`;
+  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
 
   // Check if an existing file is already registered for this document type
   const { data: existingRows } = await supabase
@@ -8815,7 +8854,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
   const { error: uploadError } = await supabase.storage
     .from(ORGANIZATION_DOCUMENTS_BUCKET)
     .upload(objectPath, params.file, {
-      upsert: true,
+      upsert: false,
       contentType: params.file.type || "application/pdf",
     });
 
@@ -8843,7 +8882,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
         onConflict: "submission_id,document_type_id",
       },
     )
-    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identities(id,name)")
+    .select("id,submission_id,document_type_id,file_url,file_name,file_type,file_size,validation_status,admin_status,admin_remarks,revision_history,uploaded_at,reviewed_at,created_at,updated_at,document_type_identity:document_type_identities(id,name)")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to save the uploaded renewal document.");
@@ -8877,7 +8916,7 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {
     throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
   }
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${safeFileName}`;
+  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from(ORGANIZATION_DOCUMENTS_BUCKET)

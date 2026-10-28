@@ -7143,30 +7143,48 @@ function AdminPortalContent({ section }: { section: string }) {
 
     try {
       await permanentlyDeleteTemplateRecordInSupabase(template.databaseId, template.name);
-      removeTemplate(template.id);
-      removeTemplate(template.databaseId);
-      if (editingTemplateId === template.id || editingTemplateId === template.databaseId) {
-        resetTemplateForm();
-      }
-      if (previewTemplate?.id === template.id || previewTemplate?.databaseId === template.databaseId) {
-        setPreviewTemplate(null);
-      }
-      if (pendingDeleteTemplate?.id === template.id || pendingDeleteTemplate?.databaseId === template.databaseId) {
-        setPendingDeleteTemplate(null);
-      }
-      await appendAuditLog("Deleted file", "template", template.databaseId, `Permanently deleted file "${template.name}".`);
-      await refreshAdminState();
-      invalidateRegistrationRequirementTypes();
-      removeTemplate(template.id);
-      removeTemplate(template.databaseId);
-      toast({ title: "File deleted", description: `${template.name} was permanently removed.` });
     } catch (error) {
       toast({
         title: "Delete failed",
         description: error instanceof Error ? error.message : "The file could not be deleted.",
         variant: "destructive",
       });
+      return;
     }
+
+    removeTemplate(template.id);
+    removeTemplate(template.databaseId);
+    if (editingTemplateId === template.id || editingTemplateId === template.databaseId) {
+      resetTemplateForm();
+    }
+    if (previewTemplate?.id === template.id || previewTemplate?.databaseId === template.databaseId) {
+      setPreviewTemplate(null);
+    }
+    if (pendingDeleteTemplate?.id === template.id || pendingDeleteTemplate?.databaseId === template.databaseId) {
+      setPendingDeleteTemplate(null);
+    }
+
+    try {
+      await appendAuditLog("Deleted file", "template", template.databaseId, `Permanently deleted file "${template.name}".`);
+    } catch (error) {
+      console.warn("The template was deleted, but its follow-up audit entry could not be saved:", error);
+    }
+    let refreshFailed = false;
+    try {
+      await refreshAdminState();
+    } catch (error) {
+      refreshFailed = true;
+      console.warn("The template was deleted, but the admin list could not be refreshed:", error);
+    }
+    invalidateRegistrationRequirementTypes();
+    removeTemplate(template.id);
+    removeTemplate(template.databaseId);
+    toast({
+      title: "File deleted",
+      description: refreshFailed
+        ? `${template.name} was deleted. Refresh the page to update the list.`
+        : `${template.name} was permanently removed. Previously submitted documents remain preserved.`,
+    });
   };
 
   const openFile = async (fileUrl: string, downloadName?: string) => {
@@ -12787,8 +12805,9 @@ function AdminPortalContent({ section }: { section: string }) {
               }
               warning={
                 <>
-                  This template will be permanently removed from the <span className="font-semibold">Forms &amp; Templates</span>{" "}
-                  list. Any previously submitted organization documents referencing this template will remain safely preserved in their records.
+                  Only this template entry will be deleted from the <span className="font-semibold">Forms &amp; Templates</span>{" "}
+                  database. Existing submission records keep their document-type identity, uploaded documents, review statuses, remarks, and revision history.
+                  The deleted template will no longer accept new uploads. Its stored source file is retained in Storage. This action cannot be undone.
                 </>
               }
               warningTone="danger"

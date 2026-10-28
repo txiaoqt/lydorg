@@ -10,6 +10,7 @@ import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortal
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { loadOrganizationRequiredDocumentTypesState, resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 export type PublicTemplatesCatalogProps = {
   compactHeader?: boolean;
@@ -25,9 +26,9 @@ export default function PublicTemplatesCatalog({
   const publicTemplatesQuery = useQuery({
     queryKey: ["public", "templates", "catalog"],
     queryFn: async () => (await loadOrganizationRequiredDocumentTypesState())?.templates ?? [],
-    staleTime: 30_000,
-    refetchInterval: 30_000,
-    refetchIntervalInBackground: false,
+    staleTime: 5 * 60_000,
+    refetchInterval: false,
+    refetchOnWindowFocus: true,
   });
 
   // Drawer state
@@ -173,6 +174,16 @@ export default function PublicTemplatesCatalog({
 
   return (
     <>
+      <div className="flex justify-end mb-3">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={publicTemplatesQuery.isFetching}
+          onClick={() => void publicTemplatesQuery.refetch()}
+        >
+          {publicTemplatesQuery.isFetching ? "Refreshing templates…" : "Refresh templates"}
+        </Button>
+      </div>
       <UserPortalTemplatesWorkspaceView
         publicTemplates={allPublicTemplates}
         openPreview={openPreview}
