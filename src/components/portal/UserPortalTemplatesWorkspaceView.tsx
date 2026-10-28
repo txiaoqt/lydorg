@@ -37,6 +37,7 @@ export interface UserPortalTemplatesWorkspaceViewProps {
   formatShortPortalDate?: (dateStr: string) => string;
   hideHeader?: boolean;
   compactHeader?: boolean;
+  searchPlaceholder?: string;
 }
 
 // Authentic File Format Resolver (PDF, DOCX, XLSX, ZIP, PNG, etc.)
@@ -116,6 +117,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
   formatShortPortalDate,
   hideHeader = false,
   compactHeader = false,
+  searchPlaceholder,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -344,7 +346,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search templates..."
+              placeholder={searchPlaceholder ?? "Search templates..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-9 pl-9 pr-3 text-xs rounded-xl bg-background border-border/80 w-full"
@@ -665,7 +667,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search templates by title, description, category..."
+              placeholder={searchPlaceholder ?? "Search templates by title, description, category..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full"

@@ -16,8 +16,8 @@ const PublicTemplates = () => {
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Forms &amp; Templates
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
-              Browse and download official forms, compliance templates, and document references from PCYDO.
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl">
+              Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
 

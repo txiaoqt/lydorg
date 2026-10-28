@@ -19,6 +19,7 @@ const COORDS: [number, number] = [14.59238, 121.08618];
 
 const Contacts = () => {
   const { address, email, officeName } = usePublicContactInfo();
+  const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,8 +32,8 @@ const Contacts = () => {
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Contact Us
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
-              Get in touch with the PCYDO office in Pasig City.
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl">
+              For inquiries regarding services provided by the Pasig City Youth Development Office (PCYDO), please use the official contact information provided below.
             </p>
           </div>
         </div>
@@ -96,15 +97,17 @@ const Contacts = () => {
                     Official Email
                   </p>
                   <a
-                    href={`mailto:${email}`}
+                    href={gmailComposeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="font-segoe text-sm sm:text-base font-bold leading-snug text-[#0E2F66] hover:underline break-all"
                   >
                     {email}
                   </a>
                 </div>
               </div>
-              <p className="font-segoe text-xs text-slate-500 mt-1 leading-relaxed">
-                For official correspondence, document inquiries, and youth organization support.
+              <p className="font-segoe text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+                For official correspondence, document-related inquiries, and assistance with youth organization-related matters, please contact the PCYDO through the official email address provided above.
               </p>
             </div>
 
@@ -116,37 +119,37 @@ const Contacts = () => {
                   Office Hours
                 </p>
               </div>
-              <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-2.5">
-                <span className="font-segoe text-sm font-semibold text-[#0E2F66]">
-                  Monday - Thursday
-                </span>
-                <span className="font-segoe text-sm font-bold text-[#0E2F66]">
-                  7:00 AM – 6:00 PM
-                </span>
-              </div>
-              <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-2.5">
-                <span className="font-segoe text-sm font-normal text-slate-500">
-                  Friday
-                </span>
-                <span className="font-segoe text-sm font-medium text-slate-500">
-                  Closed
-                </span>
-              </div>
-              <div className="flex justify-between items-center border-b border-public-border-default/70 pb-2 sm:pb-2.5">
-                <span className="font-segoe text-sm font-normal text-slate-500">
-                  Saturday
-                </span>
-                <span className="font-segoe text-sm font-medium text-slate-500">
-                  Closed
-                </span>
-              </div>
-              <div className="flex justify-between items-center pb-0.5 sm:pb-0">
-                <span className="font-segoe text-sm font-normal text-slate-500">
-                  Sunday
-                </span>
-                <span className="font-segoe text-sm font-medium text-slate-500">
-                  Closed
-                </span>
+              <div className="overflow-hidden rounded-xl border border-public-border-default">
+                <table className="w-full border-collapse text-left font-segoe text-xs sm:text-sm">
+                  <thead>
+                    <tr>
+                      <th scope="col" className="w-1/2 border-b border-r border-public-border-default bg-public-bg-section px-3 py-2 font-semibold text-public-text-brand">
+                        Day
+                      </th>
+                      <th scope="col" className="w-1/2 border-b border-public-border-default bg-public-bg-section px-3 py-2 font-semibold text-public-text-brand">
+                        Operating Hours
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border-b border-r border-public-border-default px-3 py-2 font-medium text-public-text-brand">
+                        Monday–Thursday
+                      </td>
+                      <td className="border-b border-public-border-default px-3 py-2 font-semibold text-public-text-brand">
+                        7:00 AM–6:00 PM
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-public-border-default px-3 py-2 text-public-text-secondary">
+                        Friday–Sunday
+                      </td>
+                      <td className="px-3 py-2 text-public-text-secondary">
+                        Closed
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -167,7 +170,9 @@ const Contacts = () => {
               </p>
             </div>
             <a
-              href={`mailto:${email}`}
+              href={gmailComposeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-public-bg-brand px-5 py-2.5 font-segoe text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-public-bg-brand-hover shadow-xs mt-1"
             >
               <Send className="h-4 w-4 shrink-0" />

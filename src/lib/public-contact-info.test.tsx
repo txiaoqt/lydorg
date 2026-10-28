@@ -249,10 +249,22 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     expect(screen.getByText("Official Email")).toBeInTheDocument();
     const emailLinks = screen.getAllByRole("link", { name: "lydo@pasigcity.gov.ph" });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
+    const gmailEmailLinks = screen.getAllByRole("link", { name: "Send an Email" }).filter((link) =>
+      link.getAttribute("href")?.startsWith("https://mail.google.com/mail/?"),
+    );
+    expect(gmailEmailLinks).toHaveLength(1);
+    const sendEmail = gmailEmailLinks[0];
+    const gmailCompose = new URL(sendEmail.getAttribute("href")!);
+    expect(gmailCompose.origin).toBe("https://mail.google.com");
+    expect(gmailCompose.searchParams.get("to")).toBe("lydo@pasigcity.gov.ph");
+    expect(sendEmail).toHaveAttribute("target", "_blank");
+    expect(sendEmail.getAttribute("rel")?.split(/\s+/)).toEqual(expect.arrayContaining(["noopener", "noreferrer"]));
 
     // Verify office hours
     expect(screen.getByText("Office Hours")).toBeInTheDocument();
-    expect(screen.getByText("Monday - Thursday")).toBeInTheDocument();
-    expect(screen.getByText("7:00 AM – 6:00 PM")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Day" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Operating Hours" })).toBeInTheDocument();
+    expect(screen.getByText("Monday–Thursday")).toBeInTheDocument();
+    expect(screen.getByText("7:00 AM–6:00 PM")).toBeInTheDocument();
   });
 });

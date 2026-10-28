@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, CircleHelp, Filter, Search, Send } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,89 +14,206 @@ import {
 import { cn } from "@/lib/utils";
 import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
-type FaqCategory = "getting-started" | "documents" | "budget" | "portal";
+type FaqCategory = "general" | "yorp" | "forms" | "ypop" | "budget" | "support";
 type FilterId = "all" | FaqCategory;
 
-const faqs: { question: string; answer: string; category: FaqCategory }[] = [
+type Faq = {
+  question: string;
+  answer: string;
+  category: FaqCategory;
+  supportingParagraphs?: { label?: string; text: string }[];
+  listItems?: string[];
+  answerLink?: { before: string; label: string; after: string; to: string };
+  learnMore?: { before: string; label: string; after: string; to: string };
+};
+
+const faqs: Faq[] = [
   {
     question: "What is Y-TRACE?",
     answer:
-      "Y-TRACE is a youth organization compliance portal for Pasig City. It supports organization registration, compliance document submission, budget requests, liquidation reporting, templates, and official updates from the PCYDO office.",
-    category: "getting-started",
+      "Y-TRACE is a digital system developed for the Pasig City Youth Development Office (PCYDO) to support youth organization programs and services in Pasig City. Through the public website and Organization Portal, youth organizations can access official information and resources, register for the Youth Organization Registration Program (YORP), participate in the Youth Participation Organization Passport (YPOP) program, submit budget requests and liquidation reports, and view official announcements and updates.",
+    category: "general",
+    learnMore: {
+      before: "Visit the ",
+      label: "About page",
+      after: " to learn about Y-TRACE, YORP, and YPOP.",
+      to: "/about",
+    },
   },
   {
     question: "Who can create an account?",
     answer:
-      "Only heads of organizations can register an account. Each account is tied to one youth organization. If your organization already has a Unique Registration Number (URN), select the previously registered organization option during sign-up.",
-    category: "getting-started",
+      "The head of a youth organization may register for an account on behalf of the organization. Each account is associated with one youth organization. If your organization already has an active Unique Registration Number (URN), select the option for a previously registered organization during sign-up.",
+    category: "general",
+    learnMore: {
+      before: "Visit the ",
+      label: "About page",
+      after: " for information about YORP.",
+      to: "/about",
+    },
   },
   {
-    question: "What do I need to complete first before submitting documents?",
+    question: "What should I do after signing up?",
     answer:
-      "You need to fill out and save your Organization Profile first. The profile must be reviewed and verified by an admin before you can proceed to Registration Requirements and budget requests.",
-    category: "getting-started",
+      "You can sign up using either your Google account or the standard sign-up method. Regardless of which method you choose, you must complete and save your Organization Profile before proceeding to other sections of the Organization Portal.",
+    category: "general",
+    supportingParagraphs: [
+      {
+        label: "For organizations with an active URN: ",
+        text: "Complete and save your Organization Profile to access the other sections of the portal.",
+      },
+      {
+        label: "For organizations without a URN: ",
+        text: "Complete and save your Organization Profile, then proceed to the YORP Registration section to submit the required registration documents.",
+      },
+    ],
+    learnMore: {
+      before: "Visit the ",
+      label: "Forms & Templates page",
+      after: " to access the official YORP registration forms and templates.",
+      to: "/public-templates",
+    },
   },
   {
-    question: "How do I submit my registration requirements?",
+    question: "What is the Youth Organization Registration Program (YORP)?",
     answer:
-      "Go to Registration Requirements and upload the required file for each published document slot. Once a file is attached, it becomes available for admin review, and you will be notified if any document needs revision or has been approved.",
-    category: "documents",
+      "The Youth Organization Registration Program (YORP) is a program of the National Youth Commission (NYC) that aims to recognize and maintain a registry of youth organizations, support their development, and strengthen youth participation in community and national development.",
+    category: "yorp",
+    learnMore: {
+      before: "Visit the ",
+      label: "About page",
+      after: " for information about YORP.",
+      to: "/about",
+    },
   },
   {
-    question: "What documents are required for organization registration?",
+    question: "What documents are required for YORP registration?",
     answer:
-      "Official registration documents include the Constitution and By-Laws, NYC YORP Registration Form (Form B), YORP Directory of Officers and Adviser, YORP List of Members in Good Standing, Pasig City YORP Registration Form (Form A), and PCYDO YORP Data Request Form.",
-    category: "documents",
+      "Organizations applying for YORP registration must submit the following documents through the YORP Registration section of the Organization Portal:",
+    category: "yorp",
+    listItems: [
+      "Pasig City YORP Registration Form (Form A)",
+      "NYC YORP Registration Form (Form B)",
+      "Endorsement Letter from the Appropriate Authority",
+      "Directory of Officers and Advisers",
+      "List of Members in Good Standing",
+      "Constitution and By-Laws",
+    ],
+    learnMore: {
+      before: "Visit the ",
+      label: "Forms & Templates page",
+      after: " to download the official YORP registration forms and templates.",
+      to: "/public-templates",
+    },
   },
   {
-    question: "Where can I download the official forms and templates?",
-    answer:
-      "Official forms, templates, and reference documents are available on the public Forms & Templates page and inside the organization portal. Available documents are dynamically published and updated by the PCYDO team.",
-    category: "documents",
+    question: "Where can I access the official forms and templates?",
+    answer: "",
+    category: "forms",
+    answerLink: {
+      before: "Official forms, templates, and reference documents are available on the ",
+      label: "Forms & Templates page",
+      after: " of the public website and the Organization Portal.",
+      to: "/public-templates",
+    },
   },
   {
-    question: "What happens after a budget request is approved?",
+    question: "What is the Youth Participation Organization Passport (YPOP)?",
     answer:
-      "Once approved, your budget request moves to 'Submit Onsite'. You then submit the required hard copy to the PCYDO office. After the office confirms release of funds, a liquidation report becomes available for you to complete after your activity.",
+      "The Youth Participation Organization Passport (YPOP) is a program of the Pasig City Youth Development Office (PCYDO) that aims to encourage and recognize youth organizations' participation in city-led and organization-initiated activities. It evaluates organizations based on their participation in eligible activities, with the goal of promoting active youth participation in community development. Organizations that meet the established qualification criteria may be eligible for project grant incentives, subject to the program's requirements.",
+    category: "ypop",
+    learnMore: {
+      before: "Visit the ",
+      label: "About page",
+      after: " for information about YPOP.",
+      to: "/about",
+    },
+  },
+  {
+    question: "Which organizations are eligible to participate in YPOP?",
+    answer:
+      "Youth organizations registered under the Youth Organization Registration Program (YORP) may participate in the YPOP program, subject to the participation requirements established by the PCYDO. Participation in YPOP does not automatically qualify an organization for project grant incentives.",
+    category: "ypop",
+    learnMore: {
+      before: "Visit the ",
+      label: "About page",
+      after: " for information about YORP and YPOP.",
+      to: "/about",
+    },
+  },
+  {
+    question: "What are the requirements for YPOP qualification?",
+    answer:
+      "To qualify for YPOP project grant incentives, an organization must achieve at least 70% of the total possible points for PCYDO-mandated city-led activities. Organizations that do not meet this threshold are not eligible for these incentives.",
+    category: "ypop",
+    learnMore: {
+      before: "Refer to the official ",
+      label: "YPOP guidelines",
+      after: " for the applicable participation criteria and qualification requirements.",
+      to: "/public-templates",
+    },
+  },
+  {
+    question: "How can my organization submit a budget request?",
+    answer:
+      "Your organization must first qualify for the Youth Participation Organization Passport (YPOP) program to access the Budget Requests page of the Organization Portal. Once qualified, open the Budget Requests page, complete the required information in the Budget Request Form, and submit the completed form through the portal.",
     category: "budget",
   },
   {
-    question: "What is a liquidation report and when do I submit it?",
+    question: "How many budget requests may my organization submit per YPOP semester?",
     answer:
-      "A liquidation report accounts for how the released budget was used. It becomes available after the budget release process is completed. You submit it after your activity, and the deadline is based on the release timeline shown in the portal and notifications.",
+      "Each qualified organization may submit one budget request per YPOP semester through the Organization Portal.",
     category: "budget",
   },
   {
-    question: "Where do I see status updates and admin remarks?",
+    question: "Where can I view updates and notifications about my organization's submissions?",
     answer:
-      "Check the Notifications section for real-time updates on document approvals, revision requests, budget decisions, and liquidation reminders. The Compliance Status section gives you a full summary of your current standing.",
-    category: "portal",
+      "Check the Notifications section of the Organization Portal for updates on document approvals, revision requests, and important deadlines.",
+    category: "support",
   },
   {
-    question: "How do admins manage records?",
+    question: "What should I do if my organization's submitted documents require revisions?",
     answer:
-      "PCYDO staff use a separate Admin Portal to review organization profiles, validate documents, approve or reject budget requests, monitor liquidation reports, manage templates, and publish news and transparency updates.",
-    category: "portal",
+      "Check the Notifications section of the Organization Portal for revision requests and review the accompanying administrative remarks. Revise the document according to the instructions provided and upload the updated file to the corresponding document slot within five days of the revision request. Failure to meet the deadline will result in the submission being locked. To have the submission unlocked, you must coordinate with the PCYDO for assistance.",
+    category: "support",
+  },
+  {
+    question: "What should I do if I cannot access my account?",
+    answer:
+      "Ensure that you are using the correct login credentials and try signing in again. If you continue to experience difficulties, contact the Pasig City Youth Development Office (PCYDO) through its official contact channels for assistance.",
+    category: "support",
+    learnMore: {
+      before: "Visit the ",
+      label: "Contact page",
+      after: " for the PCYDO's official contact information.",
+      to: "/contacts",
+    },
   },
 ];
 
 const filterTabs: { id: FilterId; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "getting-started", label: "Getting Started" },
-  { id: "documents", label: "Documents & Compliance" },
-  { id: "budget", label: "Budget & Liquidation" },
-  { id: "portal", label: "Portal & Notifications" },
+  { id: "general", label: "General Information" },
+  { id: "yorp", label: "YORP" },
+  { id: "forms", label: "Forms & Templates" },
+  { id: "ypop", label: "YPOP" },
+  { id: "budget", label: "Budget Requests" },
+  { id: "support", label: "Account & Portal Support" },
 ];
 
 const categoryDefs: { id: FaqCategory; title: string }[] = [
-  { id: "getting-started", title: "Getting Started" },
-  { id: "documents", title: "Documents & Compliance" },
-  { id: "budget", title: "Budget & Liquidation" },
-  { id: "portal", title: "Portal & Notifications" },
+  { id: "general", title: "Section 1 · General Information" },
+  { id: "yorp", title: "Section 2 · Youth Organization Registration Program (YORP)" },
+  { id: "forms", title: "Section 3 · Forms and Templates" },
+  { id: "ypop", title: "Section 4 · Youth Participation Organization Passport (YPOP)" },
+  { id: "budget", title: "Section 5 · Budget Requests" },
+  { id: "support", title: "Section 6 · Account and Portal Support" },
 ];
 
 const Faqs = () => {
+  const accordionId = useId();
   const { email } = usePublicContactInfo();
+  const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -105,10 +223,22 @@ const Faqs = () => {
   const filteredFaqs = faqs.filter((faq) => {
     if (activeFilter !== "all" && faq.category !== activeFilter) return false;
     if (!query) return true;
-    return (
-      faq.question.toLowerCase().includes(query) ||
-      faq.answer.toLowerCase().includes(query)
-    );
+    const searchableText = [
+      faq.question,
+      faq.answer,
+      ...(faq.supportingParagraphs ?? []).flatMap(({ label, text }) => [label, text]),
+      ...(faq.listItems ?? []),
+      faq.answerLink?.before,
+      faq.answerLink?.label,
+      faq.answerLink?.after,
+      faq.learnMore?.before,
+      faq.learnMore?.label,
+      faq.learnMore?.after,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return searchableText.includes(query);
   });
 
   const groups = categoryDefs
@@ -131,8 +261,8 @@ const Faqs = () => {
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Frequently Asked Questions
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
-              Quick answers about using Y-TRACE and navigating the compliance workflow.
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl">
+              Find information about Y-TRACE, YORP, YPOP, and other programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
         </div>
@@ -251,6 +381,8 @@ const Faqs = () => {
                   <div className="flex flex-col gap-2.5">
                     {group.items.map((faq) => {
                       const isOpen = openId === faq.question;
+                      const questionId = `${accordionId}-question-${faqs.indexOf(faq)}`;
+                      const answerId = `${accordionId}-answer-${faqs.indexOf(faq)}`;
                       return (
                         <div
                           key={faq.question}
@@ -262,7 +394,10 @@ const Faqs = () => {
                           )}
                         >
                           <button
+                            id={questionId}
                             type="button"
+                            aria-expanded={isOpen}
+                            aria-controls={answerId}
                             onClick={() => setOpenId(isOpen ? null : faq.question)}
                             className="flex w-full items-center justify-between gap-3 p-4 sm:p-4.5 text-left cursor-pointer transition-colors hover:bg-slate-50/50"
                           >
@@ -284,13 +419,58 @@ const Faqs = () => {
                               )}
                             </span>
                           </button>
-                          {isOpen && (
-                            <div className="border-t border-border/50 bg-slate-50/30 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
-                              <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700">
-                                {faq.answer}
-                              </p>
-                            </div>
-                          )}
+                          <div
+                            id={answerId}
+                            role="region"
+                            aria-labelledby={questionId}
+                            hidden={!isOpen}
+                            className="border-t border-border/50 bg-slate-50/30 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4"
+                          >
+                              {faq.answer && (
+                                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700">
+                                  {faq.answer}
+                                </p>
+                              )}
+                              {faq.answerLink && (
+                                <p className="mt-2 font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700">
+                                  {faq.answerLink.before}
+                                  <Link
+                                    to={faq.answerLink.to}
+                                    className="font-semibold text-public-text-brand underline underline-offset-2 transition-opacity hover:opacity-80"
+                                  >
+                                    {faq.answerLink.label}
+                                  </Link>
+                                  {faq.answerLink.after}
+                                </p>
+                              )}
+                              {faq.supportingParagraphs?.map((paragraph) => (
+                                <p
+                                  key={paragraph.label}
+                                  className="mt-2 font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700"
+                                >
+                                  {paragraph.label && <strong>{paragraph.label}</strong>}
+                                  {paragraph.text}
+                                </p>
+                              ))}
+                              {faq.listItems && (
+                                <ul className="mt-2 list-disc space-y-1 pl-5 font-segoe text-sm sm:text-public-fs-subheading-sm leading-relaxed text-slate-700">
+                                  {faq.listItems.map((item) => <li key={item}>{item}</li>)}
+                                </ul>
+                              )}
+                              {faq.learnMore && (
+                                <p className="mt-3 font-segoe text-sm sm:text-public-fs-subheading-sm leading-relaxed text-slate-700">
+                                  <strong>Learn more: </strong>
+                                  {faq.learnMore.before}
+                                  <Link
+                                    to={faq.learnMore.to}
+                                    className="font-semibold text-public-text-brand underline underline-offset-2 transition-opacity hover:opacity-80"
+                                  >
+                                    {faq.learnMore.label}
+                                  </Link>
+                                  {faq.learnMore.after}
+                                </p>
+                              )}
+                          </div>
                         </div>
                       );
                     })}
@@ -304,22 +484,25 @@ const Faqs = () => {
             </div>
           )}
 
-          {/* Still Need Help */}
+          {/* Need Assistance */}
           <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-2.5 sm:gap-4 rounded-2xl border border-public-border-default bg-white p-6 sm:p-10 text-center shadow-public-nav mt-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-public-bg-tertiary-100 text-[#0E2F66]">
               <CircleHelp className="h-6 w-6 text-public-text-brand" />
             </div>
             <div className="flex flex-col gap-1 sm:gap-1.5 max-w-md">
               <h3 className="font-segoe text-base sm:text-lg font-bold text-[#0E2F66]">
-                Still Need Help?
+                Need Assistance?
               </h3>
               <p className="font-segoe text-xs sm:text-sm text-slate-500 leading-relaxed">
-                Can't find the answer you're looking for? Reach out to the PCYDO office directly
-                and we'll get back to you as soon as possible.
+                For further inquiries, please contact the PCYDO through its official email address.
+                Include the purpose of your inquiry and any relevant details to help the office
+                address your request.
               </p>
             </div>
             <a
-              href={`mailto:${email}`}
+              href={gmailComposeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-public-bg-brand px-5 py-2.5 font-segoe text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-public-bg-brand-hover shadow-xs mt-1"
             >
               <Send className="h-4 w-4 shrink-0" />

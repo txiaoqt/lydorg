@@ -178,6 +178,7 @@ export default function PublicTemplatesCatalog({
         openPreview={openPreview}
         openFile={openFile}
         compactHeader={compactHeader}
+        searchPlaceholder="Search by title, description, or keyword..."
       />
 
       <PortalDocumentDrawer

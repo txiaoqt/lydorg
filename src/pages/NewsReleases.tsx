@@ -15,6 +15,18 @@ import { cn } from "@/lib/utils";
 import { PublicNewsReleaseCard, type PublicNewsRelease } from "@/components/public/PublicNewsReleaseCard";
 
 const LYDO_FACEBOOK_URL = "https://www.facebook.com/profile.php?id=100064071040238";
+const NEWS_CATEGORY_PRIORITY = ["yorp", "ypop", "move"];
+export const NEWS_RELEASES_SEARCH_PLACEHOLDER = "Search by title, summary, or keyword…";
+
+export const orderNewsReleaseCategories = (categories: string[]) =>
+  [...categories].sort((a, b) => {
+    const priorityA = NEWS_CATEGORY_PRIORITY.indexOf(a.trim().toLowerCase());
+    const priorityB = NEWS_CATEGORY_PRIORITY.indexOf(b.trim().toLowerCase());
+    if (priorityA !== -1 && priorityB !== -1) return priorityA - priorityB;
+    if (priorityA !== -1) return -1;
+    if (priorityB !== -1) return 1;
+    return a.localeCompare(b);
+  });
 
 const NewsReleases = () => {
   const [releases, setReleases] = useState<PublicNewsRelease[] | null>(null);
@@ -35,8 +47,13 @@ const NewsReleases = () => {
   }, []);
 
   const availableCategories = useMemo(
-    () =>
-      [...new Set((releases ?? []).map((r) => r.category).filter((c): c is string => Boolean(c)))].sort(),
+    () => {
+      const categories = [
+        ...new Set((releases ?? []).map((r) => r.category).filter((c): c is string => Boolean(c))),
+      ];
+
+      return orderNewsReleaseCategories(categories);
+    },
     [releases],
   );
 
@@ -59,10 +76,10 @@ const NewsReleases = () => {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
-              News Releases
+              NEWS RELEASES
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
-              Official announcements and updates from the Pasig City Youth Development Office.
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl">
+              Official announcements and updates on the programs, services, and activities of the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
         </div>
@@ -79,7 +96,7 @@ const NewsReleases = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
-                placeholder="Search news title, summary, keyword..."
+                placeholder={NEWS_RELEASES_SEARCH_PLACEHOLDER}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
@@ -154,7 +171,7 @@ const NewsReleases = () => {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
-                placeholder="Search news title, summary, keyword..."
+                placeholder={NEWS_RELEASES_SEARCH_PLACEHOLDER}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
