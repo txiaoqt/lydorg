@@ -30,6 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminTheme } from "@/admin/context/AdminThemeContext";
 import { RenewalTestEnvironmentPanel } from "@/admin/components/RenewalTestEnvironmentPanel";
+import { isRenewalScenarioVisible } from "@/lib/renewal-scenario-environment";
 import { YorpSampleDataSeedingPanel } from "@/admin/components/YorpSampleDataSeedingPanel";
 import {
   AlertDialog,
@@ -603,10 +604,10 @@ export const AdminSettingsPage: React.FC = () => {
                   </SettingSection>
                 </div>
 
-                {(import.meta.env.DEV || import.meta.env.MODE !== "production") && (
+                {isRenewalScenarioVisible(import.meta.env) && (
                   <div className="pt-2 space-y-3">
                     <RenewalTestEnvironmentPanel onNavigateToRenewals={() => navigate("/admin/renewals")} />
-                    <YorpSampleDataSeedingPanel />
+                    {(import.meta.env.DEV || import.meta.env.MODE !== "production") && <YorpSampleDataSeedingPanel />}
                   </div>
                 )}
               </TabsContent>

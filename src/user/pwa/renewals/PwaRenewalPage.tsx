@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { UserPortalRenewalWorkspaceView } from "@/components/portal/UserPortalRenewalWorkspaceView";
 import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
+import {
+  downloadPwaDocument,
+  getPwaDocumentFilename,
+  openPwaDocumentInNewTab,
+} from "@/lib/pwa-renewal-document-actions";
+import { toast } from "@/hooks/use-toast";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import { PWA_ROUTES } from "../pwaRoutes";
@@ -11,7 +17,30 @@ export function PwaRenewalPage({ data, history = false }: { data: ReturnType<typ
   const approved = data.renewals.filter((item) => item.status === "approved");
   const active = history ? approved.find((item) => item.id === selectedId) ?? approved[0] ?? null
     : data.renewalState.activeRenewal ?? approved[0] ?? null;
-  const openFile = async (url: string) => requestPwaDocumentPreview(url, decodeURIComponent(url.split(/[/?#]/).filter(Boolean).pop() || "Renewal document.pdf"));
+  const openPreview = (url: string, fileName: string) =>
+    requestPwaDocumentPreview(url, getPwaDocumentFilename(url, fileName));
+  const openFile = async (url: string, fileName?: string) => {
+    try {
+      await downloadPwaDocument(url, getPwaDocumentFilename(url, fileName));
+    } catch {
+      toast({
+        title: "Unable to download document",
+        description: "This file could not be downloaded. Check your connection and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  const openInNewTab = async (url: string) => {
+    try {
+      await openPwaDocumentInNewTab(url);
+    } catch {
+      toast({
+        title: "Unable to open document",
+        description: "This file could not be opened in a new tab. Check your connection and try again.",
+        variant: "destructive",
+      });
+    }
+  };
   if (data.renewalsLoading) return <p role="status" className="pwa-empty-copy">Loading renewal cycles…</p>;
   if (data.renewalsError) return <section className="pwa-card"><p role="alert">Renewal cycles could not be loaded.</p><button className="pwa-secondary-button" onClick={() => void data.refreshRenewals()}>Retry</button></section>;
   return (
@@ -31,8 +60,9 @@ export function PwaRenewalPage({ data, history = false }: { data: ReturnType<typ
           onActiveRenewalChange={(renewal) => setSelectedId(renewal.id)}
           navigate={go}
           userRouteMap={{ "organization-profile": PWA_ROUTES.profile, "document-submission": PWA_ROUTES.documents, "organization-renewal": PWA_ROUTES.renewal, renewals: PWA_ROUTES.renewals }}
-          openPreview={openFile}
-          openFile={(url) => { void openFile(url); }}
+          openPreview={openPreview}
+          openFile={openFile}
+          openInNewTab={openInNewTab}
           onRenewalUpdated={() => { void data.refreshRenewals(); }}
         />
       )}

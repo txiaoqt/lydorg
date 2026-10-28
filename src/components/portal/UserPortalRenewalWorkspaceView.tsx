@@ -78,6 +78,7 @@ export interface UserPortalRenewalWorkspaceViewProps {
   userRouteMap: Record<string, string>;
   openPreview?: (fileUrl: string, title: string) => void | Promise<void>;
   openFile?: (fileUrl: string, downloadName?: string) => void;
+  openInNewTab?: (fileUrl: string) => void | Promise<void>;
   onRenewalUpdated?: (renewal: OrganizationRenewalRecord) => void;
 }
 
@@ -145,6 +146,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
   userRouteMap,
   openPreview,
   openFile,
+  openInNewTab,
   onRenewalUpdated,
 }) => {
   const [activeRenewal, setActiveRenewal] = useState<OrganizationRenewalRecord | null>(initialActiveRenewal);
@@ -1797,7 +1799,8 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
               }
             }}
             onOpenInNewTab={(url) => {
-              if (openFile) void openFile(url);
+              if (openInNewTab) void openInNewTab(url);
+              else if (openFile) void openFile(url);
               else if (url) window.open(url, "_blank", "noopener,noreferrer");
             }}
             onReplaceFile={

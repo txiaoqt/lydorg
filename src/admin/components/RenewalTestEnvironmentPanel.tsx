@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { isRenewalScenarioVisible, isStagingRenewalScenarioEnabled } from "@/lib/renewal-scenario-environment";
 import {
   adminGetOrCreateRenewalTestAccountInSupabase,
   adminPrepareRenewalTestScenarioInSupabase,
@@ -49,7 +50,8 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const disclosureId = useId();
 
-  const isDevOrTestEnv = import.meta.env.DEV || import.meta.env.MODE !== "production";
+  const isDevOrTestEnv = isRenewalScenarioVisible(import.meta.env);
+  const isStagingScenario = isStagingRenewalScenarioEnabled(import.meta.env);
 
   const fetchAccountState = async () => {
     try {
@@ -57,7 +59,7 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
       const data = await adminGetOrCreateRenewalTestAccountInSupabase();
       setTestAccount(data);
     } catch (err: any) {
-      console.error("Failed to load renewal test account:", err);
+      console.error("Failed to load renewal test account.");
       toast({
         title: "Test Environment Error",
         description: err?.message || "Failed to load renewal test account details.",
@@ -154,7 +156,9 @@ export const RenewalTestEnvironmentPanel: React.FC<RenewalTestEnvironmentPanelPr
       const res = await adminResetRenewalTestScenarioInSupabase();
       toast({
         title: "Renewal Test Scenario Reset",
-        description: `Test organization reset to clean Cycle 2 ready state (+30 days expiration: ${res.endDate}).`,
+        description: isStagingScenario
+          ? `Scenario set to +30 days (${res.endDate}). Existing renewal records and documents are preserved.`
+          : `Test organization reset to clean Cycle 2 ready state (+30 days expiration: ${res.endDate}).`,
       });
       await fetchAccountState();
     } catch (err: any) {

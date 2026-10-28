@@ -57,6 +57,37 @@ const mockTestAccountDetails: lydoConnectSupabase.RenewalTestAccountDetails = {
 };
 
 describe("RenewalTestEnvironmentPanel", () => {
+  it("reuses the panel in an explicitly enabled staging production build without a password response", async () => {
+    vi.stubEnv("DEV", false);
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_SUPABASE_URL", "https://zroudsvpswqsjlyttkjf.supabase.co");
+    vi.stubEnv("VITE_ENABLE_STAGING_RENEWAL_SCENARIO", "true");
+    try {
+      vi.mocked(lydoConnectSupabase.adminGetOrCreateRenewalTestAccountInSupabase).mockResolvedValue({
+        ...mockTestAccountDetails,
+        credentials: { email: "ytrace-renewal-synthetic@example.invalid" },
+      });
+      render(<RenewalTestEnvironmentPanel />);
+      fireEvent.click(screen.getByRole("button", { name: /Renewal Test Environment/ }));
+      expect(await screen.findByText("ytrace-renewal-synthetic@example.invalid")).toBeInTheDocument();
+      expect(screen.queryByText("Temporary Password")).not.toBeInTheDocument();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("does not load the feature on a non-staging production target despite the staging flag", () => {
+    vi.stubEnv("DEV", false);
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_SUPABASE_URL", "https://unknown.supabase.co");
+    vi.stubEnv("VITE_ENABLE_STAGING_RENEWAL_SCENARIO", "true");
+    try {
+      render(<RenewalTestEnvironmentPanel />);
+      expect(screen.queryByRole("button", { name: /Renewal Test Environment/ })).not.toBeInTheDocument();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   beforeEach(() => {
     vi.clearAllMocks();
   });

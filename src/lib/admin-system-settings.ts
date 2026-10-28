@@ -1059,7 +1059,7 @@ export const useSystemSetting = <K extends AdminSystemSettingKey | "security.adm
  * Public-safe asynchronous fetcher for non-sensitive system settings (e.g. contact info, office address).
  * Loads live data from Supabase without requiring admin session authentication.
  */
-export const fetchPublicSystemSettings = async (): Promise<Partial<AdminSystemSettingsValues>> => {
+const loadPublicSystemSettings = async (): Promise<Partial<AdminSystemSettingsValues>> => {
   if (!supabase) return {};
 
   try {
@@ -1100,6 +1100,19 @@ export const fetchPublicSystemSettings = async (): Promise<Partial<AdminSystemSe
   }
 
   return {};
+};
+
+let pendingPublicSystemSettings: ReturnType<typeof loadPublicSystemSettings> | null = null;
+
+/** Share concurrent consumers (e.g. home page and footer) without caching
+ * settled results: later mounts still read freshly published public settings. */
+export const fetchPublicSystemSettings = () => {
+  if (!pendingPublicSystemSettings) {
+    pendingPublicSystemSettings = loadPublicSystemSettings().finally(() => {
+      pendingPublicSystemSettings = null;
+    });
+  }
+  return pendingPublicSystemSettings;
 };
 
 /**

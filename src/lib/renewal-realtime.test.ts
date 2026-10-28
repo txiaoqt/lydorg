@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const realtimeMock = vi.hoisted(() => {
   const handlers: Array<{ event: string; filter: Record<string, string>; callback: (payload: unknown) => void }> = [];
@@ -35,6 +35,7 @@ import {
 import { queryClient } from "./query-client";
 
 describe("scoped renewal Realtime subscriptions", () => {
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
   beforeEach(() => {
     vi.clearAllMocks();
     realtimeMock.handlers.length = 0;
@@ -146,7 +147,9 @@ describe("scoped renewal Realtime subscriptions", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 80));
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(invalidateSpy.mock.calls.map(([arg]) => arg.queryKey)).toEqual([
+      ["user", "org-1", "budget-detail", "request-1"],
       ["user", "org-1", "budget-detail-view", "request-1"],
+      ["user", "org-1", "budget-files", "request-1"],
       ["user", "org-1", "budget-files-view", "request-1"],
       ["user", "org-1", "budget-detail-pwa", "request-1"],
       ["user", "org-1", "budget-files-pwa", "request-1"],
@@ -169,11 +172,15 @@ describe("scoped renewal Realtime subscriptions", () => {
 
     const refreshedKeys = invalidateSpy.mock.calls.map(([arg]) => arg.queryKey);
     expect(refreshedKeys).toEqual([
+      ["user", "org-1", "budget-page"],
       ["user", "org-1", "budget-page-view"],
       ["user", "org-1", "budget-page-pwa"],
+      ["user", "org-1", "dashboard-summary"],
       ["user", "org-1", "dashboard-summary-view"],
       ["user", "org-1", "dashboard-summary-liquidation-view"],
+      ["user", "org-1", "budget-detail", "request-1"],
       ["user", "org-1", "budget-detail-view", "request-1"],
+      ["user", "org-1", "budget-files", "request-1"],
       ["user", "org-1", "budget-files-view", "request-1"],
       ["user", "org-1", "budget-detail-pwa", "request-1"],
       ["user", "org-1", "budget-files-pwa", "request-1"],
@@ -199,7 +206,9 @@ describe("scoped renewal Realtime subscriptions", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 80));
     expect(onChange).not.toHaveBeenCalled();
     expect(invalidateSpy.mock.calls.map(([arg]) => arg.queryKey)).toEqual([
+      ["user", "org-1", "liquidation-detail", "report-1"],
       ["user", "org-1", "liquidation-detail-view", "report-1"],
+      ["user", "org-1", "liquidation-files", "report-1"],
       ["user", "org-1", "liquidation-files-view", "report-1"],
       ["user", "org-1", "liquidation-detail-pwa", "report-1"],
       ["user", "org-1", "liquidation-files-pwa", "report-1"],
@@ -229,6 +238,7 @@ describe("scoped renewal Realtime subscriptions", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(invalidateSpy.mock.calls.map(([arg]) => arg.queryKey)).toEqual([
       ["user", "org-1", "ypop", "semester", "2026-2"],
+      ["user", "org-1", "ypop", "entries-by-semesters"],
     ]);
     cleanup();
     invalidateSpy.mockRestore();
@@ -258,6 +268,9 @@ describe("scoped renewal Realtime subscriptions", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(invalidateSpy.mock.calls.map(([arg]) => arg.queryKey)).toEqual([
       ["user", "org-1", "ypop", "semester", "2026-2"],
+      ["user", "org-1", "ypop", "entries-by-semesters"],
+      ["user", "org-1", "ypop", "ppa-page", "entry-1"],
+      ["user", "org-1", "ypop", "ppa", "entry-1"],
     ]);
 
     cleanup();
@@ -281,6 +294,66 @@ describe("scoped renewal Realtime subscriptions", () => {
 
     cleanup();
     invalidateSpy.mockRestore();
+  });
+
+  it("coalesces a YPOP upload burst into one exact file-cache refresh", async () => {
+    vi.useFakeTimers();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries").mockResolvedValue();
+    const cancel = vi.spyOn(queryClient, "cancelQueries").mockResolvedValue();
+    const changed = vi.fn();
+    const cleanup = subscribeToOrganizationYpopFileChangesInSupabase("org-1", "city_led", "participation-1", changed);
+    for (let i = 0; i < 20; i++) realtimeMock.handlers[i % 2].callback({});
+    expect(invalidate).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(60);
+    expect(invalidate).toHaveBeenCalledExactlyOnceWith({queryKey:["user","org-1","ypop","event-files","participation-1"],exact:true});
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(changed).toHaveBeenCalledTimes(1);
+    cleanup();
+  });
+
+  it("keeps an event received during an in-flight YPOP refresh", async () => {
+    vi.useFakeTimers();
+    let finish!: () => void;
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+      .mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve; })).mockResolvedValue();
+    vi.spyOn(queryClient, "cancelQueries").mockResolvedValue();
+    const changed = vi.fn();
+    const cleanup = subscribeToOrganizationYpopFileChangesInSupabase("org-1", "org_led", "activity-1", changed);
+    realtimeMock.handlers[0].callback({});
+    await vi.advanceTimersByTimeAsync(60);
+    realtimeMock.handlers[1].callback({});
+    expect(invalidate).toHaveBeenCalledTimes(1);
+    finish();
+    await vi.advanceTimersByTimeAsync(60);
+    expect(invalidate).toHaveBeenCalledTimes(2);
+    expect(changed).toHaveBeenCalledTimes(2);
+    cleanup();
+  });
+
+  it("disposes queued and in-flight YPOP callbacks on navigation", async () => {
+    vi.useFakeTimers();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries").mockResolvedValue();
+    const changed = vi.fn();
+    const cleanup = subscribeToOrganizationYpopFileChangesInSupabase("org-1", "city_led", "participation-1", changed);
+    realtimeMock.handlers[0].callback({});
+    cleanup();
+    await vi.advanceTimersByTimeAsync(100);
+    realtimeMock.handlers[1].callback({});
+    await vi.advanceTimersByTimeAsync(100);
+    expect(invalidate).not.toHaveBeenCalled();
+    expect(changed).not.toHaveBeenCalled();
+    let finishCancel!: () => void;
+    vi.spyOn(queryClient, "cancelQueries").mockImplementationOnce(
+      () => new Promise<void>(resolve => { finishCancel = resolve; }),
+    );
+    const closeDuringRefresh = subscribeToOrganizationYpopFileChangesInSupabase("org-1", "city_led", "participation-2", changed);
+    realtimeMock.handlers[2].callback({});
+    await vi.advanceTimersByTimeAsync(60);
+    closeDuringRefresh();
+    finishCancel();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(invalidate).not.toHaveBeenCalled();
+    expect(changed).not.toHaveBeenCalled();
   });
 
   it("subscribes only to the open YPOP file parent for City-led and Org-led details", () => {
