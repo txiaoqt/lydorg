@@ -32,7 +32,7 @@ const Contacts = () => {
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Contact Us
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-2xl lg:max-w-5xl min-h-[137px] sm:min-h-[86px] lg:min-h-[65px]">
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
               For inquiries regarding services provided by the Pasig City Youth Development Office (PCYDO), please use the official contact information provided below.
             </p>
           </div>
