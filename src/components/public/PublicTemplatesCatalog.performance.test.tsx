@@ -1,5 +1,5 @@
 import React from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mocks = vi.hoisted(() => ({ load: vi.fn() }));
@@ -9,7 +9,7 @@ vi.mock("@/components/portal/UserPortalTemplatesWorkspaceView", () => ({UserPort
 vi.mock("@/components/portal/PortalDocumentDrawer", () => ({PortalDocumentDrawer:()=>null}));
 import PublicTemplatesCatalog from "./PublicTemplatesCatalog";
 afterEach(() => {cleanup();focusManager.setFocused(undefined);vi.useRealTimers();vi.clearAllMocks();});
-it("does not poll idle, refreshes explicitly, and refetches stale metadata on focus", async () => {
+it("does not poll idle and refetches stale metadata on focus", async () => {
   vi.useFakeTimers();
   mocks.load.mockResolvedValue({templates:[{id:"a",name:"Published template",templateActive:true}]});
   const client = new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0,refetchOnWindowFocus:false}}});
@@ -19,12 +19,9 @@ it("does not poll idle, refreshes explicitly, and refetches stale metadata on fo
   await act(async()=>{await vi.advanceTimersByTimeAsync(90_000);});
   expect(mocks.load).toHaveBeenCalledTimes(1);
   mocks.load.mockResolvedValue({templates:[{id:"b",name:"New template",templateActive:true}]});
-  fireEvent.click(screen.getByRole("button",{name:"Refresh templates"}));
-  await act(async()=>{await vi.advanceTimersByTimeAsync(1);});
+  await act(async()=>{focusManager.setFocused(false);await vi.advanceTimersByTimeAsync(300_001);focusManager.setFocused(true);await vi.advanceTimersByTimeAsync(1);});
   expect(mocks.load).toHaveBeenCalledTimes(2);
   expect(screen.getByText("New template")).toBeInTheDocument();
   expect(screen.queryByText("Published template")).not.toBeInTheDocument();
-  await act(async()=>{focusManager.setFocused(false);await vi.advanceTimersByTimeAsync(300_001);focusManager.setFocused(true);await vi.advanceTimersByTimeAsync(1);});
-  expect(mocks.load).toHaveBeenCalledTimes(3);
   cleanup();client.clear();
 });

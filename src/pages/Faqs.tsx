@@ -261,7 +261,7 @@ const Faqs = () => {
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Frequently Asked Questions
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-2xl lg:max-w-5xl">
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-2xl lg:max-w-5xl min-h-[137px] sm:min-h-[86px] lg:min-h-[65px]">
               Find information about Y-TRACE, YORP, YPOP, and other programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>

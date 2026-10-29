@@ -78,7 +78,7 @@ const NewsReleases = () => {
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               News Releases
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-2xl lg:max-w-5xl">
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-2xl lg:max-w-5xl min-h-[137px] sm:min-h-[86px] lg:min-h-[65px]">
               Official announcements and updates on the programs, services, and activities of the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
