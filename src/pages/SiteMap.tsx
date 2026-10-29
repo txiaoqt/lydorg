@@ -45,14 +45,16 @@ const SiteMap = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-2 py-4 text-center sm:items-start sm:text-left sm:gap-[16px] sm:py-[48px] sm:min-h-[285px]">
-          <h1 className="font-segoe font-bold leading-tight tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
-            Site Map
-          </h1>
-          <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl">
-            Complete directory of the Y-TRACE public website pages and Organization Portal workflows.
-          </p>
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
+          <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
+            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+              Site Map
+            </h1>
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
+              Complete directory of the Y-TRACE public website pages and Organization Portal workflows.
+            </p>
+          </div>
         </div>
       </section>
 
