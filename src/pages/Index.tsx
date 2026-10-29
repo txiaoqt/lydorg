@@ -203,12 +203,12 @@ const Index = () => {
 
                 {/* Main Heading */}
                 <h1 className="hero-title w-full max-w-[390px] xs:max-w-[400px] sm:max-w-none font-segoe font-bold leading-[1.2] sm:leading-none tracking-tight sm:tracking-[-0.02em] text-white text-[21.5px] xs:text-[22px] sm:text-public-fs-hero">
-                  Your youth organization's compliance,<br className="sm:hidden" /> simplified.
+                  Youth Organization Services<br className="sm:hidden" /> in One Place.
                 </h1>
 
                 {/* Description */}
                 <p className="hero-description w-full max-w-[342px] sm:max-w-[480px] lg:max-w-none font-segoe font-normal leading-[1.35] sm:leading-[130%] tracking-normal sm:tracking-[-0.02em] text-center text-white/90 text-[12px] sm:text-public-fs-body-md lg:text-justify">
-                  Register, submit compliance documents, request activity budgets, and track liquidation deadlines - all in one place with PCYDO.
+                  Access youth organization services, manage requirements, and stay informed about programs and opportunities through <span className="whitespace-nowrap">Y-TRACE</span>.
                 </p>
               </div>
 
