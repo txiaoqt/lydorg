@@ -1,5 +1,5 @@
-import { ArrowRight, Banknote, BookOpen, Calendar, ChevronDown, ClipboardList, Clock, Download, ExternalLink, Eye, FileText, Globe, HelpCircle, Info, Loader2, Mail, MapPin, Megaphone, Send, Shield } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Banknote, Check, ChevronDown, Clock, FileText, Globe, HelpCircle, Info, Mail, MapPin, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,37 +7,26 @@ import heroImage from "@/assets/hero-image-upscaled.jpeg";
 import YTracePromotionalVideo from "@/components/public/YTracePromotionalVideo";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
-import { useLydoConnect } from "@/lib/lydo-connect-store";
-import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
-import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { PublicNewsReleaseCard } from "@/components/public/PublicNewsReleaseCard";
-import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
-import { toast } from "@/hooks/use-toast";
 import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
 const faqs = [
   {
     id: 1,
-    question: "How do I register my youth organization with PCYDO?",
-    answer: "Navigate to the Sign Up page and create an account for your organization. You will then be guided through submitting the required documents for PCYDO review and approval.",
+    question: "What is Y-TRACE?",
+    answer: "Y-TRACE is a digital system developed for the Pasig City Youth Development Office (PCYDO) to support youth organization programs and services in Pasig City. Through the public website and Organization Portal, youth organizations can access official information and resources, register for the Youth Organization Registration Program (YORP), participate in the Youth Participation Organization Passport (YPOP) program, submit budget requests and liquidation reports, and view official announcements and updates.",
   },
   {
     id: 2,
-    question: "What documents are required for compliance submission?",
-    answer: "Required registration documents include the Constitution and By-Laws, NYC YORP Registration Form (Form B), Directory of Officers and Adviser, List of Members in Good Standing, Pasig City YORP Registration Form (Form A), and PCYDO YORP Data Request Form. Download official templates from the Forms & Templates section.",
+    question: "Who can create an account?",
+    answer: "The head of a youth organization may register for an account on behalf of the organization. Each account is associated with one youth organization. If your organization already has an active Unique Registration Number (URN), select the option for a previously registered organization during sign-up.",
   },
   {
     id: 3,
-    question: "How do I track the status of my submitted documents?",
-    answer: "After logging in, your dashboard shows the real-time status of all submitted documents, pending requirements, and upcoming compliance deadlines.",
+    question: "What should I do after signing up?",
+    answer: "You can sign up using either your Google account or the standard sign-up method. Regardless of which method you choose, you must complete and save your Organization Profile before proceeding to other sections of the Organization Portal.",
   },
 ];
-
-const getFileType = (url: string | null | undefined): string => {
-  if (!url) return "FILE";
-  const ext = url.split(".").pop()?.split("?")[0].toUpperCase() ?? "FILE";
-  return ext.length <= 5 ? ext : "FILE";
-};
 
 type LatestNewsRelease = {
   id: string;
@@ -48,45 +37,36 @@ type LatestNewsRelease = {
   category: string | null;
 };
 
-const overviewCards = [
-  { icon: BookOpen, title: "Learn the Process", description: "Understand the compliance workflow and requirements for PCYDO-registered youth organizations." },
-  { icon: FileText, title: "Access Official Forms", description: "Download the required forms for registration, activity budgets, and liquidation reports." },
-  { icon: Send, title: "Apply Online", description: "Submit your organization's documents and applications directly through the portal." },
-  { icon: ClipboardList, title: "Track Your Application", description: "Monitor submission statuses and stay on top of compliance deadlines in real time." },
+const overviewHighlights = [
+  "Find registration and compliance guidelines",
+  "Access official forms and templates",
+  "Submit requirements and track updates online",
 ];
 
 const quickLinks = [
-  { icon: Info, title: "About", description: "Learn about PCYDO and its mandate for Pasig City youth organizations.", href: "/about" },
-  { icon: Banknote, title: "Budget Transparency", description: "Explore the Local Youth Development Fund, allocations, and audited grants.", href: "/budget-transparency" },
-  { icon: FileText, title: "Forms & Templates", description: "Download official forms and document templates for compliance submission.", href: "/public-templates" },
-  { icon: Globe, title: "News Releases", description: "Stay updated with the latest official announcements and events from PCYDO.", href: "/news-releases" },
-  { icon: HelpCircle, title: "FAQs", description: "Find answers to common questions about the portal and compliance processes.", href: "/faqs" },
-  { icon: MapPin, title: "Contacts", description: "Get in touch with the PCYDO office, find office hours, and visit us.", href: "/contacts" },
+  { icon: Info, title: "Learn About Y-TRACE", description: "Understand the portal and the services available to youth organizations in Pasig City.", href: "/about" },
+  { icon: Banknote, title: "View Budget Information", description: "Review information on youth development funding and budget allocations.", href: "/budget-transparency" },
+  { icon: FileText, title: "Access Forms and Templates", description: "Browse and download official PCYDO forms, templates, and reference documents.", href: "/public-templates" },
+  { icon: Globe, title: "Read the Latest News", description: "View official announcements and updates from PCYDO.", href: "/news-releases" },
+  { icon: HelpCircle, title: "Find Answers", description: "Get answers to common questions about the Y-TRACE portal and PCYDO services.", href: "/faqs" },
+  { icon: MapPin, title: "Contact PCYDO", description: "Find official contact information for inquiries and assistance.", href: "/contacts" },
 ];
 
 const Index = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [openingTemplateId, setOpeningTemplateId] = useState<string | null>(null);
-  const [downloadingTemplateId, setDownloadingTemplateId] = useState<string | null>(null);
   const [latestReleases, setLatestReleases] = useState<LatestNewsRelease[] | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [previewTitle, setPreviewTitle] = useState("");
-  const [previewCanInline, setPreviewCanInline] = useState(true);
-  const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
   const { address: officeAddress, email: officialEmail } = usePublicContactInfo();
+  const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(officialEmail)}`;
   const { isAuthenticated, role } = useAuth();
   const { hash } = useLocation();
-  const { state } = useLydoConnect();
   const portalHref = isAuthenticated ? (role === "admin" ? "/admin" : "/dashboard") : "/signin";
 
-  const featuredTemplates = useMemo(
-    () =>
-      [...state.templates]
-        .filter((t) => t.templateActive && t.isActive)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .slice(0, 3),
-    [state.templates],
+  const portalOverviewPill = (
+    <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+      <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold uppercase leading-[140%] text-public-text-brand-secondary">
+        Portal Overview
+      </span>
+    </div>
   );
 
   useEffect(() => {
@@ -102,73 +82,6 @@ const Index = () => {
         setLatestReleases((data as LatestNewsRelease[] | null) ?? []);
       });
   }, []);
-
-  const openTemplate = async (fileUrl: string | undefined, fileName: string) => {
-    if (!fileUrl || !fileUrl.trim() || fileUrl.startsWith("#")) {
-      setPreviewUrl("");
-      setPreviewTitle(fileName);
-      setPreviewEmptyMessage("No file available for preview yet.");
-      setPreviewCanInline(false);
-      setDrawerOpen(true);
-      return;
-    }
-
-    setOpeningTemplateId(fileName);
-    try {
-      const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
-      if (!resolvedUrl) {
-        throw new Error("No file is available yet.");
-      }
-
-      setPreviewUrl(resolvedUrl);
-      setPreviewTitle(fileName);
-      setPreviewEmptyMessage("");
-      setPreviewCanInline(
-        resolvedUrl.includes("application/pdf") ||
-        fileUrl.toLowerCase().endsWith(".pdf") ||
-        resolvedUrl.toLowerCase().includes(".pdf") ||
-        (!fileUrl.toLowerCase().endsWith(".xlsx") && !fileUrl.toLowerCase().endsWith(".docx"))
-      );
-      setDrawerOpen(true);
-    } catch (error) {
-      toast({
-        title: "Unable to preview template",
-        description: error instanceof Error ? error.message : "The template file could not be opened.",
-        variant: "destructive",
-      });
-    } finally {
-      setOpeningTemplateId(null);
-    }
-  };
-
-  const downloadTemplate = async (fileUrl: string, fileName: string) => {
-    if (!fileUrl || fileUrl.startsWith("#")) {
-      toast({ title: "Download unavailable", description: "No file is available for download yet.", variant: "destructive" });
-      return;
-    }
-    setDownloadingTemplateId(fileName);
-    try {
-      const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
-      const response = await fetch(resolvedUrl);
-      if (!response.ok) throw new Error("Failed to fetch file");
-      const blob = await response.blob();
-
-      const targetFileName = resolveCleanTemplateDownloadFileName(fileName, fileUrl || resolvedUrl);
-
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = targetFileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      toast({ title: "Download failed", description: error instanceof Error ? error.message : "The file could not be downloaded.", variant: "destructive" });
-    } finally {
-      setDownloadingTemplateId(null);
-    }
-  };
 
   useEffect(() => {
     if (!hash) return;
@@ -186,7 +99,7 @@ const Index = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="hero-section public-hero-gradient relative flex min-h-0 sm:min-h-[758px] flex-col justify-center overflow-x-clip pt-[84px] sm:pt-[68px] lg:pt-[80px] pb-4 sm:pb-0">
+      <section className="hero-section public-hero-pasig-photo relative flex min-h-0 sm:min-h-[758px] flex-col justify-center overflow-x-clip pt-[84px] sm:pt-[68px] lg:pt-[80px] pb-4 sm:pb-0">
         <div className="container mx-auto relative z-10 w-full max-w-7xl px-3.5 xs:px-4 sm:px-6 lg:px-[64px] py-0 sm:py-10 lg:py-0">
           <div className="flex flex-col-reverse items-center gap-4 sm:gap-6 lg:flex-row lg:items-center lg:gap-[40px]">
             {/* Left column (Text & Actions) */}
@@ -251,10 +164,10 @@ const Index = () => {
           {/* Title block */}
           <div className="flex max-w-3xl flex-col gap-2 sm:gap-3">
             <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-              Explore the Portal
+              Explore Y-TRACE
             </h2>
             <p className="font-segoe font-normal leading-[1.5] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-              Find official forms, review budget information, or get updates and help from PCYDO.
+              Access official information, resources, and services related to youth organization registration, compliance, and PCYDO programs.
             </p>
           </div>
 
@@ -290,59 +203,59 @@ const Index = () => {
       <section className="bg-white px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-5 sm:gap-6 lg:gap-[24px] xl:flex-row xl:items-center">
 
+          {/* Stacked layouts label the section above the video; desktop keeps it in the text column */}
+          <div className="w-full self-start xl:hidden">
+            {portalOverviewPill}
+          </div>
+
           {/* Left column — autoplay preview with its own expanded player */}
-          <YTracePromotionalVideo />
+          <div className="w-full self-start xl:w-[540px] xl:shrink-0 xl:self-center">
+            <YTracePromotionalVideo />
+          </div>
 
           {/* Right column */}
           <div className="flex w-full flex-col gap-4 sm:gap-6 lg:gap-[24px] xl:px-[24px]">
 
             {/* Title block */}
             <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-              <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                  OVERVIEW
-                </span>
+              <div className="hidden xl:block">
+                {portalOverviewPill}
               </div>
               <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-                What is Y-TRACE?
+                Your Gateway to Youth Organization Services
               </h2>
-              <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-left sm:text-justify text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-                Y-TRACE is the official online portal of PCYDO for managing youth organization compliance, registrations, and activity processes — all in one place.
+              <p className="max-w-[62ch] font-segoe font-normal leading-relaxed sm:leading-[140%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
+                Y-TRACE brings essential information and digital services for youth organizations in Pasig City into one place. Access guidelines, submit requirements, and keep track of your submissions through the portal.
               </p>
             </div>
 
-            {/* 2×2 feature cards */}
-            <div className="grid grid-cols-1 gap-2.5 sm:gap-3 lg:gap-x-[24px] lg:gap-y-[12px] py-1 sm:py-[10px] sm:grid-cols-2">
-              {overviewCards.map(({ icon: Icon, title, description }) => (
-                <div key={title} className="flex flex-col gap-1.5 sm:gap-2 lg:gap-[8px] rounded-lg sm:rounded-[8px] border border-public-bg-brand-subtle bg-white p-3 sm:p-3.5 lg:p-[16px]">
-                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 lg:h-[40px] lg:w-[40px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-2 lg:p-[8px]">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-public-text-brand" />
-                  </div>
-                  <h3 className="font-segoe font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-base sm:text-public-fs-subtitle-sm">
-                    {title}
-                  </h3>
-                  <p className="font-segoe font-normal leading-relaxed sm:leading-[140%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-                    {description}
-                  </p>
-                </div>
-              ))}
+            {/* What the portal covers */}
+            <div className="rounded-xl border border-public-bg-brand-subtle bg-white p-1.5 shadow-public-nav sm:rounded-[16px] sm:p-[8px]">
+              <ul className="flex flex-col divide-y divide-public-bg-brand-subtle">
+                {overviewHighlights.map((highlight) => (
+                  <li key={highlight} className="flex items-start gap-3 px-2.5 py-3 sm:px-[12px] sm:py-[12px]">
+                    <span aria-hidden="true" className="mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-public-bg-tertiary-100">
+                      <Check className="h-3.5 w-3.5 text-public-text-brand" strokeWidth={2.5} />
+                    </span>
+                    <span className="font-segoe text-sm sm:text-public-fs-body-sm leading-relaxed text-public-text-secondary">
+                      {highlight}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* Buttons */}
-            <div className="flex flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:gap-[16px]">
-              <Link
-                to="/about"
-                className="flex items-center justify-center gap-2 rounded-[8px] bg-public-bg-brand px-3.5 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
-              >
-                Learn More <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/public-templates"
-                className="flex items-center justify-center rounded-[8px] border border-public-border-brand px-3.5 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
-              >
-                Browse Forms & Templates
-              </Link>
-            </div>
+            {/* Primary link */}
+            <Link
+              to="/about"
+              className="group inline-flex w-fit items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3.5 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle active:bg-public-bg-brand-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
+            >
+              Learn more about the portal
+              <ArrowRight
+                aria-hidden="true"
+                className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+              />
+            </Link>
 
           </div>
         </div>
@@ -354,30 +267,27 @@ const Index = () => {
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px]">
 
             {/* Title group */}
-            <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-              <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                  LATEST NEWS
-                </span>
+            <div className="flex flex-col gap-2 py-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:py-[10px]">
+              <div className="flex flex-col gap-1.5 sm:gap-[10px]">
+                <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+                  <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+                    LATEST NEWS
+                  </span>
+                </div>
+                <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
+                  Latest News Releases
+                </h2>
               </div>
-              <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-                Stay Updated
-              </h2>
-              <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-                Stay informed with the latest announcements, events, and updates from the Pasig City Youth Development Office.
-              </p>
+              <Link
+                to="/news-releases"
+                className="hidden shrink-0 items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:inline-flex sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle active:bg-public-bg-brand-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
+              >
+                View all <ArrowRight aria-hidden="true" className="h-4 w-4" />
+              </Link>
             </div>
 
             {/* Cards + view all */}
             <div className="flex flex-col gap-2 sm:gap-[8px]">
-              <div className="hidden justify-end sm:flex">
-                <Link
-                  to="/news-releases"
-                  className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
-                >
-                  View all <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6 py-1 sm:py-2">
                 {latestReleases === null ? (
                   [1, 2, 3].map((i) => (
@@ -404,206 +314,8 @@ const Index = () => {
         </section>
       )}
 
-      {/* Resources */}
-      <section className="bg-white px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px]">
-
-          {/* Title group */}
-          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                RESOURCES
-              </span>
-            </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-              Forms & Templates
-            </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-              Download official forms and document templates required for your organization's compliance with PCYDO.
-            </p>
-          </div>
-
-          {/* Cards + view all */}
-          <div className="flex flex-col gap-2 sm:gap-[8px]">
-            <div className="hidden justify-end sm:flex">
-              <Link
-                to="/public-templates"
-                className="flex items-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
-              >
-                View all <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            {featuredTemplates.length > 0 ? (
-              <>
-                {/* Mobile Template Cards (Strictly preserved) */}
-                <div className="grid gap-3 py-1 sm:hidden">
-                  {featuredTemplates.map((template) => {
-                    const isOpening = openingTemplateId === template.name;
-                    const isDownloading = downloadingTemplateId === template.name;
-                    const viewDisabled = !template.templateFileUrl || isOpening;
-                    const dlDisabled = !template.templateFileUrl || isDownloading;
-
-                    return (
-                      <div
-                        key={`mobile-${template.id}`}
-                        className="relative flex flex-col gap-2.5 rounded-xl border border-[#DCE4F0] bg-white p-3.5 shadow-public-nav"
-                      >
-                        {/* Header with Document Icon and Title */}
-                        <div className="flex items-start gap-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF7FE] p-1.5">
-                            <FileText className="h-4 w-4 text-[#0E2F66]" />
-                          </div>
-                          <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-                            <h3 className="font-segoe font-bold leading-snug tracking-[-0.02em] text-[#0E2F66] text-base break-words">
-                              {template.name}
-                            </h3>
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        <p className="font-segoe font-normal leading-relaxed text-left text-[#64748B] text-sm line-clamp-2 break-words">
-                          {template.description || "Official template published by PCYDO."}
-                        </p>
-
-                        {/* Buttons */}
-                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#DCE4F0]">
-                          <button
-                            type="button"
-                            disabled={viewDisabled}
-                            onClick={() => void openTemplate(template.templateFileUrl, template.name)}
-                            className="h-8 flex flex-1 items-center justify-center gap-1 rounded-lg border border-[#0E2F66] bg-white px-2 py-1.5 font-segoe text-sm font-semibold text-[#0E2F66] transition-colors hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-2xs"
-                          >
-                            {isOpening ? (
-                              <>
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0E2F66]" /> Opening…
-                              </>
-                            ) : (
-                              <>
-                                <Eye className="h-3.5 w-3.5 text-[#0E2F66]" /> View
-                              </>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={dlDisabled}
-                            onClick={() => void downloadTemplate(template.templateFileUrl, template.name)}
-                            className="h-8 flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#0E2F66] px-2 py-1.5 font-segoe text-sm font-semibold text-white transition-colors hover:bg-[#0A234D] disabled:opacity-50 cursor-pointer shadow-2xs"
-                          >
-                            {isDownloading ? (
-                              <>
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-white" /> Downloading…
-                              </>
-                            ) : (
-                              <>
-                                <Download className="h-3.5 w-3.5 text-white" /> Download
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Desktop Template Cards (Redesigned Featured Resources) */}
-                <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 py-2">
-                  {featuredTemplates.map((template) => {
-                    const formattedDate = template.templateUploadedAt
-                      ? `Updated ${new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(template.templateUploadedAt))}`
-                      : "Upload date unavailable";
-                    const isOpening = openingTemplateId === template.name;
-                    const isDownloading = downloadingTemplateId === template.name;
-                    const viewDisabled = !template.templateFileUrl || isOpening;
-                    const dlDisabled = !template.templateFileUrl || isDownloading;
-
-                    return (
-                      <div
-                        key={`desktop-${template.id}`}
-                        className="group relative flex flex-col justify-between h-full rounded-2xl border border-[#DCE4F0] bg-white p-6 transition-all duration-200 hover:border-public-border-brand/50 hover:shadow-md hover:shadow-slate-200/60"
-                      >
-                        {/* Top Content: [Document Icon] Template Name, Updated date, Description */}
-                        <div className="flex flex-col gap-3">
-                          {/* Header Row: Document Icon immediately beside Template Name */}
-                          <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF7FE] text-[#0E2F66] border border-[#DCE4F0]/60 transition-colors group-hover:bg-[#E1EFFE] mt-0.5">
-                              <FileText className="h-5 w-5 text-[#0E2F66]" />
-                            </div>
-                            <h3 className="font-segoe text-lg font-bold leading-snug tracking-[-0.01em] text-[#0E2F66] group-hover:text-public-text-brand transition-colors break-words">
-                              {template.name}
-                            </h3>
-                          </div>
-
-                          {/* Updated date */}
-                          <p className="font-segoe text-xs font-normal text-public-text-secondary">
-                            {formattedDate}
-                          </p>
-
-                          {/* Description */}
-                          <p className="font-segoe text-sm leading-relaxed text-slate-600 line-clamp-3">
-                            {template.description || "Official template published by PCYDO."}
-                          </p>
-                        </div>
-
-                        {/* Action Buttons: View (secondary outline) + Download (primary solid) */}
-                        <div className="mt-6 pt-4 border-t border-[#E8EEF5] flex items-center gap-3">
-                          <button
-                            type="button"
-                            disabled={viewDisabled}
-                            onClick={() => void openTemplate(template.templateFileUrl, template.name)}
-                            className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-public-border-brand bg-white px-3 py-2.5 font-segoe text-sm font-semibold text-public-text-brand transition-all hover:bg-public-bg-brand-subtle active:bg-slate-100 disabled:opacity-50 cursor-pointer"
-                          >
-                            {isOpening ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin text-public-text-brand" />
-                                <span>Opening…</span>
-                              </>
-                            ) : (
-                              <>
-                                <Eye className="h-4 w-4 text-public-text-brand" />
-                                <span>View</span>
-                              </>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={dlDisabled}
-                            onClick={() => void downloadTemplate(template.templateFileUrl, template.name)}
-                            className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-public-bg-brand px-3 py-2.5 font-segoe text-sm font-semibold text-white transition-all hover:bg-public-bg-brand-hover active:bg-[#071936] disabled:opacity-50 cursor-pointer shadow-xs"
-                          >
-                            {isDownloading ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin text-white" />
-                                <span>Downloading…</span>
-                              </>
-                            ) : (
-                              <>
-                                <Download className="h-4 w-4 text-white" />
-                                <span>Download</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : null}
-            <div className="flex pt-1.5 sm:hidden">
-              <Link
-                to="/public-templates"
-                className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-public-border-brand px-3 py-2.5 sm:px-[12px] sm:py-[12px] font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
-              >
-                View all <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
       {/* Help Center */}
-      <section className="bg-public-bg-section px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+      <section className="bg-white px-4 py-7 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-5 sm:gap-6 lg:gap-[24px] xl:flex-row xl:items-center">
 
           {/* Left column */}
@@ -617,7 +329,7 @@ const Index = () => {
               Frequently Asked Questions
             </h2>
             <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-              Quick answers to the most common questions about using the PCYDO portal.
+              Find answers to common questions about PCYDO services and the Y-TRACE portal.
             </p>
           </div>
 
@@ -650,18 +362,16 @@ const Index = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="bg-white px-3.5 py-7 sm:px-6 sm:py-12 lg:px-[10px] lg:py-[96px]">
+      <section className="bg-public-bg-section px-3.5 py-7 sm:px-6 sm:py-12 lg:px-[10px] lg:py-[96px]">
         <div className="public-hero-gradient mx-auto flex w-full max-w-[1090px] flex-col items-center gap-5 sm:gap-6 lg:gap-[32px] rounded-xl sm:rounded-[16px] px-4 py-7 sm:px-[32px] sm:py-[64px] shadow-public-overview-card lg:px-[64px] lg:py-[160px]">
 
           {/* Title group */}
           <div className="flex w-full flex-col items-center gap-2.5 sm:gap-4 lg:gap-[24px] p-1 sm:p-[10px] text-center">
             <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-[22px] sm:text-public-fs-title-page">
-              Ready to get started
-              <br className="sm:hidden" />
-              {" "}with PCYDO?
+              Get Started with Y-TRACE
             </h2>
             <p className="font-segoe font-medium sm:font-semibold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm">
-              Join the growing community of youth organizations in Pasig City.
+              Access the Y-TRACE Portal to manage your organization's registration, submit requirements, track compliance, and participate in PCYDO-administered programs.
             </p>
           </div>
 
@@ -696,10 +406,10 @@ const Index = () => {
               </span>
             </div>
             <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-              Get in Touch with PCYDO
+              Get in Touch
             </h2>
             <p className="font-segoe font-normal leading-normal text-public-text-secondary text-sm sm:text-public-fs-body-sm max-w-xl">
-              Connect with the Pasig City Youth Development Office for accreditation inquiries, compliance assistance, and youth program support.
+              For inquiries regarding services provided by the Pasig City Youth Development Office (PCYDO), please contact the office through its official communication channels.
             </p>
           </div>
 
@@ -728,7 +438,9 @@ const Index = () => {
                 Official Email
               </p>
               <a
-                href={`mailto:${officialEmail}`}
+                href={gmailComposeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-segoe text-sm sm:text-base font-semibold leading-snug text-public-text-brand hover:underline break-all"
               >
                 {officialEmail}
@@ -761,7 +473,9 @@ const Index = () => {
               <span>View Contact Page</span>
             </Link>
             <a
-              href={`mailto:${officialEmail}`}
+              href={gmailComposeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 font-segoe text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 active:scale-[0.98]"
             >
               <Mail className="h-4 w-4" />
@@ -771,34 +485,6 @@ const Index = () => {
 
         </div>
       </section>
-
-      <PortalDocumentDrawer
-        open={drawerOpen}
-        onOpenChange={(open) => {
-          setDrawerOpen(open);
-          if (!open) {
-            setPreviewUrl("");
-            setPreviewTitle("");
-            setPreviewEmptyMessage("");
-            setPreviewCanInline(false);
-          }
-        }}
-        mode="template"
-        previewUrl={previewUrl}
-        previewTitle={previewTitle}
-        templateTitle={previewTitle}
-        templateFileName={previewTitle}
-        previewCanInline={previewCanInline}
-        previewEmptyMessage={previewEmptyMessage}
-        organizationName="PCYDO"
-        downloading={Boolean(downloadingTemplateId)}
-        onDownloadFile={downloadTemplate}
-        onOpenInNewTab={(url) => {
-          if (url) {
-            window.open(url, "_blank", "noopener,noreferrer");
-          }
-        }}
-      />
 
       <Footer />
     </div>
