@@ -14,6 +14,9 @@ import Contacts from "@/pages/Contacts";
 import { PwaContactPage } from "@/user/pwa/PwaInformationPages";
 import { supabase } from "@/lib/supabase";
 
+const gmailComposeHref = (email: string) =>
+  `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
+
 vi.mock("@/components/public/YTracePromotionalVideo", () => ({ default: () => null }));
 
 vi.mock("react-leaflet", () => ({
@@ -97,7 +100,7 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     const emailLinks = screen.getAllByRole("link", { name: "lydo@pasigcity.gov.ph" });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
     emailLinks.forEach((link) => {
-      expect(link).toHaveAttribute("href", "mailto:lydo@pasigcity.gov.ph");
+      expect(link).toHaveAttribute("href", gmailComposeHref("lydo@pasigcity.gov.ph"));
     });
 
     expect(screen.getByText("Office Hours")).toBeInTheDocument();
@@ -105,7 +108,7 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     expect(screen.getByText("Fri – Sun: Closed")).toBeInTheDocument();
   });
 
-  it("renders dynamic email in Footer with mailto link without contact number", () => {
+  it("renders dynamic email in Footer with the official compose link without contact number", () => {
     render(
       <BrowserRouter>
         <Footer />
@@ -118,7 +121,7 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     const emailLinks = screen.getAllByRole("link", { name: "lydo@pasigcity.gov.ph" });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
     emailLinks.forEach((link) => {
-      expect(link).toHaveAttribute("href", "mailto:lydo@pasigcity.gov.ph");
+      expect(link).toHaveAttribute("href", gmailComposeHref("lydo@pasigcity.gov.ph"));
     });
   });
 
