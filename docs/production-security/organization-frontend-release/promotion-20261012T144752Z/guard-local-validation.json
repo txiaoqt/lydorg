@@ -1,0 +1,23 @@
+{
+  "capturedAt": "2026-10-12T15:00:32.726Z",
+  "status": "PASS",
+  "checks": 13,
+  "assertions": [
+    "Exact permitted request uses zero retries and bounded timeout",
+    "Second promotion invocation never dispatched",
+    "Wrong project blocked before transport",
+    "Wrong deployment blocked before transport",
+    "Query override blocked before transport",
+    "Nonempty body blocked before transport",
+    "New deployment operation blocked before transport",
+    "Other mutation method blocked before transport",
+    "Wrong origin blocked before transport",
+    "Wrong account blocked before transport",
+    "Wrong current team blocked before transport",
+    "Read-only provider observation does not consume attempt",
+    "Ambiguous response cannot cause resubmission"
+  ],
+  "realProviderRequests": 0,
+  "evidenceType": "LOCAL_MOCKED_TRANSPORT_GUARD",
+  "guardSha256": "7bf19d58ca0ce312f49e94adaa2df036c0af01aef96eed4d460b9a4a8a8f19a4"
+}

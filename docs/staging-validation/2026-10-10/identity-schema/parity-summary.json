@@ -1,0 +1,7 @@
+{
+  "tablesExact": true,
+  "functionsExact": true,
+  "schemaExact": true,
+  "allCatalogFieldsExact": true,
+  "intentionalDifferences": []
+}

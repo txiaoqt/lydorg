@@ -1,0 +1,132 @@
+[
+  {
+    "directory": "tmp/performance-after",
+    "jsChunkCount": 39,
+    "initialStaticJs": [
+      {
+        "file": "assets/index-BuLHGVav.js",
+        "bytes": 1240805,
+        "gzipBytes": 333482
+      }
+    ],
+    "initialBytes": 1240805,
+    "initialGzipBytes": 333482,
+    "largestChunks": [
+      {
+        "file": "assets/AdminPortal-D3MWmA37.js",
+        "bytes": 2857628,
+        "gzipBytes": 940744
+      },
+      {
+        "file": "assets/index-BuLHGVav.js",
+        "bytes": 1240805,
+        "gzipBytes": 333482
+      },
+      {
+        "file": "assets/exceljs.min-CwEfcvc4.js",
+        "bytes": 938989,
+        "gzipBytes": 270956
+      },
+      {
+        "file": "assets/sheet-ZEjjvx06.js",
+        "bytes": 550344,
+        "gzipBytes": 166312
+      },
+      {
+        "file": "assets/UserPortal-C1z1MdV8.js",
+        "bytes": 406163,
+        "gzipBytes": 80414
+      },
+      {
+        "file": "assets/AccountSuspendedScreen-CShpqlXm.js",
+        "bytes": 217033,
+        "gzipBytes": 51180
+      },
+      {
+        "file": "assets/html2canvas.esm-CBrSDip1.js",
+        "bytes": 202301,
+        "gzipBytes": 48033
+      },
+      {
+        "file": "assets/PwaUserPortal-DVEvCXAO.js",
+        "bytes": 168192,
+        "gzipBytes": 43008
+      },
+      {
+        "file": "assets/leaflet-BAdwPHYw.js",
+        "bytes": 153651,
+        "gzipBytes": 44882
+      },
+      {
+        "file": "assets/index.es-i5X6Ged4.js",
+        "bytes": 151464,
+        "gzipBytes": 51960
+      }
+    ]
+  },
+  {
+    "directory": "tmp/readiness-build",
+    "jsChunkCount": 39,
+    "initialStaticJs": [
+      {
+        "file": "assets/index-Fhu7jQhY.js",
+        "bytes": 1243519,
+        "gzipBytes": 334592
+      }
+    ],
+    "initialBytes": 1243519,
+    "initialGzipBytes": 334592,
+    "largestChunks": [
+      {
+        "file": "assets/AdminPortal-DmD2Sx2y.js",
+        "bytes": 2857628,
+        "gzipBytes": 940745
+      },
+      {
+        "file": "assets/index-Fhu7jQhY.js",
+        "bytes": 1243519,
+        "gzipBytes": 334592
+      },
+      {
+        "file": "assets/exceljs.min-jy2LzOUI.js",
+        "bytes": 938989,
+        "gzipBytes": 270957
+      },
+      {
+        "file": "assets/sheet-mQXk85Tv.js",
+        "bytes": 550344,
+        "gzipBytes": 166312
+      },
+      {
+        "file": "assets/UserPortal-CAABn8KC.js",
+        "bytes": 406163,
+        "gzipBytes": 80416
+      },
+      {
+        "file": "assets/AccountSuspendedScreen-Cc-zHArK.js",
+        "bytes": 217033,
+        "gzipBytes": 51179
+      },
+      {
+        "file": "assets/html2canvas.esm-CBrSDip1.js",
+        "bytes": 202301,
+        "gzipBytes": 48033
+      },
+      {
+        "file": "assets/PwaUserPortal-jSwGvuqB.js",
+        "bytes": 168192,
+        "gzipBytes": 43008
+      },
+      {
+        "file": "assets/leaflet-BXi25DdW.js",
+        "bytes": 153651,
+        "gzipBytes": 44882
+      },
+      {
+        "file": "assets/index.es-ywAaLFe3.js",
+        "bytes": 151464,
+        "gzipBytes": 51960
+      }
+    ]
+  }
+]

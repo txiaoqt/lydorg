@@ -1,0 +1,239 @@
+{
+  "engineVersion": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+  "functions": [
+    {
+      "signature": "admin_approve_renewal(text,uuid,text,text)",
+      "productionMd5": "33ba7c606820f771e4ed79709bcd188b",
+      "localMd5": "33ba7c606820f771e4ed79709bcd188b",
+      "match": true
+    },
+    {
+      "signature": "admin_cleanup_yorp_sample_dataset(text,text)",
+      "productionMd5": "804caabb51c48bde392768971a9b6c91",
+      "localMd5": "804caabb51c48bde392768971a9b6c91",
+      "match": true
+    },
+    {
+      "signature": "admin_ensure_renewal_test_account_profile(text)",
+      "productionMd5": "e08abef51274c58a5202440fd5242eb1",
+      "localMd5": "e08abef51274c58a5202440fd5242eb1",
+      "match": true
+    },
+    {
+      "signature": "admin_get_or_create_renewal_test_account(text)",
+      "productionMd5": "1fe788c8e9983ecc49a925e76f1cd6c9",
+      "localMd5": "1fe788c8e9983ecc49a925e76f1cd6c9",
+      "match": true
+    },
+    {
+      "signature": "admin_get_yorp_sample_dataset_status(text,text)",
+      "productionMd5": "4b274df3cba7af260c503260e9fc92f2",
+      "localMd5": "4b274df3cba7af260c503260e9fc92f2",
+      "match": true
+    },
+    {
+      "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+      "productionMd5": "037a3b0b0844a38619f6ce768cb3372b",
+      "localMd5": "037a3b0b0844a38619f6ce768cb3372b",
+      "match": true
+    },
+    {
+      "signature": "admin_reset_renewal_test_scenario(text)",
+      "productionMd5": "8ce7c63826f845120f0616bf3faa2324",
+      "localMd5": "8ce7c63826f845120f0616bf3faa2324",
+      "match": true
+    },
+    {
+      "signature": "admin_restore_renewal_test_scenario(text)",
+      "productionMd5": "d83a26a06867d1b2d1f21027d3e4c6f0",
+      "localMd5": "d83a26a06867d1b2d1f21027d3e4c6f0",
+      "match": true
+    },
+    {
+      "signature": "admin_seed_renewal_test_registration_documents(text)",
+      "productionMd5": "a3e4de38869718a570b7e6b8b2e22d1f",
+      "localMd5": "a3e4de38869718a570b7e6b8b2e22d1f",
+      "match": true
+    },
+    {
+      "signature": "admin_seed_yorp_sample_dataset_core(text,text)",
+      "productionMd5": "33ccae7f636011a5e2a3310035fdc0a0",
+      "localMd5": "33ccae7f636011a5e2a3310035fdc0a0",
+      "match": true
+    },
+    {
+      "signature": "admin_seed_yorp_sample_dataset(text,text)",
+      "productionMd5": "b6e376ab185fbe42cc4cd2da3b14c874",
+      "localMd5": "b6e376ab185fbe42cc4cd2da3b14c874",
+      "match": true
+    },
+    {
+      "signature": "calculate_organization_renewal_eligibility(uuid)",
+      "productionMd5": "6c46228859ad6e8163988ecbf2db6877",
+      "localMd5": "6c46228859ad6e8163988ecbf2db6877",
+      "match": true
+    },
+    {
+      "signature": "delete_organization_account_canonical(text,uuid)",
+      "productionMd5": "5c1f0179b9f279eb7a99ff9ee8627c3f",
+      "localMd5": "5c1f0179b9f279eb7a99ff9ee8627c3f",
+      "match": true
+    },
+    {
+      "signature": "diversify_yorp_seed_projects_and_budgets()",
+      "productionMd5": "8e784def2e544f558c0a87cd718204cb",
+      "localMd5": "8e784def2e544f558c0a87cd718204cb",
+      "match": true
+    },
+    {
+      "signature": "enforce_accreditation_immutability()",
+      "productionMd5": "5ea02f1e637d463c4df2e3c7e333aa4b",
+      "localMd5": "5ea02f1e637d463c4df2e3c7e333aa4b",
+      "match": true
+    },
+    {
+      "signature": "enforce_renewal_terminal_immutability()",
+      "productionMd5": "bdafdef3fded73e5816c199a5ede36c7",
+      "localMd5": "bdafdef3fded73e5816c199a5ede36c7",
+      "match": true
+    },
+    {
+      "signature": "evaluate_and_apply_automatic_registration_verification(uuid,uuid)",
+      "productionMd5": "f45c470966f52bbb18132666ce3e17ae",
+      "localMd5": "f45c470966f52bbb18132666ce3e17ae",
+      "match": true
+    },
+    {
+      "signature": "guard_historical_organization_owner()",
+      "productionMd5": "9568bb785b8d832a58e1acc894d74610",
+      "localMd5": "9568bb785b8d832a58e1acc894d74610",
+      "match": true
+    },
+    {
+      "signature": "guard_organization_identity_privileges()",
+      "productionMd5": "3a0fa47c620efc033eec091090bbee1c",
+      "localMd5": "3a0fa47c620efc033eec091090bbee1c",
+      "match": true
+    },
+    {
+      "signature": "guard_renewal_test_registration_packet_immutable()",
+      "productionMd5": "82fe24048d3d32b9c3643409873441ea",
+      "localMd5": "82fe24048d3d32b9c3643409873441ea",
+      "match": true
+    },
+    {
+      "signature": "guard_retained_organization_deletion()",
+      "productionMd5": "4dd28db38030a73ee633b024e78db340",
+      "localMd5": "4dd28db38030a73ee633b024e78db340",
+      "match": true
+    },
+    {
+      "signature": "guard_submitted_registration_document_edits()",
+      "productionMd5": "c6265ae36e8db8678de7a4e69691008e",
+      "localMd5": "c6265ae36e8db8678de7a4e69691008e",
+      "match": true
+    },
+    {
+      "signature": "hard_delete_admin_template_document(text,uuid)",
+      "productionMd5": "36de9fc3fb6c5ad090579f3261f77bbf",
+      "localMd5": "36de9fc3fb6c5ad090579f3261f77bbf",
+      "match": true
+    },
+    {
+      "signature": "is_development_or_test_environment()",
+      "productionMd5": "683db5c6c05d3012f8b9bb36398f61b9",
+      "localMd5": "683db5c6c05d3012f8b9bb36398f61b9",
+      "match": true
+    },
+    {
+      "signature": "promote_renewal_submission_files_for_review()",
+      "productionMd5": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+      "localMd5": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+      "match": true
+    },
+    {
+      "signature": "rebalance_yorp_seed_reporting_quarters()",
+      "productionMd5": "e486017358c8e1f9264752f8ef5cdbe9",
+      "localMd5": "e486017358c8e1f9264752f8ef5cdbe9",
+      "match": true
+    },
+    {
+      "signature": "repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+      "productionMd5": "7121da46bd1bf383ab352d49eda2235a",
+      "localMd5": "7121da46bd1bf383ab352d49eda2235a",
+      "match": true
+    },
+    {
+      "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+      "productionMd5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "localMd5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "match": true
+    },
+    {
+      "signature": "set_updated_at()",
+      "productionMd5": "8de7ae383447503e8949149bfb3f0efb",
+      "localMd5": "8de7ae383447503e8949149bfb3f0efb",
+      "match": true
+    },
+    {
+      "signature": "sync_organization_accreditation_projection()",
+      "productionMd5": "d9d4d85fbc26cee78618d591073393b7",
+      "localMd5": "d9d4d85fbc26cee78618d591073393b7",
+      "match": true
+    },
+    {
+      "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+      "productionMd5": "252754fd75505948c26afe27f6b0b760",
+      "localMd5": "252754fd75505948c26afe27f6b0b760",
+      "match": true
+    },
+    {
+      "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+      "productionMd5": "59370b100efed37d5975dc16983d786a",
+      "localMd5": "59370b100efed37d5975dc16983d786a",
+      "match": true
+    },
+    {
+      "signature": "user_resubmit_renewal(uuid)",
+      "productionMd5": "d19a1d0415f3eb900bab7dea241f0b21",
+      "localMd5": "d19a1d0415f3eb900bab7dea241f0b21",
+      "match": true
+    },
+    {
+      "signature": "user_start_or_get_renewal_draft(uuid)",
+      "productionMd5": "52bbac2146c7a9473898fb1b6b8908c8",
+      "localMd5": "52bbac2146c7a9473898fb1b6b8908c8",
+      "match": true
+    },
+    {
+      "signature": "user_submit_renewal(uuid)",
+      "productionMd5": "d41b680681db2323aba2c62693f59131",
+      "localMd5": "d41b680681db2323aba2c62693f59131",
+      "match": true
+    },
+    {
+      "signature": "validate_admin_session_token(text)",
+      "productionMd5": "50d5dcf06885fa593fe5355fc8892d69",
+      "localMd5": "50d5dcf06885fa593fe5355fc8892d69",
+      "match": true
+    },
+    {
+      "signature": "ytrace_production_containment.freeze_fixture_markers()",
+      "productionMd5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "localMd5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "match": true
+    },
+    {
+      "signature": "ytrace_identity.authorize_reviewer(text)",
+      "productionMd5": "0f5766e8fe835c30681dab0ea86571db",
+      "localMd5": "0f5766e8fe835c30681dab0ea86571db",
+      "match": true
+    },
+    {
+      "signature": "ytrace_identity.has_retained_history(uuid)",
+      "productionMd5": "608aaefe8b604986f752ea289ebed5f5",
+      "localMd5": "608aaefe8b604986f752ea289ebed5f5",
+      "match": true
+    }
+  ]
+}

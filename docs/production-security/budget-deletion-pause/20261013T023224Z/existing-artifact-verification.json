@@ -1,0 +1,300 @@
+{
+  "status": "PASS",
+  "recordedAt": "2026-10-13T02:33:22.789Z",
+  "priorArtifactsVerified": 58,
+  "runtimeIdentitiesVerified": 7,
+  "sqlUnchanged": true,
+  "originalCutoverUnchanged": true,
+  "results": [
+    {
+      "path": "admin-frontend-release-plan.md",
+      "status": "PASS",
+      "sha256": "bf9ed009748773b8eebb4406d6f7e4f7ce1ccffe1f18f5d964bd03d95bfbe7cf"
+    },
+    {
+      "path": "admin-release-overlay/src/admin/AdminPortal.tsx",
+      "status": "PASS",
+      "sha256": "0264f74666ffc03317da7f9ddbed3038a15589ce1e5804a533f71847844a5945"
+    },
+    {
+      "path": "admin-release-overlay/src/admin/components/BudgetRequestsTable.tsx",
+      "status": "PASS",
+      "sha256": "7099dc549c5764641698c58979974f746653d793163f7f334890a93d8e0de9dd"
+    },
+    {
+      "path": "admin-release-overlay/src/lib/admin-budget-deletion-pause.ts",
+      "status": "PASS",
+      "sha256": "fb8764d9d004e2cedcf6cb643a5a9d258985d071c9cabbf4ef4348debaa34225"
+    },
+    {
+      "path": "admin-release-overlay/src/lib/lydo-connect-supabase.ts",
+      "status": "PASS",
+      "sha256": "1575e18e2e9e90288d8b37e3ecd1c44a7911b20c569fa3581d47ae9870b527ca"
+    },
+    {
+      "path": "budget_deletion_pause_production.sql",
+      "status": "PASS",
+      "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+    },
+    {
+      "path": "build-pause-candidate.mjs",
+      "status": "PASS",
+      "sha256": "b8b484899b68fe6a7aeb6108b28cbe4d59f176eb76090aa732dbba75d36948cd"
+    },
+    {
+      "path": "candidate-manifest.json",
+      "status": "PASS",
+      "sha256": "1bcb9321e6efb4a3d00716cab1c2aa9a44fd761e32858e0ab24710bff306b606"
+    },
+    {
+      "path": "captured-functions.json",
+      "status": "PASS",
+      "sha256": "63668e8099a65ef93deba086c0ed93f0f29e9c9d90870687fbfe4974b08fc6fa"
+    },
+    {
+      "path": "catalog-readonly.json",
+      "status": "PASS",
+      "sha256": "090ea2e54c1f39ca118a33ac015ff941ce56e1961cb1330266da773df91938eb"
+    },
+    {
+      "path": "compare-typescript.mjs",
+      "status": "PASS",
+      "sha256": "a56e0ebdb55d961a6ecf0895a2745ea419ff0c48a986b8cf7cae00f31bd4fcb3"
+    },
+    {
+      "path": "final-artifact-check.mjs",
+      "status": "PASS",
+      "sha256": "a13a8b2db187b989ce20634536849e055f6ef8567886d6c0c22ada69f268d4e2"
+    },
+    {
+      "path": "frontend-overlay-identities.json",
+      "status": "PASS",
+      "sha256": "b97c945ba7eaf5c66f6edac80db23bce42c9d08bde7028429f58fc62090c9efb"
+    },
+    {
+      "path": "frontend-tests-first.log",
+      "status": "PASS",
+      "sha256": "70014ed40cc12c3477cdd1ab02c94435e827869a8e486e000ec0c43ace4683bb"
+    },
+    {
+      "path": "full-diff-check.log",
+      "status": "PASS",
+      "sha256": "c24d6e61a8ec69fc9d5b9e43f132d87a9e267ab075adca69ab16f6040ec3721f"
+    },
+    {
+      "path": "future-cutover-gates-proposal.sql",
+      "status": "PASS",
+      "sha256": "f77ceae769301affc2b8150db1bf922fbbaf3ee4db6f20a65939d95495ab5f8c"
+    },
+    {
+      "path": "future-cutover-gates.json",
+      "status": "PASS",
+      "sha256": "8773a887332749c8f9b3f79621113ffb1ad620b97ab4e04eaa364a77636c7330"
+    },
+    {
+      "path": "isolated-admin-build.log",
+      "status": "PASS",
+      "sha256": "e119ec770592209366314c3a6174e3d72bf10e8e434d31ab06732f6429638350"
+    },
+    {
+      "path": "isolated-admin-typescript.log",
+      "status": "PASS",
+      "sha256": "ca86b633640e97027b8b19b408e9645c76a29990c4a68f7710daa9fed84a2e31"
+    },
+    {
+      "path": "isolated-base-typescript.log",
+      "status": "PASS",
+      "sha256": "52a95613e2119f03ec59333c74766f9c627584b0265a76310cfc6a8514c573b8"
+    },
+    {
+      "path": "isolated-build-results.json",
+      "status": "PASS",
+      "sha256": "7460fa130f9dee965916ae8bdea8754ee48b8ba333e3ce4ba2fd820649028a90"
+    },
+    {
+      "path": "isolated-generated-inventory.json",
+      "status": "PASS",
+      "sha256": "3f44a3dd3cf7aff7f936d425a02646e9f4e0351764827b087c0d5fe7e5a7dff3"
+    },
+    {
+      "path": "local-schema-inputs.json",
+      "status": "PASS",
+      "sha256": "4d70bd4411b0b84bdaa1d41d768f84b26c5aa3228ef685bb6b03dc22110e7b2b"
+    },
+    {
+      "path": "operator-checklist.md",
+      "status": "PASS",
+      "sha256": "04661396ee3019c78444f6d897bb8132bea025797ea102777e6271a920081758"
+    },
+    {
+      "path": "original-92-preservation-readonly.json",
+      "status": "PASS",
+      "sha256": "91e524853ddaffc65e95ae26f5d853229dcdf643d54f12827a578c768eb8d30f"
+    },
+    {
+      "path": "original-92-preservation-readonly.sql",
+      "status": "PASS",
+      "sha256": "99c296bbac0e5ebfca59eaa263e246a31d9871e14283266279b79a186f2645d3"
+    },
+    {
+      "path": "original-local-identities.json",
+      "status": "PASS",
+      "sha256": "09d2d4b88cb14909312c745245d318be775031ff64af38677563304dae7595b7"
+    },
+    {
+      "path": "original-local/src/admin/AdminPortal.tsx",
+      "status": "PASS",
+      "sha256": "0ab2356753e5fa569ba9918988d4277e2a73fd7b03cadd69e522644cf6d8c7ee"
+    },
+    {
+      "path": "original-local/src/admin/components/BudgetRequestsTable.tsx",
+      "status": "PASS",
+      "sha256": "5b2a471d17811f34ad076e18897b7b1a68238fa66eafcf7a3973d703f65b50fe"
+    },
+    {
+      "path": "original-local/src/admin/components/BudgetRequestsTableSelection.test.tsx",
+      "status": "PASS",
+      "sha256": "d2ba6b9f726ad94e32a2a2253353a796245039960ad7f0a5f7032e98d2e768b6"
+    },
+    {
+      "path": "original-local/src/lib/admin-budget-request-deletion.test.ts",
+      "status": "PASS",
+      "sha256": "61cc70a243a5aa2423f9b10d3d5cd1cdf1648c8c6e4b4a927087f627f86886be"
+    },
+    {
+      "path": "original-local/src/lib/lydo-connect-supabase.ts",
+      "status": "PASS",
+      "sha256": "c3a8b445e51178c061407b8f60d6793093769e6943514149f6346dcd8c386353"
+    },
+    {
+      "path": "pause-body.sql",
+      "status": "PASS",
+      "sha256": "6cf0eeb22303d1c9d9b59596cb28c2845370d960f06b6e7d4ca66df13a97c24a"
+    },
+    {
+      "path": "post-install-readonly.sql",
+      "status": "PASS",
+      "sha256": "5f226308872e2e613b07a93a9c6fdebfb52392532dafd3b4d84987099f621465"
+    },
+    {
+      "path": "pre-install-readonly-result.json",
+      "status": "PASS",
+      "sha256": "5133f8ed107c0884b1bbae1966268b70eaaf716bc01f26cad87773cefb22f750"
+    },
+    {
+      "path": "pre-install-readonly.sql",
+      "status": "PASS",
+      "sha256": "0feb7b7510621ec3c06e2ee12e751bd1982ef9d5070d5a3be70aceaecba66384"
+    },
+    {
+      "path": "prepare-inputs.mjs",
+      "status": "PASS",
+      "sha256": "928f786c23ec22a27b6d12df3cc82f3a9c520cee4d49da7a8e11c452df40fc8b"
+    },
+    {
+      "path": "prepare-readonly-verifiers.mjs",
+      "status": "PASS",
+      "sha256": "e2e76da20d237a728529e484000f59d64b372efa69bece38dea54e399e5161b5"
+    },
+    {
+      "path": "prepare-ui.mjs",
+      "status": "PASS",
+      "sha256": "57a12c812758b48396b430165a91b44a4b2584f029711486e46df6ac89583969"
+    },
+    {
+      "path": "preservation-baseline-proposal.json",
+      "status": "PASS",
+      "sha256": "7b05f965c1b0d53b0eea6a72e8b24e4aed0887cea22761ee755976aa39864c37"
+    },
+    {
+      "path": "profile-associated-preservation-readonly.json",
+      "status": "PASS",
+      "sha256": "baf929fd0d90b5920969d4d196dae246eaf9c58fbc57a90c36a244c4775c5f32"
+    },
+    {
+      "path": "profile-reconciliation-readonly.json",
+      "status": "PASS",
+      "sha256": "0a66aff5c46bb1b41655484df05b9c3698110fa05b0f63230da5f5995cd7e7d4"
+    },
+    {
+      "path": "profile-reconciliation-readonly.sql",
+      "status": "PASS",
+      "sha256": "5b7f02a3d997d1b890b084cc89e501a632f2ee5f35a899ba17b37f2c1f53ffd7"
+    },
+    {
+      "path": "protected-data-readonly.json",
+      "status": "PASS",
+      "sha256": "2575aaa3634b4acb4b4d2782689d84d6a46d1ab7494237aa6449ce4dc86a74cc"
+    },
+    {
+      "path": "recent-workflow-evidence-readonly.json",
+      "status": "PASS",
+      "sha256": "f8cc74469ce1365cdc30c2aa0fb828db67fad26bce8441febd636699b43ec1ec"
+    },
+    {
+      "path": "recent-workflow-evidence-readonly.sql",
+      "status": "PASS",
+      "sha256": "d85d3e52f0abfd04e23e0fccb2e0819cc9e6885aaace3886eaff2d52440f0af4"
+    },
+    {
+      "path": "retention-decisions.md",
+      "status": "PASS",
+      "sha256": "a2b7f0f61865ddf683995cd4335af446d8ef67cca9cf047c9c12e9f2354fc2cf"
+    },
+    {
+      "path": "review.md",
+      "status": "PASS",
+      "sha256": "d5fb2672180ad52f57b1eff75a60fa01da0c8da6c07be0fd13fab3fafacf2209"
+    },
+    {
+      "path": "sql-test-evidence.json",
+      "status": "PASS",
+      "sha256": "35c98704b6d1f8c79c959e23c9d8bb6c5565a04b4a0a35f7bdb0596789acfda9"
+    },
+    {
+      "path": "sql-tests-fifth.tap",
+      "status": "PASS",
+      "sha256": "7fc5e2553cfba5681b686e90600cfc81e70ebe0429f75198471594ba79932945"
+    },
+    {
+      "path": "sql-tests-final.tap",
+      "status": "PASS",
+      "sha256": "4f6b1492d1d36f98c91b12d02647b6a051b59982f7be03d5e83e37659c6ed0c5"
+    },
+    {
+      "path": "sql-tests-first.tap",
+      "status": "PASS",
+      "sha256": "494a87a24bb7513af6de7741e0bd60ac46638164821d3ccc7cf5ddbdce284d86"
+    },
+    {
+      "path": "sql-tests-fourth.tap",
+      "status": "PASS",
+      "sha256": "76efb677910b648608d6acd0460b5035cfb6f98e0f9711b86c4db38168cb9e48"
+    },
+    {
+      "path": "sql-tests-second.tap",
+      "status": "PASS",
+      "sha256": "ad70e34859d5cfdc7cefe53b9af24489c898352d8bd54a091bffb46950a213f5"
+    },
+    {
+      "path": "sql-tests-sixth.tap",
+      "status": "PASS",
+      "sha256": "746093c9e2bcdac7a7ac25c1fbd3c673c1121f8ef101a71559ff76f6a495b4d2"
+    },
+    {
+      "path": "sql-tests-third.tap",
+      "status": "PASS",
+      "sha256": "7e17cea5fc101db17151a1ce8e583dee21f12228fd3283c664cee6cf020acc1c"
+    },
+    {
+      "path": "typescript-comparison.json",
+      "status": "PASS",
+      "sha256": "710a67d0ca5fe88a8c2c95eb3cbf39037248453bdc8fcb2f6194c0c02c3d7f8c"
+    },
+    {
+      "path": "validate-admin-overlay.mjs",
+      "status": "PASS",
+      "sha256": "d769bbe9e248cb7d78301eec4ce975e1e2aa3a7824821fddd577809b860edfdc"
+    }
+  ]
+}

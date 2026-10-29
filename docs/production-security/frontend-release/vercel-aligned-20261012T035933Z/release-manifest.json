@@ -1,0 +1,185 @@
+{
+  "capturedAt": "2026-10-12T04:31:19.731Z",
+  "decision": {
+    "localCandidate": "GO",
+    "productionEnvironmentCandidateWithoutPromotion": "CONDITIONAL GO; separate authorization required",
+    "productionAliasPromotion": "NO-GO pending hosted acceptance and recovery review"
+  },
+  "branch": "ui-refactor",
+  "baseCommit": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "sourceRevision": "sha256:e8ffe3241f7529f4440e8e4cc427254d2cd29da5e1bbcd0d689395431cd5aa8d",
+  "fixedVersion": "1.0.0-admin-storage-rc+20261012035933.vercel24",
+  "target": {
+    "team": "toffs-projects-81b2ce10",
+    "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+    "project": "lydorg",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "domain": "https://y-trace-admin.vercel.app",
+    "productionDeploymentUnchanged": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+    "organizationProjectExcluded": "yorbms_user"
+  },
+  "artifacts": {
+    "source": {
+      "name": "admin-gateway-vercel24-source.zip",
+      "bytes": 15422338,
+      "sha256": "665e7d1f5969eb53cd65592043fbae8b6da21b1f7c83fbd9dfc1cc32f5aeaf6e",
+      "absolutePath": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T035933Z\\revision2\\admin-gateway-vercel24-source.zip"
+    },
+    "staticBuild": {
+      "name": "admin-gateway-vercel24-static-build.zip",
+      "bytes": 11957132,
+      "sha256": "294632f506ea8762f6197622803043c6bd00a2e524753e608eb032b11a29c699",
+      "format": "ordinary Vite static output, NOT Vercel Build Output API",
+      "absolutePath": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T035933Z\\revision2\\admin-gateway-vercel24-static-build.zip"
+    },
+    "inventorySha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d"
+  },
+  "packaging": {
+    "modified": [
+      "package.json",
+      "vercel.json"
+    ],
+    "added": [
+      "scripts/build-admin-release.mjs",
+      "scripts/build-admin-release.test.mjs",
+      "scripts/admin-release-config.json",
+      "requirements.txt"
+    ],
+    "runtimeFilesUnchanged": [
+      {
+        "path": "src/lib/admin-storage-access.ts",
+        "sha256": "c7b5eee5076ad8a4095ed0afbeefc5f42c85ba462200dc14cae8b8c08e198fdb"
+      },
+      {
+        "path": "src/lib/lydo-connect-store.tsx",
+        "sha256": "0e25a810735f13daccc1d5733c44894dc81b2a1f21a390fd1f99e40728d60e8c"
+      },
+      {
+        "path": "src/lib/lydo-connect-supabase.ts",
+        "sha256": "4add5f7330483335a6b6a34fe6bc70da8f46906540d52ca1a1d318a48f35814f"
+      },
+      {
+        "path": "src/lib/query-client.ts",
+        "sha256": "1c4a0e885e83172550fa4a1ef0a47278eaeb19c7aa23b12ea9a51a62a7422b63"
+      },
+      {
+        "path": "src/lib/signed-storage-url-cache.ts",
+        "sha256": "961d9786467553ef0f7b14972db12523f6ac9609b07d610978f734d7d992f883"
+      }
+    ],
+    "npmDependenciesUnchanged": true,
+    "packageLockSha256": "0ef6b3d79ec9ba0d6120a30237d37fccbeff3a70fc541223a24000b686b306bb",
+    "installCommand": "npm ci --include=dev --no-audit --no-fund",
+    "buildCommand": "npm run build",
+    "wrapper": "scripts/build-admin-release.mjs",
+    "providerMetadataNamesDiscarded": 16,
+    "routingAndHeadersSha256": "9c709c6bfb433627e1567a298e2e81b61c296c4dc9045645e8fd68acc3f42255"
+  },
+  "publicConfiguration": {
+    "names": [
+      "VITE_ADMIN_APP_URL",
+      "VITE_DEPLOY_SURFACE",
+      "VITE_SUPABASE_ANON_KEY",
+      "VITE_SUPABASE_URL"
+    ],
+    "sha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+    "parity": "PASS",
+    "serverValuesRequested": false,
+    "standaloneUserPwaFlagRelevant": false
+  },
+  "validation": {
+    "focusedAssertions": {
+      "pass": 91,
+      "fail": 0,
+      "type": "local Vitest mocks/fixtures"
+    },
+    "packagingTests": {
+      "pass": 21,
+      "fail": 0,
+      "type": "Node built-in tests"
+    },
+    "pythonChecks": {
+      "pass": 7,
+      "fail": 0,
+      "runtime": "Windows Python 3.14.3",
+      "evidenceReusedBecausePythonSourcesAndRequirementsUnchanged": true,
+      "python312GrammarAndWindowsDistributionResolution": "PASS",
+      "hostedPythonImportAndInvocation": "NOT TESTED"
+    },
+    "typescript": "PASS",
+    "productionBuilds": 2,
+    "reproduction": {
+      "status": "PASS",
+      "allFilesByteIdentical": true,
+      "freshSourceExtraction": true,
+      "freshNpmCiCount": 2,
+      "dependencyInstallationShared": false,
+      "node": "24.21.0",
+      "npm": "11.19.0",
+      "platform": "Windows x64",
+      "linuxOrProviderReproduction": false
+    },
+    "secretScan": {
+      "status": "PASS",
+      "serviceRoleJwts": 0,
+      "secretApiKeys": 0,
+      "literalAdminSessionTokens": 0,
+      "privateOperatorVariableNames": 0,
+      "publicAnonJwts": 1,
+      "otherProjectPublicJwts": 0,
+      "productionClientOriginPresent": true,
+      "gatewayNamePresent": true,
+      "fixedVersionPresent": true,
+      "stagingOriginPresent": false,
+      "injectedProviderCanaryPresent": false,
+      "limitation": "Bounded literal/pattern scan and clean build environment; not an exhaustive audit of every possible encoding."
+    },
+    "diffCheck": "PASS",
+    "fullRepositorySuite": "NOT TESTED in this task",
+    "linuxToolchain": "BLOCKED; no installed WSL distribution or Docker runtime available",
+    "providerBuild": "NOT TESTED; deployment not authorized"
+  },
+  "pythonDependencyResolution": [
+    {
+      "name": "requests",
+      "version": "2.34.2"
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.4"
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.2"
+    },
+    {
+      "name": "idna",
+      "version": "3.20"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22"
+    }
+  ],
+  "preservation": {
+    "status": "PASS",
+    "originalArchiveHashesVerified": true,
+    "originalCandidateFilesVerified": 557,
+    "rootSnapshotEntries": 4126,
+    "priorMissingEntriesPreserved": 18,
+    "previouslyDocumentedChangesOnly": [
+      "src/lib/admin-storage-resolver.integration.test.ts",
+      "src/lib/lydo-connect-supabase.ts"
+    ],
+    "currentTaskRootApplicationChanges": 0,
+    "privateEnvFilesRead": false
+  },
+  "minorPreparationDiagnostic": "One preliminary Node test command used an incorrect relative executable path; no assertions ran. Corrected invocation and final saved suite both passed 21/21.",
+  "intermediateVariantPreserved": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T035933Z\\admin-gateway-vercel24-source.zip",
+  "deploymentPerformed": false,
+  "supabaseRequestsPerformed": false
+}

@@ -1,0 +1,12 @@
+{
+  "capturedAt": null,
+  "status": "BLOCKED",
+  "inspection": "Computer-use enabled-surface inventory",
+  "enabledBrowsers": ["Codex In-app Browser", "Codex MCP Apps"],
+  "existingBrowserTabs": 0,
+  "enabledNativeApps": 0,
+  "existingSignedInCandidateBrowserAvailable": false,
+  "browserCookiesOrTokensRead": false,
+  "newLoginPerformed": false,
+  "limitation": "This inventory describes controllable surfaces only; it does not assert that no Chrome or Edge installation exists on this machine."
+}

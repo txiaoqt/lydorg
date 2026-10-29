@@ -1,0 +1,23 @@
+{
+  "draftStatus": "NOT_AUTHORIZED_DO_NOT_COPY_TO_OPERATOR_STATE",
+  "version": 1,
+  "approved": false,
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "port": 5432,
+  "database": "postgres",
+  "user": "postgres",
+  "route": "native-pg-direct-tls",
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "sqlBytes": 11945,
+  "runnerBundleSha256": "0b7b75d13cb113c790e6373d304ef4990fd8591c0ebd98e3b7f5ad9a7280a0d9",
+  "caSha256": null,
+  "controlPlaneEvidenceSha256": null,
+  "preflightEvidenceSha256": null,
+  "preflightStateSha256": null,
+  "authorizationReference": null,
+  "approvedAt": null,
+  "expiresAt": null,
+  "exclusiveWindowConfirmed": false,
+  "existingDeletionRequestsDrained": false
+}

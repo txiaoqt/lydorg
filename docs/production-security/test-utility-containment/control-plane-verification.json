@@ -1,0 +1,11 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "projectId": "mqqaykksadotbrghbexz",
+  "name": "lydo-org-focused",
+  "databaseHost": "db.mqqaykksadotbrghbexz.supabase.co",
+  "status": "ACTIVE_HEALTHY",
+  "region": "ap-southeast-2",
+  "readOnly": true,
+  "capturedDate": "2026-10-11",
+  "note": "Fresh management/control-plane metadata only. Future SQL installation still requires its own immediate fixed-project/TLS identity verification."
+}

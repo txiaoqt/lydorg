@@ -1,0 +1,33 @@
+{
+  "capturedAt": "2026-10-12T12:09:46.894Z",
+  "status": "PASS",
+  "reviewType": "Separate archive-based automated verification plus primary-agent manual review; not independent human approval.",
+  "sourceRevision": "sha256:0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+  "sourceZipSha256": "e7d43c8aa7d0d0a2cc42130eafd34ad9b1b5147aeb416aba55349353f7fa33c8",
+  "sourceFiles": 562,
+  "allSevenRuntimeFilesUnchanged": true,
+  "packagingScope": [
+    "package.json",
+    "requirements.txt",
+    "scripts/build-organization-release.mjs",
+    "scripts/build-organization-release.test.mjs",
+    "scripts/organization-release-config.json",
+    "vercel.json"
+  ],
+  "projectAndTeamPinned": true,
+  "adminPackagingIdentityAbsent": true,
+  "environmentProjectionReviewed": true,
+  "authorizationRuntimeUnchanged": true,
+  "apiAndPythonBehaviorPreserved": true,
+  "generatedInventoryReproduced": true,
+  "sourceArchiveRoundtrip": "PASS",
+  "diffChecks": "PASS",
+  "typecheck": "FAIL 651",
+  "reviewedReleaseIntroducedTypeDefects": 0,
+  "providerExecution": "NOT TESTED",
+  "linuxCompatibility": "NOT TESTED",
+  "domainPromotionAuthorized": false,
+  "candidateDecision": "CONDITIONAL GO",
+  "fullPwaReadiness": "NOT CERTIFIED",
+  "storageCutover": "NO-GO"
+}

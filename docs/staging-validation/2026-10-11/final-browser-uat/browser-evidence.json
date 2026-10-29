@@ -1,0 +1,2322 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "startedAt": "2026-10-11T02:17:43.861Z",
+  "browserVersion": "155.0.8059.39",
+  "checks": [
+    {
+      "name": "Org C normal UI login and dashboard",
+      "status": "PASS",
+      "route": "/dashboard",
+      "underReviewRegistration": true
+    },
+    {
+      "name": "Org C registration status and approved peer lock displayed",
+      "status": "PASS",
+      "underReview": 1,
+      "approved": 1,
+      "approvedPeerLocked": true
+    },
+    {
+      "name": "Owner corrected PDF preview",
+      "status": "PASS",
+      "onePageRendered": true,
+      "fileSize": 675,
+      "noPageErrors": true
+    },
+    {
+      "name": "Owner corrected PDF browser download",
+      "status": "PASS",
+      "size": 675,
+      "sha256": "eff909582c12ba82bc1fcdbc8f88a8f8df3f12a1101be978d6ef7cacc19f13a5"
+    },
+    {
+      "name": "Approved peer PDF preview and mobile drawer",
+      "status": "PASS",
+      "width": 390,
+      "scrollWidth": 380,
+      "approvedLocked": true
+    },
+    {
+      "name": "Owner approved peer browser download",
+      "status": "PASS",
+      "size": 672,
+      "sha256": "0ac59676f7aa8053c1fbabfcb5f466f763d6c959eba38ed6e680357ebe1cceb0"
+    },
+    {
+      "name": "Organization UI logout and protected-route redirect",
+      "status": "PASS",
+      "afterConfirmation": true,
+      "route": "/signin"
+    },
+    {
+      "name": "Same-browser account switch C to renewal owner",
+      "status": "PASS",
+      "correctOrganizationDisplayed": true,
+      "previousCFilesAbsent": true
+    },
+    {
+      "name": "Cycle 2 approved renewal displays six locked documents",
+      "status": "PASS",
+      "approved": 6,
+      "revision": 0,
+      "cosmeticIssue": "Five fixtures display Never uploaded despite attached files"
+    },
+    {
+      "name": "Approved renewal PDF browser download",
+      "status": "PASS",
+      "size": 674,
+      "sha256": "67bba8968f41f97923e82f9fcfcf2d90871de9605d1b897ff336d452652a4f0d"
+    },
+    {
+      "name": "Owner session restores after reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Approved renewal PDF preview",
+      "status": "PASS",
+      "fileSize": 674,
+      "pages": 1
+    },
+    {
+      "name": "Same-browser switch renewal owner to Organization B",
+      "status": "PASS",
+      "previousRenewalFilesAbsent": true,
+      "correctUrnVerificationView": true
+    },
+    {
+      "name": "Super Admin normal UI login and registration list",
+      "status": "PASS",
+      "records": 5,
+      "orgCVisible": true
+    },
+    {
+      "name": "Admin Org C original-quality PDF download",
+      "status": "PASS",
+      "size": 675,
+      "sha256": "eff909582c12ba82bc1fcdbc8f88a8f8df3f12a1101be978d6ef7cacc19f13a5"
+    },
+    {
+      "name": "Admin registration review data and bounded download",
+      "status": "PASS",
+      "correctedPdfHashMatched": true,
+      "peerApprovalVisible": true
+    },
+    {
+      "name": "Admin approved renewal review display",
+      "status": "PASS",
+      "sixApproved": true,
+      "terminalVerified": true,
+      "decisionsNotChanged": true
+    }
+  ],
+  "http": [
+    {
+      "phase": "org-c-login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "org-c-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "org-c-dashboard",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "org-c-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "org-c-preview",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "org-c-preview",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "org-c-download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "org-c-approved-preview",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "org-c-approved-preview",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "org-c-mobile-preview",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "org-c-approved-download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-status",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-status",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-status",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-status",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-status",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-status",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "org-c-logout-confirm",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204
+    },
+    {
+      "phase": "org-c-logout-confirm",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-approved-display",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "owner-session-restore",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "renewal-download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "click",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "pwa-shell",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "renewal-owner-logout",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204
+    },
+    {
+      "phase": "renewal-owner-logout",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "account-switch-b",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "b-documents",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "b-logout",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204
+    },
+    {
+      "phase": "b-logout",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "super-admin-ui-login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200
+    },
+    {
+      "phase": "super-admin-ui-login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_recent_notifications",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_list_page",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_list_page",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-registration-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_registration_detail",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-review-controls",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-review-controls",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-download-menu",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200
+    },
+    {
+      "phase": "admin-download-menu",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200
+    },
+    {
+      "phase": "admin-download-menu",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-download-menu",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-download-menu",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-org-c-download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_recent_notifications",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_renewal_queue_page",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-list",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_renewal_review_context",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-review",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200
+    },
+    {
+      "phase": "admin-renewal-review",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "admin-logout-dialog",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-logout-dialog",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 200
+    },
+    {
+      "phase": "admin-logout-dialog",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 200
+    },
+    {
+      "phase": "admin-ui-logout",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "admin-ui-logout",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_recent_notifications",
+      "status": 200
+    },
+    {
+      "phase": "admin-ui-logout",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204
+    },
+    {
+      "phase": "admin-ui-logout",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_sidebar_counts",
+      "status": 400
+    },
+    {
+      "phase": "admin-ui-logout",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_renewal_review_context",
+      "status": 400
+    },
+    {
+      "phase": "admin-ui-logout",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_portal_change_versions",
+      "status": 400
+    },
+    {
+      "phase": "admin-ui-logout",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_renewal_queue_page",
+      "status": 400
+    }
+  ],
+  "blocked": [
+    {
+      "phase": "setup",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "org-c-login",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "org-c-login",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "org-c-dashboard",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "org-c-documents",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "renewal-owner-login",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "renewal-owner-status",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "logged-out-route-check",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "renewal-approved-display",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "owner-session-restore",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "pwa-shell",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "account-switch-b",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "b-documents",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "super-admin-ui-login",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-registration-list",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-registration-list",
+      "endpoint": "/rest/v1/rpc/admin_refresh_session",
+      "method": "POST",
+      "production": false
+    },
+    {
+      "phase": "admin-org-c-review",
+      "endpoint": "/pdf_embedder.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-org-c-review",
+      "endpoint": "/pdf_embedder.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-org-c-review",
+      "endpoint": "/css/text_defaults_md.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-org-c-review",
+      "endpoint": "/index.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-org-c-review",
+      "endpoint": "/main.js",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-org-c-review",
+      "endpoint": "/pdf_viewer_wrapper.js",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-org-c-review",
+      "endpoint": "/rest/v1/rpc/admin_refresh_session",
+      "method": "POST",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-list",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-list",
+      "endpoint": "/rest/v1/rpc/admin_refresh_session",
+      "method": "POST",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-review",
+      "endpoint": "/pdf_embedder.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-review",
+      "endpoint": "/pdf_embedder.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-review",
+      "endpoint": "/css/text_defaults_md.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-review",
+      "endpoint": "/index.css",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-review",
+      "endpoint": "/main.js",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-renewal-review",
+      "endpoint": "/pdf_viewer_wrapper.js",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "admin-logout-protected-route",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    }
+  ],
+  "errors": [],
+  "console": {
+    "error": 41,
+    "warning": 10
+  },
+  "websockets": [
+    {
+      "phase": "setup",
+      "staging": false
+    },
+    {
+      "phase": "setup",
+      "staging": false
+    },
+    {
+      "phase": "org-c-login",
+      "staging": false
+    },
+    {
+      "phase": "org-c-login",
+      "staging": false
+    },
+    {
+      "phase": "org-c-login",
+      "staging": true
+    },
+    {
+      "phase": "org-c-dashboard",
+      "staging": false
+    },
+    {
+      "phase": "org-c-dashboard",
+      "staging": true
+    },
+    {
+      "phase": "org-c-documents",
+      "staging": false
+    },
+    {
+      "phase": "org-c-documents",
+      "staging": true
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "staging": false
+    },
+    {
+      "phase": "logged-out-protected-route",
+      "staging": true
+    },
+    {
+      "phase": "renewal-owner-login",
+      "staging": false
+    },
+    {
+      "phase": "renewal-owner-login",
+      "staging": true
+    },
+    {
+      "phase": "renewal-owner-status",
+      "staging": false
+    },
+    {
+      "phase": "renewal-owner-status",
+      "staging": true
+    },
+    {
+      "phase": "logged-out-route-check",
+      "staging": false
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "staging": false
+    },
+    {
+      "phase": "renewal-owner-login-actual",
+      "staging": true
+    },
+    {
+      "phase": "renewal-approved-display",
+      "staging": false
+    },
+    {
+      "phase": "renewal-approved-display",
+      "staging": true
+    },
+    {
+      "phase": "owner-session-restore",
+      "staging": false
+    },
+    {
+      "phase": "owner-session-restore",
+      "staging": true
+    },
+    {
+      "phase": "pwa-shell",
+      "staging": false
+    },
+    {
+      "phase": "pwa-shell",
+      "staging": true
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "staging": false
+    },
+    {
+      "phase": "pwa-renewal-route",
+      "staging": true
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "staging": false
+    },
+    {
+      "phase": "renewal-owner-before-switch",
+      "staging": true
+    },
+    {
+      "phase": "account-switch-b",
+      "staging": false
+    },
+    {
+      "phase": "account-switch-b",
+      "staging": true
+    },
+    {
+      "phase": "b-documents",
+      "staging": false
+    },
+    {
+      "phase": "b-documents",
+      "staging": true
+    },
+    {
+      "phase": "super-admin-ui-login",
+      "staging": false
+    },
+    {
+      "phase": "admin-registration-list",
+      "staging": false
+    },
+    {
+      "phase": "admin-registration-list",
+      "staging": true
+    },
+    {
+      "phase": "admin-renewal-list",
+      "staging": false
+    },
+    {
+      "phase": "admin-renewal-list",
+      "staging": true
+    },
+    {
+      "phase": "admin-logout-protected-route",
+      "staging": false
+    }
+  ],
+  "finishedAt": "2026-10-11T02:27:49.684Z"
+}

@@ -1,0 +1,9 @@
+{
+  "captured_at": "2026-10-11T12:12:33.90217+00:00",
+  "read_only": "on",
+  "baselineCompatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "finalCompatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "matches": true,
+  "functions": 296,
+  "containmentMarkerFunctionCovered": true
+}

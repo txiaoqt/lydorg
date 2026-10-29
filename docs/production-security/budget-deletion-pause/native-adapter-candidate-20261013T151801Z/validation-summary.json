@@ -1,0 +1,16 @@
+{
+  "status": 1,
+  "candidate": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z",
+  "bundleSha256": "ce386a8b04500ec983bb7d1a154d552df828d3c55150c514a3d1784657128b92",
+  "manifestSha256": "24983dbdf52ca036dd648df0c0b88f962057384be07e00df8b4aa4c16f07c33b",
+  "tests": 77,
+  "pass": 76,
+  "fail": 1,
+  "reason": "Node permission child-process setup mutated the shared environment object; subsequent safety check rejected NODE_OPTIONS",
+  "startedAt": "2026-10-13T15:18:51.377Z",
+  "finishedAt": "2026-10-13T15:18:52.365Z",
+  "preserved": true,
+  "replacedBy": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z",
+  "installationActivated": false,
+  "protectedStateAccessed": false
+}

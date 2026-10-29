@@ -1,0 +1,5 @@
+COMMAND: C:\Users\Christopher x Angel\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.exe -NoLogo -NoProfile -NonInteractive -File C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-proof-state-candidate-20261015T015135Z\invoke-fixture-tests.ps1 TEMP/TMP: process-only, value is the GUID run directory TEMP_PATH_PROBE: C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-proof-state-candidate-20261015T015135Z\test-fixtures\run-90df88e961d842d3b52f3697ebe9a8e1\ TEMP_PROBE_UTC: 2026-10-15T02:31:07.8093763+00:00 / 2026-10-15T02:31:08.3291929+00:00 TEST_START_UTC: 2026-10-15T02:31:08.3331982+00:00 TEST_END_UTC: 2026-10-15T02:31:09.9478211+00:00 EXIT: 1 CLEANUP: NOT_ATTEMPTED_UNVERIFIED_PATH STDOUT: not ok - harness [HARNESS_FAILED]
+1..1
+# SUMMARY pass=0 fail=1 blocked=0
+# FAILURE_CODES harness:HARNESS_FAILED
+ STDERR: 

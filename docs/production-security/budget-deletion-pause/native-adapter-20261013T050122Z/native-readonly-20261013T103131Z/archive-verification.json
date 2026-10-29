@@ -1,0 +1,32 @@
+{
+    "status":  "PASS",
+    "renameCount":  1,
+    "renameOverwroteFile":  false,
+    "archived":  {
+                     "name":  "control-plane-proof-history-2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf.json",
+                     "directory":  false,
+                     "bytes":  200,
+                     "createdAt":  "2026-10-13T08:48:48.8892004Z",
+                     "lastWriteAt":  "2026-10-13T08:48:48.8962340Z",
+                     "lastAccessAt":  "2026-10-13T10:38:38.0468842Z",
+                     "attributes":  "Archive",
+                     "aclSha256":  "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+                     "sha256":  "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf"
+                 },
+    "originalArchive":  {
+                            "name":  "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+                            "directory":  false,
+                            "bytes":  200,
+                            "createdAt":  "2026-10-13T07:53:03.1472310Z",
+                            "lastWriteAt":  "2026-10-13T07:53:03.1547868Z",
+                            "lastAccessAt":  "2026-10-13T10:38:38.0157861Z",
+                            "attributes":  "Archive",
+                            "aclSha256":  "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+                            "sha256":  "0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd"
+                        },
+    "contentsCreationWriteOwnershipAclPreserved":  true,
+    "lastAccessChangesAccepted":  true,
+    "activeProofAbsent":  true,
+    "installationStateCreated":  false,
+    "verifiedAt":  "2026-10-13T10:38:42.0605637Z"
+}

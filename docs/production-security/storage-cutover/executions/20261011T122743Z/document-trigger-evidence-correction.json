@@ -1,0 +1,24 @@
+{
+  "reason": "An initial namespace-only report filter counted one of the three hotfix triggers. The two public-schema trigger functions are included using their exact reviewed trigger names. All 90 existing trigger definitions already matched the before/after catalog; no database change occurred.",
+  "triggers": [
+    {
+      "name": "a_document_mutation_guard",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER a_document_mutation_guard BEFORE INSERT OR UPDATE ON document_submission_files FOR EACH ROW EXECUTE FUNCTION ytrace_document_mutation.guard_file()"
+    },
+    {
+      "name": "b_document_direct_guard",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER b_document_direct_guard BEFORE INSERT OR DELETE OR UPDATE ON document_submission_files FOR EACH ROW EXECUTE FUNCTION guard_direct_document_mutation()"
+    },
+    {
+      "name": "a_document_parent_guard",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER a_document_parent_guard BEFORE INSERT OR DELETE OR UPDATE ON document_submissions FOR EACH ROW EXECUTE FUNCTION guard_document_parent_mutation()"
+    }
+  ],
+  "originalCatalogUnchanged": true
+}

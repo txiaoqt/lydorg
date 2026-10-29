@@ -1,0 +1,61 @@
+{
+  "status": "LOCAL_REGRESSION_FAILED",
+  "candidate": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z",
+  "runnerBundleSha256": "e9441c48881962782fbc28f223a2d23e4d84bc2fb33b7ec67b2675ffe7d49c18",
+  "manifestSha256": "d2b0263d0895a0871e1fdab224a29b48830407aeb8ad034cc3e144f0df7416dc",
+  "focusedTests": {
+    "tests": 103,
+    "pass": 102,
+    "fail": 1,
+    "exitStatus": 1,
+    "tapSha256": "c92e84cc4cd801fe9b8d3970073655b6ef26d02870d552a22393c5d6befc9577",
+    "startedAt": "2026-10-13T16:09:57.172Z",
+    "finishedAt": "2026-10-13T16:09:58.234Z",
+    "failedCase": "real harmless child verifies two fresh challenges over its original inherited IPC channel"
+  },
+  "diagnosis": {
+    "confirmed": "ERR_ACCESS_DENIED before child lease; dynamically imported local module was not readable through inherited Windows permission arguments",
+    "explicitPermissionArgDiagnostic": "PASS; original channel completed two fresh challenges",
+    "productionCodeChangeRequired": false
+  },
+  "syntax": [
+    {
+      "file": "budget-runner-core.mjs",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "exit": 0,
+      "stderr": ""
+    }
+  ],
+  "command": [
+    "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T035933Z\\toolchain\\extracted\\node-v24.21.0-win-x64\\node.exe",
+    "--permission",
+    "--allow-child-process",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\scripts",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\node_modules",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\package.json",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\package-lock.json",
+    "--test",
+    "--test-reporter=tap",
+    "budget-safety-controls.test.mjs"
+  ],
+  "environment": "OS essentials and nonexistent dummy profile only; no credentials",
+  "networkCalls": 0,
+  "protectedStateAccess": false,
+  "databaseConnection": false,
+  "actualOsPidReuseTested": false
+}

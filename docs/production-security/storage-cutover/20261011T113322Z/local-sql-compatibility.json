@@ -1,0 +1,15 @@
+[
+  {
+    "test": "production metadata projection in isolated PGlite",
+    "status": "PASS",
+    "objects": 378,
+    "linkedPrivate": 71,
+    "unlinkedPrivateDenied": 215,
+    "ownerRead": 70,
+    "suspendedOrOtherLinkedReadDenied": 1,
+    "currentTemplatesReadable": 13,
+    "unreferencedTemplatesDenied": 56,
+    "foundationSourcesAndGrantsMatchStaging": 14,
+    "scope": "Production metadata only, no binary files or live authorization requests"
+  }
+]

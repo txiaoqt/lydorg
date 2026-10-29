@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "expectedInventories": 57,
+  "capturedInventories": 57,
+  "matchedInventories": 57,
+  "changedInventories": 0,
+  "referenceFileSha256": "2575aaa3634b4acb4b4d2782689d84d6a46d1ab7494237aa6449ce4dc86a74cc",
+  "referenceInventoriesSha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429",
+  "currentInventoriesSha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429",
+  "differences": [],
+  "baselineAdopted": false,
+  "baselineModified": false,
+  "legitimacyOfDifferences": "NOT ESTABLISHED BY THIS PREFLIGHT",
+  "nativeAttemptCount": 1,
+  "automaticRetries": 0
+}

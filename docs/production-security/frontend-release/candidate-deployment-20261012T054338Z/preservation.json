@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "priorAttemptMarkerPreserved": true,
+  "capturedAt": "2026-10-12T05:56:42.418Z",
+  "rootApplicationChangesThisTask": 0,
+  "rootSnapshotEntries": 4126,
+  "priorChangesPreserved": [
+    "src/lib/admin-storage-resolver.integration.test.ts",
+    "src/lib/lydo-connect-supabase.ts"
+  ],
+  "privateEnvContentsReadDuringReview": false,
+  "archives": {
+    "source": "324ea22858359d71c4cd94f7da2ee7a658d98327a2bca4e9b7d9facfc10e7984",
+    "staticBuild": "a5c2417acf8e3bf5b5e69dadd2ed204e37a7e6a95b81b47c124875c568993199"
+  },
+  "extractedSourceChangesByCli": [],
+  "excludedCliMetadataChangeOnly": false,
+  "rootGitignoreUnchanged": true,
+  "liveAdminHtml": {
+    "http": 200,
+    "sha256": "fabd94e4fe69d9fa197088cfc97a24d6208ba3b862d14cdccbca460e8a88ae93",
+    "bytes": 1884,
+    "previousSha256": "fabd94e4fe69d9fa197088cfc97a24d6208ba3b862d14cdccbca460e8a88ae93",
+    "matchesOriginal": true
+  },
+  "operationLockReleased": true,
+  "attemptMarkerRetained": true
+}

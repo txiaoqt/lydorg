@@ -1,0 +1,1140 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T10:14:09.029Z",
+  "results": [
+    {
+      "check": "A: genuine staging Auth JWT and account identity",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 223
+        },
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 139
+        }
+      ]
+    },
+    {
+      "check": "B: genuine staging Auth JWT and account identity",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 482
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 132
+        }
+      ]
+    },
+    {
+      "check": "S: genuine staging Auth JWT and account identity",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 212
+        },
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 129
+        }
+      ]
+    },
+    {
+      "check": "Create active synthetic template using Admin metadata and gateway upload workflows",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/create_admin_template_document",
+          "status": 200,
+          "durationMs": 132
+        },
+        {
+          "actor": "Super Admin",
+          "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 810
+        },
+        {
+          "actor": "Super Admin",
+          "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+          "method": "PUT",
+          "endpoint": "/storage/v1/object/upload/sign",
+          "status": 200,
+          "durationMs": 460
+        },
+        {
+          "actor": "Super Admin",
+          "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_template_file_url",
+          "status": 200,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Create published synthetic news image using Admin gateway and normal metadata RPC",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Create published synthetic news image using Admin gateway and normal metadata RPC",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 277
+        },
+        {
+          "actor": "Super Admin",
+          "step": "Create published synthetic news image using Admin gateway and normal metadata RPC",
+          "method": "PUT",
+          "endpoint": "/storage/v1/object/upload/sign",
+          "status": 200,
+          "durationMs": 428
+        },
+        {
+          "actor": "Super Admin",
+          "step": "Create published synthetic news image using Admin gateway and normal metadata RPC",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/create_admin_news_release",
+          "status": 200,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "Provision genuine no-permissions Admin through existing account creation and activation RPCs",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin / privileged Auth fixture setup",
+          "step": "Provision genuine no-permissions Admin through existing account creation and activation RPCs",
+          "method": "GET",
+          "endpoint": "/rest/v1/roles",
+          "status": 200,
+          "durationMs": 124
+        },
+        {
+          "actor": "Super Admin / privileged Auth fixture setup",
+          "step": "Provision genuine no-permissions Admin through existing account creation and activation RPCs",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/create_admin_account",
+          "status": 200,
+          "durationMs": 138
+        },
+        {
+          "actor": "Super Admin / privileged Auth fixture setup",
+          "step": "Provision genuine no-permissions Admin through existing account creation and activation RPCs",
+          "method": "POST",
+          "endpoint": "/auth/v1/admin/users",
+          "status": 200,
+          "durationMs": 210
+        },
+        {
+          "actor": "Synthetic no-permissions Admin activation",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 214
+        },
+        {
+          "actor": "Synthetic no-permissions Admin activation",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/set_initial_admin_password",
+          "status": 200,
+          "durationMs": 160
+        },
+        {
+          "actor": "Synthetic no-permissions Admin activation",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 149
+        },
+        {
+          "actor": "Synthetic no-permissions Admin activation",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+          "status": 200,
+          "durationMs": 143
+        },
+        {
+          "actor": "Synthetic no-permissions Admin activation",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+          "status": 200,
+          "durationMs": 130
+        }
+      ]
+    },
+    {
+      "check": "Shorten only a genuine synthetic test session expiry (privileged fixture setup)",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Privileged fixture setup",
+          "step": "Shorten only a genuine synthetic test session expiry (privileged fixture setup)",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/admin_sessions",
+          "status": 200,
+          "durationMs": 127
+        }
+      ]
+    },
+    {
+      "check": "revoked: normal session validator denies test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin session RPC",
+          "step": "revoked: normal session validator denies test session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+          "status": 200,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "expired: normal session validator denies test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin session RPC",
+          "step": "expired: normal session validator denies test session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+          "status": 200,
+          "durationMs": 132
+        }
+      ]
+    },
+    {
+      "check": "Anonymous downloads published template with matching SHA-256",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous downloads published template with matching SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+          "status": 200,
+          "durationMs": 896
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot INSERT a template Storage object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot INSERT a template Storage object",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/template-files/SYNTHETIC-unauthorized-anon-template.pdf",
+          "status": 400,
+          "durationMs": 363
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot UPDATE the published template object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot UPDATE the published template object",
+          "method": "PUT",
+          "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+          "status": 400,
+          "durationMs": 366
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot UPDATE the published template object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+          "status": 200,
+          "durationMs": 40
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot DELETE the published template object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot DELETE the published template object",
+          "method": "DELETE",
+          "endpoint": "/storage/v1/object/template-files",
+          "status": 200,
+          "durationMs": 344
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot DELETE the published template object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+          "status": 200,
+          "durationMs": 39
+        }
+      ]
+    },
+    {
+      "check": "Organization A JWT cannot INSERT a template Storage object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot INSERT a template Storage object",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/template-files/SYNTHETIC-unauthorized-org-template.pdf",
+          "status": 400,
+          "durationMs": 440
+        }
+      ]
+    },
+    {
+      "check": "Organization A JWT cannot UPDATE the published template object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot UPDATE the published template object",
+          "method": "PUT",
+          "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+          "status": 400,
+          "durationMs": 393
+        },
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot UPDATE the published template object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+          "status": 200,
+          "durationMs": 40
+        }
+      ]
+    },
+    {
+      "check": "Organization A JWT cannot DELETE the published template object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot DELETE the published template object",
+          "method": "DELETE",
+          "endpoint": "/storage/v1/object/template-files",
+          "status": 200,
+          "durationMs": 129
+        },
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot DELETE the published template object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+          "status": 200,
+          "durationMs": 29
+        }
+      ]
+    },
+    {
+      "check": "Genuine no-permissions Admin cannot request template upload grant",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "No-permissions Admin",
+          "step": "Genuine no-permissions Admin cannot request template upload grant",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 227
+        }
+      ]
+    },
+    {
+      "check": "Anonymous downloads published news with matching SHA-256",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous downloads published news with matching SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/news-release-images/news-releases",
+          "status": 200,
+          "durationMs": 960
+        }
+      ]
+    },
+    {
+      "check": "Anonymous public news-image URL renders expected synthetic bytes",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous public HTTP",
+          "step": "Anonymous public news-image URL renders expected synthetic bytes",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/public/news-release-images",
+          "status": 200,
+          "durationMs": 343
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot INSERT a news Storage object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot INSERT a news Storage object",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/news-release-images/SYNTHETIC-unauthorized-anon-news.pdf",
+          "status": 400,
+          "durationMs": 165
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot UPDATE the published news object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot UPDATE the published news object",
+          "method": "PUT",
+          "endpoint": "/storage/v1/object/news-release-images/news-releases",
+          "status": 400,
+          "durationMs": 362
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot UPDATE the published news object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/news-release-images/news-releases",
+          "status": 200,
+          "durationMs": 32
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot DELETE the published news object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot DELETE the published news object",
+          "method": "DELETE",
+          "endpoint": "/storage/v1/object/news-release-images",
+          "status": 200,
+          "durationMs": 134
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous cannot DELETE the published news object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/news-release-images/news-releases",
+          "status": 200,
+          "durationMs": 44
+        }
+      ]
+    },
+    {
+      "check": "Organization A JWT cannot INSERT a news Storage object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot INSERT a news Storage object",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/news-release-images/SYNTHETIC-unauthorized-org-news.pdf",
+          "status": 400,
+          "durationMs": 432
+        }
+      ]
+    },
+    {
+      "check": "Organization A JWT cannot UPDATE the published news object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot UPDATE the published news object",
+          "method": "PUT",
+          "endpoint": "/storage/v1/object/news-release-images/news-releases",
+          "status": 400,
+          "durationMs": 144
+        },
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot UPDATE the published news object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/news-release-images/news-releases",
+          "status": 200,
+          "durationMs": 82
+        }
+      ]
+    },
+    {
+      "check": "Organization A JWT cannot DELETE the published news object",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot DELETE the published news object",
+          "method": "DELETE",
+          "endpoint": "/storage/v1/object/news-release-images",
+          "status": 200,
+          "durationMs": 134
+        },
+        {
+          "actor": "Organization A JWT",
+          "step": "Organization A JWT cannot DELETE the published news object",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/news-release-images/news-releases",
+          "status": 200,
+          "durationMs": 46
+        }
+      ]
+    },
+    {
+      "check": "Genuine no-permissions Admin cannot request news upload grant",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "No-permissions Admin",
+          "step": "Genuine no-permissions Admin cannot request news upload grant",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 235
+        }
+      ]
+    },
+    {
+      "check": "Previously prepared real gateway suite execution",
+      "status": "PASS",
+      "exitCode": 0
+    },
+    {
+      "check": "Org A/B own-file access and cross-organization isolation",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Anonymous private organization-file denial",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Suspended organization Storage restrictions",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Registration/renewal upload and lifecycle locks",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Budget/liquidation/YPOP parent workflows and Storage tests",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Authorized Admin signing of private organization documents",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Private synthetic document download content hashes",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Revoke only this run’s custom Admin test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin",
+          "step": "Revoke only this run’s custom Admin test session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "Revoke only this run’s custom Admin test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin",
+          "step": "Revoke only this run’s custom Admin test session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 139
+        }
+      ]
+    },
+    {
+      "check": "Revoke only this run’s custom Admin test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin",
+          "step": "Revoke only this run’s custom Admin test session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "Revoke only this run’s custom Admin test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin",
+          "step": "Revoke only this run’s custom Admin test session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 130
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 759
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 223
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 139
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 482
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 132
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 212
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 129
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/create_admin_template_document",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 810
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+      "method": "PUT",
+      "endpoint": "/storage/v1/object/upload/sign",
+      "status": 200,
+      "durationMs": 460
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create active synthetic template using Admin metadata and gateway upload workflows",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_template_file_url",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create published synthetic news image using Admin gateway and normal metadata RPC",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 277
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create published synthetic news image using Admin gateway and normal metadata RPC",
+      "method": "PUT",
+      "endpoint": "/storage/v1/object/upload/sign",
+      "status": 200,
+      "durationMs": 428
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create published synthetic news image using Admin gateway and normal metadata RPC",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/create_admin_news_release",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "Super Admin / privileged Auth fixture setup",
+      "step": "Provision genuine no-permissions Admin through existing account creation and activation RPCs",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Super Admin / privileged Auth fixture setup",
+      "step": "Provision genuine no-permissions Admin through existing account creation and activation RPCs",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/create_admin_account",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "Super Admin / privileged Auth fixture setup",
+      "step": "Provision genuine no-permissions Admin through existing account creation and activation RPCs",
+      "method": "POST",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 210
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 214
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/set_initial_admin_password",
+      "status": 200,
+      "durationMs": 160
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 149
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 133
+    },
+    {
+      "actor": "Synthetic no-permissions Admin activation",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 149
+    },
+    {
+      "actor": "Privileged fixture setup",
+      "step": "Shorten only a genuine synthetic test session expiry (privileged fixture setup)",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/admin_sessions",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Admin session RPC",
+      "step": "revoked: normal session validator denies test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Admin session RPC",
+      "step": "expired: normal session validator denies test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/validate_admin_session_token",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous downloads published template with matching SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 200,
+      "durationMs": 896
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 204
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot INSERT a template Storage object",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/template-files/SYNTHETIC-unauthorized-anon-template.pdf",
+      "status": 400,
+      "durationMs": 363
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot UPDATE the published template object",
+      "method": "PUT",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 400,
+      "durationMs": 366
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot UPDATE the published template object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 200,
+      "durationMs": 40
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot DELETE the published template object",
+      "method": "DELETE",
+      "endpoint": "/storage/v1/object/template-files",
+      "status": 200,
+      "durationMs": 344
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot DELETE the published template object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 200,
+      "durationMs": 39
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot INSERT a template Storage object",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/template-files/SYNTHETIC-unauthorized-org-template.pdf",
+      "status": 400,
+      "durationMs": 440
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot UPDATE the published template object",
+      "method": "PUT",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 400,
+      "durationMs": 393
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot UPDATE the published template object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 200,
+      "durationMs": 40
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot DELETE the published template object",
+      "method": "DELETE",
+      "endpoint": "/storage/v1/object/template-files",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot DELETE the published template object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 200,
+      "durationMs": 29
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot DELETE the published template object",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 416
+    },
+    {
+      "actor": "No-permissions Admin",
+      "step": "Genuine no-permissions Admin cannot request template upload grant",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 227
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous downloads published news with matching SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 200,
+      "durationMs": 960
+    },
+    {
+      "actor": "Anonymous public HTTP",
+      "step": "Anonymous public news-image URL renders expected synthetic bytes",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/public/news-release-images",
+      "status": 200,
+      "durationMs": 343
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 212
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot INSERT a news Storage object",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/news-release-images/SYNTHETIC-unauthorized-anon-news.pdf",
+      "status": 400,
+      "durationMs": 165
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot UPDATE the published news object",
+      "method": "PUT",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 400,
+      "durationMs": 362
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot UPDATE the published news object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 200,
+      "durationMs": 32
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot DELETE the published news object",
+      "method": "DELETE",
+      "endpoint": "/storage/v1/object/news-release-images",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous cannot DELETE the published news object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 200,
+      "durationMs": 44
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot INSERT a news Storage object",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/news-release-images/SYNTHETIC-unauthorized-org-news.pdf",
+      "status": 400,
+      "durationMs": 432
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot UPDATE the published news object",
+      "method": "PUT",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 400,
+      "durationMs": 144
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot UPDATE the published news object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 200,
+      "durationMs": 82
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot DELETE the published news object",
+      "method": "DELETE",
+      "endpoint": "/storage/v1/object/news-release-images",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot DELETE the published news object",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 200,
+      "durationMs": 46
+    },
+    {
+      "actor": "Organization A JWT",
+      "step": "Organization A JWT cannot DELETE the published news object",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 415
+    },
+    {
+      "actor": "No-permissions Admin",
+      "step": "Genuine no-permissions Admin cannot request news upload grant",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 235
+    },
+    {
+      "actor": "Admin",
+      "step": "Revoke only this run’s custom Admin test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 133
+    },
+    {
+      "actor": "Admin",
+      "step": "Revoke only this run’s custom Admin test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 139
+    },
+    {
+      "actor": "Admin",
+      "step": "Revoke only this run’s custom Admin test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 136
+    },
+    {
+      "actor": "Admin",
+      "step": "Revoke only this run’s custom Admin test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 130
+    }
+  ]
+}

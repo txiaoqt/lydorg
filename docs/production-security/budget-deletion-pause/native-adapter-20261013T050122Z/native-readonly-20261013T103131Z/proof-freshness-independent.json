@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "verifiedAt": "2026-10-13T10:41:54.233Z",
+  "startedAt": "2026-10-13T10:42:22.7871082Z",
+  "capturedAt": "2026-10-13T10:42:29.352Z",
+  "finishedAt": "2026-10-13T10:42:30.2550605Z",
+  "atStartSeconds": 28.554,
+  "atCaptureSeconds": 35.119,
+  "atFinishSeconds": 36.022,
+  "requiredMaxAgeSeconds": 300,
+  "originalWrapperAgeSeconds": 28836.2550605,
+  "originalWrapperCalculationContradictsRawUtc": true,
+  "explanation": "The outer PowerShell JSON parser converts ISO dates to DateTime. Casting that value back to a timezone-free string before DateTimeOffset.Parse interpreted it in local UTC+08:00, inflating age by eight hours. Node JSON parsing preserves explicit UTC; the adapter independently checked the actual proof before connection.",
+  "originalReceiptPreserved": true,
+  "nativeAttemptRepeated": false
+}

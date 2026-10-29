@@ -1,0 +1,114 @@
+{
+  "capturedAt": "2026-10-12T10:14:33.044Z",
+  "readOnly": true,
+  "origin": "https://ytrace.app",
+  "method": "Direct unauthenticated public GET; no JavaScript/browser/service worker execution; no API or Supabase calls",
+  "responses": [
+    {
+      "path": "/",
+      "http": 200,
+      "bytes": 1884,
+      "sha256": "4f0b8c4e695467a4baf6171cf164b58ad149b87fca71ff2d7149fa762ea404b8",
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://airnet-backend.vercel.app https://nominatim.openstreetmap.org https://router.project-osrm.org; frame-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      }
+    },
+    {
+      "path": "/assets/index-BUidbxI_.js",
+      "http": 200,
+      "bytes": 5669435,
+      "sha256": "3bd8bbf60b9aa9831fc809a3d5b4ab97ef8db4c87f6778c69dcaf472fba7892b",
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://airnet-backend.vercel.app https://nominatim.openstreetmap.org https://router.project-osrm.org; frame-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      }
+    },
+    {
+      "path": "/sw.js",
+      "http": 200,
+      "bytes": 2456,
+      "sha256": "34ffd57ce7298271d5d4423ea425000e0f3dad9fe746eca2214aa36468daf0b3",
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://airnet-backend.vercel.app https://nominatim.openstreetmap.org https://router.project-osrm.org; frame-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      }
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "http": 200,
+      "bytes": 820,
+      "sha256": "eff6879368743bdd4349ea76c0926c8a050b653fae50fef8df705a039b48ca93",
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://airnet-backend.vercel.app https://nominatim.openstreetmap.org https://router.project-osrm.org; frame-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      }
+    },
+    {
+      "path": "/dashboard",
+      "http": 200,
+      "bytes": 1884,
+      "sha256": "4f0b8c4e695467a4baf6171cf164b58ad149b87fca71ff2d7149fa762ea404b8",
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://airnet-backend.vercel.app https://nominatim.openstreetmap.org https://router.project-osrm.org; frame-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      }
+    },
+    {
+      "path": "/app",
+      "http": 200,
+      "bytes": 1884,
+      "sha256": "4f0b8c4e695467a4baf6171cf164b58ad149b87fca71ff2d7149fa762ea404b8",
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://airnet-backend.vercel.app https://nominatim.openstreetmap.org https://router.project-osrm.org; frame-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      }
+    }
+  ],
+  "previousHtmlSha256": "4f0b8c4e695467a4baf6171cf164b58ad149b87fca71ff2d7149fa762ea404b8",
+  "previousEntrySha256": "3bd8bbf60b9aa9831fc809a3d5b4ab97ef8db4c87f6778c69dcaf472fba7892b",
+  "htmlUnchanged": true,
+  "entryUnchanged": true,
+  "entryVersion": "1.0.0+20261008175023.2f6e742",
+  "jwtClasses": [
+    {
+      "role": "anon",
+      "projectRef": "mqqaykksadotbrghbexz"
+    }
+  ],
+  "scan": {
+    "serviceRoleJwt": false,
+    "secretKeyLiteral": false,
+    "operatorSecretNames": false,
+    "scope": "Entry JavaScript only; no environment values or JWTs emitted"
+  },
+  "serviceWorker": {
+    "sha256": "34ffd57ce7298271d5d4423ea425000e0f3dad9fe746eca2214aa36468daf0b3",
+    "networkOnlyHashedAssets": true,
+    "crossOriginRequestsNotIntercepted": true
+  }
+}

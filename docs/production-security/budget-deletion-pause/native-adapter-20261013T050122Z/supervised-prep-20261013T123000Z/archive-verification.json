@@ -1,0 +1,52 @@
+{
+    "status":  "PASS",
+    "renameCount":  1,
+    "renameOverwroteFile":  false,
+    "archived":  {
+                     "name":  "control-plane-proof-history-79a508950d5a04eda66634e9ef8bb17eb51756abdcd979b6b996866a9077ced1.json",
+                     "bytes":  197,
+                     "createdAt":  "2026-10-13T10:42:22.0831408Z",
+                     "lastWriteAt":  "2026-10-13T10:42:22.0921413Z",
+                     "lastAccessAt":  "2026-10-13T12:33:45.8082856Z",
+                     "attributes":  "Archive",
+                     "aclSha256":  "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+                     "sha256":  "79a508950d5a04eda66634e9ef8bb17eb51756abdcd979b6b996866a9077ced1"
+                 },
+    "preserved":  [
+                      {
+                          "name":  "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+                          "bytes":  200,
+                          "createdAt":  "2026-10-13T07:53:03.1472310Z",
+                          "lastWriteAt":  "2026-10-13T07:53:03.1547868Z",
+                          "lastAccessAt":  "2026-10-13T12:33:45.8700534Z",
+                          "attributes":  "Archive",
+                          "aclSha256":  "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+                          "sha256":  "0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd"
+                      },
+                      {
+                          "name":  "control-plane-proof-history-2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf.json",
+                          "bytes":  200,
+                          "createdAt":  "2026-10-13T08:48:48.8892004Z",
+                          "lastWriteAt":  "2026-10-13T08:48:48.8962340Z",
+                          "lastAccessAt":  "2026-10-13T12:33:45.8785999Z",
+                          "attributes":  "Archive",
+                          "aclSha256":  "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+                          "sha256":  "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf"
+                      },
+                      {
+                          "name":  "preflight-20261013T104229359Z-a0bcdc9b-9465-4b70-8cbd-ae2f9a76058e.json",
+                          "bytes":  37159,
+                          "createdAt":  "2026-10-13T10:42:29.3613121Z",
+                          "lastWriteAt":  "2026-10-13T10:42:29.3628083Z",
+                          "lastAccessAt":  "2026-10-13T12:33:45.8841096Z",
+                          "attributes":  "Archive",
+                          "aclSha256":  "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+                          "sha256":  "6e5869fcde18f45edfef0ba0a9709d4d0530204d89c6dfd548f55dc719dece81"
+                      }
+                  ],
+    "contentsCreationWriteOwnershipAclPreserved":  true,
+    "lastAccessChangesAccepted":  true,
+    "activeProofAbsent":  true,
+    "installationStateCreated":  false,
+    "verifiedAt":  "2026-10-13T12:33:51.2327285Z"
+}

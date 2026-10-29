@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "mode": "READ_ONLY_PREFLIGHT",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "runnerBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+  "identity": {
+    "database": "postgres",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "server_version_num": 170006,
+    "backend_pid": 2705306,
+    "server_port": 5432,
+    "tls": true,
+    "tls_version": "TLSv1.3"
+  },
+  "tlsPeerFingerprint256": "6D:58:E8:D1:17:BE:04:F4:2A:59:0C:EE:98:3A:95:DA:A7:63:F7:D1:C9:C4:6E:75:5D:5A:72:28:14:83:6B:91",
+  "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "migrations": {
+    "count": 164,
+    "latest": "20261011230000",
+    "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+  },
+  "protectedRelations": 57,
+  "installationActivated": false
+}

@@ -1,0 +1,372 @@
+{
+  "installation_verification": {
+    "receipt": [
+      {
+        "name": "production_test_utility_containment",
+        "version": "20261011230000",
+        "statements": [
+          "Standalone reviewed test-utility containment; see separately recorded candidate SHA-256."
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_cleanup_yorp_sample_dataset(text,text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_ensure_renewal_test_account_profile(text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_get_or_create_renewal_test_account(text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=public, auth, storage, extensions"
+        ],
+        "signature": "admin_get_yorp_sample_dataset_status(text,text)",
+        "deny_42501": true,
+        "source_md5": "5bc2f180ec6d55ad22598412c1472022",
+        "volatility": "v",
+        "execute_anon": true,
+        "public_execute": false,
+        "security_definer": true,
+        "execute_service_role": true,
+        "execute_authenticated": true,
+        "legacy_test_exceptions": true,
+        "active_super_admin_check": true
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_reset_renewal_test_scenario(text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_restore_renewal_test_scenario(text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_seed_renewal_test_registration_documents(text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_seed_yorp_sample_dataset_core(text,text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "admin_seed_yorp_sample_dataset(text,text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "diversify_yorp_seed_projects_and_budgets()",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "signature": "enforce_accreditation_immutability()",
+        "deny_42501": false,
+        "source_md5": "19f9ecf4571f21795abc9160661f51b6",
+        "volatility": "v",
+        "execute_anon": true,
+        "public_execute": true,
+        "security_definer": true,
+        "execute_service_role": true,
+        "execute_authenticated": true,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "signature": "enforce_renewal_terminal_immutability()",
+        "deny_42501": false,
+        "source_md5": "dd7f062b7a42f5cbc3782e225cc04d7d",
+        "volatility": "v",
+        "execute_anon": true,
+        "public_execute": true,
+        "security_definer": true,
+        "execute_service_role": true,
+        "execute_authenticated": true,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public"
+        ],
+        "signature": "guard_organization_identity_privileges()",
+        "deny_42501": true,
+        "source_md5": "ebe6884dd019667b7ac127f627b993ce",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": true,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": true,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "is_development_or_test_environment()",
+        "deny_42501": false,
+        "source_md5": "7d69bbf21ad55293e15c24da50eaaa11",
+        "volatility": "s",
+        "execute_anon": true,
+        "public_execute": true,
+        "security_definer": false,
+        "execute_service_role": true,
+        "execute_authenticated": true,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "rebalance_yorp_seed_reporting_quarters()",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      },
+      {
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, pg_temp"
+        ],
+        "signature": "repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+        "deny_42501": true,
+        "source_md5": "6d670f664473257d4bf0b98e127337d1",
+        "volatility": "v",
+        "execute_anon": false,
+        "public_execute": false,
+        "security_definer": false,
+        "execute_service_role": false,
+        "execute_authenticated": false,
+        "legacy_test_exceptions": false,
+        "active_super_admin_check": false
+      }
+    ],
+    "verified_at": "2026-10-11T11:00:59.510019+00:00",
+    "private_helper": {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "signature": "ytrace_production_containment.freeze_fixture_markers()",
+      "source_md5": "73223cc8d66adfa64e1c1877249d19b3",
+      "volatility": "v",
+      "security_definer": false
+    },
+    "marker_triggers": [
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "budget_requests",
+        "schema": "public",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()"
+      },
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "document_submission_files",
+        "schema": "public",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()"
+      },
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "document_submissions",
+        "schema": "public",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()"
+      },
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "liquidation_reports",
+        "schema": "public",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.liquidation_reports FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()"
+      }
+    ],
+    "environment_guard": false,
+    "helper_api_privileges": [
+      {
+        "role": "anon",
+        "execute": false,
+        "schema_usage": false,
+        "schema_create": false
+      },
+      {
+        "role": "authenticated",
+        "execute": false,
+        "schema_usage": false,
+        "schema_create": false
+      },
+      {
+        "role": "service_role",
+        "execute": false,
+        "schema_usage": false,
+        "schema_create": false
+      }
+    ]
+  }
+}
+

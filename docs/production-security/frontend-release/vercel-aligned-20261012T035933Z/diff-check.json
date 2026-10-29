@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "command": "git -c core.fsmonitor=false -c core.safecrlf=false diff --check",
+  "exitCode": 0,
+  "diagnostics": 0
+}

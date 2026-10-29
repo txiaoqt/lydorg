@@ -1,0 +1,9 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "status": "ACTIVE_HEALTHY",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "postgresVersion": "17.6.1.127",
+  "verifiedVia": "supabase-control-plane-get-project",
+  "scope": "READ_ONLY_REVIEW",
+  "freshNativeTLSHandshake": false
+}

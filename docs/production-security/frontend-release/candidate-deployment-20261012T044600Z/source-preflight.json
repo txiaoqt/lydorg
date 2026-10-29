@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "sourceRevision": "sha256:e8ffe3241f7529f4440e8e4cc427254d2cd29da5e1bbcd0d689395431cd5aa8d",
+  "fileCount": 561,
+  "inventorySha256": "e8ffe3241f7529f4440e8e4cc427254d2cd29da5e1bbcd0d689395431cd5aa8d",
+  "freshExtraction": true,
+  "archiveSha256": "665e7d1f5969eb53cd65592043fbae8b6da21b1f7c83fbd9dfc1cc32f5aeaf6e",
+  "archiveBytes": 15422338,
+  "staticArchiveSha256": "294632f506ea8762f6197622803043c6bd00a2e524753e608eb032b11a29c699"
+}

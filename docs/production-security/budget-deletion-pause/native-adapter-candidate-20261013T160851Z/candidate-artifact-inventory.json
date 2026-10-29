@@ -1,0 +1,52 @@
+{
+  "candidateBundleSha256": "e9441c48881962782fbc28f223a2d23e4d84bc2fb33b7ec67b2675ffe7d49c18",
+  "candidateManifestSha256": "d2b0263d0895a0871e1fdab224a29b48830407aeb8ad034cc3e144f0df7416dc",
+  "excludesSelf": true,
+  "files": [
+    {
+      "file": "budget-runner-core.mjs",
+      "bytes": 56813,
+      "sha256": "1a57f717e6aa0a9bf3fd6bc2115440f167760fab82b6fe690b897cade471cbe4"
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "bytes": 42798,
+      "sha256": "ce9b222dfd8119216f99ad4333cc17b76651efd3d5f1f9316eb42eb783988fcb"
+    },
+    {
+      "file": "focused-tests-01.tap",
+      "bytes": 22008,
+      "sha256": "c92e84cc4cd801fe9b8d3970073655b6ef26d02870d552a22393c5d6befc9577"
+    },
+    {
+      "file": "local-check-results.json",
+      "bytes": 2477,
+      "sha256": "7ad8febc39abee7557ef4d2ffe2d94bd8f61d35d903f35ecd99141120ad0e76b"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "bytes": 36455,
+      "sha256": "30ac1e54902c1b6ae44f2aa1c9111fc36457d481dbc35b242ebc4a82f172d0a6"
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "bytes": 7666,
+      "sha256": "14b725b6891294f8658403cca451efafda031a9eaaceb4e162212488a39a8d35"
+    },
+    {
+      "file": "operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "remediation-review.md",
+      "bytes": 1791,
+      "sha256": "2516df1f3f0bfa7efae331aba64bbdab548618908322d121ff7f3506e0595bad"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "d2b0263d0895a0871e1fdab224a29b48830407aeb8ad034cc3e144f0df7416dc"
+    }
+  ]
+}

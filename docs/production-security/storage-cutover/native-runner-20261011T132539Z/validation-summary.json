@@ -1,0 +1,35 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "nativeConnection": "BLOCKED",
+  "nativeTls": "BLOCKED",
+  "nativeCatalogReadiness": "BLOCKED",
+  "endpointControlPlaneVerification": "PASS",
+  "reviewedSqlBytes": 47407,
+  "reviewedSqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "runnerBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+  "tests": {
+    "command": "node --test docs/production-security/storage-cutover/native-runner-20261011T132539Z/native-runner.test.mjs docs/production-security/storage-cutover/native-runner-20261011T132539Z/transaction.local.test.mjs",
+    "exitCode": 0,
+    "passed": 28,
+    "failed": 0,
+    "offlineGuardsAndMocks": 25,
+    "isolatedPostgres": 3,
+    "localEngine": "PostgreSQL 18.3 / PGlite 0.5.8",
+    "nativeProductionEngineCompatibility": "BLOCKED; no PostgreSQL 17.6 native connection established",
+    "earlierFailure": "One new local engine-version expectation failed; preserved in local-postgres-first-run.json and corrected explicitly"
+  },
+  "productionWrites": 0,
+  "stagingWrites": 0,
+  "installationModeActivated": false,
+  "realInstallationMarkerCreated": false,
+  "realAuthorizationRecordCreated": false,
+  "autoRetries": 0,
+  "gitPushes": 0,
+  "decisions": {
+    "offlinePreparation": "PASS; ready for independent review",
+    "installationNow": "NO-GO",
+    "futureNativeProcedure": "CONDITIONAL GO only after verified native read-only TLS/catalog preflight and new human authorization"
+  }
+}

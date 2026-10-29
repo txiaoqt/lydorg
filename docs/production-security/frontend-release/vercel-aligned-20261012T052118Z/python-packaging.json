@@ -1,0 +1,13 @@
+{
+  "capturedAt": "2026-10-12T05:25:58.559Z",
+  "status": "PASS",
+  "tests": 7,
+  "failed": 0,
+  "inputsUnchanged": true,
+  "reusedIsolatedVenv": true,
+  "actualRuntime": "Windows Python 3.14.3",
+  "python312Grammar": "PASS",
+  "python312Execution": "NOT TESTED",
+  "providerPackaging": "BLOCKED pending separately authorized hosted candidate",
+  "externalBusinessCalls": false
+}

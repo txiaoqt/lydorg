@@ -1,0 +1,288 @@
+{
+  "capturedAt": "2026-10-12T03:27:38.017Z",
+  "mode": "GET only; official CLI 63.1.2; decrypt=false; whitelist output; no raw response persistence",
+  "adminProject": {
+    "status": "PASS",
+    "evidence": {
+      "id": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "name": "lydorg",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "createdAt": 1780759350373,
+      "updatedAt": 1791482045170,
+      "gitForkProtection": true,
+      "gitComments": {
+        "onCommit": false,
+        "onPullRequest": true
+      },
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true,
+      "settings": {
+        "framework": "vite",
+        "nodeVersion": "24.x",
+        "rootDirectory": null,
+        "outputDirectory": "build",
+        "buildCommand": "npm run build",
+        "installCommand": "npm install",
+        "devCommand": null
+      },
+      "git": {
+        "type": "github",
+        "org": "txiaoqt",
+        "repo": "lydorg",
+        "repoId": 1261131358,
+        "productionBranch": "main",
+        "createdAt": 1780759350160,
+        "updatedAt": 1780759350160
+      },
+      "productionTarget": {
+        "id": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+        "name": "lydorg",
+        "url": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app",
+        "readyState": "READY",
+        "target": "production",
+        "createdAt": 1791481704926,
+        "buildingAt": 1791481873704,
+        "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+        "aliasAssigned": 1791482045180,
+        "deploymentHostname": "lydorg-gdb25hm7m-toffs-projects-81b2ce10",
+        "alias": [
+          "y-trace-admin.vercel.app",
+          "lydorg-toffs-projects-81b2ce10.vercel.app",
+          "lydorg-git-main-toffs-projects-81b2ce10.vercel.app"
+        ],
+        "sourceIdentity": {
+          "githubCommitSha": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+          "githubCommitRef": "main",
+          "githubRepo": "lydorg",
+          "githubOrg": "txiaoqt",
+          "githubDeployment": "1"
+        },
+        "projectSettings": {},
+        "builds": [],
+        "functions": null,
+        "routes": null,
+        "routeCount": null
+      },
+      "deployHookCount": 0,
+      "environmentNamesInProjectResponse": [
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "VITE_ADMIN_APP_URL",
+        "VITE_DEPLOY_SURFACE",
+        "VITE_SUPABASE_ANON_KEY",
+        "VITE_SUPABASE_URL"
+      ],
+      "functionConfigPresent": false,
+      "routeConfigPresent": false
+    }
+  },
+  "organizationProject": {
+    "status": "PASS",
+    "evidence": {
+      "id": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "name": "yorbms_user",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "createdAt": 1780759558694,
+      "updatedAt": 1791481871891,
+      "gitForkProtection": true,
+      "gitComments": {
+        "onCommit": false,
+        "onPullRequest": true
+      },
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true,
+      "settings": {
+        "framework": "vite",
+        "nodeVersion": "24.x",
+        "rootDirectory": null,
+        "outputDirectory": "build",
+        "buildCommand": "npm run build",
+        "installCommand": "npm install",
+        "devCommand": null
+      },
+      "git": {
+        "type": "github",
+        "org": "txiaoqt",
+        "repo": "lydorg",
+        "repoId": 1261131358,
+        "productionBranch": "main",
+        "createdAt": 1780759558553,
+        "updatedAt": 1780759558553
+      },
+      "productionTarget": {
+        "id": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+        "name": "yorbms_user",
+        "url": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app",
+        "readyState": "READY",
+        "target": "production",
+        "createdAt": 1791481704862,
+        "buildingAt": 1791481708491,
+        "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+        "aliasAssigned": 1791481871833,
+        "deploymentHostname": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10",
+        "alias": [
+          "ytrace.app",
+          "www.ytrace.app",
+          "yorbmsuser-toffs-projects-81b2ce10.vercel.app",
+          "yorbmsuser-git-main-toffs-projects-81b2ce10.vercel.app"
+        ],
+        "sourceIdentity": {
+          "githubCommitSha": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+          "githubCommitRef": "main",
+          "githubRepo": "lydorg",
+          "githubOrg": "txiaoqt",
+          "githubDeployment": "1"
+        },
+        "projectSettings": {},
+        "builds": [],
+        "functions": null,
+        "routes": null,
+        "routeCount": null
+      },
+      "deployHookCount": 0,
+      "environmentNamesInProjectResponse": [
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "VITE_DEPLOY_SURFACE",
+        "VITE_ENABLE_STANDALONE_USER_PWA_UI",
+        "VITE_SUPABASE_ANON_KEY",
+        "VITE_SUPABASE_URL"
+      ],
+      "functionConfigPresent": false,
+      "routeConfigPresent": false
+    }
+  },
+  "productionDeployment": {
+    "status": "PASS",
+    "evidence": {
+      "id": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "name": "lydorg",
+      "url": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app",
+      "readyState": "READY",
+      "status": "READY",
+      "target": "production",
+      "source": "git",
+      "createdAt": 1791481704926,
+      "ready": 1791482044885,
+      "buildingAt": 1791481873704,
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "version": 2,
+      "aliasAssigned": true,
+      "isInConcurrentBuildsQueue": false,
+      "regions": [
+        "iad1"
+      ],
+      "alias": [
+        "y-trace-admin.vercel.app",
+        "lydorg-toffs-projects-81b2ce10.vercel.app",
+        "lydorg-git-main-toffs-projects-81b2ce10.vercel.app"
+      ],
+      "sourceIdentity": {
+        "githubCommitSha": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+        "githubCommitRef": "main",
+        "githubRepo": "lydorg",
+        "githubOrg": "txiaoqt",
+        "githubDeployment": "1"
+      },
+      "projectSettings": {
+        "framework": "vite",
+        "nodeVersion": "24.x",
+        "outputDirectory": "build",
+        "buildCommand": "npm run build",
+        "installCommand": "npm install",
+        "devCommand": null,
+        "commandForIgnoringBuildStep": null
+      },
+      "builds": [],
+      "functions": null,
+      "routes": null,
+      "routeCount": null
+    }
+  },
+  "productionEnvironmentMetadata": {
+    "status": "PASS",
+    "evidence": {
+      "variables": [
+        {
+          "key": "SUPABASE_SERVICE_ROLE_KEY",
+          "type": "sensitive",
+          "target": [
+            "preview",
+            "production"
+          ],
+          "createdAt": 1783442466139,
+          "updatedAt": 1783442466139
+        },
+        {
+          "key": "VITE_ADMIN_APP_URL",
+          "type": "encrypted",
+          "target": [
+            "production"
+          ],
+          "createdAt": 1789924916394,
+          "updatedAt": 1789924916394
+        },
+        {
+          "key": "VITE_DEPLOY_SURFACE",
+          "type": "encrypted",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "createdAt": 1780759350161,
+          "updatedAt": 1780759350161,
+          "publicValueCheck": {
+            "valueVerification": "NOT VERIFIED (not requested in plaintext)"
+          }
+        },
+        {
+          "key": "VITE_SUPABASE_ANON_KEY",
+          "type": "encrypted",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "createdAt": 1780759350161,
+          "updatedAt": 1780759350161,
+          "publicValueCheck": {
+            "valueVerification": "NOT VERIFIED (not requested in plaintext)"
+          }
+        },
+        {
+          "key": "VITE_SUPABASE_URL",
+          "type": "encrypted",
+          "target": [
+            "production",
+            "preview"
+          ],
+          "createdAt": 1780759350161,
+          "updatedAt": 1780759350161,
+          "publicValueCheck": {
+            "valueVerification": "NOT VERIFIED (not requested in plaintext)"
+          }
+        }
+      ],
+      "pagination": {}
+    }
+  },
+  "adminDomains": {
+    "status": "PASS",
+    "evidence": {
+      "domains": [
+        {
+          "name": "y-trace-admin.vercel.app",
+          "apexName": "vercel.app",
+          "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+          "gitBranch": null,
+          "redirect": null,
+          "redirectStatusCode": null,
+          "verified": true,
+          "createdAt": 1781247228224,
+          "updatedAt": 1781247228224
+        }
+      ],
+      "pagination": {
+        "count": 1,
+        "next": null
+      }
+    }
+  }
+}

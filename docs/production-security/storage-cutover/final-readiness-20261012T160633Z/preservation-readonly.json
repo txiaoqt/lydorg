@@ -1,0 +1,112 @@
+{
+  "captured_at": "2026-10-12 16:16:08.474909+00",
+  "read_only": "on",
+  "preserved_data": [
+    {
+      "relation": "public.budget_request_files",
+      "row_count": 6,
+      "content_fingerprint": "959a679f0db324003bfbd9a41a73bd76"
+    },
+    {
+      "relation": "public.budget_requests",
+      "row_count": 90,
+      "content_fingerprint": "57fe3b1985eeb77aef7c8b7e61c43b84"
+    },
+    {
+      "relation": "public.document_submission_files",
+      "row_count": 547,
+      "content_fingerprint": "86e23905698f1463ca8324b2f2fdee29"
+    },
+    {
+      "relation": "public.document_submissions",
+      "row_count": 92,
+      "content_fingerprint": "cc28a4388e2ed0a521c1a57f6ee6f54d"
+    },
+    {
+      "relation": "public.liquidation_report_files",
+      "row_count": 5,
+      "content_fingerprint": "74753e505a742349247f64c80a710765"
+    },
+    {
+      "relation": "public.liquidation_reports",
+      "row_count": 62,
+      "content_fingerprint": "c8feef83d961d102237a129520184554"
+    },
+    {
+      "relation": "public.move_applications",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.move_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.news_releases",
+      "row_count": 3,
+      "content_fingerprint": "798d23db2aef87b5dc37457dd3b2e180"
+    },
+    {
+      "relation": "public.organization_accreditations",
+      "row_count": 89,
+      "content_fingerprint": "61c8deb3bf9495fde59e613cc4f9b7f4"
+    },
+    {
+      "relation": "public.organization_profiles",
+      "row_count": 93,
+      "content_fingerprint": "a3d0cedda53960f18b94f97f59779489"
+    },
+    {
+      "relation": "public.organization_renewals",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.required_document_types",
+      "row_count": 13,
+      "content_fingerprint": "0c5e9f03ad34ee1de7605d93eec093d4"
+    },
+    {
+      "relation": "public.ypop_entries",
+      "row_count": 5,
+      "content_fingerprint": "af85bef72658c2ea0eb84d1a98262965"
+    },
+    {
+      "relation": "public.ypop_event_files",
+      "row_count": 17,
+      "content_fingerprint": "8cbfd3e6b00371e388f42144f4aee2fb"
+    },
+    {
+      "relation": "public.ypop_event_participations",
+      "row_count": 14,
+      "content_fingerprint": "45edd1bde95490300c5e0e36866476a7"
+    },
+    {
+      "relation": "public.ypop_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.ypop_org_activities",
+      "row_count": 3,
+      "content_fingerprint": "d9970134c1e270bf09164bf6ddf67111"
+    },
+    {
+      "relation": "public.ypop_org_activity_files",
+      "row_count": 4,
+      "content_fingerprint": "49bd4a87247d409605d93844836c11fb"
+    },
+    {
+      "relation": "storage.buckets",
+      "row_count": 10,
+      "content_fingerprint": "832ce1466eb597a15f1082c9544eb540"
+    },
+    {
+      "relation": "storage.objects",
+      "row_count": 378,
+      "content_fingerprint": "67284160e3ab4a273194aad042e84e40"
+    }
+  ]
+}
+

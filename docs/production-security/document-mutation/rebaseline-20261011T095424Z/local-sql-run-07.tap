@@ -1,0 +1,302 @@
+TAP version 13
+# Subtest: rebaselined artifact scope and body integrity
+ok 1 - rebaselined artifact scope and body integrity
+  ---
+  duration_ms: 5.5444
+  ...
+# Subtest: post-containment document lifecycle actual PostgreSQL matrix
+    # Subtest: unmodified production candidate rejects this synthetic catalog
+    ok 1 - unmodified production candidate rejects this synthetic catalog
+      ---
+      duration_ms: 74.0297
+      ...
+    # Subtest: exact patch bodies install with unchanged business rows, containment and migration history
+    ok 2 - exact patch bodies install with unchanged business rows, containment and migration history
+      ---
+      duration_ms: 142.6292
+      ...
+    # Subtest: operator post-install verifier recognizes the installed guards and preserved authorization
+    ok 3 - operator post-install verifier recognizes the installed guards and preserved authorization
+      ---
+      duration_ms: 30.0777
+      ...
+    # Subtest: requested renewal revision changes one file, preserves five peers and resubmits
+    ok 4 - requested renewal revision changes one file, preserves five peers and resubmits
+      ---
+      duration_ms: 21.9147
+      ...
+    # Subtest: normal registration requested revision preserves the peer and original revision history
+    ok 5 - normal registration requested revision preserves the peer and original revision history
+      ---
+      duration_ms: 12.3464
+      ...
+    # Subtest: API grants preserve authenticated owner RPCs and custom Admin anon review transport
+    ok 6 - API grants preserve authenticated owner RPCs and custom Admin anon review transport
+      ---
+      duration_ms: 5.5427
+      ...
+    # Subtest: approved renewal and associated documents deny both replacement RPCs and direct writes
+    ok 7 - approved renewal and associated documents deny both replacement RPCs and direct writes
+      ---
+      duration_ms: 159.4096
+      ...
+    # Subtest: rejected renewal and associated documents deny both replacement RPCs and direct writes
+    ok 8 - rejected renewal and associated documents deny both replacement RPCs and direct writes
+      ---
+      duration_ms: 139.3716
+      ...
+    # Subtest: approved_green submission blocks content mutations and owner deletion
+    ok 9 - approved_green submission blocks content mutations and owner deletion
+      ---
+      duration_ms: 58.4352
+      ...
+    # Subtest: rejected_red submission blocks content mutations and owner deletion
+    ok 10 - rejected_red submission blocks content mutations and owner deletion
+      ---
+      duration_ms: 64.2503
+      ...
+    # Subtest: under_admin_review file content is immutable through owner replacement
+    ok 11 - under_admin_review file content is immutable through owner replacement
+      ---
+      duration_ms: 29.3088
+      ...
+    # Subtest: approved_green file content is immutable through owner replacement
+    ok 12 - approved_green file content is immutable through owner replacement
+      ---
+      duration_ms: 27.4039
+      ...
+    # Subtest: rejected_red file content is immutable through owner replacement
+    ok 13 - rejected_red file content is immutable through owner replacement
+      ---
+      duration_ms: 30.8647
+      ...
+    # Subtest: cross-organization and anonymous RPC mutation denied without changed rows
+    ok 14 - cross-organization and anonymous RPC mutation denied without changed rows
+      ---
+      duration_ms: 83.409
+      ...
+    # Subtest: direct cross-organization RLS updates affect zero rows
+    ok 15 - direct cross-organization RLS updates affect zero rows
+      ---
+      duration_ms: 30.1785
+      ...
+    # Subtest: suspended owner replacement and resubmission denied
+    ok 16 - suspended owner replacement and resubmission denied
+      ---
+      duration_ms: 58.572
+      ...
+    # Subtest: genuine captured Admin validator accepts active reviewer and denies invalid/expired/revoked sessions
+    ok 17 - genuine captured Admin validator accepts active reviewer and denies invalid/expired/revoked sessions
+      ---
+      duration_ms: 93.3462
+      ...
+    # Subtest: inactive Admin is denied and no review state changes
+    ok 18 - inactive Admin is denied and no review state changes
+      ---
+      duration_ms: 30.8121
+      ...
+    # Subtest: normal full Admin approval creates one next term then terminal replacement stays denied
+    ok 19 - normal full Admin approval creates one next term then terminal replacement stays denied
+      ---
+      duration_ms: 64.288
+      ...
+    # Subtest: authenticated: budget_requests fixture markers remain protected after patch
+    ok 20 - authenticated: budget_requests fixture markers remain protected after patch
+      ---
+      duration_ms: 56.498
+      ...
+    # Subtest: authenticated: liquidation_reports fixture markers remain protected after patch
+    ok 21 - authenticated: liquidation_reports fixture markers remain protected after patch
+      ---
+      duration_ms: 61.9913
+      ...
+    # Subtest: authenticated: document_submissions fixture markers remain protected after patch
+    ok 22 - authenticated: document_submissions fixture markers remain protected after patch
+      ---
+      duration_ms: 60.3465
+      ...
+    # Subtest: authenticated: document_submission_files fixture markers remain protected after patch
+    ok 23 - authenticated: document_submission_files fixture markers remain protected after patch
+      ---
+      duration_ms: 67.9964
+      ...
+    # Subtest: postgres: budget_requests fixture markers remain protected after patch
+    ok 24 - postgres: budget_requests fixture markers remain protected after patch
+      ---
+      duration_ms: 55.5597
+      ...
+    # Subtest: postgres: liquidation_reports fixture markers remain protected after patch
+    ok 25 - postgres: liquidation_reports fixture markers remain protected after patch
+      ---
+      duration_ms: 53.5611
+      ...
+    # Subtest: postgres: document_submissions fixture markers remain protected after patch
+    ok 26 - postgres: document_submissions fixture markers remain protected after patch
+      ---
+      duration_ms: 50.37
+      ...
+    # Subtest: postgres: document_submission_files fixture markers remain protected after patch
+    ok 27 - postgres: document_submission_files fixture markers remain protected after patch
+      ---
+      duration_ms: 55.7212
+      ...
+    # Subtest: identity markers and test GUC cannot bypass accreditation/renewal immutability
+    ok 28 - identity markers and test GUC cannot bypass accreditation/renewal immutability
+      ---
+      duration_ms: 77.1506
+      ...
+    # Subtest: anon: all 12 test mutation RPCs remain disabled
+    ok 29 - anon: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 313.7604
+      ...
+    # Subtest: authenticated: all 12 test mutation RPCs remain disabled
+    ok 30 - authenticated: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 313.2196
+      ...
+    # Subtest: service_role: all 12 test mutation RPCs remain disabled
+    ok 31 - service_role: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 325.2941
+      ...
+    # Subtest: postgres: all 12 test mutation RPCs remain disabled
+    ok 32 - postgres: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 319.6845
+      ...
+    # Subtest: retained sample status retains Super Admin enforcement over anon transport
+    ok 33 - retained sample status retains Super Admin enforcement over anon transport
+      ---
+      duration_ms: 38.2881
+      ...
+    # Subtest: replacement audit failure rolls back file/history/parent changes
+    ok 34 - replacement audit failure rolls back file/history/parent changes
+      ---
+      duration_ms: 27.4848
+      ...
+    # Subtest: second installation is rejected without data changes
+    ok 35 - second installation is rejected without data changes
+      ---
+      duration_ms: 56.5558
+      ...
+    1..35
+ok 2 - post-containment document lifecycle actual PostgreSQL matrix
+  ---
+  duration_ms: 5496.1419
+  ...
+# Subtest: new exact gates and atomic rollback
+    # Subtest: migration version/name fails closed before installation
+    ok 1 - migration version/name fails closed before installation
+      ---
+      duration_ms: 92.3698
+      ...
+    # Subtest: migration statements fails closed before installation
+    ok 2 - migration statements fails closed before installation
+      ---
+      duration_ms: 84.0417
+      ...
+    # Subtest: missing migration receipt fails closed before installation
+    ok 3 - missing migration receipt fails closed before installation
+      ---
+      duration_ms: 62.6826
+      ...
+    # Subtest: RPC function body fails closed before installation
+    ok 4 - RPC function body fails closed before installation
+      ---
+      duration_ms: 91.738
+      ...
+    # Subtest: RPC ACL fails closed before installation
+    ok 5 - RPC ACL fails closed before installation
+      ---
+      duration_ms: 84.6286
+      ...
+    # Subtest: RPC owner fails closed before installation
+    ok 6 - RPC owner fails closed before installation
+      ---
+      duration_ms: 88.0697
+      ...
+    # Subtest: fixture trigger disabled fails closed before installation
+    ok 7 - fixture trigger disabled fails closed before installation
+      ---
+      duration_ms: 89.1324
+      ...
+    # Subtest: fixture trigger missing fails closed before installation
+    ok 8 - fixture trigger missing fails closed before installation
+      ---
+      duration_ms: 82.7406
+      ...
+    # Subtest: containment helper grant fails closed before installation
+    ok 9 - containment helper grant fails closed before installation
+      ---
+      duration_ms: 84.925
+      ...
+    # Subtest: containment private schema grant fails closed before installation
+    ok 10 - containment private schema grant fails closed before installation
+      ---
+      duration_ms: 78.923
+      ...
+    # Subtest: test-only RPC reenabled fails closed before installation
+    ok 11 - test-only RPC reenabled fails closed before installation
+      ---
+      duration_ms: 81.2601
+      ...
+    # Subtest: environment guard changed fails closed before installation
+    ok 12 - environment guard changed fails closed before installation
+      ---
+      duration_ms: 82.7391
+      ...
+    # Subtest: RLS disabled fails closed before installation
+    ok 13 - RLS disabled fails closed before installation
+      ---
+      duration_ms: 80.4213
+      ...
+    # Subtest: table column changed fails closed before installation
+    ok 14 - table column changed fails closed before installation
+      ---
+      duration_ms: 85.4029
+      ...
+    # Subtest: table constraint changed fails closed before installation
+    ok 15 - table constraint changed fails closed before installation
+      ---
+      duration_ms: 81.1866
+      ...
+    # Subtest: Storage policy changed fails closed before installation
+    ok 16 - Storage policy changed fails closed before installation
+      ---
+      duration_ms: 82.173
+      ...
+    # Subtest: role inheritance changed fails closed before installation
+    ok 17 - role inheritance changed fails closed before installation
+      ---
+      duration_ms: 84.4799
+      ...
+    # Subtest: namespace collision fails closed before installation
+    ok 18 - namespace collision fails closed before installation
+      ---
+      duration_ms: 79.4673
+      ...
+    # Subtest: guard trigger-name collision fails closed before installation
+    ok 19 - guard trigger-name collision fails closed before installation
+      ---
+      duration_ms: 84.5659
+      ...
+    # Subtest: failure after all new functions/triggers/grants restores full original catalog and rows
+    ok 20 - failure after all new functions/triggers/grants restores full original catalog and rows
+      ---
+      duration_ms: 104.0129
+      ...
+    1..20
+ok 3 - new exact gates and atomic rollback
+  ---
+  duration_ms: 3456.4171
+  ...
+1..3
+# tests 58
+# suites 0
+# pass 58
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9154.2956

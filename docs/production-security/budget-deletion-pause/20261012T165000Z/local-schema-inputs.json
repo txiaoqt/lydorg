@@ -1,0 +1,1071 @@
+{
+  "enums": [
+    {
+      "name": "app_role_code",
+      "labels": [
+        "admin",
+        "organization_user",
+        "youth",
+        "super_admin"
+      ]
+    },
+    {
+      "name": "profile_status",
+      "labels": [
+        "incomplete",
+        "pending_review",
+        "verified",
+        "needs_update",
+        "suspended_inactive"
+      ]
+    },
+    {
+      "name": "document_submission_status",
+      "labels": [
+        "not_started",
+        "draft",
+        "uploaded",
+        "ocr_processing",
+        "ready_for_review",
+        "submitted",
+        "under_admin_review",
+        "needs_revision",
+        "approved_green",
+        "rejected_red"
+      ]
+    },
+    {
+      "name": "document_file_validation_status",
+      "labels": [
+        "correct",
+        "needs_reupload",
+        "missing",
+        "mismatch"
+      ]
+    },
+    {
+      "name": "ocr_status",
+      "labels": [
+        "pending",
+        "processing",
+        "completed",
+        "failed"
+      ]
+    },
+    {
+      "name": "budget_request_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved_for_ftf_green",
+        "rejected_red",
+        "hard_copy_submitted",
+        "budget_released",
+        "completed",
+        "awaiting_release"
+      ]
+    },
+    {
+      "name": "liquidation_report_status",
+      "labels": [
+        "pending_activity_completion",
+        "not_started",
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved_for_ftf_green",
+        "rejected_red",
+        "hard_copy_submitted",
+        "completed_liquidated",
+        "overdue"
+      ]
+    },
+    {
+      "name": "visibility_status",
+      "labels": [
+        "draft",
+        "published",
+        "hidden"
+      ]
+    },
+    {
+      "name": "compliance_remark_status",
+      "labels": [
+        "open",
+        "resolved"
+      ]
+    },
+    {
+      "name": "notification_type",
+      "labels": [
+        "document_revision",
+        "document_green",
+        "document_red",
+        "budget_go_signal",
+        "budget_revision",
+        "budget_released",
+        "liquidation_go_signal",
+        "liquidation_revision",
+        "overdue",
+        "completed",
+        "news_release",
+        "renewal_window_opened",
+        "renewal_window_urgent",
+        "accreditation_expired",
+        "rejected",
+        "inquiry_responded",
+        "inquiry_closed",
+        "ypop_verified",
+        "ypop_needs_revision",
+        "ypop_qualified",
+        "ypop_not_qualified"
+      ]
+    },
+    {
+      "name": "activity_action",
+      "labels": [
+        "created_profile",
+        "updated_profile",
+        "submitted_documents",
+        "reviewed_documents",
+        "submitted_budget_request",
+        "reviewed_budget_request",
+        "submitted_liquidation_report",
+        "reviewed_liquidation_report",
+        "published_news_release",
+        "published_transparency_post",
+        "added_remark",
+        "resolved_remark"
+      ]
+    },
+    {
+      "name": "ypop_entry_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "qualified",
+        "not_qualified",
+        "pending_evaluation"
+      ]
+    },
+    {
+      "name": "ypop_period_status",
+      "labels": [
+        "draft",
+        "open",
+        "closed"
+      ]
+    },
+    {
+      "name": "ypop_event_participation_status",
+      "labels": [
+        "pending_verification",
+        "verified",
+        "needs_revision",
+        "rejected",
+        "confirmed",
+        "draft",
+        "pending_evaluation"
+      ]
+    },
+    {
+      "name": "move_application_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved_for_ftf_green",
+        "rejected_red",
+        "completed"
+      ]
+    },
+    {
+      "name": "inquiry_status",
+      "labels": [
+        "pending_review",
+        "reviewed",
+        "closed",
+        "in_review",
+        "responded",
+        "resolved"
+      ]
+    },
+    {
+      "name": "ypop_org_activity_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved",
+        "rejected",
+        "pending_evaluation"
+      ]
+    },
+    {
+      "name": "registration_type",
+      "labels": [
+        "new_organization",
+        "existing_urn"
+      ]
+    },
+    {
+      "name": "urn_review_status",
+      "labels": [
+        "not_applicable",
+        "pending",
+        "verified",
+        "needs_correction",
+        "rejected"
+      ]
+    },
+    {
+      "name": "verification_method",
+      "labels": [
+        "documents",
+        "urn"
+      ]
+    },
+    {
+      "name": "renewal_application_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "resubmitted",
+        "approved",
+        "rejected"
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "actor_user_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "action",
+      "type": "text",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_type",
+      "type": "text",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "activity_logs",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "metadata",
+      "type": "jsonb",
+      "table": "activity_logs",
+      "default": "'{}'::jsonb",
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "admin_accounts",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "username",
+      "type": "citext",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "password_hash",
+      "type": "text",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "email",
+      "type": "citext",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "display_name",
+      "type": "text",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "is_active",
+      "type": "boolean",
+      "table": "admin_accounts",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "role_id",
+      "type": "smallint",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "unit_id",
+      "type": "smallint",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_password_set",
+      "type": "boolean",
+      "table": "admin_accounts",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "admin_sessions",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "admin_id",
+      "type": "uuid",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "token_hash",
+      "type": "text",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "last_used_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "revoked_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "budget_request_files",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "budget_request_id",
+      "type": "uuid",
+      "table": "budget_request_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_url",
+      "type": "text",
+      "table": "budget_request_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_name",
+      "type": "text",
+      "table": "budget_request_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_type",
+      "type": "text",
+      "table": "budget_request_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_size",
+      "type": "bigint",
+      "table": "budget_request_files",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "uploaded_at",
+      "type": "timestamp with time zone",
+      "table": "budget_request_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "budget_request_files",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "admin_status",
+      "type": "text",
+      "table": "budget_request_files",
+      "default": "'submitted'::text",
+      "not_null": true
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "budget_request_files",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "budget_request_files",
+      "default": "clock_timestamp()",
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "activity_title",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "activity_description",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "activity_date",
+      "type": "date",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "venue",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "requested_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "approved_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "released_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "release_date",
+      "type": "date",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "purpose_category",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "status",
+      "type": "budget_request_status",
+      "table": "budget_requests",
+      "default": "'draft'::budget_request_status",
+      "not_null": true
+    },
+    {
+      "name": "remarks",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "go_signal_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "hard_copy_submitted_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "user_note",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "revision_history",
+      "type": "jsonb",
+      "table": "budget_requests",
+      "default": "'[]'::jsonb",
+      "not_null": true
+    },
+    {
+      "name": "budget_request_type",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "'regular'::text",
+      "not_null": true
+    },
+    {
+      "name": "ypop_entry_id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "fiscal_year",
+      "type": "integer",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "budget_requests",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "budget_requests",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "liquidation_report_files",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "liquidation_report_id",
+      "type": "uuid",
+      "table": "liquidation_report_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_url",
+      "type": "text",
+      "table": "liquidation_report_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_name",
+      "type": "text",
+      "table": "liquidation_report_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_type",
+      "type": "text",
+      "table": "liquidation_report_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_size",
+      "type": "bigint",
+      "table": "liquidation_report_files",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "uploaded_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_report_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_report_files",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "admin_status",
+      "type": "text",
+      "table": "liquidation_report_files",
+      "default": "'submitted'::text",
+      "not_null": true
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "liquidation_report_files",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "budget_request_id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "status",
+      "type": "liquidation_report_status",
+      "table": "liquidation_reports",
+      "default": "'pending_activity_completion'::liquidation_report_status",
+      "not_null": true
+    },
+    {
+      "name": "remarks",
+      "type": "text",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "go_signal_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "deadline_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "hard_copy_submitted_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "liquidation_reports",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "liquidation_reports",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "user_id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "message",
+      "type": "text",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "type",
+      "type": "notification_type",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_type",
+      "type": "text",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_read",
+      "type": "boolean",
+      "table": "notifications",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "notifications",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "smallint",
+      "table": "roles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "code",
+      "type": "app_role_code",
+      "table": "roles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "label",
+      "type": "text",
+      "table": "roles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "roles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "roles",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "permission_codes",
+      "type": "text[]",
+      "table": "roles",
+      "default": "'{}'::text[]",
+      "not_null": true
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "update_admin_budget_request(text,uuid,text,numeric,numeric,date,text,text,timestamp with time zone,timestamp with time zone,text,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.update_admin_budget_request(_session_token text, _budget_request_id uuid, _status text DEFAULT NULL::text, _approved_amount numeric DEFAULT NULL::numeric, _released_amount numeric DEFAULT NULL::numeric, _release_date date DEFAULT NULL::date, _remarks text DEFAULT NULL::text, _admin_remarks text DEFAULT NULL::text, _go_signal_at timestamp with time zone DEFAULT NULL::timestamp with time zone, _hard_copy_submitted_at timestamp with time zone DEFAULT NULL::timestamp with time zone, _user_note text DEFAULT NULL::text, _revision_history jsonb DEFAULT NULL::jsonb)\n RETURNS TABLE(id uuid, organization_id uuid, submitted_by uuid, activity_title text, activity_description text, activity_date date, venue text, requested_amount numeric, approved_amount numeric, released_amount numeric, release_date date, purpose_category text, status budget_request_status, remarks text, admin_remarks text, go_signal_at timestamp with time zone, hard_copy_submitted_at timestamp with time zone, user_note text, revision_history jsonb, created_at timestamp with time zone, updated_at timestamp with time zone)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _admin_id uuid;\n  _now timestamptz := clock_timestamp();\n  _mapped_status public.budget_request_status := NULL;\nBEGIN\n  SELECT vat.admin_id\n  INTO _admin_id\n  FROM public.validate_admin_session_token(_session_token) vat\n  LIMIT 1;\n\n  IF _admin_id IS NULL THEN\n    RAISE EXCEPTION 'Admin account is not authorized.';\n  END IF;\n\n  IF _status IS NOT NULL AND _status <> '' THEN\n    IF _status = 'completed' THEN\n      RAISE EXCEPTION 'Completed is not a Budget Request status. Use budget_released; liquidation has its own lifecycle.';\n    ELSIF _status IN ('approved', 'approved_green', 'approved_for_ftf_green', 'hard_copy_submitted', 'awaiting_release') THEN\n      _mapped_status := 'awaiting_release'::public.budget_request_status;\n    ELSIF _status IN ('rejected', 'rejected_red') THEN\n      _mapped_status := 'rejected_red'::public.budget_request_status;\n    ELSIF _status IN ('draft', 'submitted', 'under_review', 'needs_revision', 'budget_released') THEN\n      _mapped_status := _status::public.budget_request_status;\n    ELSE\n      RAISE EXCEPTION 'Invalid Budget Request status: %', _status;\n    END IF;\n  END IF;\n\n  RETURN QUERY\n  UPDATE public.budget_requests\n  SET\n    status = COALESCE(_mapped_status, budget_requests.status),\n    approved_amount = COALESCE(_approved_amount, budget_requests.approved_amount),\n    released_amount = COALESCE(_released_amount, budget_requests.released_amount),\n    release_date = COALESCE(_release_date, budget_requests.release_date),\n    remarks = COALESCE(_remarks, budget_requests.remarks),\n    admin_remarks = COALESCE(_admin_remarks, budget_requests.admin_remarks),\n    go_signal_at = COALESCE(_go_signal_at, budget_requests.go_signal_at),\n    hard_copy_submitted_at = COALESCE(_hard_copy_submitted_at, budget_requests.hard_copy_submitted_at),\n    user_note = COALESCE(_user_note, budget_requests.user_note),\n    revision_history = COALESCE(_revision_history, budget_requests.revision_history),\n    revision_requested_at = CASE\n      WHEN _mapped_status = 'needs_revision' THEN _now\n      ELSE budget_requests.revision_requested_at\n    END,\n    revision_due_at = CASE\n      WHEN _mapped_status = 'needs_revision' THEN _now + interval '5 days'\n      ELSE budget_requests.revision_due_at\n    END,\n    revision_locked = CASE\n      WHEN _mapped_status = 'needs_revision' THEN false\n      ELSE budget_requests.revision_locked\n    END,\n    revision_locked_at = CASE\n      WHEN _mapped_status = 'needs_revision' THEN NULL\n      ELSE budget_requests.revision_locked_at\n    END,\n    updated_at = _now\n  WHERE budget_requests.id = _budget_request_id\n  RETURNING\n    budget_requests.id,\n    budget_requests.organization_id,\n    budget_requests.submitted_by,\n    budget_requests.activity_title,\n    budget_requests.activity_description,\n    budget_requests.activity_date,\n    budget_requests.venue,\n    budget_requests.requested_amount,\n    budget_requests.approved_amount,\n    budget_requests.released_amount,\n    budget_requests.release_date,\n    budget_requests.purpose_category,\n    budget_requests.status,\n    budget_requests.remarks,\n    budget_requests.admin_remarks,\n    budget_requests.go_signal_at,\n    budget_requests.hard_copy_submitted_at,\n    budget_requests.user_note,\n    budget_requests.revision_history,\n    budget_requests.created_at,\n    budget_requests.updated_at;\nEND;\n$function$\n",
+      "definition_md5": "90825843cb2104f8e3959439b4a8653f"
+    }
+  ]
+}

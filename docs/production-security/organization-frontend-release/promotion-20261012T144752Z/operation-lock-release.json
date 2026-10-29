@@ -1,0 +1,8 @@
+{
+  "capturedAt": "2026-10-12T15:12:46.610Z",
+  "ownedLocks": 2,
+  "releasedLocks": 2,
+  "status": "PASS",
+  "otherProcessLocksRemoved": false,
+  "durableAttemptMarkerRetained": true
+}

@@ -1,0 +1,178 @@
+{
+  "status": "PREFLIGHT_PASSED_NOT_SUBMITTED",
+  "projectRef": "mqqaykksadotbrghbexz",
+  "authorizedSha256": "abd2ea82587c9bbb0c18af68851faa7f83fd5a64bca113014c500b00abec8c65",
+  "receiptVersion": "20261011230000",
+  "recordedAt": "2026-10-11T06:52:19.064Z",
+  "git": {
+    "branch": "ui-refactor",
+    "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+    "dirtyWorkingTreePreserved": true
+  },
+  "project": {
+    "id": "mqqaykksadotbrghbexz",
+    "name": "lydo-org-focused",
+    "status": "ACTIVE_HEALTHY",
+    "databaseHost": "db.mqqaykksadotbrghbexz.supabase.co"
+  },
+  "connection": {
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "database_name": "postgres",
+    "server_address": "2406:da1c:4c7:f800:e263:668:14a1:4880/128",
+    "server_port": 5432,
+    "backend_pid": 2667989,
+    "tls": {
+      "ssl": true,
+      "cipher": "TLS_AES_256_GCM_SHA384",
+      "version": "TLSv1.3"
+    },
+    "capabilities": {
+      "create_db": true,
+      "superuser": false,
+      "bypass_rls": true,
+      "create_role": true
+    },
+    "can_create_schema": true,
+    "can_create_public_function": true,
+    "migration_schema_usage": true,
+    "can_record_migration": true,
+    "containment_schema_absent": true,
+    "receipt_absent": true,
+    "marker_triggers_absent": true
+  },
+  "dnsVerification": {
+    "Name": "db.mqqaykksadotbrghbexz.supabase.co",
+    "Type": 28,
+    "IPAddress": "2406:da1c:4c7:f800:e263:668:14a1:4880"
+  },
+  "catalogCompleteMatch": true,
+  "migrations": {
+    "count": 163,
+    "latest": "20261008174154",
+    "fingerprint": "380c842e791bfbcf5c7a939371e24738"
+  },
+  "functionPrivileges": [
+    {
+      "owner": "postgres",
+      "signature": "admin_cleanup_yorp_sample_dataset(text,text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_ensure_renewal_test_account_profile(text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_get_or_create_renewal_test_account(text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_get_yorp_sample_dataset_status(text,text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_reset_renewal_test_scenario(text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_restore_renewal_test_scenario(text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_seed_renewal_test_registration_documents(text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_seed_yorp_sample_dataset_core(text,text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "admin_seed_yorp_sample_dataset(text,text)",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "diversify_yorp_seed_projects_and_budgets()",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "enforce_accreditation_immutability()",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "enforce_renewal_terminal_immutability()",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "guard_organization_identity_privileges()",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "is_development_or_test_environment()",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "rebalance_yorp_seed_reporting_quarters()",
+      "can_alter_and_grant": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+      "can_alter_and_grant": true
+    }
+  ],
+  "tablePrivileges": [
+    {
+      "table_name": "budget_requests",
+      "owner": "postgres",
+      "owns_table": true,
+      "can_create_trigger": true
+    },
+    {
+      "table_name": "document_submission_files",
+      "owner": "postgres",
+      "owns_table": true,
+      "can_create_trigger": true
+    },
+    {
+      "table_name": "document_submissions",
+      "owner": "postgres",
+      "owns_table": true,
+      "can_create_trigger": true
+    },
+    {
+      "table_name": "liquidation_reports",
+      "owner": "postgres",
+      "owns_table": true,
+      "can_create_trigger": true
+    }
+  ],
+  "quiescence": {
+    "checked_at": "2026-10-11T06:48:33.291371+00:00",
+    "prepared_transactions": 0,
+    "idle_open_transactions": 0,
+    "installer_lock_present": false,
+    "test_utility_active_calls": []
+  },
+  "operatorConfirmation": "User confirmed production renewal-test and sample-seeding operations are paused through completion.",
+  "installationPath": "Exact self-recording standalone transaction via fixed-project authenticated Supabase SQL control plane; no migration API wrapper, generated receipt, or linked CLI.",
+  "privateDataHandling": "Only counts and aggregate fingerprints stored; no row values, passwords, JWTs, API keys, session tokens, or signed URLs."
+}

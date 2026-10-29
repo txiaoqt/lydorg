@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-10-12T12:09:46.842Z",
+  "status": "PASS",
+  "reason": "Only the six packaging files changed. This task did not modify SQL, RLS, classifier code or its data inputs; all seven runtime hashes are unchanged. Reuse exact preserved prior receipts instead of repeating infrastructure validation.",
+  "evidence": [
+    {
+      "path": "docs/production-security/organization-storage-review/20261012T100755Z/isolated-sql.tap",
+      "sha256": "527d66971a16ef6f4169e99c8e81a6499f861cd3e03d3fed755eba263d4bf597",
+      "status": "REUSED PASS",
+      "tests": 1,
+      "scope": "PGlite actual Storage foundation/cutover SQL compatibility",
+      "rerun": false
+    },
+    {
+      "path": "docs/production-security/organization-storage-review/20261012T100755Z/classification-tests.tap",
+      "sha256": "cb2d7f7b565295f4acc127e2f6faa8fea05ee02c6c9e7151a76f444067833ad2",
+      "status": "REUSED PASS",
+      "tests": 8,
+      "scope": "Offline conservative retention/classification/redaction",
+      "rerun": false
+    }
+  ],
+  "newLiveDatabaseOrStorageAssertion": false
+}

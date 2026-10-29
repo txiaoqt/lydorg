@@ -1,0 +1,10 @@
+{
+  "node": "v24.21.0",
+  "npm": "11.19.0",
+  "python": "Python 3.14.3",
+  "platform": "Windows x64",
+  "nodeExecutableSha256": "ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32",
+  "freshNpmCiCount": 2,
+  "linuxOrProviderReproduction": "NOT TESTED",
+  "python312Execution": "NOT TESTED"
+}

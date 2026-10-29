@@ -1,0 +1,33 @@
+{
+  "capturedAt": "2026-10-12T12:02:36.744Z",
+  "status": "PASS",
+  "localOnly": true,
+  "targetProject": "yorbms_user",
+  "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "sourceRevision": "sha256:0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+  "sourceArchive": {
+    "path": ".agent/organization-storage-vercel-20261012T114439Z/organization-storage-vercel24-source.zip",
+    "bytes": 15424325,
+    "sha256": "e7d43c8aa7d0d0a2cc42130eafd34ad9b1b5147aeb416aba55349353f7fa33c8",
+    "files": 562,
+    "roundtrip": "PASS",
+    "repeatGeneration": "PASS"
+  },
+  "staticArchive": {
+    "path": ".agent/organization-storage-vercel-20261012T114439Z/organization-storage-vercel24-static.zip",
+    "bytes": 11956896,
+    "sha256": "12f9d3da83e0669e8bde62879d3615782c877768571f79799a9d02bf162c62d3",
+    "files": 53,
+    "roundtrip": "PASS",
+    "repeatGeneration": "PASS"
+  },
+  "staticInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+  "fixedVersion": "1.0.0-org-storage-rc+20261012114439.vercel24",
+  "publicConfigurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+  "typecheck": "FAIL",
+  "typecheckErrors": 651,
+  "reviewedReleaseIntroducedTypeDefects": 0,
+  "hostedExecution": "NOT TESTED",
+  "deploymentSubmitted": false
+}

@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "archiveSha256": "0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd",
+  "archiveBytes": 200,
+  "archiveCreationUtc": "2026-10-13T07:53:03.1472310Z",
+  "archiveLastWriteUtc": "2026-10-13T07:53:03.1547868Z",
+  "archiveObservedLastAccessUtc": "2026-10-13T08:47:32.3054289Z",
+  "archiveOwnershipAndAclPreserved": true,
+  "freshProofSha256": "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf",
+  "freshProofAclVerified": true,
+  "stateFiles": [
+    "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+    "control-plane-proof.json"
+  ],
+  "authorizationExists": false,
+  "approvedPreflightExists": false,
+  "lockExists": false,
+  "attemptMarkerExists": false,
+  "completedPreflightEvidenceExists": false,
+  "manifestSha256": "8e59054cdbea2497decfd0a47582960129db21cb0ffd0757e8865f5d0e89f7b8",
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+}

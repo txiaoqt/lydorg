@@ -1,0 +1,1078 @@
+{
+  "recordType": "YTRACE_BUDGET_PAUSE_NATIVE_PREFLIGHT",
+  "status": "READ_ONLY_PREFLIGHT_PASS",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "port": 5432,
+  "database": "postgres",
+  "user": "postgres",
+  "route": "native-pg-direct-tls",
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "sqlBytes": 11945,
+  "runnerBundleSha256": "58aed13a1099907460f74e9730afa8c8f22a1a0f0ee07fd6e77d609ac80a0e25",
+  "capturedAt": "2026-10-13T10:42:29.352Z",
+  "controlPlaneEvidenceSha256": "79a508950d5a04eda66634e9ef8bb17eb51756abdcd979b6b996866a9077ced1",
+  "tls": {
+    "chainVerified": true,
+    "hostnameVerified": true,
+    "protocol": "TLSv1.3",
+    "peerCertificateFingerprint256": "6D:58:E8:D1:17:BE:04:F4:2A:59:0C:EE:98:3A:95:DA:A7:63:F7:D1:C9:C4:6E:75:5D:5A:72:28:14:83:6B:91",
+    "caSha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
+  },
+  "identity": {
+    "tls": true,
+    "database": "postgres",
+    "backend_pid": 2877074,
+    "server_port": 5432,
+    "tls_version": "TLSv1.3",
+    "current_user": "postgres",
+    "public_usage": true,
+    "session_user": "postgres",
+    "backend_start": "2026-10-13T10:42:25.915827+00:00",
+    "plpgsql_usage": true,
+    "public_create": true,
+    "text_type_usage": true,
+    "application_name": "ytrace-budget-pause-r-84f708c5-f5aa-4a9e-a760-5e71e550bcea",
+    "database_connect": true,
+    "jsonb_type_usage": true,
+    "pg_read_all_stats": true,
+    "server_version_num": 170006,
+    "owns_target_function": true,
+    "transaction_read_only": "on",
+    "uuid_array_type_usage": true,
+    "active_budget_deletion_calls": 0,
+    "default_transaction_read_only": "on",
+    "other_budget_install_sessions": 0,
+    "all_eight_protected_relations_selectable": true
+  },
+  "budget": {
+    "phase": "pre",
+    "database": "postgres",
+    "function": {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "oid": "32925",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "jsonb",
+      "strict": false,
+      "arguments": "_session_token text, _request_ids uuid[]",
+      "signature": "admin_bulk_delete_budget_requests(text,uuid[])",
+      "source_md5": "eb7b756964fd31efebfb39749f5c9e5b",
+      "volatility": "v",
+      "parallel_mode": "u",
+      "definition_md5": "f6c36316ba941c9e0f76674754ac44ba",
+      "security_definer": true
+    },
+    "read_only": "on",
+    "captured_at": "2026-10-13T10:42:28.402742+00:00",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "server_version": "17.6",
+    "catalog_matches": true,
+    "project_binding": [
+      "https://mqqaykksadotbrghbexz.supabase.co"
+    ],
+    "storage_objects": 378,
+    "function_matches": true,
+    "containment_guard": false,
+    "migration_history": {
+      "count": 164,
+      "latest": "20261011230000",
+      "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+    },
+    "compatibility_sha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "storage_policy_count": 15,
+    "organization_profiles": 93
+  },
+  "protectedData": {
+    "read_only": "on",
+    "preserved_data": [
+      {
+        "relation": "auth.identities_inventory",
+        "row_count": 96,
+        "content_fingerprint": "37c3cd33bff0f9332e30802bc54a0944"
+      },
+      {
+        "relation": "auth.users_inventory",
+        "row_count": 95,
+        "content_fingerprint": "f566384e5cd74728d38e756e140262c8"
+      },
+      {
+        "relation": "public.activity_announcements",
+        "row_count": 6,
+        "content_fingerprint": "a477e1841f1f52aa84be99c7e42c9212"
+      },
+      {
+        "relation": "public.activity_logs",
+        "row_count": 3338,
+        "content_fingerprint": "dd1d44ce3b67a75986b9718abe269164"
+      },
+      {
+        "relation": "public.admin_accounts",
+        "row_count": 2,
+        "content_fingerprint": "6667025b4e95390384c3e8d21ebd86b9"
+      },
+      {
+        "relation": "public.admin_portal_change_versions",
+        "row_count": 6,
+        "content_fingerprint": "d817aed6ac548009043a81c06f4f5431"
+      },
+      {
+        "relation": "public.admin_sessions",
+        "row_count": 488,
+        "content_fingerprint": "d367e3c20ae321ac93cda1f36a9dd187"
+      },
+      {
+        "relation": "public.admin_system_settings",
+        "row_count": 68,
+        "content_fingerprint": "41cbbcc17101732120fe4ae511cf9fb9"
+      },
+      {
+        "relation": "public.admin_template_categories",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.admin_ypop_deletion_jobs",
+        "row_count": 4,
+        "content_fingerprint": "605e3150726ac44764f165c6ac17f869"
+      },
+      {
+        "relation": "public.annual_budget_allocations",
+        "row_count": 3,
+        "content_fingerprint": "baeafe3ae17c3eb8b1157bb6ea685f80"
+      },
+      {
+        "relation": "public.barangays",
+        "row_count": 3,
+        "content_fingerprint": "772803262eb4662effaca6b0f9189a00"
+      },
+      {
+        "relation": "public.budget_purpose_categories",
+        "row_count": 8,
+        "content_fingerprint": "00877f0b785dccfbbbb45fbf24969975"
+      },
+      {
+        "relation": "public.budget_request_files",
+        "row_count": 6,
+        "content_fingerprint": "959a679f0db324003bfbd9a41a73bd76"
+      },
+      {
+        "relation": "public.budget_requests",
+        "row_count": 90,
+        "content_fingerprint": "57fe3b1985eeb77aef7c8b7e61c43b84"
+      },
+      {
+        "relation": "public.compliance_remarks",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.disclosure_documents",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.document_submission_files",
+        "row_count": 547,
+        "content_fingerprint": "86e23905698f1463ca8324b2f2fdee29"
+      },
+      {
+        "relation": "public.document_submissions",
+        "row_count": 92,
+        "content_fingerprint": "cc28a4388e2ed0a521c1a57f6ee6f54d"
+      },
+      {
+        "relation": "public.events",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.inquiries",
+        "row_count": 4,
+        "content_fingerprint": "86a8b1c7c9bd972b5f61dcbc632033ec"
+      },
+      {
+        "relation": "public.liquidation_report_files",
+        "row_count": 5,
+        "content_fingerprint": "74753e505a742349247f64c80a710765"
+      },
+      {
+        "relation": "public.liquidation_reports",
+        "row_count": 62,
+        "content_fingerprint": "c8feef83d961d102237a129520184554"
+      },
+      {
+        "relation": "public.move_applications",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.move_files",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.news_categories",
+        "row_count": 3,
+        "content_fingerprint": "abd1a75ddf10f1e3ec488bb737041d9e"
+      },
+      {
+        "relation": "public.news_releases",
+        "row_count": 3,
+        "content_fingerprint": "798d23db2aef87b5dc37457dd3b2e180"
+      },
+      {
+        "relation": "public.notifications",
+        "row_count": 173,
+        "content_fingerprint": "c9da28803eedeaa26c65b78bb6eda6c9"
+      },
+      {
+        "relation": "public.organization_accreditations",
+        "row_count": 89,
+        "content_fingerprint": "61c8deb3bf9495fde59e613cc4f9b7f4"
+      },
+      {
+        "relation": "public.organization_contacts",
+        "row_count": 214,
+        "content_fingerprint": "c72b18c3edb2e72ccf11d50d0dbcefa2"
+      },
+      {
+        "relation": "public.organization_profiles",
+        "row_count": 93,
+        "content_fingerprint": "a3d0cedda53960f18b94f97f59779489"
+      },
+      {
+        "relation": "public.organization_reference_counters",
+        "row_count": 3,
+        "content_fingerprint": "2e0bb63f19674cb12db8a887bf9ea85e"
+      },
+      {
+        "relation": "public.organization_renewals",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.organization_urn_counters",
+        "row_count": 3,
+        "content_fingerprint": "b51b9a427d9ac10351501c0812c8056c"
+      },
+      {
+        "relation": "public.organizations",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.policy_versions",
+        "row_count": 3,
+        "content_fingerprint": "73a74104d4b95b6ec97c9598656e473c"
+      },
+      {
+        "relation": "public.programs",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.required_document_types",
+        "row_count": 13,
+        "content_fingerprint": "0c5e9f03ad34ee1de7605d93eec093d4"
+      },
+      {
+        "relation": "public.roles",
+        "row_count": 4,
+        "content_fingerprint": "1dcad3d0e8c8490def0d21146dca21df"
+      },
+      {
+        "relation": "public.transparency_posts",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.units",
+        "row_count": 3,
+        "content_fingerprint": "a97f533c92fb2de1bb66f97de4ea00ea"
+      },
+      {
+        "relation": "public.urn_review_history",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.user_policy_acceptance",
+        "row_count": 9,
+        "content_fingerprint": "08fc7b45a84206f14263f28759a9d624"
+      },
+      {
+        "relation": "public.user_profiles",
+        "row_count": 95,
+        "content_fingerprint": "bff1ea8e1490becad98c4f6c83a016d6"
+      },
+      {
+        "relation": "public.user_roles",
+        "row_count": 95,
+        "content_fingerprint": "9f133f574c7172ba6ad6ef106293d46a"
+      },
+      {
+        "relation": "public.yorp_sample_document_assets",
+        "row_count": 6,
+        "content_fingerprint": "62c3e8cf15931bfb8c61447e80a5a8dd"
+      },
+      {
+        "relation": "public.ypop_city_activities",
+        "row_count": 3,
+        "content_fingerprint": "528903a538a50c258a98c6f7566c60c3"
+      },
+      {
+        "relation": "public.ypop_entries",
+        "row_count": 5,
+        "content_fingerprint": "af85bef72658c2ea0eb84d1a98262965"
+      },
+      {
+        "relation": "public.ypop_event_files",
+        "row_count": 17,
+        "content_fingerprint": "8cbfd3e6b00371e388f42144f4aee2fb"
+      },
+      {
+        "relation": "public.ypop_event_participations",
+        "row_count": 14,
+        "content_fingerprint": "45edd1bde95490300c5e0e36866476a7"
+      },
+      {
+        "relation": "public.ypop_files",
+        "row_count": 0,
+        "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "relation": "public.ypop_org_activities",
+        "row_count": 3,
+        "content_fingerprint": "d9970134c1e270bf09164bf6ddf67111"
+      },
+      {
+        "relation": "public.ypop_org_activity_files",
+        "row_count": 4,
+        "content_fingerprint": "49bd4a87247d409605d93844836c11fb"
+      },
+      {
+        "relation": "public.ypop_periods",
+        "row_count": 1,
+        "content_fingerprint": "a836b242db10b87679dfd8e840732f68"
+      },
+      {
+        "relation": "public.ypop_submission_deletion_receipts",
+        "row_count": 2,
+        "content_fingerprint": "dc63498e324a7f91ce15207b07f05fc7"
+      },
+      {
+        "relation": "storage.buckets",
+        "row_count": 10,
+        "content_fingerprint": "832ce1466eb597a15f1082c9544eb540"
+      },
+      {
+        "relation": "storage.objects",
+        "row_count": 378,
+        "content_fingerprint": "67284160e3ab4a273194aad042e84e40"
+      }
+    ],
+    "sha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429"
+  },
+  "foundation": {
+    "value": {
+      "tables": [
+        {
+          "acl": "{postgres=arwdDxtm/postgres}",
+          "rls": true,
+          "owner": "postgres",
+          "table": "ytrace_storage_private.admin_asset_uploads",
+          "columns": [
+            {
+              "name": "bucket_id",
+              "type": "text",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "object_name",
+              "type": "text",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "admin_id",
+              "type": "uuid",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "resource_id",
+              "type": "uuid",
+              "default": null,
+              "not_null": false
+            },
+            {
+              "name": "expires_at",
+              "type": "timestamp with time zone",
+              "default": "(now() + '02:00:00'::interval)",
+              "not_null": true
+            }
+          ],
+          "force_rls": false,
+          "public_dml": false,
+          "constraints": [
+            {
+              "name": "admin_asset_uploads_admin_id_fkey",
+              "definition": "FOREIGN KEY (admin_id) REFERENCES admin_accounts(id)"
+            },
+            {
+              "name": "admin_asset_uploads_bucket_id_check",
+              "definition": "CHECK ((bucket_id = ANY (ARRAY['template-files'::text, 'news-release-images'::text])))"
+            },
+            {
+              "name": "admin_asset_uploads_pkey",
+              "definition": "PRIMARY KEY (bucket_id, object_name)"
+            }
+          ],
+          "effective_grants": {
+            "anon": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "service_role": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "authenticated": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            }
+          }
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres}",
+          "rls": true,
+          "owner": "postgres",
+          "table": "ytrace_storage_private.asset_bindings",
+          "columns": [
+            {
+              "name": "bucket_id",
+              "type": "text",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "object_name",
+              "type": "text",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "resource_id",
+              "type": "uuid",
+              "default": null,
+              "not_null": true
+            }
+          ],
+          "force_rls": false,
+          "public_dml": false,
+          "constraints": [
+            {
+              "name": "asset_bindings_pkey",
+              "definition": "PRIMARY KEY (bucket_id, object_name, resource_id)"
+            }
+          ],
+          "effective_grants": {
+            "anon": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "service_role": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "authenticated": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            }
+          }
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres}",
+          "rls": true,
+          "owner": "postgres",
+          "table": "ytrace_storage_private.cleanup_receipts",
+          "columns": [
+            {
+              "name": "bucket_id",
+              "type": "text",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "object_name",
+              "type": "text",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "organization_id",
+              "type": "uuid",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "expires_at",
+              "type": "timestamp with time zone",
+              "default": "(now() + '00:15:00'::interval)",
+              "not_null": true
+            }
+          ],
+          "force_rls": false,
+          "public_dml": false,
+          "constraints": [
+            {
+              "name": "cleanup_receipts_pkey",
+              "definition": "PRIMARY KEY (bucket_id, object_name, user_id)"
+            }
+          ],
+          "effective_grants": {
+            "anon": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "service_role": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "authenticated": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            }
+          }
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres}",
+          "rls": true,
+          "owner": "postgres",
+          "table": "ytrace_storage_private.trusted_storage_origins",
+          "columns": [
+            {
+              "name": "origin",
+              "type": "text",
+              "default": null,
+              "not_null": true
+            },
+            {
+              "name": "registered_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "not_null": true
+            },
+            {
+              "name": "note",
+              "type": "text",
+              "default": null,
+              "not_null": false
+            }
+          ],
+          "force_rls": false,
+          "public_dml": false,
+          "constraints": [
+            {
+              "name": "trusted_storage_origins_origin_check",
+              "definition": "CHECK ((origin ~ '^https?://[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]{1,5})?$'::text))"
+            },
+            {
+              "name": "trusted_storage_origins_pkey",
+              "definition": "PRIMARY KEY (origin)"
+            }
+          ],
+          "effective_grants": {
+            "anon": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "service_role": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            },
+            "authenticated": {
+              "delete": false,
+              "insert": false,
+              "select": false,
+              "update": false,
+              "trigger": false,
+              "truncate": false,
+              "references": false
+            }
+          }
+        }
+      ],
+      "database": "postgres",
+      "triggers": [
+        {
+          "name": "ytrace_activity_cleanup",
+          "type": 11,
+          "table": "public.ypop_org_activities",
+          "columns": "",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_draft_cleanup()",
+          "definition": "CREATE TRIGGER ytrace_activity_cleanup BEFORE DELETE ON ypop_org_activities FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_draft_cleanup()",
+          "definition_sha256": "39b3a064aa141df05c40872c9647ed0cf0290345b71bed50b498aaf19fc636ab"
+        },
+        {
+          "name": "ytrace_budget_cleanup",
+          "type": 11,
+          "table": "public.budget_requests",
+          "columns": "",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_draft_cleanup()",
+          "definition": "CREATE TRIGGER ytrace_budget_cleanup BEFORE DELETE ON budget_requests FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_draft_cleanup()",
+          "definition_sha256": "43cc855d01fa59991abc67dd3d6bb45194e6e3d7fc8f154b4b159d54cc035ff0"
+        },
+        {
+          "name": "ytrace_event_cleanup",
+          "type": 11,
+          "table": "public.ypop_event_participations",
+          "columns": "",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_draft_cleanup()",
+          "definition": "CREATE TRIGGER ytrace_event_cleanup BEFORE DELETE ON ypop_event_participations FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_draft_cleanup()",
+          "definition_sha256": "7c0375e8e537e7f17db7718c55212d87fbcfd146af8ec827d5bc020b2b445ede"
+        },
+        {
+          "name": "ytrace_liquidation_cleanup",
+          "type": 11,
+          "table": "public.liquidation_reports",
+          "columns": "",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_draft_cleanup()",
+          "definition": "CREATE TRIGGER ytrace_liquidation_cleanup BEFORE DELETE ON liquidation_reports FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_draft_cleanup()",
+          "definition_sha256": "157b643a351d61faba6c08fca31355cc4c35c43c369236d67ee3e3c72301a07a"
+        },
+        {
+          "name": "ytrace_move_cleanup",
+          "type": 11,
+          "table": "public.move_applications",
+          "columns": "",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_draft_cleanup()",
+          "definition": "CREATE TRIGGER ytrace_move_cleanup BEFORE DELETE ON move_applications FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_draft_cleanup()",
+          "definition_sha256": "3043c1771d3b18a28696813a90084f84175ff2e224215881943b5783d8b1d0ae"
+        },
+        {
+          "name": "ytrace_remember_news_asset",
+          "type": 21,
+          "table": "public.news_releases",
+          "columns": "10",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_asset_binding()",
+          "definition": "CREATE TRIGGER ytrace_remember_news_asset AFTER INSERT OR UPDATE OF preview_image_url ON news_releases FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_asset_binding()",
+          "definition_sha256": "3d25b746b741985db814eb839849c028bcc537f8cc14bcda02f22804bfc7c27c"
+        },
+        {
+          "name": "ytrace_remember_template_asset",
+          "type": 21,
+          "table": "public.required_document_types",
+          "columns": "6",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_asset_binding()",
+          "definition": "CREATE TRIGGER ytrace_remember_template_asset AFTER INSERT OR UPDATE OF template_url ON required_document_types FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_asset_binding()",
+          "definition_sha256": "9fb0c11cb8db265f69bd6f5c476ef1d91e6081515c55134a58738fe5278ab786"
+        },
+        {
+          "name": "ytrace_ypop_cleanup",
+          "type": 11,
+          "table": "public.ypop_entries",
+          "columns": "",
+          "enabled": "O",
+          "function": "ytrace_storage_private.remember_draft_cleanup()",
+          "definition": "CREATE TRIGGER ytrace_ypop_cleanup BEFORE DELETE ON ypop_entries FOR EACH ROW EXECUTE FUNCTION ytrace_storage_private.remember_draft_cleanup()",
+          "definition_sha256": "f648644600005d1134cc67a74580a399ca62a444ed0c22f99341b933e403e6d8"
+        }
+      ],
+      "functions": [
+        {
+          "acl": "{postgres=X/postgres,service_role=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "admin_authorize_storage_operation(text,text,text,text,uuid,text)",
+          "source_md5": "bc17ff58b1bcc636d0d6320ccc2e3b33",
+          "volatility": "v",
+          "definition_md5": "5d6b3160a32152819bf0ddc0a236a978",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": true,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "3c84eba094d7a18ae2fd2d9bb66a5334b0a24a019075d063294d6e421e83209a"
+        },
+        {
+          "acl": "{postgres=X/postgres,service_role=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.asset_reference_audit()",
+          "source_md5": "34e12e0f511faa800891c31d1051a18e",
+          "volatility": "s",
+          "definition_md5": "7d6f0f706d8df343945acd4650b8bddc",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": true,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "9d0acd4433346b21242aaef4e839bf829e85648436090b7225ea8aa18be95c49"
+        },
+        {
+          "acl": "{postgres=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.backfill_asset_bindings()",
+          "source_md5": "37d337efe6e9bf27b6887b5f84dbf382",
+          "volatility": "v",
+          "definition_md5": "dc754959b513b035c44bbefcea42b1d6",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "c407045ee2ed682a74731e8fc843824cb49b26e4cbfd54a586058666b96f8532"
+        },
+        {
+          "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.is_active_template(text)",
+          "source_md5": "d2727112234d5be6252328dc87983d54",
+          "volatility": "s",
+          "definition_md5": "2b6acc1735ae3526853c22e7d5772075",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": true,
+            "service_role": false,
+            "authenticated": true
+          },
+          "security_definer": true,
+          "definition_sha256": "2475a9f11ebc1d35490513e17e2199b5da80c4e0887b990c70a8af34a0a44c5b"
+        },
+        {
+          "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.is_public_avatar(text,text,text,text)",
+          "source_md5": "ba4aa5d6994ee930ebeb1ef7b3faa672",
+          "volatility": "s",
+          "definition_md5": "34c6a8ac38d9bc01b5e1e942b982d6f9",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": true,
+            "service_role": false,
+            "authenticated": true
+          },
+          "security_definer": true,
+          "definition_sha256": "06781cd38bd5af95339eb45f474eec1db1d23dfa05dd90ddb9b08c1595c3f657"
+        },
+        {
+          "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.is_published_news_image(text)",
+          "source_md5": "c41320784f654b0cf194728c0ba69c14",
+          "volatility": "s",
+          "definition_md5": "9a3982c347197abc9c29dfc11d8bc0b5",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": true,
+            "service_role": false,
+            "authenticated": true
+          },
+          "security_definer": true,
+          "definition_sha256": "5dcd413150b580a341cd332182b66a4804a179714f462b01dcbc98e2dccb03de"
+        },
+        {
+          "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.organization_object_access(text,text,text)",
+          "source_md5": "0fa5031b24cf2ad3495dbd97d1ebdc92",
+          "volatility": "s",
+          "definition_md5": "64e829bf12aa13c9d64bf4f4be159437",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": true
+          },
+          "security_definer": true,
+          "definition_sha256": "e50cbd92531495a7fc97a2c8334a88d9dd27ae2c4a3a851ed01ebc4a9e3c9934"
+        },
+        {
+          "acl": "{postgres=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.parent_context(text,text)",
+          "source_md5": "80e71dc4d74feab05144426185e344b2",
+          "volatility": "s",
+          "definition_md5": "17828a61687a6236d80b45a735c0bdc1",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "1fd6c58c2694a6fd5d9821617b3750fdd53b3701a11928de72578262ed9180e3"
+        },
+        {
+          "acl": "{postgres=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.public_asset_reference(text,text)",
+          "source_md5": "9f49fdee112932949b326c54bad4d70c",
+          "volatility": "s",
+          "definition_md5": "ee204655a17a300ae2d70cd5b3b5dd59",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "02bee275e0b179abd322e113f5aeee34bd113c6c20c4f0a135be5d73a2105d0b"
+        },
+        {
+          "acl": "{postgres=X/postgres,service_role=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.register_trusted_storage_origin(text,text)",
+          "source_md5": "573bad51dd3c2b654a28ad35c736ca1a",
+          "volatility": "v",
+          "definition_md5": "f1086cced01738ee8c5ad2f7738a8c83",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": true,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "e938ed7a6092b298aacc039b1928684ed15ea7cb078d5652d01b389c9a9c30e0"
+        },
+        {
+          "acl": "{postgres=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.remember_asset_binding()",
+          "source_md5": "41e656072cb78d5ba312fff57966d2e3",
+          "volatility": "v",
+          "definition_md5": "e92cb716a49a985743355026a0c86d1e",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "49ca5266716f9ca335c95644886e2ef07f2b766b999c0321364303b563d9caaa"
+        },
+        {
+          "acl": "{postgres=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.remember_draft_cleanup()",
+          "source_md5": "bd447d36f28a8a771749f6d204499cd7",
+          "volatility": "v",
+          "definition_md5": "1ea0355d176fbdd09364cce91d14d9f1",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "630438e720668bcc8d552ac067d538b67d7a0c69e52ff919df35c61c719c53d4"
+        },
+        {
+          "acl": "{postgres=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog, public"
+          ],
+          "signature": "ytrace_storage_private.resource_references(text,text)",
+          "source_md5": "528a6ea2e05c53505dd0106bf91081a7",
+          "volatility": "s",
+          "definition_md5": "f8ce7660b637af3c8104b1d50e64cc44",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": false
+          },
+          "security_definer": true,
+          "definition_sha256": "62f68a7628befabc92aa6a036209202d2d30f30153a68822031746ecbbddc438"
+        },
+        {
+          "acl": "{postgres=X/postgres}",
+          "owner": "postgres",
+          "config": [
+            "search_path=pg_catalog"
+          ],
+          "signature": "ytrace_storage_private.url_decode(text)",
+          "source_md5": "fced7f9df7e65a9f48c3382e360819e6",
+          "volatility": "i",
+          "definition_md5": "3688ec994049536a5d867da5dc9b221d",
+          "public_execute": false,
+          "effective_grants": {
+            "anon": false,
+            "service_role": false,
+            "authenticated": false
+          },
+          "security_definer": false,
+          "definition_sha256": "7ba530325fb6c01686130f6aaaa1e4a2ea309ca043b4ba0ef7b66b38c1ba7143"
+        }
+      ],
+      "read_only": "on",
+      "schema_acl": "{postgres=UC/postgres,anon=U/postgres,authenticated=U/postgres,service_role=U/postgres}",
+      "asset_audit": [
+        {
+          "form": "legacy-public-url",
+          "total": 3,
+          "origin": "https://mqqaykksadotbrghbexz.supabase.co",
+          "published": true,
+          "resolvable": true,
+          "resource_kind": "news"
+        },
+        {
+          "form": "canonical",
+          "total": 13,
+          "origin": "storage://",
+          "published": true,
+          "resolvable": true,
+          "resource_kind": "template"
+        }
+      ],
+      "captured_at": "2026-10-13T10:42:29.340256+00:00",
+      "current_user": "postgres",
+      "session_user": "postgres",
+      "binding_counts": {
+        "template-files": 13,
+        "news-release-images": 3
+      },
+      "internal_counts": {
+        "asset_bindings": 16,
+        "cleanup_receipts": 0,
+        "admin_asset_uploads": 0,
+        "trusted_storage_origins": 1
+      },
+      "trusted_origins": [
+        "https://mqqaykksadotbrghbexz.supabase.co"
+      ],
+      "environment_guard": false,
+      "storage_policy_count": 15,
+      "published_news_resolution": {
+        "total": 3,
+        "resolved": 3,
+        "published": 3,
+        "objects_exist": 3
+      },
+      "current_template_resolution": {
+        "total": 13,
+        "active": 13,
+        "resolved": 13,
+        "objects_exist": 13
+      }
+    },
+    "sha256": "770d3d419386094aa7be2cce8e1a5a47056fe2c972e4a043c8949652cd67dea5",
+    "structureSha256": "eb9bf6a418438358fc9b6e8e72208e4b3ade1d798ac04fe91c7eb58c2b5063d9"
+  },
+  "approvalFingerprint": "8d8a45ca4a229d17b8cd79c33b914791e8b435774e5f615cae364b3d319c80fc"
+}

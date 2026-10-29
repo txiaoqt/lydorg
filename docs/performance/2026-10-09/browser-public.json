@@ -1,0 +1,1597 @@
+[
+  {
+    "build": "tmp/performance-baseline",
+    "route": "/",
+    "scope": "Anonymous local Edge; uncompressed local assets; real public API where reachable; not production page latency",
+    "idleSeconds": 0,
+    "pageTitle": "Y-TRACE",
+    "initialRequests": 21,
+    "idleRequests": 0,
+    "apiRequests": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "method": "POST",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "method": "POST",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013418473-627045047_1327120832766939_4311476262346846152_n.jpg",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013436066-725714963_1317403143928965_3598923462941362572_n.jpg",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013396792-631139155_1332352942243728_6744438061089168388_n.jpg",
+        "method": "GET",
+        "phase": "load"
+      }
+    ],
+    "resources": [
+      {
+        "name": "/pwa-theme-init.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 10.899999999906868,
+        "transferSize": 1557,
+        "decodedBodySize": 1257
+      },
+      {
+        "name": "/assets/index-DmSuQzf0.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 106.60000000009313,
+        "transferSize": 5669731,
+        "decodedBodySize": 5669431
+      },
+      {
+        "name": "/assets/index-nVUCXF5z.css",
+        "host": "127.0.0.1",
+        "initiator": "link",
+        "duration": 20,
+        "transferSize": 461947,
+        "decodedBodySize": 461647
+      },
+      {
+        "name": "/css2",
+        "host": "fonts.googleapis.com",
+        "initiator": "css",
+        "duration": 119.1999999997206,
+        "transferSize": 1289,
+        "decodedBodySize": 22387
+      },
+      {
+        "name": "/FullNavbar.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 6.100000000093132,
+        "transferSize": 9244,
+        "decodedBodySize": 8944
+      },
+      {
+        "name": "/favicon.ico",
+        "host": "127.0.0.1",
+        "initiator": "other",
+        "duration": 4.400000000372529,
+        "transferSize": 8019,
+        "decodedBodySize": 7719
+      },
+      {
+        "name": "/assets/Index-D4whuYIm.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 4.2999999998137355,
+        "transferSize": 31705,
+        "decodedBodySize": 31405
+      },
+      {
+        "name": "/assets/PublicNewsReleaseCard-CnqhChhR.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 4,
+        "transferSize": 3517,
+        "decodedBodySize": 3217
+      },
+      {
+        "name": "/assets/hero-image-upscaled-DMBKzXU7.jpeg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 31.100000000093132,
+        "transferSize": 3367384,
+        "decodedBodySize": 3367084
+      },
+      {
+        "name": "/assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 21.299999999813735,
+        "transferSize": 2415926,
+        "decodedBodySize": 2415626
+      },
+      {
+        "name": "/FullFooter.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 15.100000000093132,
+        "transferSize": 4373,
+        "decodedBodySize": 4073
+      },
+      {
+        "name": "/rest/v1/news_releases",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 1494.5,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/rest/v1/rpc/get_public_system_settings",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 1494.1000000000931,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/rest/v1/rpc/get_public_system_settings",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 1488.7000000001863,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/fonts/segoeui.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 73.10000000009313,
+        "transferSize": 960052,
+        "decodedBodySize": 959752
+      },
+      {
+        "name": "/fonts/segoeuib.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 74.29999999981374,
+        "transferSize": 947392,
+        "decodedBodySize": 947092
+      },
+      {
+        "name": "/storage/v1/object/public/news-release-images/news-releases/1786013418473-627045047_1327120832766939_4311476262346846152_n.jpg",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "img",
+        "duration": 934,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/storage/v1/object/public/news-release-images/news-releases/1786013436066-725714963_1317403143928965_3598923462941362572_n.jpg",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "img",
+        "duration": 936.8000000002794,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/storage/v1/object/public/news-release-images/news-releases/1786013396792-631139155_1332352942243728_6744438061089168388_n.jpg",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "img",
+        "duration": 937.8000000002794,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      }
+    ],
+    "wireResponses": [
+      {
+        "host": "127.0.0.1",
+        "path": "/",
+        "status": 200,
+        "type": "Document",
+        "responseMs": 11.571,
+        "encodedBytes": 2077
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/pwa-theme-init.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 3.666,
+        "encodedBytes": 1456
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-nVUCXF5z.css",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 5.582,
+        "encodedBytes": 461841
+      },
+      {
+        "host": "fonts.googleapis.com",
+        "path": "/css2",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 116.942,
+        "encodedBytes": 1462
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-DmSuQzf0.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 19.482,
+        "encodedBytes": 5669633
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullNavbar.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 5.061,
+        "encodedBytes": 9142
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/favicon.ico",
+        "status": 200,
+        "type": "Other",
+        "responseMs": 3.498,
+        "encodedBytes": 7928
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/PublicNewsReleaseCard-CnqhChhR.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 2.752,
+        "encodedBytes": 3416
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/Index-D4whuYIm.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 2.715,
+        "encodedBytes": 31605
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 11.215,
+        "encodedBytes": 2415837
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/hero-image-upscaled-DMBKzXU7.jpeg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 19.059,
+        "encodedBytes": 3367295
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullFooter.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 13.801,
+        "encodedBytes": 4270
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeui.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 5.271,
+        "encodedBytes": 959946
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeuib.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 5.995,
+        "encodedBytes": 947286
+      },
+      {
+        "host": "fonts.gstatic.com",
+        "path": "/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 58.146,
+        "encodedBytes": 48288
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 660.834,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 664.221,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 661.725,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 820.487,
+        "encodedBytes": 1245
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 827.219,
+        "encodedBytes": 1013
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 824.846,
+        "encodedBytes": 1109
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013418473-627045047_1327120832766939_4311476262346846152_n.jpg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 925.708,
+        "encodedBytes": 204123
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013436066-725714963_1317403143928965_3598923462941362572_n.jpg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 927.285,
+        "encodedBytes": 187784
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013396792-631139155_1332352942243728_6744438061089168388_n.jpg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 927.557,
+        "encodedBytes": 255922
+      }
+    ],
+    "failures": [],
+    "longTasks": [
+      {
+        "start": 285.79999999981374,
+        "duration": 226
+      }
+    ]
+  },
+  {
+    "build": "tmp/performance-baseline",
+    "route": "/public-templates",
+    "scope": "Anonymous local Edge; uncompressed local assets; real public API where reachable; not production page latency",
+    "idleSeconds": 35,
+    "pageTitle": "Y-TRACE",
+    "initialRequests": 15,
+    "idleRequests": 1,
+    "apiRequests": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "method": "POST",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "method": "GET",
+        "phase": "idle"
+      }
+    ],
+    "resources": [
+      {
+        "name": "/pwa-theme-init.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 9.700000000186265,
+        "transferSize": 1557,
+        "decodedBodySize": 1257
+      },
+      {
+        "name": "/assets/index-DmSuQzf0.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 71.6999999997206,
+        "transferSize": 5669731,
+        "decodedBodySize": 5669431
+      },
+      {
+        "name": "/assets/index-nVUCXF5z.css",
+        "host": "127.0.0.1",
+        "initiator": "link",
+        "duration": 13.600000000093132,
+        "transferSize": 461947,
+        "decodedBodySize": 461647
+      },
+      {
+        "name": "/css2",
+        "host": "fonts.googleapis.com",
+        "initiator": "css",
+        "duration": 199.5,
+        "transferSize": 1289,
+        "decodedBodySize": 22387
+      },
+      {
+        "name": "/FullNavbar.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 3.7000000001862645,
+        "transferSize": 9244,
+        "decodedBodySize": 8944
+      },
+      {
+        "name": "/favicon.ico",
+        "host": "127.0.0.1",
+        "initiator": "other",
+        "duration": 3.2000000001862645,
+        "transferSize": 8019,
+        "decodedBodySize": 7719
+      },
+      {
+        "name": "/assets/PublicTemplates-VPTmGevL.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 2.8000000002793968,
+        "transferSize": 4622,
+        "decodedBodySize": 4322
+      },
+      {
+        "name": "/FullFooter.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 4.100000000093132,
+        "transferSize": 4373,
+        "decodedBodySize": 4073
+      },
+      {
+        "name": "/fonts/segoeui.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 69.1999999997206,
+        "transferSize": 960052,
+        "decodedBodySize": 959752
+      },
+      {
+        "name": "/fonts/segoeuib.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 71.29999999981374,
+        "transferSize": 947392,
+        "decodedBodySize": 947092
+      },
+      {
+        "name": "/rest/v1/required_document_types",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 590.8000000002794,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/rest/v1/rpc/get_public_system_settings",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 585.5,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/rest/v1/required_document_types",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 421.5,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      }
+    ],
+    "wireResponses": [
+      {
+        "host": "127.0.0.1",
+        "path": "/public-templates",
+        "status": 200,
+        "type": "Document",
+        "responseMs": 4.082,
+        "encodedBytes": 2077
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/pwa-theme-init.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 2.312,
+        "encodedBytes": 1456
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-nVUCXF5z.css",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 4.438,
+        "encodedBytes": 461841
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-DmSuQzf0.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 12.006,
+        "encodedBytes": 5669633
+      },
+      {
+        "host": "fonts.googleapis.com",
+        "path": "/css2",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 198.296,
+        "encodedBytes": 1462
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullNavbar.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 2.918,
+        "encodedBytes": 9142
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/favicon.ico",
+        "status": 200,
+        "type": "Other",
+        "responseMs": 2.484,
+        "encodedBytes": 7928
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/PublicTemplates-VPTmGevL.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 2.038,
+        "encodedBytes": 4522
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullFooter.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 3.352,
+        "encodedBytes": 4270
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeui.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 5.907,
+        "encodedBytes": 959946
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeuib.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 7.363,
+        "encodedBytes": 947286
+      },
+      {
+        "host": "fonts.gstatic.com",
+        "path": "/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 51.676,
+        "encodedBytes": 48288
+      },
+      {
+        "host": "fonts.gstatic.com",
+        "path": "/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 52.936,
+        "encodedBytes": 27377
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 360.071,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 366.965,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 221.801,
+        "encodedBytes": 1219
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 219.646,
+        "encodedBytes": 2092
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 419.996,
+        "encodedBytes": 1937
+      }
+    ],
+    "failures": [],
+    "longTasks": [
+      {
+        "start": 238.89999999990687,
+        "duration": 205
+      }
+    ]
+  },
+  {
+    "build": "tmp/performance-final",
+    "route": "/",
+    "scope": "Anonymous local Edge; uncompressed local assets; real public API where reachable; not production page latency",
+    "idleSeconds": 0,
+    "pageTitle": "Y-TRACE",
+    "initialRequests": 28,
+    "idleRequests": 0,
+    "apiRequests": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "method": "POST",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013418473-627045047_1327120832766939_4311476262346846152_n.jpg",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013436066-725714963_1317403143928965_3598923462941362572_n.jpg",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013396792-631139155_1332352942243728_6744438061089168388_n.jpg",
+        "method": "GET",
+        "phase": "load"
+      }
+    ],
+    "resources": [
+      {
+        "name": "/pwa-theme-init.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 13.300000000279397,
+        "transferSize": 1557,
+        "decodedBodySize": 1257
+      },
+      {
+        "name": "/assets/index-BSciubSV.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 19,
+        "transferSize": 1241178,
+        "decodedBodySize": 1240878
+      },
+      {
+        "name": "/assets/index-nn-gkKHN.css",
+        "host": "127.0.0.1",
+        "initiator": "link",
+        "duration": 16.600000000093132,
+        "transferSize": 386047,
+        "decodedBodySize": 385747
+      },
+      {
+        "name": "/css2",
+        "host": "fonts.googleapis.com",
+        "initiator": "css",
+        "duration": 195.60000000009313,
+        "transferSize": 1289,
+        "decodedBodySize": 22387
+      },
+      {
+        "name": "/FullNavbar.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 5.600000000093132,
+        "transferSize": 9244,
+        "decodedBodySize": 8944
+      },
+      {
+        "name": "/favicon.ico",
+        "host": "127.0.0.1",
+        "initiator": "other",
+        "duration": 4.899999999906868,
+        "transferSize": 8019,
+        "decodedBodySize": 7719
+      },
+      {
+        "name": "/assets/Index-LvDdZybT.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 6.600000000093132,
+        "transferSize": 31978,
+        "decodedBodySize": 31678
+      },
+      {
+        "name": "/assets/PortalDocumentDrawer-Bs2HczUT.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 8,
+        "transferSize": 33118,
+        "decodedBodySize": 32818
+      },
+      {
+        "name": "/assets/sheet-DGBYZrQS.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 9.099999999627471,
+        "transferSize": 550644,
+        "decodedBodySize": 550344
+      },
+      {
+        "name": "/assets/file-check-Dj1B0IM8.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 6.5,
+        "transferSize": 734,
+        "decodedBodySize": 434
+      },
+      {
+        "name": "/assets/lock-Dgqnm-_V.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 18.600000000093132,
+        "transferSize": 675,
+        "decodedBodySize": 375
+      },
+      {
+        "name": "/assets/clock-BODiPcUj.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 18.700000000186265,
+        "transferSize": 652,
+        "decodedBodySize": 352
+      },
+      {
+        "name": "/assets/PublicNewsReleaseCard-BEUZ8C4y.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 21.299999999813735,
+        "transferSize": 3552,
+        "decodedBodySize": 3252
+      },
+      {
+        "name": "/assets/calendar-Bx2ceNL5.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 19.899999999906868,
+        "transferSize": 726,
+        "decodedBodySize": 426
+      },
+      {
+        "name": "/assets/send-DHx2T5q3.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 20.5,
+        "transferSize": 759,
+        "decodedBodySize": 459
+      },
+      {
+        "name": "/assets/banknote-DSwAH-5L.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 20.40000000037253,
+        "transferSize": 714,
+        "decodedBodySize": 414
+      },
+      {
+        "name": "/assets/hero-image-upscaled-DMBKzXU7.jpeg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 25.5,
+        "transferSize": 3367384,
+        "decodedBodySize": 3367084
+      },
+      {
+        "name": "/assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 17.5,
+        "transferSize": 2415926,
+        "decodedBodySize": 2415626
+      },
+      {
+        "name": "/FullFooter.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 5.699999999720603,
+        "transferSize": 4373,
+        "decodedBodySize": 4073
+      },
+      {
+        "name": "/fonts/segoeui.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 90.20000000018626,
+        "transferSize": 960052,
+        "decodedBodySize": 959752
+      },
+      {
+        "name": "/fonts/segoeuib.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 81.89999999990687,
+        "transferSize": 947392,
+        "decodedBodySize": 947092
+      },
+      {
+        "name": "/rest/v1/news_releases",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 1565.9000000003725,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/rest/v1/rpc/get_public_system_settings",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 1409.1000000000931,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/storage/v1/object/public/news-release-images/news-releases/1786013418473-627045047_1327120832766939_4311476262346846152_n.jpg",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "img",
+        "duration": 686.7999999998137,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/storage/v1/object/public/news-release-images/news-releases/1786013436066-725714963_1317403143928965_3598923462941362572_n.jpg",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "img",
+        "duration": 695.0999999996275,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/storage/v1/object/public/news-release-images/news-releases/1786013396792-631139155_1332352942243728_6744438061089168388_n.jpg",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "img",
+        "duration": 696.3000000002794,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      }
+    ],
+    "wireResponses": [
+      {
+        "host": "127.0.0.1",
+        "path": "/",
+        "status": 200,
+        "type": "Document",
+        "responseMs": 5.268,
+        "encodedBytes": 2077
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/pwa-theme-init.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 4.835,
+        "encodedBytes": 1456
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-nn-gkKHN.css",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 6.32,
+        "encodedBytes": 385941
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-BSciubSV.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 9.005,
+        "encodedBytes": 1241080
+      },
+      {
+        "host": "fonts.googleapis.com",
+        "path": "/css2",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 194.162,
+        "encodedBytes": 1462
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullNavbar.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 4.603,
+        "encodedBytes": 9142
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/favicon.ico",
+        "status": 200,
+        "type": "Other",
+        "responseMs": 3.664,
+        "encodedBytes": 7928
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/file-check-Dj1B0IM8.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 4.403,
+        "encodedBytes": 633
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/Index-LvDdZybT.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 5.176,
+        "encodedBytes": 31878
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/PortalDocumentDrawer-Bs2HczUT.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 5.531,
+        "encodedBytes": 33018
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/lock-Dgqnm-_V.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 14.95,
+        "encodedBytes": 574
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/clock-BODiPcUj.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 14.368,
+        "encodedBytes": 551
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/calendar-Bx2ceNL5.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 9.91,
+        "encodedBytes": 625
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/banknote-DSwAH-5L.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 10.222,
+        "encodedBytes": 613
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/send-DHx2T5q3.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 10.185,
+        "encodedBytes": 658
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/PublicNewsReleaseCard-BEUZ8C4y.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 12.026,
+        "encodedBytes": 3451
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/sheet-DGBYZrQS.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 6.272,
+        "encodedBytes": 550545
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/hero-image-upscaled-DMBKzXU7.jpeg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 8.851,
+        "encodedBytes": 3367295
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 9.751,
+        "encodedBytes": 2415837
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullFooter.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 4.402,
+        "encodedBytes": 4270
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeuib.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 7.615,
+        "encodedBytes": 947286
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeui.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 7.152,
+        "encodedBytes": 959946
+      },
+      {
+        "host": "fonts.gstatic.com",
+        "path": "/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 69.585,
+        "encodedBytes": 48288
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 580.334,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 725.09,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 825.925,
+        "encodedBytes": 1244
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 832.253,
+        "encodedBytes": 1111
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013418473-627045047_1327120832766939_4311476262346846152_n.jpg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 679.233,
+        "encodedBytes": 204123
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013436066-725714963_1317403143928965_3598923462941362572_n.jpg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 685.305,
+        "encodedBytes": 187776
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/storage/v1/object/public/news-release-images/news-releases/1786013396792-631139155_1332352942243728_6744438061089168388_n.jpg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 687.008,
+        "encodedBytes": 255933
+      }
+    ],
+    "failures": [],
+    "longTasks": []
+  },
+  {
+    "build": "tmp/performance-final",
+    "route": "/public-templates",
+    "scope": "Anonymous local Edge; uncompressed local assets; real public API where reachable; not production page latency",
+    "idleSeconds": 35,
+    "pageTitle": "Y-TRACE",
+    "initialRequests": 24,
+    "idleRequests": 0,
+    "apiRequests": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "method": "GET",
+        "phase": "load"
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "method": "POST",
+        "phase": "load"
+      }
+    ],
+    "resources": [
+      {
+        "name": "/pwa-theme-init.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 11.700000000186265,
+        "transferSize": 1557,
+        "decodedBodySize": 1257
+      },
+      {
+        "name": "/assets/index-BSciubSV.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 20.09999999962747,
+        "transferSize": 1241178,
+        "decodedBodySize": 1240878
+      },
+      {
+        "name": "/assets/index-nn-gkKHN.css",
+        "host": "127.0.0.1",
+        "initiator": "link",
+        "duration": 18.300000000279397,
+        "transferSize": 386047,
+        "decodedBodySize": 385747
+      },
+      {
+        "name": "/css2",
+        "host": "fonts.googleapis.com",
+        "initiator": "css",
+        "duration": 198.60000000009313,
+        "transferSize": 1289,
+        "decodedBodySize": 22387
+      },
+      {
+        "name": "/FullNavbar.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 4.399999999906868,
+        "transferSize": 9244,
+        "decodedBodySize": 8944
+      },
+      {
+        "name": "/favicon.ico",
+        "host": "127.0.0.1",
+        "initiator": "other",
+        "duration": 4.600000000093132,
+        "transferSize": 8019,
+        "decodedBodySize": 7719
+      },
+      {
+        "name": "/assets/PublicTemplates-LtBD9PYN.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 9.100000000093132,
+        "transferSize": 5158,
+        "decodedBodySize": 4858
+      },
+      {
+        "name": "/assets/jszip.min-D-LtdMge.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 9.399999999906868,
+        "transferSize": 117176,
+        "decodedBodySize": 116876
+      },
+      {
+        "name": "/assets/calendar-Bx2ceNL5.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 8.100000000093132,
+        "transferSize": 726,
+        "decodedBodySize": 426
+      },
+      {
+        "name": "/assets/clock-BODiPcUj.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 8.100000000093132,
+        "transferSize": 652,
+        "decodedBodySize": 352
+      },
+      {
+        "name": "/assets/UserPortalTemplatesWorkspaceView-0dtImcE3.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 20.899999999906868,
+        "transferSize": 22832,
+        "decodedBodySize": 22532
+      },
+      {
+        "name": "/assets/search-Cg3Wq7VM.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 20.5,
+        "transferSize": 922,
+        "decodedBodySize": 622
+      },
+      {
+        "name": "/assets/sheet-DGBYZrQS.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 24.800000000279397,
+        "transferSize": 550644,
+        "decodedBodySize": 550344
+      },
+      {
+        "name": "/assets/PortalDocumentDrawer-Bs2HczUT.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 21.799999999813735,
+        "transferSize": 33118,
+        "decodedBodySize": 32818
+      },
+      {
+        "name": "/assets/file-check-Dj1B0IM8.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 22.299999999813735,
+        "transferSize": 734,
+        "decodedBodySize": 434
+      },
+      {
+        "name": "/assets/lock-Dgqnm-_V.js",
+        "host": "127.0.0.1",
+        "initiator": "script",
+        "duration": 23.299999999813735,
+        "transferSize": 675,
+        "decodedBodySize": 375
+      },
+      {
+        "name": "/FullFooter.svg",
+        "host": "127.0.0.1",
+        "initiator": "img",
+        "duration": 6.199999999720603,
+        "transferSize": 4373,
+        "decodedBodySize": 4073
+      },
+      {
+        "name": "/fonts/segoeui.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 127.89999999990687,
+        "transferSize": 960052,
+        "decodedBodySize": 959752
+      },
+      {
+        "name": "/fonts/segoeuib.ttf",
+        "host": "127.0.0.1",
+        "initiator": "css",
+        "duration": 130,
+        "transferSize": 947392,
+        "decodedBodySize": 947092
+      },
+      {
+        "name": "/rest/v1/required_document_types",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 592.8000000002794,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      },
+      {
+        "name": "/rest/v1/rpc/get_public_system_settings",
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "initiator": "fetch",
+        "duration": 592.5,
+        "transferSize": 0,
+        "decodedBodySize": 0
+      }
+    ],
+    "wireResponses": [
+      {
+        "host": "127.0.0.1",
+        "path": "/public-templates",
+        "status": 200,
+        "type": "Document",
+        "responseMs": 4.19,
+        "encodedBytes": 2077
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/pwa-theme-init.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 2.999,
+        "encodedBytes": 1456
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-nn-gkKHN.css",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 7.781,
+        "encodedBytes": 385941
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/index-BSciubSV.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 8.095,
+        "encodedBytes": 1241080
+      },
+      {
+        "host": "fonts.googleapis.com",
+        "path": "/css2",
+        "status": 200,
+        "type": "Stylesheet",
+        "responseMs": 196.168,
+        "encodedBytes": 1462
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullNavbar.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 3.263,
+        "encodedBytes": 9142
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/favicon.ico",
+        "status": 200,
+        "type": "Other",
+        "responseMs": 2.915,
+        "encodedBytes": 7928
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/calendar-Bx2ceNL5.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 6.04,
+        "encodedBytes": 625
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/PublicTemplates-LtBD9PYN.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 6.312,
+        "encodedBytes": 5058
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/clock-BODiPcUj.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 6,
+        "encodedBytes": 551
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/jszip.min-D-LtdMge.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 6.1,
+        "encodedBytes": 117077
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/search-Cg3Wq7VM.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 15.705,
+        "encodedBytes": 821
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/UserPortalTemplatesWorkspaceView-0dtImcE3.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 17.473,
+        "encodedBytes": 22732
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/file-check-Dj1B0IM8.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 13.31,
+        "encodedBytes": 633
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/lock-Dgqnm-_V.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 14.135,
+        "encodedBytes": 574
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/PortalDocumentDrawer-Bs2HczUT.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 16.267,
+        "encodedBytes": 33018
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/assets/sheet-DGBYZrQS.js",
+        "status": 200,
+        "type": "Script",
+        "responseMs": 17.837,
+        "encodedBytes": 550545
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/FullFooter.svg",
+        "status": 200,
+        "type": "Image",
+        "responseMs": 4.95,
+        "encodedBytes": 4270
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeui.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 12.677,
+        "encodedBytes": 959946
+      },
+      {
+        "host": "127.0.0.1",
+        "path": "/fonts/segoeuib.ttf",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 13.327,
+        "encodedBytes": 947286
+      },
+      {
+        "host": "fonts.gstatic.com",
+        "path": "/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 66.737,
+        "encodedBytes": 27377
+      },
+      {
+        "host": "fonts.gstatic.com",
+        "path": "/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+        "status": 200,
+        "type": "Font",
+        "responseMs": 64.196,
+        "encodedBytes": 48288
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 375.384,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 375.918,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 208.287,
+        "encodedBytes": 2363
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 212.087,
+        "encodedBytes": 969
+      }
+    ],
+    "failures": [],
+    "longTasks": [
+      {
+        "start": 395.70000000018626,
+        "duration": 54
+      }
+    ]
+  }
+]

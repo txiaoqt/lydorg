@@ -1,0 +1,296 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T11:46:49.400Z",
+  "results": [
+    {
+      "check": "A: authoritative eligibility preview denies current fixture",
+      "status": "PASS",
+      "canDraft": false,
+      "canSubmit": false,
+      "windowStatus": "too_early",
+      "prerequisite": "Current term outside renewal window",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "A: authoritative eligibility preview denies current fixture",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 164
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: authoritative eligibility preview denies current fixture",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/calculate_organization_renewal_eligibility",
+          "status": 200,
+          "durationMs": 131
+        }
+      ]
+    },
+    {
+      "check": "B: authoritative eligibility preview denies current fixture",
+      "status": "PASS",
+      "canDraft": false,
+      "canSubmit": false,
+      "windowStatus": "too_early",
+      "prerequisite": "No ledger term or expiry projection",
+      "http": [
+        {
+          "actor": "B JWT",
+          "step": "B: authoritative eligibility preview denies current fixture",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 149
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: authoritative eligibility preview denies current fixture",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/calculate_organization_renewal_eligibility",
+          "status": 200,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "B own missing-ledger draft denied",
+      "status": "PASS",
+      "sqlstate": "P0001",
+      "denialReason": "No authoritative accreditation term",
+      "http": [
+        {
+          "actor": "B own missing-ledger draft denied",
+          "step": "B own missing-ledger draft denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 400,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "A own early draft denied",
+      "status": "PASS",
+      "sqlstate": "P0001",
+      "denialReason": "Renewal window is not yet open",
+      "http": [
+        {
+          "actor": "A own early draft denied",
+          "step": "A own early draft denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 400,
+          "durationMs": 131
+        }
+      ]
+    },
+    {
+      "check": "A cannot create B renewal",
+      "status": "PASS",
+      "sqlstate": "P0001",
+      "denialReason": "Caller does not own",
+      "http": [
+        {
+          "actor": "A cannot create B renewal",
+          "step": "A cannot create B renewal",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 400,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "B cannot create A renewal",
+      "status": "PASS",
+      "sqlstate": "P0001",
+      "denialReason": "Caller does not own",
+      "http": [
+        {
+          "actor": "B cannot create A renewal",
+          "step": "B cannot create A renewal",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 400,
+          "durationMs": 127
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot create renewal",
+      "status": "PASS",
+      "sqlstate": "P0001",
+      "denialReason": "Authentication required",
+      "http": [
+        {
+          "actor": "Anonymous cannot create renewal",
+          "step": "Anonymous cannot create renewal",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 400,
+          "durationMs": 128
+        }
+      ]
+    },
+    {
+      "check": "Suspended organization cannot create renewal",
+      "status": "PASS",
+      "sqlstate": "P0001",
+      "denialReason": "verified profile status",
+      "http": [
+        {
+          "actor": "Suspended organization cannot create renewal",
+          "step": "Suspended organization cannot create renewal",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 400,
+          "durationMs": 181
+        }
+      ]
+    },
+    {
+      "check": "Close only this prerequisite test Auth session",
+      "status": "PASS"
+    },
+    {
+      "check": "Close only this prerequisite test Auth session",
+      "status": "PASS"
+    },
+    {
+      "check": "Close only this prerequisite test Auth session",
+      "status": "PASS"
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 1332
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 210
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 416
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: authoritative eligibility preview denies current fixture",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 164
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: authoritative eligibility preview denies current fixture",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/calculate_organization_renewal_eligibility",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: authoritative eligibility preview denies current fixture",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 149
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: authoritative eligibility preview denies current fixture",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/calculate_organization_renewal_eligibility",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "B own missing-ledger draft denied",
+      "step": "B own missing-ledger draft denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 400,
+      "durationMs": 133
+    },
+    {
+      "actor": "A own early draft denied",
+      "step": "A own early draft denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 400,
+      "durationMs": 131
+    },
+    {
+      "actor": "A cannot create B renewal",
+      "step": "A cannot create B renewal",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 400,
+      "durationMs": 133
+    },
+    {
+      "actor": "B cannot create A renewal",
+      "step": "B cannot create A renewal",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 400,
+      "durationMs": 127
+    },
+    {
+      "actor": "Anonymous cannot create renewal",
+      "step": "Anonymous cannot create renewal",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 400,
+      "durationMs": 128
+    },
+    {
+      "actor": "Suspended organization cannot create renewal",
+      "step": "Suspended organization cannot create renewal",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 400,
+      "durationMs": 181
+    },
+    {
+      "actor": "Suspended organization cannot create renewal",
+      "step": "Suspended organization cannot create renewal",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 131
+    },
+    {
+      "actor": "Suspended organization cannot create renewal",
+      "step": "Suspended organization cannot create renewal",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 127
+    },
+    {
+      "actor": "Suspended organization cannot create renewal",
+      "step": "Suspended organization cannot create renewal",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 144
+    }
+  ]
+}

@@ -1,0 +1,2272 @@
+{
+  "capturedAt": "2026-10-12T06:54:48.471Z",
+  "status": "PASS",
+  "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+  "sourceFilesCompared": 560,
+  "virtualPrefixRemoved": "src/",
+  "packagedOutput": [
+    {
+      "name": "out",
+      "type": "directory",
+      "children": [
+        {
+          "name": "api",
+          "type": "directory",
+          "children": [
+            {
+              "name": "sync-run-once",
+              "type": "lambda",
+              "uid": "team_lrnDtn1fujS9WebCMQoWHmGR-4626c20294afb3a384bde1c1c2c5625989"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "digestAlgorithm": "Hosted SHA-1 upload metadata compared with dry-run SHA-1; approved archive and extracted source verified separately with SHA-256",
+  "missing": [],
+  "extra": [],
+  "mismatches": [],
+  "files": [
+    {
+      "path": ".gitattributes",
+      "digest": "c0bad5a918bd30e6c92aa8b36ff19db731cab3e7"
+    },
+    {
+      "path": "api/sync-run-once.py",
+      "digest": "0fa03dc450ffb0cc0968180d35f3ecad178589da"
+    },
+    {
+      "path": "components.json",
+      "digest": "71d812dd5af2d81f024da5aee3c2a35765754675"
+    },
+    {
+      "path": "eslint.config.js",
+      "digest": "d3dcccaaa4e49a19e9a913c9e28c1c6e307b53aa"
+    },
+    {
+      "path": "index.html",
+      "digest": "e9e00a026b0165d143cd106a84b16253e9d18270"
+    },
+    {
+      "path": "package-lock.json",
+      "digest": "2d3900f2ba736eea090289810a87aa6cd6c3c25b"
+    },
+    {
+      "path": "package.json",
+      "digest": "0edb2d567f1a15bc7d5049ef1a16c16d6d3ee611"
+    },
+    {
+      "path": "postcss.config.js",
+      "digest": "dd173fb8dfdadba2ffcd23bf5a70bff7ad846e3a"
+    },
+    {
+      "path": "public/FullFooter.svg",
+      "digest": "cd1887c6e915ac807f3e81dec72b4b9ac6d9d81f"
+    },
+    {
+      "path": "public/FullNavbar.svg",
+      "digest": "5e7d72f98a8809fce0dfe80e24f35dfcc1358687"
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "digest": "e8de3d8a519c6b7623db3494d1e0ceb4a1719e1d"
+    },
+    {
+      "path": "public/data/pasig-barangay-boundaries.geojson",
+      "digest": "d497712f565ba4920b10694a211a413ef8be0be0"
+    },
+    {
+      "path": "public/favicon.ico",
+      "digest": "d0f386c69c1ed0dba9b8cd63ea1a54bf477e07e7"
+    },
+    {
+      "path": "public/fonts/segoeui.ttf",
+      "digest": "fe94066e642c842be5cc47c39a6f79756a1e86a0"
+    },
+    {
+      "path": "public/fonts/segoeuib.ttf",
+      "digest": "af143bd7f606a3d1a1b688309d8d702373935ae2"
+    },
+    {
+      "path": "public/icons/icon-192.png",
+      "digest": "c11bcff44d5ea66485f85f5c6ccba6851fa21a17"
+    },
+    {
+      "path": "public/icons/icon-512.png",
+      "digest": "9715a7784ef4fbbd03b90855da3279c6d6dcb397"
+    },
+    {
+      "path": "public/icons/icon-maskable-512.png",
+      "digest": "e60fb377e2bfd05270c6853d4472fa37ca6253be"
+    },
+    {
+      "path": "public/loginPageImages/image1.jpg",
+      "digest": "0d0ac74b738193e7ad24a56f8bb114d803f60409"
+    },
+    {
+      "path": "public/loginPageImages/image2.jpg",
+      "digest": "652411f0b836ee4c557cf1543631d175f989ab4e"
+    },
+    {
+      "path": "public/loginPageImages/image3.jpg",
+      "digest": "a852cbf41545afe962f2406228197b4bcefd3338"
+    },
+    {
+      "path": "public/loginPageImages/image4.jpg",
+      "digest": "0ed822bef9bfed87ee8c9edf2423f6ec1a668cda"
+    },
+    {
+      "path": "public/logo.png",
+      "digest": "ff3e66fed9a26437e8b587ffb570b7a230ec6a56"
+    },
+    {
+      "path": "public/lydo-connect-logo.svg",
+      "digest": "a8c6a60895a5ebdf2f4f2d33916d0cb47ef5a3f9"
+    },
+    {
+      "path": "public/lydo-letterhead-footer.jpg",
+      "digest": "39f891d352e382092c7719ed0167ef219a009a48"
+    },
+    {
+      "path": "public/lydo-letterhead-header.jpg",
+      "digest": "ad9059fdb90a703145e4990c779d0a4785c19771"
+    },
+    {
+      "path": "public/manifest-admin.webmanifest",
+      "digest": "b111cbb7959f320bcf668ddd66455fd7a5c127fa"
+    },
+    {
+      "path": "public/manifest.webmanifest",
+      "digest": "c014388b6caaa02bc1b3de783dc523aa45352766"
+    },
+    {
+      "path": "public/pwa-theme-init.js",
+      "digest": "da4c82268f9e5b7565582f4cd9bdc1acb4276cc8"
+    },
+    {
+      "path": "public/robots.txt",
+      "digest": "c87003668ea52a5fa648d3d4f74f7c122ab33c21"
+    },
+    {
+      "path": "public/sw.js",
+      "digest": "52564940ffdf5699f7fa5ccd19db7fc8dcbcd429"
+    },
+    {
+      "path": "public/templates/pcydo-move-application-form.pdf",
+      "digest": "23bd300ea247e8de30f8a99d82947eb440439d51"
+    },
+    {
+      "path": "public/y-trace-logo-blue.png",
+      "digest": "d47c8ee907e55c51d19fa2c7edb967afce691764"
+    },
+    {
+      "path": "public/y-trace-logo.png",
+      "digest": "95fd861e4350384543db5c36791c12c2e6f76b5c"
+    },
+    {
+      "path": "public/y-trace-logo.svg",
+      "digest": "7fc38d2ac98edc1d5563d9f9fa80325c0faaafed"
+    },
+    {
+      "path": "requirements.txt",
+      "digest": "8a51aefa26e8b29676a0cc520115e2d881a0c277"
+    },
+    {
+      "path": "scripts/admin-release-config.json",
+      "digest": "99e3f2779fe2325fcb08a0369d8f56b0f1445447"
+    },
+    {
+      "path": "scripts/build-admin-release.mjs",
+      "digest": "8fbee9041b50a2582d34708aab8eeaa6af599e05"
+    },
+    {
+      "path": "scripts/build-admin-release.test.mjs",
+      "digest": "128661d419520d89b20163bbaf8c7c9792798795"
+    },
+    {
+      "path": "scripts/patch-radix-select.cjs",
+      "digest": "415f00201ea09c3ad19cd0f7a8af3b5deab83015"
+    },
+    {
+      "path": "src/App.tsx",
+      "digest": "2b388ff0fd4d05e3f3f82b83688a3d760a5e5ac5"
+    },
+    {
+      "path": "src/admin/AdminPortal.tsx",
+      "digest": "dc1036398f8075a0e20defcbdc1cf7021562ca34"
+    },
+    {
+      "path": "src/admin/admin-budget-monitoring.css",
+      "digest": "15488b81093fa1fb7be3c5c8b84c26c771739d0d"
+    },
+    {
+      "path": "src/admin/admin-desktop-gating.test.tsx",
+      "digest": "10b4100fa9d449c4bc2580ceeecc7d80681f47cd"
+    },
+    {
+      "path": "src/admin/admin-group3-security.test.tsx",
+      "digest": "d4912d81da4ae184683d14a621cac47e60cb4f59"
+    },
+    {
+      "path": "src/admin/admin-inquiries-reviewed-workflow.test.tsx",
+      "digest": "d5153df49a45b2cab1508081c50f880230914d24"
+    },
+    {
+      "path": "src/admin/admin-inquiries.css",
+      "digest": "b602dbbea7287fbb061379f8c91a3d7444ac70db"
+    },
+    {
+      "path": "src/admin/admin-notification-popover.test.tsx",
+      "digest": "fc01eb438e7bec69c43bfb824ef25710054f7676"
+    },
+    {
+      "path": "src/admin/admin-portal-snapshot-contract.test.ts",
+      "digest": "7b56ba052719ca27d12f291e52e94bbdcae1c4b3"
+    },
+    {
+      "path": "src/admin/admin-registration-review-summary-visibility.test.tsx",
+      "digest": "d7da0e0fe8a3ea37b7a43768f59ad3495dba2816"
+    },
+    {
+      "path": "src/admin/admin-registration-suspended-review.test.tsx",
+      "digest": "90ae62a91ef5c5b8ecaf0b06931ac25d20be1423"
+    },
+    {
+      "path": "src/admin/admin-review-decision-help.test.tsx",
+      "digest": "a528191e6233a880653587c8ac648fec4b8b8b12"
+    },
+    {
+      "path": "src/admin/admin-review-lifecycle-decision.test.tsx",
+      "digest": "680246ee3423d16218372c26117efefd8676b9dd"
+    },
+    {
+      "path": "src/admin/admin-review-status-and-approval-marker.test.tsx",
+      "digest": "c21af15beba88878b3c149bbd0351d51d30b3b04"
+    },
+    {
+      "path": "src/admin/admin-security-guards.test.tsx",
+      "digest": "72ed5fc3d0dbd19c377df538bf565147555f9076"
+    },
+    {
+      "path": "src/admin/admin-settings.test.tsx",
+      "digest": "e2f64c8c4233de647a14bda6398994de6e9ab024"
+    },
+    {
+      "path": "src/admin/admin-workflow-settings.test.tsx",
+      "digest": "a057ea0e29f67c842661dedf209d321a1d554d35"
+    },
+    {
+      "path": "src/admin/admin-ypop-request-revision-decision.test.tsx",
+      "digest": "7e355c878c7c1c2414013a1f284765d145de2fe5"
+    },
+    {
+      "path": "src/admin/admin-ypop-validation-materialization.test.tsx",
+      "digest": "61e88717e800caf7f85e9e03af885be9ded09412"
+    },
+    {
+      "path": "src/admin/admin-ypop-validation-review.css",
+      "digest": "d8b67cbdf1b3f499a466a3a49964542da0dd94d5"
+    },
+    {
+      "path": "src/admin/budget-request-restored-lifecycle.test.tsx",
+      "digest": "3a03dcf3b2b5ba11f926f40f6c444f8f6224e49e"
+    },
+    {
+      "path": "src/admin/components/ActivityLogsExportDialog.tsx",
+      "digest": "91070d29e6e69571cade1441516435c94187c1b6"
+    },
+    {
+      "path": "src/admin/components/ActivityLogsTable.tsx",
+      "digest": "f436f7239e3544287081123aeaf7abb92d84a049"
+    },
+    {
+      "path": "src/admin/components/AdminDependentFilters.test.tsx",
+      "digest": "afa4664dbe831345855d1ba46b19795c7ade8801"
+    },
+    {
+      "path": "src/admin/components/AdminExportDialog.tsx",
+      "digest": "33e262c54a7c1dbaf9f7231c1ec6656bb86876e1"
+    },
+    {
+      "path": "src/admin/components/AdminFilterLayoutStability.test.tsx",
+      "digest": "72869c7d1d5564a9d303a9f8034e1bf10e80972f"
+    },
+    {
+      "path": "src/admin/components/AdminRegistrationsSuspendedFilter.test.tsx",
+      "digest": "34e0ece9130fa9cd67eab66bc5d4d56afa605ec9"
+    },
+    {
+      "path": "src/admin/components/AdminRenewalDocumentPreview.test.tsx",
+      "digest": "ac3ac9218860313a7dff74b87cbf3d1dbcf27817"
+    },
+    {
+      "path": "src/admin/components/AdminRenewalDocumentPreview.tsx",
+      "digest": "9ae3f73e4b1348ea5bd113cf8a91fb50d3b09d24"
+    },
+    {
+      "path": "src/admin/components/AdminReportingPeriodSelector.test.tsx",
+      "digest": "9a7a369a44ee4064bc37ad4521e9d35d94a0cb3a"
+    },
+    {
+      "path": "src/admin/components/AdminReportingPeriodSelector.tsx",
+      "digest": "f3773483b822d6245433ecb26f21173e298b1b5b"
+    },
+    {
+      "path": "src/admin/components/AdminSettingsPage.tsx",
+      "digest": "6706a04a72f139fd6000431b0a0b4364dcee585a"
+    },
+    {
+      "path": "src/admin/components/AdminTemplatesArchiveLifecycle.test.tsx",
+      "digest": "6102fefce5addf12f31cb34c090ca70887402784"
+    },
+    {
+      "path": "src/admin/components/AdministratorFormDialog.tsx",
+      "digest": "63bc9d8f03c0931de00fe570455ce2235f8a7de8"
+    },
+    {
+      "path": "src/admin/components/AdministratorsTable.tsx",
+      "digest": "3a3fec04463aef6cf614d2f1a2c5bf315d0f6e3f"
+    },
+    {
+      "path": "src/admin/components/BackupRecoveryPage.test.tsx",
+      "digest": "68c304f5b8f02bebc87a8968e0212f264174d88f"
+    },
+    {
+      "path": "src/admin/components/BackupRecoveryPage.tsx",
+      "digest": "fd06a34ed397b66d4d4310fdf0239c9cdb6d6568"
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringFilterPopover.tsx",
+      "digest": "5d0ae7550c072a52d267091e9322cb7f9b2c2fd3"
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringFilterSummary.tsx",
+      "digest": "66b55622579fe788baa7bb78ef3006e7630e4e61"
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringOverview.test.tsx",
+      "digest": "911e54ec5b08c1d62c027924793cdad19569955d"
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringOverview.tsx",
+      "digest": "ea222c5b6e7ced91c04a9833580a06ca28496076"
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringPageControls.tsx",
+      "digest": "72bb4b4bdf18c9779857aae2eaba5dd6d26e6a7f"
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringSummaryCard.test.tsx",
+      "digest": "fc6ae8d221d49860aec2f56199b5927512478de4"
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringSummaryCard.tsx",
+      "digest": "a4239751e7e55f66c1220bece38c0ee5031a025d"
+    },
+    {
+      "path": "src/admin/components/BudgetRequestsTable.tsx",
+      "digest": "3e4ff1a8ea72b994603f9b803e36a758b8ccb161"
+    },
+    {
+      "path": "src/admin/components/BudgetRequestsTableSelection.test.tsx",
+      "digest": "e0e438b133d07fb29cc68a4ef5aec046f914af3d"
+    },
+    {
+      "path": "src/admin/components/BulkOrganizationDeleteDialog.tsx",
+      "digest": "4947c7a4c6454dcdbf84d42cba2dd189ac927d23"
+    },
+    {
+      "path": "src/admin/components/CityActivityAnnouncementDialog.tsx",
+      "digest": "b90ab21a177f5e84a1f0e3c89e2620c12a24f22f"
+    },
+    {
+      "path": "src/admin/components/ConfigureAnnualBudgetModal.tsx",
+      "digest": "d88035679fb9579e2fd66a9e7a2acc4442d0b233"
+    },
+    {
+      "path": "src/admin/components/DownloadDocumentsDialog.tsx",
+      "digest": "891f52b38b3a96d9d6f29e75c9648294ad6d726d"
+    },
+    {
+      "path": "src/admin/components/InquiriesTable.tsx",
+      "digest": "5b8d769ab6c11881590d28bfe9cea4ba45abb52a"
+    },
+    {
+      "path": "src/admin/components/InquiryDetailDrawer.tsx",
+      "digest": "6de85964bb005e54ebb92de56836bf327350829c"
+    },
+    {
+      "path": "src/admin/components/LiquidationReportsTable.tsx",
+      "digest": "14ec143e43c9b0ab266032ee2173a7cbf5320efe"
+    },
+    {
+      "path": "src/admin/components/NeedsAttentionList.tsx",
+      "digest": "56690ce40c780ed93673fa3d627ba44818cea948"
+    },
+    {
+      "path": "src/admin/components/NewsPreviewDialog.tsx",
+      "digest": "0d568f475d19ca45e53e743b4496f9e5922977ad"
+    },
+    {
+      "path": "src/admin/components/NewsReleaseFormDialog.test.tsx",
+      "digest": "556a2143c61957f51fbccbe3064349f44ad12e70"
+    },
+    {
+      "path": "src/admin/components/NewsReleaseFormDialog.tsx",
+      "digest": "a67136f74d6fb0db4eaf613598fb28708d307215"
+    },
+    {
+      "path": "src/admin/components/NewsReleasesTable.tsx",
+      "digest": "f91928dce09668cebd40f09c872b263fa20058e9"
+    },
+    {
+      "path": "src/admin/components/OrganizationBudgetDrawer.tsx",
+      "digest": "d495637cccbc377de591725a6ddf6046a8ab71ec"
+    },
+    {
+      "path": "src/admin/components/OrganizationFundingTable.tsx",
+      "digest": "214c0c8fed7ce2163b07bcb9a2d343a66bde4548"
+    },
+    {
+      "path": "src/admin/components/OrganizationIdentityReviewPanel.test.tsx",
+      "digest": "a1f11997eaec241a1ffbd25855112a9f556e6214"
+    },
+    {
+      "path": "src/admin/components/OrganizationIdentityReviewPanel.tsx",
+      "digest": "e3bf09835e98f95f63fff6ba5dc1a85c56151835"
+    },
+    {
+      "path": "src/admin/components/PasigBudgetMap.test.tsx",
+      "digest": "15193a9c9f867d3444a27f46bd18910ae5ef0e36"
+    },
+    {
+      "path": "src/admin/components/PasigBudgetMap.tsx",
+      "digest": "efa07012be29e022b575a4f090f7a5be028f3238"
+    },
+    {
+      "path": "src/admin/components/PublicBudgetSnapshotConfigPage.tsx",
+      "digest": "f3f1daf0200efcd5b6a84740c49ca77f1a11eee7"
+    },
+    {
+      "path": "src/admin/components/RecentActivityLogCard.tsx",
+      "digest": "35cc95ac0016894daf121636d8a5150edad380b2"
+    },
+    {
+      "path": "src/admin/components/RegistrationsTable.tsx",
+      "digest": "f81e872756e27dddf91317fff98f9245f9738299"
+    },
+    {
+      "path": "src/admin/components/RenewalTestEnvironmentPanel.tsx",
+      "digest": "5fb30a97c98994f48e647cf959f6765caaf6f1ed"
+    },
+    {
+      "path": "src/admin/components/RenewalsTable.tsx",
+      "digest": "bb567b7769ef419958f151696741e5900fa01aa6"
+    },
+    {
+      "path": "src/admin/components/ReplyEmailDialog.tsx",
+      "digest": "72c5c6894c765f9462a04fcc5158b387d178be55"
+    },
+    {
+      "path": "src/admin/components/RolesPermissionsPanel.tsx",
+      "digest": "1d2d6cee61364f1ed33da7185269ebbb2759a4eb"
+    },
+    {
+      "path": "src/admin/components/StatsCard.tsx",
+      "digest": "4d006a0229ab2624e5d8c7d34e0fe35b87e6e8da"
+    },
+    {
+      "path": "src/admin/components/TemplateCategoryLifecycle.test.tsx",
+      "digest": "0398d7352f28e4293a98bb565ec109522c6d56c1"
+    },
+    {
+      "path": "src/admin/components/TemplateFilePreviewDialog.tsx",
+      "digest": "3e5a58bbdb050062608916555a9e559f99765b54"
+    },
+    {
+      "path": "src/admin/components/TemplateFormDialog.tsx",
+      "digest": "9ac5d4f88855a4846df18de962bbe9043f3e20dc"
+    },
+    {
+      "path": "src/admin/components/TemplatesTable.test.tsx",
+      "digest": "6a46ce9e174cabe4529ad3eee6d82b0db520470c"
+    },
+    {
+      "path": "src/admin/components/TemplatesTable.tsx",
+      "digest": "345c286a28b55b839abd37be95c2e488e404de54"
+    },
+    {
+      "path": "src/admin/components/UnverifiedAdminAccessScreen.tsx",
+      "digest": "95dcbcb0c2e73e77bf1e7f55e5ffb467003ee246"
+    },
+    {
+      "path": "src/admin/components/UrnReviewPanel.tsx",
+      "digest": "c5e9ca3f99048e4bb8210ff92d9de99438c4025f"
+    },
+    {
+      "path": "src/admin/components/YorpRegistryDetailDrawer.export.test.tsx",
+      "digest": "a561e11bc36cc03b9a360aa6f0f3e779306f333a"
+    },
+    {
+      "path": "src/admin/components/YorpRegistryDetailDrawer.test.tsx",
+      "digest": "5504b254bfc1572ab19f478739c55a2cdcec726c"
+    },
+    {
+      "path": "src/admin/components/YorpRegistryDetailDrawer.tsx",
+      "digest": "e6e20b907f60255e20d8979525e05ed5b2351980"
+    },
+    {
+      "path": "src/admin/components/YorpRegistryExportDialog.test.tsx",
+      "digest": "bf4f0469ead600b585a4694289f6146598041a40"
+    },
+    {
+      "path": "src/admin/components/YorpRegistryExportDialog.tsx",
+      "digest": "419d89cf75b5c5e5c5afa4d1c29f5f8e5f210634"
+    },
+    {
+      "path": "src/admin/components/YorpRegistryTable.tsx",
+      "digest": "e90a6c0169dcf80f587e6b06701bab305b164294"
+    },
+    {
+      "path": "src/admin/components/YorpSampleDataSeedingPanel.tsx",
+      "digest": "01f66c2e46eac86908130bedc73712a9d4c3fe2d"
+    },
+    {
+      "path": "src/admin/components/YpopPeriodsTable.tsx",
+      "digest": "101f42768789c816f646db9a75ede86a33c76027"
+    },
+    {
+      "path": "src/admin/components/YpopRecentActivity.test.tsx",
+      "digest": "683e3b2023544722e8b8a98bc8951c3556fadc38"
+    },
+    {
+      "path": "src/admin/components/YpopSubmissionsTable.test.tsx",
+      "digest": "715f9229aee33ac555cceaa4bb481fd7db4a224c"
+    },
+    {
+      "path": "src/admin/components/YpopSubmissionsTable.tsx",
+      "digest": "9a5f4653824447f89c9bb429a8766663fdd6da03"
+    },
+    {
+      "path": "src/admin/components/YpopValidationComputationPopover.tsx",
+      "digest": "78733158afb82c8da0bde9a37c4a26d0e2db9c79"
+    },
+    {
+      "path": "src/admin/components/YpopValidationSummaryAndFilter.test.tsx",
+      "digest": "df2fd7028c9b5bdf2121198e41057652e34a81f1"
+    },
+    {
+      "path": "src/admin/components/budget-donut-layout.test.ts",
+      "digest": "a0c6a3bb9b85d09cd7d3ce80922189a1eb509e17"
+    },
+    {
+      "path": "src/admin/components/budget-donut-layout.ts",
+      "digest": "efe1d4ea85d762c098d66de39da547be238d1e09"
+    },
+    {
+      "path": "src/admin/context/AdminThemeContext.test.tsx",
+      "digest": "b2ad8e572cc71af86eabd0808bdbe8ac16fc4e65"
+    },
+    {
+      "path": "src/admin/context/AdminThemeContext.tsx",
+      "digest": "1554ee5da70229573b43f56692221a5984db5955"
+    },
+    {
+      "path": "src/admin/liquidation-unified-lifecycle.test.tsx",
+      "digest": "636406ee41c3deffefa17ce66eb9e652cf914ab7"
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.accreditation.test.tsx",
+      "digest": "c3a0422530985b161285601dadf49f007b5db870"
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.quarterly.test.tsx",
+      "digest": "9c5f0a26c2ffae0c9444f87dfe128096b4e98fad"
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.test.tsx",
+      "digest": "c12c35229dd2e724edbd20429fcdf2344dea94c3"
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.tsx",
+      "digest": "5d88abf65b2a44975df3592e80742834ffd4097b"
+    },
+    {
+      "path": "src/admin/pages/yorp-registry.css",
+      "digest": "56c6baf4e21ed3e03928f5539acb656ae980c460"
+    },
+    {
+      "path": "src/admin/renewal-test-environment.test.tsx",
+      "digest": "5c69795b6efe07313ceb2a142de6b143ebbd21cb"
+    },
+    {
+      "path": "src/admin/yorp-sample-data-seeding-panel.test.tsx",
+      "digest": "c0315f3d1f452b01657a3dfdd29ca1738edc36f9"
+    },
+    {
+      "path": "src/admin/ypop-qualification-status.test.tsx",
+      "digest": "14b657bc16e8e0c80920a60818e868c8e5b062ba"
+    },
+    {
+      "path": "src/assets/about-hero.webp",
+      "digest": "c34c6f8e23031481f15eba1e03255da8a3e2b72b"
+    },
+    {
+      "path": "src/assets/hero-image-upscaled.jpeg",
+      "digest": "0a9fe97e2a21e47bad1ae55a5d673f0651d7148b"
+    },
+    {
+      "path": "src/assets/hero-image.webp",
+      "digest": "71123b22cd060231523b467284546c2bdbb4b508"
+    },
+    {
+      "path": "src/assets/lydo-pasig-city-seal-transparent.png",
+      "digest": "50a01c73ffb88d541435505fc66fb8bb9544bb54"
+    },
+    {
+      "path": "src/assets/overview-preview.jpg",
+      "digest": "51942bfa904266eeb2253413ee593909c6ffb0df"
+    },
+    {
+      "path": "src/assets/ytrace-community-workshop.png",
+      "digest": "d07740129cef90a90e96da49cff38a75b3965711"
+    },
+    {
+      "path": "src/assets/ytrace-overview-upscaled.jpeg",
+      "digest": "cb1d3d96cd0c6e1775a002e75de0bcc3e5ef6e3a"
+    },
+    {
+      "path": "src/components/AdminPageLoader.tsx",
+      "digest": "a92a6a0ed2202b97960d8689f84e7d317d25e4fa"
+    },
+    {
+      "path": "src/components/AnnouncementBar.tsx",
+      "digest": "7be8464e153840affcc8925b446bd3d688d85b14"
+    },
+    {
+      "path": "src/components/BrandLogo.tsx",
+      "digest": "783cf0ce5f43194b8958515f0e05439b3260e067"
+    },
+    {
+      "path": "src/components/ConfirmActionDialog.tsx",
+      "digest": "19532382ca48a86d82bc2f6563ebd1f095ef6ddf"
+    },
+    {
+      "path": "src/components/Footer.tsx",
+      "digest": "1df52300662a18db1112d424dc548fba4ccef6c5"
+    },
+    {
+      "path": "src/components/GoogleIcon.tsx",
+      "digest": "c9589dd25613c7362cc2455a1867c57ba075a397"
+    },
+    {
+      "path": "src/components/LegalPolicyView.tsx",
+      "digest": "bc8098a18fcfda49745b5b71976ec535d6d77b42"
+    },
+    {
+      "path": "src/components/Navbar.test.tsx",
+      "digest": "4b63b94ec484909a1bb4d8dfa34b374da3c4e5b4"
+    },
+    {
+      "path": "src/components/Navbar.tsx",
+      "digest": "de1d08eac64a6a674e8dc4074982b9043388054c"
+    },
+    {
+      "path": "src/components/PolicyContent.tsx",
+      "digest": "7403893c324275f6a71e40debb361698f59e7e2d"
+    },
+    {
+      "path": "src/components/PublicPageLoader.tsx",
+      "digest": "bb149260a91596da71f26fa98812f391b924d3cb"
+    },
+    {
+      "path": "src/components/SourcePostEmbed.tsx",
+      "digest": "b2323805bbf4fcaa4df0789559891803de23a061"
+    },
+    {
+      "path": "src/components/TermsPrivacyAgreementModal.test.tsx",
+      "digest": "27048e8905b75eaa2f28c2447af256ee65ee6ef5"
+    },
+    {
+      "path": "src/components/TermsPrivacyAgreementModal.tsx",
+      "digest": "b9271528f91d49e48dee69fb5dfb2d0d2aae08ac"
+    },
+    {
+      "path": "src/components/activity/RecentActivityPreview.tsx",
+      "digest": "1fe53db228f06eafaa3e824f75b14d281a611577"
+    },
+    {
+      "path": "src/components/activity/RecentActivityScopingAndWording.test.tsx",
+      "digest": "2360b0ca439c0883d4de2bbc29fe7ac5bc14fb20"
+    },
+    {
+      "path": "src/components/auth/AuthImageSlideshow.tsx",
+      "digest": "37804fd0cd0bc6bdd1b574deb32303fde4bf391f"
+    },
+    {
+      "path": "src/components/portal/AccountSuspendedScreen.tsx",
+      "digest": "688ac43d938e119a77b25f049724d19e849ef121"
+    },
+    {
+      "path": "src/components/portal/AdminBreadcrumb.tsx",
+      "digest": "9a95894bf5da7fb0d4a40f2a54e67c9338914031"
+    },
+    {
+      "path": "src/components/portal/AdminDesktopGate.test.tsx",
+      "digest": "ab3e11580af16bd4b318b1a0eed395df4280ccc1"
+    },
+    {
+      "path": "src/components/portal/AdminDesktopGate.tsx",
+      "digest": "584ec0dadf663c1b92936e6e22a6f869653b583a"
+    },
+    {
+      "path": "src/components/portal/AdminDesktopWarningScreen.tsx",
+      "digest": "4e609b24b8f8e419d7d67fd4cba2a59d4af20526"
+    },
+    {
+      "path": "src/components/portal/AdminPageHeader.tsx",
+      "digest": "36a1c9b494c8bcf4b17ed24050e18b12329f0922"
+    },
+    {
+      "path": "src/components/portal/AdminProfileMenu.tsx",
+      "digest": "b782fa21049f18927f0f7c80c22ce7b73cfcce8f"
+    },
+    {
+      "path": "src/components/portal/AdminSearchPalette.tsx",
+      "digest": "8bb4f6850e8df26229bebfa8ec7984cba755d126"
+    },
+    {
+      "path": "src/components/portal/BudgetExecutionPipeline.tsx",
+      "digest": "9a7788313d8269b0b9de3668507d1bab073c973f"
+    },
+    {
+      "path": "src/components/portal/DangerConfirmDialog.tsx",
+      "digest": "92e470fd192803692bd017012396d6fd4d6bdc37"
+    },
+    {
+      "path": "src/components/portal/EndorsementGuidelinesModal.test.tsx",
+      "digest": "ce991108fd3766da960973b2b33b148b4fd22f38"
+    },
+    {
+      "path": "src/components/portal/EndorsementGuidelinesModal.tsx",
+      "digest": "b076b0b37000a3fac858472671fa0ae4c0c805d0"
+    },
+    {
+      "path": "src/components/portal/FeatureGate.tsx",
+      "digest": "77fd212e9e3e275eba545553919c79494e112f2e"
+    },
+    {
+      "path": "src/components/portal/OrganizationActivityHistoryModal.test.tsx",
+      "digest": "3675335c86f1243102bef6bbde69b7e4e4010c02"
+    },
+    {
+      "path": "src/components/portal/OrganizationActivityHistoryModal.tsx",
+      "digest": "8a4d878d73acb4c94f2db5c539d79dae54fdcd50"
+    },
+    {
+      "path": "src/components/portal/OrganizationHistoryPagination.tsx",
+      "digest": "cef1d738fcd33d55a0c8a3961b01149697a4ac5e"
+    },
+    {
+      "path": "src/components/portal/OrganizationIdentityNotice.tsx",
+      "digest": "326242d2a08ef2f15ec12e36e0e17294d6e13c0e"
+    },
+    {
+      "path": "src/components/portal/PortalAttachedDocumentDrawer.tsx",
+      "digest": "b7d3874872adeda03d1e147c74f75234b3715902"
+    },
+    {
+      "path": "src/components/portal/PortalAttachedFileRow.tsx",
+      "digest": "b136024a94f17c7b5a51623cbff4e2b0a347014c"
+    },
+    {
+      "path": "src/components/portal/PortalDocumentDrawer.tsx",
+      "digest": "ca7184dc6220629e87c3d7d9da8b3b5626b1f73d"
+    },
+    {
+      "path": "src/components/portal/PortalDocumentDrawerRevisionNotice.test.tsx",
+      "digest": "63ea9415b71415c696dff37278cedcf10fb63978"
+    },
+    {
+      "path": "src/components/portal/PortalDocumentPreviewModal.tsx",
+      "digest": "57622f6b6e7c7b4e0a8cadda07817da407fc7e3a"
+    },
+    {
+      "path": "src/components/portal/PortalDrawerDocumentSection.tsx",
+      "digest": "598916392fb1df3efdb005aaa8774b16a0d883ce"
+    },
+    {
+      "path": "src/components/portal/PortalPublicProfilePreviewDialog.test.tsx",
+      "digest": "a2d4a532820a095b6a8181ef394f2a15ba68ce02"
+    },
+    {
+      "path": "src/components/portal/PortalPublicProfilePreviewDialog.tsx",
+      "digest": "8cb6838e10710fc0bdad15350bd33efcc38847b6"
+    },
+    {
+      "path": "src/components/portal/PortalShell.tsx",
+      "digest": "f00f767909c809c00138b2421f9aee1534c231c1"
+    },
+    {
+      "path": "src/components/portal/PortalWorkflowStatusHelper.tsx",
+      "digest": "f5fed5448f382eef52f30c09868f7dd72f06b16d"
+    },
+    {
+      "path": "src/components/portal/StatusBadge.tsx",
+      "digest": "5202f44ff91bf3e67313b2185372741dcd8d8ea5"
+    },
+    {
+      "path": "src/components/portal/StatusStandardization.test.tsx",
+      "digest": "4b7f87f804d56bec8572cc8a6d8a9ba81b646bd8"
+    },
+    {
+      "path": "src/components/portal/SubmitInquiryModal.test.tsx",
+      "digest": "15f6397c0b4fd65515cbbd65b40fec358180dbf3"
+    },
+    {
+      "path": "src/components/portal/SubmitInquiryModal.tsx",
+      "digest": "07d73a752408d78939c6e7670867b04894ece5bd"
+    },
+    {
+      "path": "src/components/portal/UserFeatureIcon.tsx",
+      "digest": "14da00810da83c3fcba3c850e14d50ddf52042f9"
+    },
+    {
+      "path": "src/components/portal/UserPortalBudgetRevisionAndApproval.test.tsx",
+      "digest": "dd5d3d5b9f6dd23ce2269c5315261421006e4083"
+    },
+    {
+      "path": "src/components/portal/UserPortalBudgetUpload.test.tsx",
+      "digest": "3c1bea4261a88f0bcc3587c901dab067c4c052a9"
+    },
+    {
+      "path": "src/components/portal/UserPortalBudgetWorkspaceView.tsx",
+      "digest": "8830ddd62e804b02e7e040dd53f44049c7142a53"
+    },
+    {
+      "path": "src/components/portal/UserPortalCreateBudgetSubmitInteraction.test.tsx",
+      "digest": "20be2d6cf9e379b53aa803463467932641c33c78"
+    },
+    {
+      "path": "src/components/portal/UserPortalDocumentWorkspaceView.tsx",
+      "digest": "13b5b549901c16ade9bb439c2546f3c943200c65"
+    },
+    {
+      "path": "src/components/portal/UserPortalLiquidationWorkflow.test.tsx",
+      "digest": "81447e3ffa0153bec33f18514c1908b39b83770e"
+    },
+    {
+      "path": "src/components/portal/UserPortalLiquidationWorkspaceView.tsx",
+      "digest": "7155b0f1928469e77b0cb7fd3bf44b5241c8ebf0"
+    },
+    {
+      "path": "src/components/portal/UserPortalNewsWorkspaceView.tsx",
+      "digest": "478c98035deb28e8a6f389f18725a27d6e8bbb71"
+    },
+    {
+      "path": "src/components/portal/UserPortalNotificationsWorkspaceView.tsx",
+      "digest": "c90cb07bc92b27f3aa3ad145335e9422175fee5f"
+    },
+    {
+      "path": "src/components/portal/UserPortalOrganizationProfileHeader.test.ts",
+      "digest": "cdff1c92fdda2ead90d94f860c6e6bfd728bfe2b"
+    },
+    {
+      "path": "src/components/portal/UserPortalOrganizationProfileWorkspaceView.tsx",
+      "digest": "11718bf84ac80f319c273ff57bb90b21d649043e"
+    },
+    {
+      "path": "src/components/portal/UserPortalRedesignView.test.tsx",
+      "digest": "e5fdaca49f05b8ecc04d229e7ba19d6292ffdc5a"
+    },
+    {
+      "path": "src/components/portal/UserPortalRedesignView.tsx",
+      "digest": "27db98a00f2d681137ba8598233cf041dcf40af7"
+    },
+    {
+      "path": "src/components/portal/UserPortalRenewalCountdownChip.tsx",
+      "digest": "cdf294e22bf1ee983e47d73c30ec403e3509710f"
+    },
+    {
+      "path": "src/components/portal/UserPortalRenewalWorkspaceView.test.tsx",
+      "digest": "f4da8f4bf91907d776e9ad519e1aa517ea34b02f"
+    },
+    {
+      "path": "src/components/portal/UserPortalRenewalWorkspaceView.tsx",
+      "digest": "a79e6637db4da9a8b410fc01dded50c920e7c14e"
+    },
+    {
+      "path": "src/components/portal/UserPortalResponsiveWorkspace.test.tsx",
+      "digest": "09163264a01bc94061da0cf2d3e517582e78640f"
+    },
+    {
+      "path": "src/components/portal/UserPortalShell.tsx",
+      "digest": "30f882a2e8fac1e88258c5220b90f850042668e2"
+    },
+    {
+      "path": "src/components/portal/UserPortalTemplatesConsistency.test.tsx",
+      "digest": "9797eefd6e0b27213e06a857b236c962d1d73fc1"
+    },
+    {
+      "path": "src/components/portal/UserPortalTemplatesWorkspaceView.tsx",
+      "digest": "ca0ae76db6ca0e9918eb90e5dc1a493b14ae96f6"
+    },
+    {
+      "path": "src/components/portal/UserPortalYPOPWorkspaceView.tsx",
+      "digest": "f28e2f1339cfdfd79afd8425d1c793d5c98c02ad"
+    },
+    {
+      "path": "src/components/portal/WebsiteWorkflowNotice.tsx",
+      "digest": "35c7eae5a259d40c8150e1fa851e0de0f37c1a35"
+    },
+    {
+      "path": "src/components/portal/portal-ui.tsx",
+      "digest": "e280e481e7fa4f9dcb029d9c8a614d6b2c69b1e2"
+    },
+    {
+      "path": "src/components/portal/ypop/UserPortalYpopIntegration.test.tsx",
+      "digest": "8e7e2668d6134287c650cae3e7264b2bccb63012"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopBudgetRequestEntryPoint.test.tsx",
+      "digest": "3acbe47fa58967ede8dc0b3115b693d15e3a3f6b"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopCityLedStagedUpload.test.tsx",
+      "digest": "9b316d01434166bbbec96cb9afc93e5d80827df6"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopCityLedTab.tsx",
+      "digest": "38dc79dc43694afac2b94600803143290d732696"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopDraftIsolationAndSync.test.tsx",
+      "digest": "aaf1d50e60de2a3faefc06bc22980787ebe3ddeb"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopNeedsRevisionFileReplacement.test.tsx",
+      "digest": "1aed2358bd1bc35e85d84c9f74c864d37ab92f82"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopOrgLedTab.tsx",
+      "digest": "7a08eac72d3a858ed5dc53982a945e1e24a9f677"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopPendingEvaluationQualification.test.tsx",
+      "digest": "95498406362252c44c60134eb6013a2a0e31f91e"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopPpaModal.tsx",
+      "digest": "57c768f6fa70a3d82b114a8df58712db11b8e843"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx",
+      "digest": "345a9478a3c6d933db39f8ff23846344d4d91216"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopProofDrawer.tsx",
+      "digest": "80b6e46c7e571a2ea8aa3537fa825775283a0864"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopProofDrawerRedesign.test.tsx",
+      "digest": "3f7d93a4621695b4fcf77b88904184218bd3680c"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "digest": "bebd4c6e94f3791c22b25e03a637d4fc6b65bc90"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopSemesterList.tsx",
+      "digest": "ee8d390322be83c7a189eb5b1ddd55af3c4e2353"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopSemesterWorkspace.tsx",
+      "digest": "1b39a5545a4cc124bc3b1b0fc212c8010a6dc9a8"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopTransientDuplicateDraftPrevention.test.tsx",
+      "digest": "5c54cbc7ee1e081f56ff67a6a68fffd0da45fd1f"
+    },
+    {
+      "path": "src/components/public/PublicBudgetOverview.tsx",
+      "digest": "8e92bbdffe0135c8a5bfbd7d82ea02ea4b4cbfb3"
+    },
+    {
+      "path": "src/components/public/PublicBudgetTransparencyMap.tsx",
+      "digest": "f93ed5f19c92ee9686881115a113e1430e38267a"
+    },
+    {
+      "path": "src/components/public/PublicNewsReleaseCard.tsx",
+      "digest": "24f4b710a5dab9d84e030de0222d5bd362d78603"
+    },
+    {
+      "path": "src/components/public/PublicTemplatesCatalog.tsx",
+      "digest": "69f8c679a6eef1b24145409626da39b0d6134e04"
+    },
+    {
+      "path": "src/components/reports/ExportReportDialog.tsx",
+      "digest": "eacfb75339c3e37d8bed9a846934255f703ed159"
+    },
+    {
+      "path": "src/components/reports/YorpQuarterlyReportDialog.regression.test.tsx",
+      "digest": "3baf632a323c6748be443cfd7bff450137813e1d"
+    },
+    {
+      "path": "src/components/reports/YorpQuarterlyReportDialog.tsx",
+      "digest": "c89417bba7e0b91aa70fe90e665a203e83b6b038"
+    },
+    {
+      "path": "src/components/ui/accordion.tsx",
+      "digest": "fe12d7de2bee0f1281d27fb9eb847469fd502a9b"
+    },
+    {
+      "path": "src/components/ui/alert-dialog.tsx",
+      "digest": "643777694678a6834383f8d703355e7bdc4fcbe0"
+    },
+    {
+      "path": "src/components/ui/alert.tsx",
+      "digest": "9a3a75c8b3c003e9b1096a801df421beb638bd68"
+    },
+    {
+      "path": "src/components/ui/aspect-ratio.tsx",
+      "digest": "d8365cbb0b70c70414c13a999b41d895564bc19a"
+    },
+    {
+      "path": "src/components/ui/avatar.tsx",
+      "digest": "8c6a0b88b286c0aaf5e3716ed488654b67c2625f"
+    },
+    {
+      "path": "src/components/ui/badge.tsx",
+      "digest": "e93bf052ff591e4887c2ef918b5f95973ca4517c"
+    },
+    {
+      "path": "src/components/ui/breadcrumb.tsx",
+      "digest": "85c7f5de9ddfa176b829ccf8e07ced355eee6f20"
+    },
+    {
+      "path": "src/components/ui/button.tsx",
+      "digest": "cdd2167ed07ad439ba34acc950bd60dc6ce8a19a"
+    },
+    {
+      "path": "src/components/ui/calendar.tsx",
+      "digest": "b31361c9e0350fb44b679734e17953d195cc92b3"
+    },
+    {
+      "path": "src/components/ui/card.tsx",
+      "digest": "970e3b433acd29c67049a9862400b9bdce021b59"
+    },
+    {
+      "path": "src/components/ui/carousel.tsx",
+      "digest": "0b36c606dce8d18e000a1e06b777ed3475f71a27"
+    },
+    {
+      "path": "src/components/ui/chart.tsx",
+      "digest": "6b64a49b0adf0767519e58285282289fe1c6c928"
+    },
+    {
+      "path": "src/components/ui/checkbox.tsx",
+      "digest": "b513d00d90e1b03baaf338e5bd776c067e33ec85"
+    },
+    {
+      "path": "src/components/ui/collapsible.tsx",
+      "digest": "7bb0c60e2884f5c8b93b5cda6cc188b27c5587b4"
+    },
+    {
+      "path": "src/components/ui/command.tsx",
+      "digest": "86a5a2f5999d614bfba915e8b5aaf7e9d7d5ac20"
+    },
+    {
+      "path": "src/components/ui/context-menu.tsx",
+      "digest": "7393df6ec8135aeef1915f8da168d18d436e60df"
+    },
+    {
+      "path": "src/components/ui/dialog.tsx",
+      "digest": "432ca660ec610d5d499f1d68798919d2b21c9c88"
+    },
+    {
+      "path": "src/components/ui/drawer.tsx",
+      "digest": "409799c0e6d2d2f63393232c473baf360789d0a0"
+    },
+    {
+      "path": "src/components/ui/dropdown-menu.tsx",
+      "digest": "23ba4fbd2570219c96f08f8674f5e65e738a1705"
+    },
+    {
+      "path": "src/components/ui/form.tsx",
+      "digest": "6c2db44ebe022f8cc9427544c103d61458783e6a"
+    },
+    {
+      "path": "src/components/ui/hover-card.tsx",
+      "digest": "bbaff08839db5dd0e4a4393ffb86a0e408892358"
+    },
+    {
+      "path": "src/components/ui/input-otp.tsx",
+      "digest": "1face74548d04c972f01e4feddb843fe0bb7b7d2"
+    },
+    {
+      "path": "src/components/ui/input.tsx",
+      "digest": "ed4ae3d62bacd6c021cd68557ad4b4bdbbfc9ba9"
+    },
+    {
+      "path": "src/components/ui/label.tsx",
+      "digest": "5828ccbee93e40503d5e75ee65379eb92f43232d"
+    },
+    {
+      "path": "src/components/ui/menubar.tsx",
+      "digest": "e113cdb975cb0c9b74fc4f2ae678d12b99b17dc4"
+    },
+    {
+      "path": "src/components/ui/navigation-menu.tsx",
+      "digest": "8dabfdff80eb9fea523b4005050600114bbf2f2c"
+    },
+    {
+      "path": "src/components/ui/pagination.tsx",
+      "digest": "12f826405de40fa5da1b1f613e96fdd687f34109"
+    },
+    {
+      "path": "src/components/ui/popover.tsx",
+      "digest": "378bb9420734375c79fb7864950f44fd51cf2c66"
+    },
+    {
+      "path": "src/components/ui/progress.tsx",
+      "digest": "a6d86f98aa9bee93aa9af1d06812d1447be1cfdf"
+    },
+    {
+      "path": "src/components/ui/radio-group.tsx",
+      "digest": "21808156a77651e2876d8096917b18f9ed7dc406"
+    },
+    {
+      "path": "src/components/ui/resizable.tsx",
+      "digest": "46b9bf1f5908fbff106a841bde83fa1324b5f7ac"
+    },
+    {
+      "path": "src/components/ui/scroll-area.tsx",
+      "digest": "d3df19d77d8714d66f53c5d304745232147e5fe7"
+    },
+    {
+      "path": "src/components/ui/select.tsx",
+      "digest": "1b8dc84c68df3e80073145c66997de12036942dc"
+    },
+    {
+      "path": "src/components/ui/separator.tsx",
+      "digest": "f3786d0fd5f9a8e194a759cdbae0f575d3b5c71e"
+    },
+    {
+      "path": "src/components/ui/sheet.tsx",
+      "digest": "88f069456845f254f1c434efbb4d9f47bb9e6ccc"
+    },
+    {
+      "path": "src/components/ui/sidebar.tsx",
+      "digest": "83be6cef9f75cafda15b5d19199352c87e017d99"
+    },
+    {
+      "path": "src/components/ui/skeleton.tsx",
+      "digest": "ef23806fe13127b182f8adef147faf80b3d8b2cc"
+    },
+    {
+      "path": "src/components/ui/slider.tsx",
+      "digest": "672f624db79d5351283d709279af2483a00696d9"
+    },
+    {
+      "path": "src/components/ui/sonner.tsx",
+      "digest": "fe0c0c75181f1cf8d28c446b318f57702f37b891"
+    },
+    {
+      "path": "src/components/ui/switch.tsx",
+      "digest": "7aae6a65ec4ff31ddcdef2fa7b61fd251c870b65"
+    },
+    {
+      "path": "src/components/ui/table.tsx",
+      "digest": "21e309552d1f76e2277de5be11070f56b23dacaf"
+    },
+    {
+      "path": "src/components/ui/tabs.tsx",
+      "digest": "5661f87c4e3c2ccd347d3ce83618cf0394affb4e"
+    },
+    {
+      "path": "src/components/ui/textarea.tsx",
+      "digest": "cb8a3563b5d03b8b27a33047580f4fe2ab50fd81"
+    },
+    {
+      "path": "src/components/ui/toast.tsx",
+      "digest": "47888b9d70ee06ec4f3d2ecabc41653ff853f3c2"
+    },
+    {
+      "path": "src/components/ui/toaster.tsx",
+      "digest": "c3aeaeb6cf9b6b4f58fc241bd397f0b763d4f437"
+    },
+    {
+      "path": "src/components/ui/toggle-group.tsx",
+      "digest": "1dee88875a6082d6d47466a8712d29b0de582fcd"
+    },
+    {
+      "path": "src/components/ui/toggle.tsx",
+      "digest": "6f938083dc5d8c8c350b67b79cbeecce944ba63d"
+    },
+    {
+      "path": "src/components/ui/tooltip.tsx",
+      "digest": "4ecc8b1518f852a3b0815b3ae984da5f9f5dc1ba"
+    },
+    {
+      "path": "src/components/ui/use-toast.ts",
+      "digest": "40f18ccf54766039dd8a4639777854a10380a6ab"
+    },
+    {
+      "path": "src/hooks/use-admin-desktop-viewport.test.ts",
+      "digest": "4e17ccd297ff9e8411257ca5b58e0854511d2849"
+    },
+    {
+      "path": "src/hooks/use-admin-desktop-viewport.ts",
+      "digest": "5e838c638d92f406e1d0d0a59d8eb3ad73e64347"
+    },
+    {
+      "path": "src/hooks/use-admin-system-settings.ts",
+      "digest": "7a1af4585bf8b2947909e93d47aedb6c29b00fdd"
+    },
+    {
+      "path": "src/hooks/use-auth.tsx",
+      "digest": "2ebfc02d161165f347bd1be00eaf2d4af13eb924"
+    },
+    {
+      "path": "src/hooks/use-mobile.tsx",
+      "digest": "730c11c65e33b27f0e9d838a979d7e146353dac7"
+    },
+    {
+      "path": "src/hooks/use-organization-identity-check.test.tsx",
+      "digest": "899d6367a9d1bd9b19a6fd15f16253427957454f"
+    },
+    {
+      "path": "src/hooks/use-organization-identity-check.ts",
+      "digest": "ce9711bf00f4228ddf7c3a7ff62aea21443e60ab"
+    },
+    {
+      "path": "src/hooks/use-policy-agreement.ts",
+      "digest": "f0ed2d0870663cfebac244193a6df2f776dc081f"
+    },
+    {
+      "path": "src/hooks/use-renewal-clock.test.ts",
+      "digest": "e2623ab1da4152f9f18730852230469a3069fdd9"
+    },
+    {
+      "path": "src/hooks/use-renewal-clock.ts",
+      "digest": "927279c8a3e301e50ad69e0cab17353a0ead584f"
+    },
+    {
+      "path": "src/hooks/use-toast.ts",
+      "digest": "8dd7265cc312b2407c498f452fbb636829af72e8"
+    },
+    {
+      "path": "src/index.css",
+      "digest": "a13437c53d0a2f4133862e671ed0a97ca3125af5"
+    },
+    {
+      "path": "src/lib/account-switching-isolation.test.tsx",
+      "digest": "33747a4865589346ad212ac3c209c9c27b03db57"
+    },
+    {
+      "path": "src/lib/activity-log-export.test.ts",
+      "digest": "d1c352467ddf7325817f4dbffc857af8fdc6e2ac"
+    },
+    {
+      "path": "src/lib/activity-log-export.ts",
+      "digest": "bf2ad7810052abe8416f4e83eb145e3cfddd570a"
+    },
+    {
+      "path": "src/lib/admin-auth.ts",
+      "digest": "b8e54cbbd58d8959c8e2f3c7a7e92958387c0a07"
+    },
+    {
+      "path": "src/lib/admin-backup-control.test.ts",
+      "digest": "c583d46924db76772e0ae7278aa0fe8634fa3968"
+    },
+    {
+      "path": "src/lib/admin-backup-recovery.test.ts",
+      "digest": "9d0131e9a30a38a76bc3758841dfdc22fc1a240e"
+    },
+    {
+      "path": "src/lib/admin-backup-recovery.ts",
+      "digest": "48544b4efe160f73b4c53b8168b4b448665cb067"
+    },
+    {
+      "path": "src/lib/admin-budget-request-deletion.test.ts",
+      "digest": "f5a0b454feaf92c391d34d3cd2b9f1123c597828"
+    },
+    {
+      "path": "src/lib/admin-email-notification-pipeline.test.ts",
+      "digest": "466bf3b9551266078950a5c4392a543b72e9ae1d"
+    },
+    {
+      "path": "src/lib/admin-inactivity.test.ts",
+      "digest": "d05c954589788bbf457206654c8481d525756bb5"
+    },
+    {
+      "path": "src/lib/admin-invite.test.ts",
+      "digest": "94808f3a8dd7458ea18ac5753664371a6a4bf375"
+    },
+    {
+      "path": "src/lib/admin-lifecycle-user-sync.test.tsx",
+      "digest": "1dca58becec0bdcb15be577b6a238b180311f53f"
+    },
+    {
+      "path": "src/lib/admin-organization-deletion.test.ts",
+      "digest": "a2a69a0393a784860882d664802b060588a44aad"
+    },
+    {
+      "path": "src/lib/admin-organization-deletion.ts",
+      "digest": "cbf7e39cf61dad8f34886d7c4bfe1d379fb414ff"
+    },
+    {
+      "path": "src/lib/admin-pdf-sample-generation.test.ts",
+      "digest": "7d1b8fbc2261d8dda8458034f28914675ab3cf1e"
+    },
+    {
+      "path": "src/lib/admin-permissions.test.ts",
+      "digest": "6cc2dc16fd28ba72e51c78d8f559e7e64eb891bc"
+    },
+    {
+      "path": "src/lib/admin-permissions.ts",
+      "digest": "154263359fa36f32f8c499f7ebaa6b8657ae39e3"
+    },
+    {
+      "path": "src/lib/admin-quarterly-export-contract.test.ts",
+      "digest": "c5863f0aef2869e9efc38e858551f5f8b1e36a27"
+    },
+    {
+      "path": "src/lib/admin-quarterly-export-rpc.test.ts",
+      "digest": "cc5a4e997a52cb2f47dc25682f3f04f2578820d7"
+    },
+    {
+      "path": "src/lib/admin-registration-review-fk.test.ts",
+      "digest": "825f55224a5396c2792cd7039df726377bbe98f1"
+    },
+    {
+      "path": "src/lib/admin-report-period.test.ts",
+      "digest": "878a53a89853a3beb0e34d17569195b0b44c1737"
+    },
+    {
+      "path": "src/lib/admin-report-period.ts",
+      "digest": "d97100e40b619ab8f556404c9271b9689f2c470b"
+    },
+    {
+      "path": "src/lib/admin-storage-access.test.ts",
+      "digest": "64f5511c09fde786b91fb3bbbaafabbbcb710433"
+    },
+    {
+      "path": "src/lib/admin-storage-access.ts",
+      "digest": "84bee9f22ef0359ee816ebc57975e0e88da046ce"
+    },
+    {
+      "path": "src/lib/admin-storage-resolver.integration.test.ts",
+      "digest": "44ed6aef75d239327a1e2a095edd11dc4216a6fd"
+    },
+    {
+      "path": "src/lib/admin-system-settings.ts",
+      "digest": "c4198d117301aee4f92305afbe2173a6c855b345"
+    },
+    {
+      "path": "src/lib/audit-records-hardening.test.ts",
+      "digest": "848bcf516ebd0ee721f24a276239ec1239738074"
+    },
+    {
+      "path": "src/lib/auth-redirect.ts",
+      "digest": "62a4a016c5223eaa77d3f8228f4f0161d56945d8"
+    },
+    {
+      "path": "src/lib/auth-session-recovery.test.ts",
+      "digest": "ca0d47460cd27504a34341c91d96f9af4ff7732c"
+    },
+    {
+      "path": "src/lib/auth-session-recovery.ts",
+      "digest": "d23c149750d0ec9d91138e3f564be4fe14136783"
+    },
+    {
+      "path": "src/lib/budget-category-colors.test.ts",
+      "digest": "e8c515ebf6e1fbc1478bdbbf9f64781954d51f73"
+    },
+    {
+      "path": "src/lib/budget-category-colors.ts",
+      "digest": "adfcc67cef68f9d80e0389f66be8cf4caff88417"
+    },
+    {
+      "path": "src/lib/budget-eligibility.test.ts",
+      "digest": "a0c8726804d6e86542af994be767f149d1a99265"
+    },
+    {
+      "path": "src/lib/budget-eligibility.ts",
+      "digest": "b9f673d3be4e0d8333e2ad9cdd4a557d62f4d7f8"
+    },
+    {
+      "path": "src/lib/budget-monitoring-authoritative.test.ts",
+      "digest": "4c2f549bb703a30d1a383e79363affabfac58626"
+    },
+    {
+      "path": "src/lib/budget-monitoring-filters.test.ts",
+      "digest": "262d627c5092aa514e5c8c66933ee52f807a6b5c"
+    },
+    {
+      "path": "src/lib/budget-monitoring-filters.ts",
+      "digest": "4a0dc38aebc786166d21cf1ee3da95f2c780cbbb"
+    },
+    {
+      "path": "src/lib/budget-monitoring-presentation.test.ts",
+      "digest": "730e85e35a61cd5a92a82a5ec776b677c18d1cfc"
+    },
+    {
+      "path": "src/lib/budget-monitoring-presentation.ts",
+      "digest": "9b0a0be7c787b546a4685c468fa3d277f0af51d1"
+    },
+    {
+      "path": "src/lib/cross-tab-password-recovery.test.ts",
+      "digest": "568ade27d6cc732cbb8082c6a3c228e5ba1e21d3"
+    },
+    {
+      "path": "src/lib/deleted-admin-invitee-routing.test.tsx",
+      "digest": "786933993fe3ea28e7ba33e9a278ce49dfe3cc0f"
+    },
+    {
+      "path": "src/lib/deployment-surface.ts",
+      "digest": "4669824d75904e05fbb5c73d17c110f8dd12e6a0"
+    },
+    {
+      "path": "src/lib/document-compression.ts",
+      "digest": "929b0ffce9ade0ac2dd0a231bfb7eb1b2986b2ad"
+    },
+    {
+      "path": "src/lib/document-file-access.test.ts",
+      "digest": "5bf0f5ac2e11354ac269a0b09a1b52033b42e19a"
+    },
+    {
+      "path": "src/lib/document-file-access.ts",
+      "digest": "76c1a4d0d7ee180e47efb5ba7fd530d1ae8c20c0"
+    },
+    {
+      "path": "src/lib/document-submission-performance.test.ts",
+      "digest": "9f8b0ffca558e64db965e7d85162d08d227c6004"
+    },
+    {
+      "path": "src/lib/dynamic-document-submission-workflow.test.tsx",
+      "digest": "4bccab8f5928a42a092df035dd27e3407c214701"
+    },
+    {
+      "path": "src/lib/email-validation.test.ts",
+      "digest": "3efd3460ae31c2377b60a92948eba535b5ef721b"
+    },
+    {
+      "path": "src/lib/email-validation.ts",
+      "digest": "ee91c9ea4f3c7591455a38ee13c9d72f37eca508"
+    },
+    {
+      "path": "src/lib/google-oauth-onboarding.test.tsx",
+      "digest": "0b38df7ae2b72e8d6b7f3fc6aafc04f727ebe3c1"
+    },
+    {
+      "path": "src/lib/inquiry-reply-email.test.ts",
+      "digest": "0e528657b90cb2ad88d5791cf364dbc16affc552"
+    },
+    {
+      "path": "src/lib/inquiry-reply-url.ts",
+      "digest": "07387bee74aae0e72f37b0fa00a52a57e8e42b96"
+    },
+    {
+      "path": "src/lib/lydo-connect-data.ts",
+      "digest": "917a4b3bb4a26e0e8880cfa480781c41ed16f64b"
+    },
+    {
+      "path": "src/lib/lydo-connect-store.tsx",
+      "digest": "111b3889c4d5b1b674cdfae52a6306abfde009ea"
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "digest": "ec8b819bc824493e83802965746178fffc841a3e"
+    },
+    {
+      "path": "src/lib/notification-settings-wiring.test.tsx",
+      "digest": "ce5e9c98321bdb379de05e66079c2d75cb4a8f54"
+    },
+    {
+      "path": "src/lib/official-links.ts",
+      "digest": "be6722d68e17b5b53c4244cf7868e69da2dc5408"
+    },
+    {
+      "path": "src/lib/org-transactional-email.test.ts",
+      "digest": "949aefcdaa775530d61fbe6339d6c006f6160bd1"
+    },
+    {
+      "path": "src/lib/organization-identity-api.test.ts",
+      "digest": "781b0cb92374ede92c0131a274579373037e3e25"
+    },
+    {
+      "path": "src/lib/organization-identity-api.ts",
+      "digest": "1e93c23797af6f4ded36c3dc96a0b1e06a9b266c"
+    },
+    {
+      "path": "src/lib/organization-identity-profile-write.test.ts",
+      "digest": "2fa0146ee8584c1804a595ca535c8e9a9304d972"
+    },
+    {
+      "path": "src/lib/organization-identity.test.ts",
+      "digest": "dc7d03cc53502eae4380dd681985eafe9518b2c5"
+    },
+    {
+      "path": "src/lib/organization-identity.ts",
+      "digest": "42de9abf49a16c01e6a7fc8e4e8defd9685c2256"
+    },
+    {
+      "path": "src/lib/organization-profile-domain.test.ts",
+      "digest": "3840c4ef2cce5d9920b28260a6351c3b9f0f8a08"
+    },
+    {
+      "path": "src/lib/organization-profile-domain.ts",
+      "digest": "983caa76abe890271dc37622e7a02d09382a159a"
+    },
+    {
+      "path": "src/lib/organization-rejection-suspension.test.tsx",
+      "digest": "f1814b7decb9410caefedae29e41e9439a8b4089"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase1.test.ts",
+      "digest": "52be554186a5e2ec063ca15830462b61d40cbc6c"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2-1.test.ts",
+      "digest": "5bd58dde6a95392a1e618b6df51f43e5ef676f47"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2-2.test.ts",
+      "digest": "2d404e610641584a65f26a2bbf9c53337f114f52"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2-3.test.ts",
+      "digest": "ba0b58d021b5f15a71ce2524478e1cfe88a81d1b"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2.test.ts",
+      "digest": "5e1e2c7c529668ed4ea78208a1563dfab38b3bcb"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3.test.tsx",
+      "digest": "bb340923ec6dd05a30ad2d3dddb4f7a9d2b203d7"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3c-1.test.tsx",
+      "digest": "68984186b67e5a458c60b93af9606354066b14b4"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3c.test.tsx",
+      "digest": "e3a428314cb37fa861725d7aa117299018bf21cd"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3d.test.tsx",
+      "digest": "2c1aa338529b38e48f42cbde110d242bdbdf6ada"
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3e.test.ts",
+      "digest": "5cf302ba90698e28fa577b2044091171b0861e1a"
+    },
+    {
+      "path": "src/lib/organization-renewal.test.ts",
+      "digest": "756209b6730beb7caa3d1e3cd484bab5b2bd8a9a"
+    },
+    {
+      "path": "src/lib/organization-renewal.ts",
+      "digest": "a6f9ed8875f33799109181e91a8d1c6d8416f94c"
+    },
+    {
+      "path": "src/lib/organization-retention.test.ts",
+      "digest": "b2ed528503e4b9c2b7a5edc2d9b305092d1da1aa"
+    },
+    {
+      "path": "src/lib/pasig-districts.test.ts",
+      "digest": "9573231182c1181dd92ac922006218c700ebeefe"
+    },
+    {
+      "path": "src/lib/pasig-districts.ts",
+      "digest": "728e50e98e5aa11e147844a6816eeabe4cde5006"
+    },
+    {
+      "path": "src/lib/password-policy.test.ts",
+      "digest": "179a0d3e335c37f85744cbebae68007d793a13b8"
+    },
+    {
+      "path": "src/lib/password-policy.ts",
+      "digest": "375012db9b1da33b6546586dc5db982a8de03526"
+    },
+    {
+      "path": "src/lib/password-recovery.test.ts",
+      "digest": "1577b5b89ca3ac741b2c693aaa2943bfbe5e4623"
+    },
+    {
+      "path": "src/lib/password-recovery.ts",
+      "digest": "983e01b681d10fc28d8a976b7728d25357fa28da"
+    },
+    {
+      "path": "src/lib/pending-registration-scoping.test.ts",
+      "digest": "0d3c49d5b5d5a17eb81286e044c2ca65de1b3fca"
+    },
+    {
+      "path": "src/lib/policy-content.ts",
+      "digest": "d8d2f7cc50e995bbd4f45eba728232da89ccdeac"
+    },
+    {
+      "path": "src/lib/private-query-cache.test.ts",
+      "digest": "d3e12fd19c2411214323b0264f76929cb35e4b3e"
+    },
+    {
+      "path": "src/lib/public-budget-transparency.test.tsx",
+      "digest": "49cd0cbaa71bdfc8592c69267e525b14ed974530"
+    },
+    {
+      "path": "src/lib/public-contact-info.test.tsx",
+      "digest": "fdf5f748faf46dd59860734076fa91597fe7e5d3"
+    },
+    {
+      "path": "src/lib/pwa-document-preview.ts",
+      "digest": "d485249e9e26da45166cb6497a750a358958de5b"
+    },
+    {
+      "path": "src/lib/pydo-deterministic-urn.test.ts",
+      "digest": "8907c2593f94b2fbfba77ccaf824fc837ad39f9d"
+    },
+    {
+      "path": "src/lib/query-client.test.ts",
+      "digest": "7827710809240b839e19ec0e12b87b089f479345"
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "digest": "c0a63329aa9c674889c2a064da2c52e299da1971"
+    },
+    {
+      "path": "src/lib/registration-and-forgot-password-privacy.test.ts",
+      "digest": "62f5c8653606ae751be7be34007e5da47cbd3464"
+    },
+    {
+      "path": "src/lib/registration-bulk-reliability.test.ts",
+      "digest": "e8ad19c053ce95d434e461dec49c149faca020c5"
+    },
+    {
+      "path": "src/lib/registration-upload-transport.test.ts",
+      "digest": "486810f1f0ca3d1b07b3bb24d7c06093597303c6"
+    },
+    {
+      "path": "src/lib/registration-upload-transport.ts",
+      "digest": "57028e723477a3b436cc8f9bbfa2ab6a266c7479"
+    },
+    {
+      "path": "src/lib/registration-urn-lifecycle.test.ts",
+      "digest": "89d5625413ef2956cc0b4d02ae35efa463ab523e"
+    },
+    {
+      "path": "src/lib/renewal-realtime.test.ts",
+      "digest": "6a3c7c4db116c2e5c53db94bc18bb1f7d6514114"
+    },
+    {
+      "path": "src/lib/report-export-configs.ts",
+      "digest": "2a4bf0e6ac8cd2300590dbf4a812d617277af005"
+    },
+    {
+      "path": "src/lib/report-export.test.ts",
+      "digest": "8036fb953951824431e2bd50ffa472ffcbdcc194"
+    },
+    {
+      "path": "src/lib/report-export.ts",
+      "digest": "383be1f2cf016cc575fda9e1d1ffecc09750e544"
+    },
+    {
+      "path": "src/lib/report-letterhead-assets.ts",
+      "digest": "798c46e8f6170eaffc7f6cd57c80f16d4ed59ef3"
+    },
+    {
+      "path": "src/lib/report-section35-export.ts",
+      "digest": "52cc1f84f8be6d326ff18e463fffccd0d8418647"
+    },
+    {
+      "path": "src/lib/revision-deadline-workflow.test.ts",
+      "digest": "e3f16802fbcbeb7f6e18afd2224b53b090c11bfb"
+    },
+    {
+      "path": "src/lib/revision-deadline.ts",
+      "digest": "876b3fdb195a025b2b6a4783bc8fa310de9e13cf"
+    },
+    {
+      "path": "src/lib/revision-resubmission-lifecycle.test.ts",
+      "digest": "a18531dc969577d43c8a96b724d8627cd449caad"
+    },
+    {
+      "path": "src/lib/section35-artifact-generation.test.ts",
+      "digest": "6794d353ba688fa21242ce1abd3fafe377b07692"
+    },
+    {
+      "path": "src/lib/section35-reporting.test.ts",
+      "digest": "73e4aec886cec20d8b0d6058fa74b4fee027a311"
+    },
+    {
+      "path": "src/lib/section35-semantics.test.ts",
+      "digest": "262de0b50266fc91b0b5dd1e2b927cc3e67c6d1f"
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.test.ts",
+      "digest": "005242a03bc260409a36296554029bf9d9e4f0d4"
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.ts",
+      "digest": "710fd53cf8b89acf21c4071bc9c247997b19777f"
+    },
+    {
+      "path": "src/lib/signed-storage-url.integration.test.ts",
+      "digest": "0e128edf052559ed6a2f860a1f7062d1c1e044bb"
+    },
+    {
+      "path": "src/lib/source-post.ts",
+      "digest": "26e5c3d05aebd64c479e8303ebed0be720cff868"
+    },
+    {
+      "path": "src/lib/supabase.ts",
+      "digest": "043bbc95fde9e674022c625c1eea19735d23d47d"
+    },
+    {
+      "path": "src/lib/tc018-urn-uniqueness.test.ts",
+      "digest": "7265be939d3285df2fcab11074b40a8b07c3ed4e"
+    },
+    {
+      "path": "src/lib/tc039-verify-email-refresh.test.ts",
+      "digest": "4da34b6102ab7961135441f5451882f217f209b1"
+    },
+    {
+      "path": "src/lib/tc104-org-name-length.test.ts",
+      "digest": "93d9bba574b055046a73e695b23dff1993e09648"
+    },
+    {
+      "path": "src/lib/tc115-contact-number.test.ts",
+      "digest": "0e07831423d4b6e16234bc8d979379e06f39d21f"
+    },
+    {
+      "path": "src/lib/templates-file-resolution.test.ts",
+      "digest": "5c4f9676c181098437ead990d592bee2db388992"
+    },
+    {
+      "path": "src/lib/urn-registration.test.ts",
+      "digest": "a83b49d92e5c9a6898bd9611ba210ccc3d7785ed"
+    },
+    {
+      "path": "src/lib/urn-registration.ts",
+      "digest": "6276116d111bba38e622802ed7d32c182f657c8e"
+    },
+    {
+      "path": "src/lib/urn-validation.test.ts",
+      "digest": "ce716fa3d2d13feddc5dc68f0605a4d148c29a4e"
+    },
+    {
+      "path": "src/lib/urn-validation.ts",
+      "digest": "c44e645758d316f33cda68880000e29d5b1c84ec"
+    },
+    {
+      "path": "src/lib/user-portal-data-scope.test.ts",
+      "digest": "370f311c49a295236a264852bd74205456e0ddd3"
+    },
+    {
+      "path": "src/lib/user-workflow-eligibility.test.ts",
+      "digest": "4f17c63bfa6c4b9ea22ffc2ab9f3ed8dd03b82a1"
+    },
+    {
+      "path": "src/lib/user-workflow-eligibility.ts",
+      "digest": "21e5bd9627056f3b9a08c912a255c8125fbadfd9"
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "digest": "d2516e14718ac155f4819ea4ec143a048b6f255a"
+    },
+    {
+      "path": "src/lib/verification-cases-a-g.test.ts",
+      "digest": "c5542f1abf4f5a2a9585a5b4443f8a0b51e76da2"
+    },
+    {
+      "path": "src/lib/verification-error.test.ts",
+      "digest": "f651bf835687e3de9213f784da6b1a3d5437dd14"
+    },
+    {
+      "path": "src/lib/verification-error.ts",
+      "digest": "944b91fe59e4e2d8775b7c0808d0469797066b7b"
+    },
+    {
+      "path": "src/lib/workflow-metrics-aggregate.test.ts",
+      "digest": "aba7b35635600da3253aa960eafb6e8099be1044"
+    },
+    {
+      "path": "src/lib/workflow-metrics.ts",
+      "digest": "fe79b8b69deac38469758793be7e60e535b9764e"
+    },
+    {
+      "path": "src/lib/yorp-organization-report.fixtures.ts",
+      "digest": "8ccdfc3110ca1d654c5409bc0158aacb3f794d71"
+    },
+    {
+      "path": "src/lib/yorp-organization-report.test.ts",
+      "digest": "7752d25e0cca3f3ced6dcd12d752c325ac585d6a"
+    },
+    {
+      "path": "src/lib/yorp-organization-report.ts",
+      "digest": "dab90d2e64626a40562284e6752566edad4a5e75"
+    },
+    {
+      "path": "src/lib/yorp-registry-detail.ts",
+      "digest": "4c8c5f69c3c08fefa1efeefd05ee6506615fb995"
+    },
+    {
+      "path": "src/lib/yorp-sample-dataset-catalog.ts",
+      "digest": "8acb0711f30684c4f1df599e5c45f7187a0b1f81"
+    },
+    {
+      "path": "src/lib/yorp-sample-dataset.test.ts",
+      "digest": "c4bc7853383b301d4212fd7ec11551360d40d57c"
+    },
+    {
+      "path": "src/lib/yorp-semester.test.ts",
+      "digest": "12810c3227300808905295e3eb18cfcefdd04559"
+    },
+    {
+      "path": "src/lib/yorp-semester.ts",
+      "digest": "a3383c4d7ab446dea6c473e4e5ed3500e80902ed"
+    },
+    {
+      "path": "src/lib/ypop-admin-flicker-prevention.test.tsx",
+      "digest": "ecd20e9c1ec248eaebd664e1cf17ec6ce08b2012"
+    },
+    {
+      "path": "src/lib/ypop-admin-user-status-sync.test.ts",
+      "digest": "9486f3fbe5355a4fd83ecec5d9bf8a1ea374cdbb"
+    },
+    {
+      "path": "src/lib/ypop-category-tag-colors.test.ts",
+      "digest": "6ae37434a4064e4902cf09baa130aa4c2cdc0f97"
+    },
+    {
+      "path": "src/lib/ypop-event-eligibility.test.ts",
+      "digest": "34a6b3cf3ba8250fa34f68ea03416313fa95afdf"
+    },
+    {
+      "path": "src/lib/ypop-event-eligibility.ts",
+      "digest": "ca57489508a8c404b46872413b8cf12e696274fc"
+    },
+    {
+      "path": "src/lib/ypop-ppa-submission-sync.test.ts",
+      "digest": "61872972c5eb067209d7351028270bbc118585e9"
+    },
+    {
+      "path": "src/lib/ypop-reliability-persistence-sync.test.ts",
+      "digest": "5d3b4ad927f64a7eaf387feb8e74bee523b6194d"
+    },
+    {
+      "path": "src/lib/ypop-scoring.test.ts",
+      "digest": "0f25e8fbe90b883acebe24beae0d60d119f3924f"
+    },
+    {
+      "path": "src/lib/ypop-submission-deletion.ts",
+      "digest": "adec83348da2a08e91f896e923664735c04d87a2"
+    },
+    {
+      "path": "src/lib/ypop-user-admin-sync.test.ts",
+      "digest": "99b8278c6dfe1b1fe0d28e69ac0e1b5f45699282"
+    },
+    {
+      "path": "src/lib/ypop-user-and-admin-notifications.test.ts",
+      "digest": "da416c0f70d11d22c729e6b63f8cb86882669479"
+    },
+    {
+      "path": "src/lib/ypop-workflow-authoritative.test.ts",
+      "digest": "bdc0f88d7a0af70d8c7c895084c103eabe896ed1"
+    },
+    {
+      "path": "src/lib/ytrace-policy-content.generated.ts",
+      "digest": "d6a68251b64c947475cbdd00a55dd1d95c7944ec"
+    },
+    {
+      "path": "src/lib/ytrace-policy.test.ts",
+      "digest": "c6298f105c5ca38f59b91addc0e79f6ee444562a"
+    },
+    {
+      "path": "src/lib/ytrace-policy.ts",
+      "digest": "de22ef21cd9fd4a54887266db1eb1a86953aaae6"
+    },
+    {
+      "path": "src/main.tsx",
+      "digest": "41874dbbd0115277925d6147dddaad39343cd020"
+    },
+    {
+      "path": "src/pages/About.tsx",
+      "digest": "4507a556a157506328efd869f1c7459295338a00"
+    },
+    {
+      "path": "src/pages/AdminCreatePassword.tsx",
+      "digest": "7000a393bd7af7acc730431c9fa2399007a758ad"
+    },
+    {
+      "path": "src/pages/AuthCallback.tsx",
+      "digest": "3687275218064f57918ec12e77bc65ca0e8daf0a"
+    },
+    {
+      "path": "src/pages/Contacts.tsx",
+      "digest": "fb8ff10ab2bc235362c51f8775f4627fc04f9542"
+    },
+    {
+      "path": "src/pages/Faqs.tsx",
+      "digest": "c15217a70b8bb40b3b72f9bfd49af9ea0630ea77"
+    },
+    {
+      "path": "src/pages/GoogleOnboarding.tsx",
+      "digest": "7adb70b3dc9789795f878be3930474f611b54a47"
+    },
+    {
+      "path": "src/pages/Index.tsx",
+      "digest": "1b189cd3880dcf1acb4dee305b366de84dc4d5bb"
+    },
+    {
+      "path": "src/pages/LegalPolicy.tsx",
+      "digest": "969955681569ae92e9e24c101fd052c297b1739d"
+    },
+    {
+      "path": "src/pages/NewsReleaseRecord.tsx",
+      "digest": "ef5539988867104d415d25ada99813d7e5463706"
+    },
+    {
+      "path": "src/pages/NewsReleases.tsx",
+      "digest": "774389470fc7d73fc853f338790d2c6f500d8725"
+    },
+    {
+      "path": "src/pages/NotFound.tsx",
+      "digest": "7f1090a8cd21ac5822190cb143655b970e6ac9ab"
+    },
+    {
+      "path": "src/pages/OrganizationIdentitySignup.test.tsx",
+      "digest": "38e17d30b1f2a0496b7646c2b535810a4496ebde"
+    },
+    {
+      "path": "src/pages/PublicBudgetTransparency.tsx",
+      "digest": "6c94773914a1a3fb9e724b77c433c0b65975a23a"
+    },
+    {
+      "path": "src/pages/PublicTemplates.tsx",
+      "digest": "9f6002b3258b9084cd27d6bc96927cb3673a7a32"
+    },
+    {
+      "path": "src/pages/ResetPassword.test.tsx",
+      "digest": "78a6f82f5c321f910bad8baea272d3b5087b8e24"
+    },
+    {
+      "path": "src/pages/ResetPassword.tsx",
+      "digest": "dee7bee54051d3a4316eb980229adff265acd4e7"
+    },
+    {
+      "path": "src/pages/SignIn.test.tsx",
+      "digest": "22682d99a48944a75db7c46434b06467d07fc8af"
+    },
+    {
+      "path": "src/pages/SignIn.tsx",
+      "digest": "271d82bf2cba85f3027e1b60d531f24f9de5399f"
+    },
+    {
+      "path": "src/pages/SignUp.test.tsx",
+      "digest": "b6b30591c4eb4d01289f8afd6b59f6156c2554bb"
+    },
+    {
+      "path": "src/pages/SignUp.tsx",
+      "digest": "9aad8bcc8943a120e0f8089573a56875b26cd077"
+    },
+    {
+      "path": "src/pages/SiteMap.tsx",
+      "digest": "abf1a1a00f8e33caf950e3582a448a2aed3823e8"
+    },
+    {
+      "path": "src/pages/VerifyEmail.tsx",
+      "digest": "63b0bd070e98056cb04429e1f578d3b50dfc15f2"
+    },
+    {
+      "path": "src/test/env/.env.test",
+      "digest": "c09cd8f0ace8516006021232a7848dc8b29f57cb"
+    },
+    {
+      "path": "src/test/example.test.ts",
+      "digest": "72b7dd565100b4edf8462313b82e494815fe4f3f"
+    },
+    {
+      "path": "src/test/production-supabase-network-guard.test.ts",
+      "digest": "f8c32f3d58d8718584ece20ff31b76f5e4bfcc5f"
+    },
+    {
+      "path": "src/test/production-supabase-network-guard.ts",
+      "digest": "921a51345bed56dd2d821178aa05c8ed6acf65fb"
+    },
+    {
+      "path": "src/test/setup.ts",
+      "digest": "a34afa6906ee0c6c6b8e51c5d18c6abf5fccc50b"
+    },
+    {
+      "path": "src/test/user-button-color-standardization.test.ts",
+      "digest": "3629b651cf541e8d2d75eb9fd7a0c6cba12df2c9"
+    },
+    {
+      "path": "src/user/UserPortal.tsx",
+      "digest": "d9336b2b1ba3426d72aee85212ca7ffd76fa2b6b"
+    },
+    {
+      "path": "src/user/UserPortalDashboardLiquidation.test.tsx",
+      "digest": "89951460bc12c85ddd059afef946c1a2bab45d40"
+    },
+    {
+      "path": "src/user/UserPortalEntry.tsx",
+      "digest": "f08c82d23773693c10bdbd35c9e8c9c5d7d04042"
+    },
+    {
+      "path": "src/user/pwa/PwaAppShell.tsx",
+      "digest": "8a47cf9bc3cf173cb991816290a89792213a70a5"
+    },
+    {
+      "path": "src/user/pwa/PwaBackButton.tsx",
+      "digest": "cd360a71183729d030f7e8065e72ceafddec016f"
+    },
+    {
+      "path": "src/user/pwa/PwaBottomNavigation.tsx",
+      "digest": "1aefbb7049af3f7bd5ee7f7a959bad37dcc957cf"
+    },
+    {
+      "path": "src/user/pwa/PwaDocumentPreview.tsx",
+      "digest": "7057c94f4790cf5b6a7a4a5058b3b71cbe243438"
+    },
+    {
+      "path": "src/user/pwa/PwaErrorBoundary.tsx",
+      "digest": "e4519be918ca58ee77e541c05343ce1c2b1d7377"
+    },
+    {
+      "path": "src/user/pwa/PwaHeader.tsx",
+      "digest": "904cf4c10e6a0c31ce184be7b5dad71814c0b577"
+    },
+    {
+      "path": "src/user/pwa/PwaInformationPages.tsx",
+      "digest": "eede43f0d1ea4fffb59540a362f3126630e2eab8"
+    },
+    {
+      "path": "src/user/pwa/PwaInitialLoadingScreen.tsx",
+      "digest": "c9337a610eea03f658c31414e642cec731503812"
+    },
+    {
+      "path": "src/user/pwa/PwaMorePage.test.tsx",
+      "digest": "70eec1678b9f52aae88eb66dbc884dde00ccfddb"
+    },
+    {
+      "path": "src/user/pwa/PwaMorePage.tsx",
+      "digest": "6f6a865059532cbdaaccfbdead2b4b4c41978c79"
+    },
+    {
+      "path": "src/user/pwa/PwaOrganizationAvatar.tsx",
+      "digest": "d4cea7a8363b9e6adbc7e6ce58a57391b3c61189"
+    },
+    {
+      "path": "src/user/pwa/PwaResourcePages.tsx",
+      "digest": "8626e3088f5ab05d3a781717e2a191787a90aa5b"
+    },
+    {
+      "path": "src/user/pwa/PwaUserPortal.tsx",
+      "digest": "b2d4cda0fcfd30001ef9b348b13ae0d2a24ffbbc"
+    },
+    {
+      "path": "src/user/pwa/budgets/PwaBudgetPages.tsx",
+      "digest": "8ab7a1ad30624a58c5abd92b16ccfccb31c41b60"
+    },
+    {
+      "path": "src/user/pwa/dashboard/PwaDashboard.tsx",
+      "digest": "5689016e70416b91358820a6ca2f86479154a606"
+    },
+    {
+      "path": "src/user/pwa/documents/PwaDocumentManager.upload.test.tsx",
+      "digest": "6e70f848807074f9fccd1b1baaceff9ab6fdc8e5"
+    },
+    {
+      "path": "src/user/pwa/documents/PwaDocumentPages.tsx",
+      "digest": "705d2bcbc6a85092df42bfda581c2efc979ef121"
+    },
+    {
+      "path": "src/user/pwa/documents/documentFileValidation.ts",
+      "digest": "6f98d696475d4746c5953fa45fb1865da8ec19cf"
+    },
+    {
+      "path": "src/user/pwa/hooks/pwaPortalMetrics.test.ts",
+      "digest": "e9bb8f27e54cc93bb413a371bfb58c334128a30e"
+    },
+    {
+      "path": "src/user/pwa/hooks/pwaPortalMetrics.ts",
+      "digest": "c8a38ed08a6498d50435287ca176500018128eee"
+    },
+    {
+      "path": "src/user/pwa/hooks/useInstalledUserPwa.test.ts",
+      "digest": "bcbf9b2ed068956a778fc9413f79d5a8f98dff78"
+    },
+    {
+      "path": "src/user/pwa/hooks/useInstalledUserPwa.ts",
+      "digest": "f0fb4f8f0f4bbcbb7a55640b501db3ec322b32ab"
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaNavigation.ts",
+      "digest": "f0844c91393413fa8a159b2be02b920e4b497641"
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaPortalData.ts",
+      "digest": "16fec55c821e5c04d17e043ad5b327090c237984"
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaPreferences.test.ts",
+      "digest": "7358ebcaf955e6f7e1b2a259b37d4b1bd6282a08"
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaPreferences.ts",
+      "digest": "228da5255fb4a329b4439c8475b00fc0c84d7ffd"
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaRuntimeStatus.ts",
+      "digest": "9635191d6029a0e0969bddf10c3b36804a753222"
+    },
+    {
+      "path": "src/user/pwa/hooks/useStandalonePwa.ts",
+      "digest": "1c952bf9479668819ee9b5560829ae38233365d3"
+    },
+    {
+      "path": "src/user/pwa/liquidations/PwaLiquidationPages.test.tsx",
+      "digest": "9019f3a1d2be1ce406af58592d71d1f8889707d3"
+    },
+    {
+      "path": "src/user/pwa/liquidations/PwaLiquidationPages.tsx",
+      "digest": "c2a0245e96bda14b2e06d7d96aac692ada799736"
+    },
+    {
+      "path": "src/user/pwa/profile/PwaOrganizationDirectory.tsx",
+      "digest": "2908ac8a32fa42ee2bacbc71efcdb1d23691a925"
+    },
+    {
+      "path": "src/user/pwa/profile/PwaProfilePages.tsx",
+      "digest": "80a74b5fe0d51881d3bd26044ea5887939dfcda7"
+    },
+    {
+      "path": "src/user/pwa/profile/pwaProfileDraft.test.ts",
+      "digest": "d75ece908251c04870fd1b1383731758868fdd2a"
+    },
+    {
+      "path": "src/user/pwa/profile/pwaProfileDraft.ts",
+      "digest": "8be74118c33287caa4662d4f9c041ddcf2d1bae9"
+    },
+    {
+      "path": "src/user/pwa/public/PwaPublicEntry.tsx",
+      "digest": "b0a0ebf45987273cf58fe066e0d969722b6831fc"
+    },
+    {
+      "path": "src/user/pwa/pwaAccentThemes.ts",
+      "digest": "08f36d1a6762b71c9da9d629dcf513c993886780"
+    },
+    {
+      "path": "src/user/pwa/pwaAuthFlow.test.ts",
+      "digest": "55ec30e1cd241fb49373842976f67fbd7a1189f2"
+    },
+    {
+      "path": "src/user/pwa/pwaAuthFlow.ts",
+      "digest": "f55c926cc8ae0ce65b86612f04ba6f259320baa4"
+    },
+    {
+      "path": "src/user/pwa/pwaRoutes.test.ts",
+      "digest": "e692f2cb0f9072452fee672936bfdf08c233962e"
+    },
+    {
+      "path": "src/user/pwa/pwaRoutes.ts",
+      "digest": "49eff58c3f81ea69694a68b387336e6f42c45bbb"
+    },
+    {
+      "path": "src/user/pwa/pwaUiConsistency.test.ts",
+      "digest": "b77dc593a336eeb92eabe1de3819fea8df744c9e"
+    },
+    {
+      "path": "src/user/pwa/renewals/PwaRenewalPage.tsx",
+      "digest": "f259e879a19cc4cdd0723bdde9ef5f858dbaf3aa"
+    },
+    {
+      "path": "src/user/pwa/settings/PwaAppearanceSettings.test.tsx",
+      "digest": "9b37b58b4b10773a3731da5b5b253c9416c23600"
+    },
+    {
+      "path": "src/user/pwa/settings/PwaSettingsPages.tsx",
+      "digest": "ffc141bbd4af1478c0bf0882da5b1daa0da5a064"
+    },
+    {
+      "path": "src/user/pwa/settings/appVersion.test.ts",
+      "digest": "a493e3e15d84b070ffe0573170a6e1937e2722e9"
+    },
+    {
+      "path": "src/user/pwa/settings/appVersion.ts",
+      "digest": "77117e69c706453996aba14cf7bab9e345be3edc"
+    },
+    {
+      "path": "src/user/pwa/styles/pwa-app.css",
+      "digest": "11fa0b91ee0f48e3a80f2b3c5c02aa824cd7f5b1"
+    },
+    {
+      "path": "src/user/pwa/styles/pwaUiConsistency.test.ts",
+      "digest": "659ad05127ab0afe15c3dd463f12c82da7e4a44a"
+    },
+    {
+      "path": "src/user/pwa/templates/PwaTemplatePages.tsx",
+      "digest": "4251b9eab6c0d7e3ae6d6cb9340d5d3f3c22ef96"
+    },
+    {
+      "path": "src/user/pwa/ypop/PwaYpopAlignedPage.tsx",
+      "digest": "59c46519af9a7275d29d0e619c950b331875e79e"
+    },
+    {
+      "path": "src/user/pwa/ypop/PwaYpopPage.tsx",
+      "digest": "780e0e85b19453bb5f4d3d4ebcada020f3fd9aa3"
+    },
+    {
+      "path": "src/user/pwa/ypop/PwaYpopWorkspace.tsx",
+      "digest": "5db4d548f11cdaaa991f4f5654c4ec76e76fdd94"
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "digest": "abb318d0c5d436a429f5ab31929e8cc517bd5bef"
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/control.ts",
+      "digest": "aae2d005b02dff6dcc11c7920b4cb17006d67af4"
+    },
+    {
+      "path": "tailwind.config.ts",
+      "digest": "318a1e0de660fc5b8954cada2fcc5a0d2fdc9e35"
+    },
+    {
+      "path": "tsconfig.app.json",
+      "digest": "c42171af7e7d98ebdc2e70d4518290b6dbd09d20"
+    },
+    {
+      "path": "tsconfig.json",
+      "digest": "8aeb1c2d944257ee8e8784c204947ff7f1f762ed"
+    },
+    {
+      "path": "tsconfig.node.json",
+      "digest": "72897858460f2ddfbf5d52b2330471f70fb437f1"
+    },
+    {
+      "path": "vercel.json",
+      "digest": "689a2d409e182412c3c0891dd69c72812659fbeb"
+    },
+    {
+      "path": "vite.config.ts",
+      "digest": "4b2c753dea81c0002e118826acedefeefa1c664f"
+    },
+    {
+      "path": "vitest.config.ts",
+      "digest": "501f0b94114cf99b74193a2b64e1f8887dfddbc1"
+    },
+    {
+      "path": "worker/__init__.py",
+      "digest": "67e4dd0ec8bfbbbe52f01c592eedd56bc6ba373e"
+    },
+    {
+      "path": "worker/gform_sync_worker.py",
+      "digest": "d62d530410a2f94dfc06b84991546d389d6ed556"
+    }
+  ]
+}

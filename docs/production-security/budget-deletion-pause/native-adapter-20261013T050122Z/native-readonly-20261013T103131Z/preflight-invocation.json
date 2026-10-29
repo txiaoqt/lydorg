@@ -1,0 +1,10 @@
+{
+  "mode": "READ_ONLY_PREFLIGHT",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "runnerBundleSha256": "58aed13a1099907460f74e9730afa8c8f22a1a0f0ee07fd6e77d609ac80a0e25",
+  "invocations": 1,
+  "automaticRetries": 0,
+  "installationActivated": false,
+  "startedAt": "2026-10-13T10:42:22.7871082Z"
+}

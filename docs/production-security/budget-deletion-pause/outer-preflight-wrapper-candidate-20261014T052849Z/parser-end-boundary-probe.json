@@ -1,0 +1,37 @@
+{
+  "node": "v24.21.0",
+  "syntheticOnly": true,
+  "results": [
+    {
+      "codepoints": [
+        10
+      ],
+      "accepted": false
+    },
+    {
+      "codepoints": [
+        13
+      ],
+      "accepted": false
+    },
+    {
+      "codepoints": [
+        13,
+        10
+      ],
+      "accepted": false
+    },
+    {
+      "codepoints": [
+        8232
+      ],
+      "accepted": false
+    },
+    {
+      "codepoints": [
+        8233
+      ],
+      "accepted": false
+    }
+  ]
+}

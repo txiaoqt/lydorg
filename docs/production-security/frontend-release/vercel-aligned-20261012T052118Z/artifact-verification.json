@@ -1,0 +1,326 @@
+{
+  "capturedAt": "2026-10-12T05:37:04.011Z",
+  "status": "PASS",
+  "sourceRevision": "sha256:51a18dbc3a799b39d074834edcfe6a9c88de1dd9d115277061e071f9f38c1959",
+  "sourceArchive": {
+    "name": "admin-gateway-vercel24-source.zip",
+    "bytes": 15422629,
+    "sha256": "324ea22858359d71c4cd94f7da2ee7a658d98327a2bca4e9b7d9facfc10e7984"
+  },
+  "buildArchive": {
+    "name": "admin-gateway-vercel24-static-build.zip",
+    "bytes": 11957132,
+    "sha256": "a5c2417acf8e3bf5b5e69dadd2ed204e37a7e6a95b81b47c124875c568993199",
+    "format": "ordinary Vite static output, NOT Vercel Build Output API"
+  },
+  "artifactInventorySha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d",
+  "totalFiles": 53,
+  "totalBytes": 19519521,
+  "files": [
+    {
+      "path": ".vite/manifest.json",
+      "bytes": 6001,
+      "sha256": "982b40075c4097160304ed2d675f5191523689d0527c9a48b40589cf0b4bcc2f"
+    },
+    {
+      "path": "FullFooter.svg",
+      "bytes": 4073,
+      "sha256": "20732fef4c07569fb0f7f4525f7ec1e9d6d0c0a92b3b8d612b06fdd15d89c164"
+    },
+    {
+      "path": "FullNavbar.svg",
+      "bytes": 8944,
+      "sha256": "17cddead947c27f73b49853b94640f9efb343f9b7ac860ff0eced090f012ace6"
+    },
+    {
+      "path": "apple-touch-icon.png",
+      "bytes": 11211,
+      "sha256": "24bd4480ae38815dc1f85d590f4b5a1ae8946527f1f1ce74efcd0e1e3d503a20"
+    },
+    {
+      "path": "assets/About-pOQK0v4-.js",
+      "bytes": 21128,
+      "sha256": "4916e2196ee246b1779808f9be3288d5559261e13c01ccbff018b1df73619c65"
+    },
+    {
+      "path": "assets/Contacts-CoUJdrAB.js",
+      "bytes": 7873,
+      "sha256": "218e96eaaf63ed48c057678b131d576c680958b35da5da84ef1efacf9ef4ae91"
+    },
+    {
+      "path": "assets/Faqs-C0lfTft3.js",
+      "bytes": 11684,
+      "sha256": "adc6a02a6b972df3f557dfab418c579b9b8d2900efb7c14d18461bb0a95cc177"
+    },
+    {
+      "path": "assets/Index-rAJ4hfi9.js",
+      "bytes": 31405,
+      "sha256": "174643fc6d0eea0d2d85182a1b88b82a8fc3c3b15c8706e5eed0a6b612dba1d1"
+    },
+    {
+      "path": "assets/LegalPolicy-lGOK_cGT.js",
+      "bytes": 2731,
+      "sha256": "bb4f2ea20db59ba57fdf2987d17e95a740e8dcd412c01fcdb81e41248f9c63d5"
+    },
+    {
+      "path": "assets/NewsReleases-h4ih_YPz.js",
+      "bytes": 7859,
+      "sha256": "ae3c82eead1d7ebd00f3dbd74520422b67df35e8d974b31b5640df27633c7f77"
+    },
+    {
+      "path": "assets/PublicBudgetTransparency-Dq3xnbGB.js",
+      "bytes": 7059,
+      "sha256": "3cabf34e3895dc73733f38b2754023ac7297f6adc8380b0b2abb2c23fb7bca17"
+    },
+    {
+      "path": "assets/PublicNewsReleaseCard-B5ahKskk.js",
+      "bytes": 3217,
+      "sha256": "a848dbfacea219b9ca64db6119bde4d671e5a89021937a9065f5498d342422a1"
+    },
+    {
+      "path": "assets/PublicTemplates--Bn67AhH.js",
+      "bytes": 4322,
+      "sha256": "7d0e096741e16c0877141301b3dfcb7d1f2bc2e26b604a9a6684d46df9a3730c"
+    },
+    {
+      "path": "assets/PwaUserPortal-RQL9vBDK.js",
+      "bytes": 167825,
+      "sha256": "2fdad33250dd7e5ac07f3daa8714c013cc4a2ef0d8b9734ab6706cd1c3229344"
+    },
+    {
+      "path": "assets/SiteMap-DIH2nqgn.js",
+      "bytes": 3477,
+      "sha256": "c49e86d3b10998176f0a1a5229190a6e1196df3227792863c6942927f7c0bead"
+    },
+    {
+      "path": "assets/about-hero-CYTwmDDX.webp",
+      "bytes": 15042,
+      "sha256": "bd8bf997e25e3a09499438f8a9c2591737cea5133294275f209f55f8096f5c5c"
+    },
+    {
+      "path": "assets/admin-storage-access-CEu2SY20.js",
+      "bytes": 1223,
+      "sha256": "c95576d690046859d3a1597ce5d84c1b74f8c95d7266d97d811e83947d7c5ecb"
+    },
+    {
+      "path": "assets/exceljs.min-BF-uhfdm.js",
+      "bytes": 938953,
+      "sha256": "f818228c27a9c945fa03e0c60ce312c61b1533424d15c19ff03daf3a2c82b7c6"
+    },
+    {
+      "path": "assets/hero-image-upscaled-DMBKzXU7.jpeg",
+      "bytes": 3367084,
+      "sha256": "e3c68597ac41c0b84cff0a6ce5496a82d4d7a9cfe37bbc8ca528ed755101d36b"
+    },
+    {
+      "path": "assets/html2canvas.esm-CBrSDip1.js",
+      "bytes": 202301,
+      "sha256": "b4f3add809a6d59f46260e8fd56cab240f3153def977386b230a839e8cb0b281"
+    },
+    {
+      "path": "assets/index-Du7UYTkj.js",
+      "bytes": 60158,
+      "sha256": "b34a1012f4eb8c6b5a8a2acf468b25b0bb7fafc41c5f14743277f750d4b87bd7"
+    },
+    {
+      "path": "assets/index-DuBlIaec.js",
+      "bytes": 5672411,
+      "sha256": "ea4bdbba0fd97297bce7db34b78778c453357e4cd1d7cb6282f4c9d1ec628f5b"
+    },
+    {
+      "path": "assets/index-nVUCXF5z.css",
+      "bytes": 461647,
+      "sha256": "935b3678166468f49e4382c23bfa7f367a9eacf5e3f5d9ba7c87e6c12091ce51"
+    },
+    {
+      "path": "assets/index.es-DsVe04J_.js",
+      "bytes": 150845,
+      "sha256": "b860f1dec3989c6ae7e0baf86562bc9d5d61387409baeeac0904c7e92f03b474"
+    },
+    {
+      "path": "assets/pdf.worker.min-D39lNQBd.mjs",
+      "bytes": 1299173,
+      "sha256": "630e9622a4e3b72ecc2e668b1d662bc83931482cbc31265c73992f8f6da5b070"
+    },
+    {
+      "path": "assets/purify.es-CPrKKeqe.js",
+      "bytes": 28072,
+      "sha256": "c423ba0449cbec5c46418b68c694f4f090d1761b5ed567fd2309b4a951a6f29d"
+    },
+    {
+      "path": "assets/yorp-organization-report-BrISVEVH.js",
+      "bytes": 5961,
+      "sha256": "f8781bd854ec4b6ce4ba657b87e48d521d1d0cede9e6092708ba5462d2101f28"
+    },
+    {
+      "path": "assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+      "bytes": 2415626,
+      "sha256": "b0524c2d71cb5d728017cd94d970cf892c6b0c1cbd570038eb74e9b9d9cbc7d3"
+    },
+    {
+      "path": "data/pasig-barangay-boundaries.geojson",
+      "bytes": 113197,
+      "sha256": "15e90f550ffa07c39248eb6716f47643b08ef531c4ba90a4463bd762c61b4114"
+    },
+    {
+      "path": "favicon.ico",
+      "bytes": 7719,
+      "sha256": "70be86306d9f8606daced09183809973d2cf743e465f2875db552abf1593cc6f"
+    },
+    {
+      "path": "fonts/segoeui.ttf",
+      "bytes": 959752,
+      "sha256": "8134dbcd09e7b123c9a7f229d49cffbcb01352cc72ea5e1076b65d0dca9f73cd"
+    },
+    {
+      "path": "fonts/segoeuib.ttf",
+      "bytes": 947092,
+      "sha256": "aeb9e4a6ec5cc59f4d72df8189032d7dbb28f45161cf1552174818b5465dac4e"
+    },
+    {
+      "path": "icons/icon-192.png",
+      "bytes": 12203,
+      "sha256": "4622c905e79026b34986468cfa5d26851bbaf25a51ad6dd312fc58e9bf13a71a"
+    },
+    {
+      "path": "icons/icon-512.png",
+      "bytes": 35387,
+      "sha256": "2af1fa14ce334220afc802de1bb10883f066781aad791cb30531b2ae3952a223"
+    },
+    {
+      "path": "icons/icon-maskable-512.png",
+      "bytes": 24947,
+      "sha256": "53582355239d66c5b515085f012bfa7e463b0d519ff4c1b6ffc9290516e4ed78"
+    },
+    {
+      "path": "index.html",
+      "bytes": 1923,
+      "sha256": "3cb9e7316b7771a542220598c12949a8189b6f7a054a39e9f7647ae96afd105e"
+    },
+    {
+      "path": "loginPageImages/image1.jpg",
+      "bytes": 478514,
+      "sha256": "530b225946862e9d95025fed01c7f50aca5e67ab7b53e489afd6dd7427d77dd6"
+    },
+    {
+      "path": "loginPageImages/image2.jpg",
+      "bytes": 181237,
+      "sha256": "1e4ae5e16d97a9d0fd2f5625862f7d86c5c505417e108f50f1af8732d4c1885e"
+    },
+    {
+      "path": "loginPageImages/image3.jpg",
+      "bytes": 383215,
+      "sha256": "de1756c3ba2f30b9439ab776122442174835bd52272012a8161191e7699d8e3b"
+    },
+    {
+      "path": "loginPageImages/image4.jpg",
+      "bytes": 378638,
+      "sha256": "acc870614aeb8271ebbff4e8766a90cc4c0b43debd517e0220d93cbca2a533e6"
+    },
+    {
+      "path": "logo.png",
+      "bytes": 720105,
+      "sha256": "f3be9998c42135c78212575bb7fbd8f58ffc57b3e9bf61835e65e95369ecae29"
+    },
+    {
+      "path": "lydo-connect-logo.svg",
+      "bytes": 991,
+      "sha256": "61f8f64af2b354b1760fbf3bc4b7aa62182420e4f00f37b58951e55db554d8ba"
+    },
+    {
+      "path": "lydo-letterhead-footer.jpg",
+      "bytes": 53620,
+      "sha256": "e4cb8a6011c203e4038b32b33310bb2c1b32103f351e33fed4a8ab6cbbb92a57"
+    },
+    {
+      "path": "lydo-letterhead-header.jpg",
+      "bytes": 54632,
+      "sha256": "bef27e996b3d6a8f0c0730711120f2529335d2a7d9df819cebaa53f15d67d90a"
+    },
+    {
+      "path": "manifest-admin.webmanifest",
+      "bytes": 831,
+      "sha256": "751a689f9e2c36cb055db20ddfb5656314feaed253728ef9114dd5ed637f7bea"
+    },
+    {
+      "path": "manifest.webmanifest",
+      "bytes": 852,
+      "sha256": "67a29f70a1db936a1cbcdee4eade656db71aed44d8b953027dab6b7d47a7e57e"
+    },
+    {
+      "path": "pwa-theme-init.js",
+      "bytes": 1257,
+      "sha256": "d89c8cde4fa13c309cd0abcd5403334f1a04ed04ef6b4f7b6870944ed61542f9"
+    },
+    {
+      "path": "robots.txt",
+      "bytes": 25,
+      "sha256": "1cbdbc6504be7abe1267d01d7f565bfcfe5851ba3f6a3754d1d61c8f8a2c6aa3"
+    },
+    {
+      "path": "sw.js",
+      "bytes": 2560,
+      "sha256": "36a1112722f4da3a1c88ab1c6a02ac25c0ae884325efda82ab1b82dc73f06a9c"
+    },
+    {
+      "path": "templates/pcydo-move-application-form.pdf",
+      "bytes": 188008,
+      "sha256": "6793c6da6bb3e3f02c722e4b3617edc5388e5ebe98742a9fa4917e1867c81442"
+    },
+    {
+      "path": "y-trace-logo-blue.png",
+      "bytes": 29873,
+      "sha256": "b5ea537fb23f03e04e4ea3b3396e38a22d0527f30856ddb5f4e43b5b8f6d265d"
+    },
+    {
+      "path": "y-trace-logo.png",
+      "bytes": 7815,
+      "sha256": "36e934aede49e22eda687caf2e924becaf090be8dcef4606421894485eabf9f8"
+    },
+    {
+      "path": "y-trace-logo.svg",
+      "bytes": 17823,
+      "sha256": "690f07c7c53a2ceeff615bec0ba345150b4841f6121ad47d4383f8098b388aa7"
+    }
+  ],
+  "reproduction": {
+    "status": "PASS",
+    "allFilesByteIdentical": true,
+    "previousRevision2AllFilesByteIdentical": true,
+    "freshSourceExtraction": true,
+    "freshNpmCiCount": 2,
+    "dependencyInstallationShared": false,
+    "node": "24.21.0",
+    "npm": "11.19.0",
+    "platform": "Windows x64",
+    "linuxOrProviderReproduction": false
+  },
+  "secretScan": {
+    "status": "PASS",
+    "serviceRoleJwts": 0,
+    "secretApiKeys": 0,
+    "literalAdminSessionTokens": 0,
+    "privateOperatorVariableNames": 0,
+    "publicAnonJwts": 1,
+    "otherProjectPublicJwts": 0,
+    "productionClientOriginPresent": true,
+    "gatewayNamePresent": true,
+    "fixedVersionPresent": true,
+    "stagingOriginPresent": false,
+    "injectedProviderCanaryPresent": false,
+    "limitation": "Bounded literal/pattern scan and clean build environment; not an exhaustive audit of every possible encoding."
+  },
+  "preservation": {
+    "status": "PASS",
+    "originalArchiveHashesVerified": true,
+    "originalCandidateFilesVerified": 557,
+    "rootSnapshotEntries": 4126,
+    "priorMissingEntriesPreserved": 18,
+    "previouslyDocumentedChangesOnly": [
+      "src/lib/admin-storage-resolver.integration.test.ts",
+      "src/lib/lydo-connect-supabase.ts"
+    ],
+    "currentTaskRootApplicationChanges": 0,
+    "privateEnvFilesRead": false
+  }
+}

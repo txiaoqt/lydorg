@@ -591,7 +591,7 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
   // =========================================================================
 
   describe("Group 4: Redundant Action Removal & Light Multi-File Selection UI", () => {
-    it("1 & 2. 'Log Another Activity' is NOT rendered; 'Close Drawer' remains in read-only footer (Desktop & Mobile)", () => {
+    it("1 & 2. 'Log Another Activity' is NOT rendered; read-only details remain closable on desktop and mobile", () => {
       // Desktop
       setViewportWidth(1280);
       const { unmount: unmountDesktop } = render(
@@ -615,10 +615,11 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
 
       // Mobile
       setViewportWidth(375);
+      const onMobileOpenChange = vi.fn();
       render(
         <YpopPpaModal
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={onMobileOpenChange}
           entry={mockEntry}
           activity={mockSubmittedActivity}
           orgActivityFiles={[]}
@@ -631,7 +632,10 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
       );
 
       expect(screen.queryByRole("button", { name: /Log Another Activity/i })).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /Close Drawer/i })).toBeInTheDocument();
+      const closeMobileDialog = screen.getByRole("button", { name: /Close modal/i });
+      expect(closeMobileDialog).toBeInTheDocument();
+      fireEvent.click(closeMobileDialog);
+      expect(onMobileOpenChange).toHaveBeenCalledWith(false);
     });
 
     it("3. Draft workflow retains its legitimate actions (Cancel, Save as Draft, Submit for Review)", () => {
@@ -1019,4 +1023,3 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
     });
   });
 });
-

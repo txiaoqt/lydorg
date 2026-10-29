@@ -1,0 +1,90 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "runLabel": "installed-pwa-uat-20261011-03591433",
+  "environment": "isolated-local-production-build",
+  "installedPwa": {
+    "serviceWorkerInitially": {
+      "controlled": true,
+      "active": true,
+      "scopeIsAppRoot": true,
+      "scriptHasVersionQuery": true
+    },
+    "uninstalledAfterTest": true
+  },
+  "networkIsolation": {
+    "serviceWorkerProbeBlocked": true,
+    "egressProxyDeniedProbe": true,
+    "proxy": {
+      "allowedStagingTls": 2,
+      "blockedTotal": 14,
+      "blockedProduction": 0,
+      "blockedUnrelated": 14
+    },
+    "productionAttemptsBlocked": 0,
+    "productionRequestsObservedByHarness": 0
+  },
+  "checks": [
+    {
+      "name": "Production build registers and controls the installed PWA origin with the application service worker",
+      "status": "PASS",
+      "controlled": true,
+      "active": true,
+      "scopeIsAppRoot": true,
+      "scriptHasVersionQuery": true
+    },
+    {
+      "name": "Service-worker-originated unrelated request is blocked below Playwright routing",
+      "status": "PASS",
+      "workerFetchRejected": true,
+      "allowlistProxyDeniedRequest": true
+    }
+  ],
+  "http": [
+    {
+      "phase": "service-worker-registration",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "service-worker-registration",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_public_system_settings",
+      "status": 200
+    }
+  ],
+  "blocked": [
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/news-releases/:idSYNTHETIC-news-pixel.png",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    }
+  ],
+  "errors": [],
+  "operationErrors": [
+    {
+      "name": "Error",
+      "reason": "cdpSession.send: Protocol error (PWA.install): The devtools session has no associated web page when installing [REDACTED_URL]"
+    }
+  ],
+  "console": {
+    "error": 0,
+    "warning": 0,
+    "sanitizedSamples": []
+  },
+  "websockets": [],
+  "finishedAt": "2026-10-11T03:59:19.224Z"
+}

@@ -1,0 +1,77 @@
+{
+  "scope": "Definition/source hashes measured in isolated PostgreSQL. New-function ACL strings are local observations, not a replacement for production default-privilege review. Corroborate on the target after separately authorized installation.",
+  "functions": [
+    {
+      "signature": "guard_direct_document_mutation()",
+      "definition_md5": "7c87d7aab6ad2459b5eebaee7732efbd",
+      "source_md5": "78c205203bf617933ba606ffb30ef1db",
+      "owner": "postgres",
+      "security_definer": false,
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "guard_document_parent_mutation()",
+      "definition_md5": "a5d0f37ccca047e22a9c1207e71600b5",
+      "source_md5": "2573890ad54e8bdd2fdfbba358fc04e2",
+      "owner": "postgres",
+      "security_definer": false,
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+      "definition_md5": "b8f889a1617b35a3312d7c27a2ee8cde",
+      "source_md5": "6a43862235936188e237afc28256274d",
+      "owner": "postgres",
+      "security_definer": true,
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+      "definition_md5": "855c8ad6cc7a9dd621f1921c52e9f18c",
+      "source_md5": "6dd339247c5a78c507dca124c0537b2d",
+      "owner": "postgres",
+      "security_definer": true,
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+      "definition_md5": "25c9ef7e37469b003690ce2787261312",
+      "source_md5": "ab31b43878e6121faa84dc9b98afa4f8",
+      "owner": "postgres",
+      "security_definer": true,
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "user_resubmit_renewal(uuid)",
+      "definition_md5": "925e2cd4a1bc58959cd5520e834bbf3a",
+      "source_md5": "4fc55552e211fc4e36ca6891a0546004",
+      "owner": "postgres",
+      "security_definer": true,
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "user_submit_renewal(uuid)",
+      "definition_md5": "3dd14266cc03c6aa541a4ac81065494b",
+      "source_md5": "088980e79e66b27be40f4659635faf59",
+      "owner": "postgres",
+      "security_definer": true,
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "signature": "ytrace_document_mutation.guard_file()",
+      "definition_md5": "b2082c8898b0bdc45caf61490f0d7a7e",
+      "source_md5": "c29d26dec63eb2a43529dd5363506eb7",
+      "owner": "postgres",
+      "security_definer": true,
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "signature": "ytrace_document_mutation.lock_replacement(uuid)",
+      "definition_md5": "ae3cfaf97e7ff4985dfde25e9fcf4627",
+      "source_md5": "5cab3a4d1efaa8cf259877e3218dcd78",
+      "owner": "postgres",
+      "security_definer": true,
+      "acl": "{postgres=X/postgres}"
+    }
+  ]
+}

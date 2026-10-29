@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "project": "mqqaykksadotbrghbexz",
+  "verifiedVia": "official CLI secrets list --project-ref mqqaykksadotbrghbexz --output json",
+  "capturedAt": "2026-10-11T22:50:16Z",
+  "secretValuesRead": false,
+  "secretValuesSubstituted": false,
+  "required": [
+    {
+      "name": "SUPABASE_URL",
+      "present": true,
+      "sha256": "fec70409b7db23bc8b1db5a518b6578c79c92c0f71a96e5f212783274b1a2b2f",
+      "matchesVerifiedProductionOrigin": true
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "present": true,
+      "sha256": "3c483bee8218fefccdc57025508b90c984839fee42a0cf83a4406abe30c2e2b5"
+    }
+  ],
+  "activeCredentialAuthentication": "NOT TESTED; requires authorized runtime request",
+  "reservedVariables": true
+}

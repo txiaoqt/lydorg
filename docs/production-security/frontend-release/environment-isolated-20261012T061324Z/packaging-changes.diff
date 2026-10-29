@@ -1,0 +1,160 @@
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T052118Z\\candidate\\scripts\\build-admin-release.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T061324Z\\candidate\\scripts\\build-admin-release.mjs"
+index 30f8e18..c28418f 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T052118Z\\candidate\\scripts\\build-admin-release.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T061324Z\\candidate\\scripts\\build-admin-release.mjs"	
+@@ -8,9 +8,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+ const reviewed = JSON.parse(readFileSync(path.join(root, 'scripts/admin-release-config.json'), 'utf8'));
+ export const configurationHash = config => createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries(config).sort()))).digest('hex');
+ 
+-// Vercel supplies framework metadata automatically. The observability name was
+-// also verified in hosted deployment metadata. Discard every value before Vite
+-// starts so provider metadata cannot change the public client configuration.
++// Known provider metadata examples retained for regression coverage. These are
++// never worker inputs. In the verified production context, discard every extra
++// VITE_* input, including future metadata, without reading or logging its value.
+ export const vercelFrameworkMetadata = Object.freeze([
+   'VITE_VERCEL_ENV', 'VITE_VERCEL_TARGET_ENV', 'VITE_VERCEL_URL',
+   'VITE_VERCEL_BRANCH_URL', 'VITE_VERCEL_PROJECT_PRODUCTION_URL', 'VITE_VERCEL_HASH_SALT',
+@@ -24,9 +24,8 @@ export const vercelFrameworkMetadata = Object.freeze([
+ export function prepareBuildEnvironment(input, policy = reviewed, nodeVersion = process.versions.node) {
+   if (Number(nodeVersion.split('.')[0]) !== 24) throw Error('NODE24_REQUIRED');
+   if (input.VERCEL === '1' && (input.VERCEL_PROJECT_ID !== policy.projectId || input.VERCEL_ENV !== 'production')) throw Error('VERCEL_TARGET_REJECTED');
+-  const allowedMetadata = input.VERCEL === '1' ? vercelFrameworkMetadata : [];
+   if ((input.VITE_VERCEL_ENV !== undefined && input.VITE_VERCEL_ENV !== input.VERCEL_ENV) || (input.VITE_VERCEL_TARGET_ENV !== undefined && input.VITE_VERCEL_TARGET_ENV !== 'production')) throw Error('VERCEL_FRAMEWORK_ENVIRONMENT_DRIFT');
+-  if (Object.keys(input).some(name => name.startsWith('VITE_') && !policy.publicNames.includes(name) && !allowedMetadata.includes(name))) throw Error('UNREVIEWED_PUBLIC_VARIABLE');
++  if (input.VERCEL !== '1' && Object.keys(input).some(name => name.startsWith('VITE_') && !policy.publicNames.includes(name))) throw Error('UNREVIEWED_PUBLIC_VARIABLE');
+   const config = Object.fromEntries(policy.publicNames.map(name => [name, String(input[name] ?? '').trim()]));
+   if (config.VITE_DEPLOY_SURFACE !== 'admin') throw Error('ADMIN_SURFACE_REQUIRED');
+   if (config.VITE_SUPABASE_URL !== 'https://mqqaykksadotbrghbexz.supabase.co') throw Error('PRODUCTION_ORIGIN_REQUIRED');
+
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T052118Z\\candidate\\scripts\\build-admin-release.test.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T061324Z\\candidate\\scripts\\build-admin-release.test.mjs"
+index 9136754..b88d585 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T052118Z\\candidate\\scripts\\build-admin-release.test.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T061324Z\\candidate\\scripts\\build-admin-release.test.mjs"	
+@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
+ import path from 'node:path';
+ import { createHash } from 'node:crypto';
+ import { fileURLToPath } from 'node:url';
++import { spawnSync } from 'node:child_process';
+ import { prepareBuildEnvironment, configurationHash, emptyEnvironmentDirectory, vercelFrameworkMetadata } from './build-admin-release.mjs';
+ 
+ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+@@ -53,7 +54,11 @@ test('documented Vercel framework metadata is accepted and discarded', () => {
+   assert.deepEqual(Object.keys(clean).filter(name=>name.startsWith('VITE_')).sort(),Object.keys(env).sort());
+   for(const name of vercelFrameworkMetadata)assert.equal(clean[name],undefined);
+ });
+-test('undocumented Vercel-prefixed public variables still fail closed', () => assert.throws(()=>build({...providerEnvironment,VITE_VERCEL_SECRET:'fixture-only'}),/UNREVIEWED_PUBLIC_VARIABLE/));
++test('unknown provider-prefixed variables are discarded after production target verification', () => {
++  const clean=build({...providerEnvironment,VITE_VERCEL_FUTURE_METADATA:'fixture-future-provider-never-client'});
++  assert.deepEqual(clean,build(providerEnvironment));
++  assert.equal(clean.VITE_VERCEL_FUTURE_METADATA,undefined);
++});
+ test('provider framework metadata cannot bypass the verified Vercel context', () => assert.throws(()=>build({...env,VITE_VERCEL_URL:'fixture.invalid'}),/UNREVIEWED_PUBLIC_VARIABLE/));
+ test('conflicting provider framework environment is rejected', () => {
+   assert.throws(()=>build({...providerEnvironment,VITE_VERCEL_ENV:'preview'}),/VERCEL_FRAMEWORK_ENVIRONMENT_DRIFT/);
+@@ -79,6 +84,103 @@ test('observability metadata cannot enable a preview build', () => {
+   assert.throws(()=>build({...providerEnvironment,VERCEL_ENV:'preview',VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG:'fixture-only'}),/VERCEL_TARGET_REJECTED/);
+ });
+ 
+-test('similarly named unreviewed observability variables are rejected', () => {
+-  assert.throws(()=>build({...providerEnvironment,VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG_EXTRA:'fixture-only'}),/UNREVIEWED_PUBLIC_VARIABLE/);
++test('similarly named observability extras are discarded rather than forwarded', () => {
++  const clean=build({...providerEnvironment,VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG_EXTRA:'fixture-only'});
++  assert.deepEqual(clean,build(providerEnvironment));
++  assert.equal(clean.VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG_EXTRA,undefined);
++});
++
++test('a completely unknown public-prefixed variable is discarded in the verified context', () => {
++  const clean=build({...providerEnvironment,VITE_UNKNOWN_BUILD_INPUT:'fixture-arbitrary-public-never-client'});
++  assert.deepEqual(clean,build(providerEnvironment));
++  assert.equal(clean.VITE_UNKNOWN_BUILD_INPUT,undefined);
++});
++
++test('a sensitive canary under an unknown public name never enters clean inputs', () => {
++  const canary='fixture-sensitive-canary-never-client-20261012';
++  const clean=build({...providerEnvironment,VITE_SYNTHETIC_SENSITIVE_INPUT:canary});
++  assert.deepEqual(clean,build(providerEnvironment));
++  assert.equal(JSON.stringify(clean).includes(canary),false);
++});
++
++test('unknown values are not inspected while constructing verified production inputs', () => {
++  const input={...providerEnvironment};
++  Object.defineProperty(input,'VITE_FUTURE_OPAQUE_INPUT',{enumerable:true,get(){throw Error('UNKNOWN_VALUE_READ');}});
++  assert.deepEqual(build(input),build(providerEnvironment));
++});
++
++test('unknown provider metadata still rejects a wrong project before discarding', () => {
++  assert.throws(()=>build({...providerEnvironment,VERCEL_PROJECT_ID:'prj_other',VITE_VERCEL_FUTURE_METADATA:'fixture-only'}),/VERCEL_TARGET_REJECTED/);
++});
++
++test('unknown public metadata cannot permit preview, staging or development targets', () => {
++  for(const target of ['preview','staging','development']) {
++    assert.throws(()=>build({...providerEnvironment,VERCEL_ENV:target,VITE_UNKNOWN_BUILD_INPUT:'fixture-only'}),/VERCEL_TARGET_REJECTED/);
++  }
++});
++
++test('provider identity and production environment are both mandatory before discarding', () => {
++  const missingProject={...providerEnvironment,VITE_UNKNOWN_BUILD_INPUT:'fixture-only'};delete missingProject.VERCEL_PROJECT_ID;
++  const missingEnvironment={...providerEnvironment,VITE_UNKNOWN_BUILD_INPUT:'fixture-only'};delete missingEnvironment.VERCEL_ENV;
++  assert.throws(()=>build(missingProject),/VERCEL_TARGET_REJECTED/);
++  assert.throws(()=>build(missingEnvironment),/VERCEL_TARGET_REJECTED/);
++});
++
++test('standalone builds reject unknown provider and arbitrary public names', () => {
++  for(const name of ['VITE_VERCEL_FUTURE_METADATA','VITE_UNKNOWN_BUILD_INPUT','VITE_SYNTHETIC_SENSITIVE_INPUT']) {
++    assert.throws(()=>build({...env,[name]:'fixture-only'}),/UNREVIEWED_PUBLIC_VARIABLE/);
++  }
++});
++
++test('missing or invalid hosted-context flags never enable public-input discarding', () => {
++  for(const flag of [undefined,'0','true','2']) {
++    const input={...env,VERCEL_PROJECT_ID:policy.projectId,VERCEL_ENV:'production',VITE_UNKNOWN_BUILD_INPUT:'fixture-only'};
++    if(flag!==undefined)input.VERCEL=flag;
++    assert.throws(()=>build(input),/UNREVIEWED_PUBLIC_VARIABLE/);
++  }
++});
++
++test('each required application variable remains mandatory with extra metadata present', () => {
++  for(const name of policy.publicNames) {
++    const input={...providerEnvironment,VITE_UNKNOWN_BUILD_INPUT:'fixture-only'};delete input[name];
++    assert.throws(()=>build(input));
++  }
++});
++
++test('each changed approved application variable still fails closed in production', () => {
++  const changes={VITE_DEPLOY_SURFACE:'user',VITE_SUPABASE_URL:'https://zroudsvpswqsjlyttkjf.supabase.co',VITE_ADMIN_APP_URL:'https://example.invalid',VITE_SUPABASE_ANON_KEY:token({role:'anon',ref:'mqqaykksadotbrghbexz',changed:true})};
++  for(const [name,value]of Object.entries(changes))assert.throws(()=>build({...providerEnvironment,[name]:value,VITE_UNKNOWN_BUILD_INPUT:'fixture-only'}));
++});
++
++test('server-role keys remain rejected even when unknown metadata is discarded', () => {
++  assert.throws(()=>build({...providerEnvironment,VITE_SUPABASE_ANON_KEY:token({role:'service_role',ref:'mqqaykksadotbrghbexz'}),VITE_UNKNOWN_BUILD_INPUT:'fixture-only'}),/PUBLIC_KEY_PROJECT_OR_ROLE_REJECTED/);
++});
++
++test('parent release-version overrides do not enter the worker or change the pinned identity', () => {
++  const clean=build({...providerEnvironment,VITE_APP_VERSION:'fixture-version-override-never-client'});
++  assert.equal(clean.VITE_APP_VERSION,undefined);
++  const config=JSON.parse(readFileSync(path.join(root,'scripts/admin-release-config.json')));
++  assert.equal(config.fixedVersion,'1.0.0-admin-storage-rc+20261012035933.vercel24');
++  assert.deepEqual(config.publicNames,policy.publicNames);
++});
++
++test('only reviewed runtime inputs and four public variables reach a real child process', () => {
++  const input={...providerEnvironment,PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,TEMP:process.env.TEMP,
++    VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG:'fixture-observability-metadata-never-client',
++    VITE_VERCEL_FUTURE_METADATA:'fixture-future-provider-never-client',
++    VITE_UNKNOWN_BUILD_INPUT:'fixture-arbitrary-public-never-client',
++    VITE_SYNTHETIC_SENSITIVE_INPUT:'fixture-sensitive-canary-never-client-20261012',
++    VITE_APP_VERSION:'fixture-version-override-never-client',
++    SUPABASE_SERVICE_ROLE_KEY:'fixture-server-secret-never-client',
++    YTRACE_ADMIN_SESSION_TOKEN:'fixture-admin-session-never-client',
++    YTRACE_PRODUCTION_DB_PASSWORD:'fixture-database-password-never-client',
++    VERCEL_OIDC_TOKEN:'fixture-private-metadata',NODE_OPTIONS:'--inspect',UNREVIEWED_RUNTIME_INPUT:'fixture-only'};
++  const clean=build(input);
++  const allowedRuntime=['PATH','SystemRoot','WINDIR','TEMP','TMP','TMPDIR','ComSpec','PATHEXT','LANG','LC_ALL','NODE_ENV','TZ'];
++  assert.equal(Object.keys(clean).every(name=>policy.publicNames.includes(name)||allowedRuntime.includes(name)),true);
++  const code=`const expected=${JSON.stringify(policy.publicNames)};const names=Object.keys(process.env);const actual=names.filter(n=>n.startsWith('VITE_')).sort();const valid=JSON.stringify(actual)===JSON.stringify(expected)&&!names.some(n=>/^(YTRACE_|SUPABASE_|VERCEL_|NODE_OPTIONS|UNREVIEWED_RUNTIME_INPUT)/.test(n))&&process.env.NODE_ENV==='production'&&process.env.TZ==='UTC';process.stdout.write(valid?'ISOLATED_CHILD_PASS':'ISOLATED_CHILD_FAIL');process.exitCode=valid?0:1;`;
++  const child=spawnSync(process.execPath,['--eval',code],{env:clean,encoding:'utf8',windowsHide:true,timeout:10000});
++  assert.equal(child.status,0);
++  assert.equal(child.stdout,'ISOLATED_CHILD_PASS');
++  assert.equal(child.stderr,'');
+ });

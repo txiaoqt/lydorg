@@ -1,0 +1,12 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "status": "PREPARED ONLY; NOT INSTALLED",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "sourceSha256": "0d19f0c27305f645abb9a990d507d9856b5ec2aa8232539bc95a577ca72a5b0e",
+  "migrationHistoryAfter": 164,
+  "migrationReceipt": "None; external execution receipt required. Stop for a newly reviewed candidate if a DB receipt is mandatory.",
+  "atomic": true,
+  "lockTimeout": "1s",
+  "statementTimeout": "30s"
+}

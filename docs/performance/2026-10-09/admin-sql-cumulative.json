@@ -1,0 +1,74 @@
+[
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "validate_admin_session_token",
+    "queryid": "-2907513308194796176",
+    "calls": 5600,
+    "mean_ms": "64.28",
+    "max_ms": "2273.82"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "get_admin_permission_context",
+    "queryid": "-3372290723323393012",
+    "calls": 4101,
+    "mean_ms": "18.41",
+    "max_ms": "2766.60"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "admin_get_portal_change_versions",
+    "queryid": "-5883474104594762968",
+    "calls": 3443,
+    "mean_ms": "10.19",
+    "max_ms": "1363.15"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "admin_get_sidebar_counts",
+    "queryid": "4836041178133650944",
+    "calls": 1183,
+    "mean_ms": "19.31",
+    "max_ms": "1541.68"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "admin_get_review_resource_page",
+    "queryid": "-4009435953933417327",
+    "calls": 394,
+    "mean_ms": "47.52",
+    "max_ms": "1403.13"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "validate_admin_session_token",
+    "queryid": "-2907513308194796176",
+    "calls": 553,
+    "mean_ms": "11.56",
+    "max_ms": "1956.09"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "admin_get_review_resource_page",
+    "queryid": "-638219543115606722",
+    "calls": 102,
+    "mean_ms": "14.03",
+    "max_ms": "226.91"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "admin_get_review_resource_page",
+    "queryid": "7241098165335080998",
+    "calls": 38,
+    "mean_ms": "8.79",
+    "max_ms": "57.70"
+  },
+  {
+    "sampled_at": "2026-10-09 11:55:00.280929+00",
+    "rpc": "admin_get_review_resource_page",
+    "queryid": "8153701468319130401",
+    "calls": 10,
+    "mean_ms": "5.69",
+    "max_ms": "12.53"
+  }
+]

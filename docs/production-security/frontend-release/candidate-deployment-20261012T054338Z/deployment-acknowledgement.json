@@ -1,0 +1,31 @@
+{
+  "status": "SUBMITTED_ACKNOWLEDGED",
+  "capturedAt": "2026-10-12T05:50:35.138Z",
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "attempts": 1,
+  "automaticRetries": 0,
+  "cliExitCode": 0,
+  "timedOut": false,
+  "outputLimitExceeded": false,
+  "stdoutSha256": "67e33d11fec4cae067f0f1f3e0c5ab7237ee1963ae9c122983d33cae9316eb9a",
+  "stderrSha256": "bd3df5f63483bd4827b1754b80e9f0b330b3784ec6e1d080a4ddb67b489734b7",
+  "responseKeys": [
+    "id",
+    "url",
+    "productionUrl",
+    "inspectorUrl",
+    "readyState",
+    "target",
+    "deploymentApiUrl",
+    "buildMachine",
+    "deploymentProtection"
+  ],
+  "deployment": {
+    "id": "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS",
+    "url": "https://lydorg-1011y7luy-toffs-projects-81b2ce10.vercel.app",
+    "readyState": "INITIALIZING",
+    "target": "production"
+  },
+  "productionDomainPromotionRequested": false
+}

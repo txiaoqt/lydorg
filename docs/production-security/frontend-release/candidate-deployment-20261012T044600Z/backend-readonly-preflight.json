@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-12T04:45:55.343Z",
+  "project": "mqqaykksadotbrghbexz",
+  "readOnly": true,
+  "tlsChainAndHostnameVerified": true,
+  "postgresVersion": 170006,
+  "foundationReceiptExactMatch": true,
+  "functions": 14,
+  "tables": 4,
+  "triggers": 8,
+  "foundationFingerprints": {
+    "functions": "31c658a5d692e03262bf1952b1b493bce67e96f8d06da307da10e928a59af55a",
+    "tables": "e8a99cced6798451a93d4aca4eac5ca1a209ef3869cd367ac454215ec32eb85f",
+    "triggers": "ab8eaa2be4f9dd4dfbb993f61cb42b99c41ad198c8af1345eb5ec5fc40b4416f"
+  },
+  "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "migrations": {
+    "count": 164,
+    "latest": "20261011230000",
+    "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+  },
+  "storagePolicies": 15,
+  "containmentMarkers": 4,
+  "documentSecurityTriggers": 3,
+  "serviceRoleOnlyAuthorizationRpc": true
+}

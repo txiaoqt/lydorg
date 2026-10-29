@@ -1,0 +1,341 @@
+{
+  "engine": "PGlite 0.5.8 / actual PostgreSQL SQL",
+  "scope": "Synthetic isolated tables, roles, Auth UID test driver and SHA-256 digest adapter. Actual captured token validator, reviewer authorization, normal renewal/registration/deletion functions and proposed SQL replacements. Expected-catalog literal substituted only for the local catalog; untouched production gate separately rejected. No live API/Auth, browser, multi-session or production deployment certification.",
+  "results": [
+    {
+      "check": "Unmodified production gate rejects local database",
+      "status": "PASS"
+    },
+    {
+      "check": "Actual replacement SQL/grants/postconditions commit; business data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_reset_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_restore_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_reset_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_restore_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_reset_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_restore_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_reset_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_restore_renewal_test_scenario(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "Super Admin token cannot run production-disabled test mutations",
+      "status": "PASS"
+    },
+    {
+      "check": "no production-disabled mutation retains PUBLIC or API/inherited EXECUTE",
+      "status": "PASS"
+    },
+    {
+      "check": "environment fails closed for every editable setting and missing setting",
+      "status": "PASS"
+    },
+    {
+      "check": "retained sample status rejects reviewer session",
+      "status": "PASS"
+    },
+    {
+      "check": "retained sample status rejects expired session",
+      "status": "PASS"
+    },
+    {
+      "check": "retained sample status rejects revoked session",
+      "status": "PASS"
+    },
+    {
+      "check": "retained sample status rejects invalid session",
+      "status": "PASS"
+    },
+    {
+      "check": "retained status accepts active Super Admin over anon custom-session transport",
+      "status": "PASS"
+    },
+    {
+      "check": "inactive Super Admin is denied by the real captured token validator",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: fixture markers cannot be changed",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: fixture markers cannot be changed",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: fixture markers cannot be changed",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: fixture markers cannot be changed",
+      "status": "PASS"
+    },
+    {
+      "check": "ordinary new profiles cannot introduce any fixture marker",
+      "status": "PASS"
+    },
+    {
+      "check": "security-definer owner cannot bypass marker protection for an organization caller",
+      "status": "PASS"
+    },
+    {
+      "check": "normal profile edits retain existing fixture markers",
+      "status": "PASS"
+    },
+    {
+      "check": "fixture flag and arbitrary test GUC cannot alter or delete accreditation history",
+      "status": "PASS"
+    },
+    {
+      "check": "fixture flag and test GUC cannot reopen or delete terminal renewals",
+      "status": "PASS"
+    },
+    {
+      "check": "budget_requests: owner and definer cannot change seed markers; normal edits still work",
+      "status": "PASS"
+    },
+    {
+      "check": "liquidation_reports: owner and definer cannot change seed markers; normal edits still work",
+      "status": "PASS"
+    },
+    {
+      "check": "document_submissions: owner and definer cannot change seed markers; normal edits still work",
+      "status": "PASS"
+    },
+    {
+      "check": "document_submission_files: owner and definer cannot change seed markers; normal edits still work",
+      "status": "PASS"
+    },
+    {
+      "check": "normal revocation works; revoked term and revocation evidence cannot be rewritten",
+      "status": "PASS"
+    },
+    {
+      "check": "normal renewal draft, submission, valid Admin review and three-year approval remain operational",
+      "status": "PASS"
+    },
+    {
+      "check": "normal registration revision, Admin review and initial accreditation remain operational",
+      "status": "PASS"
+    },
+    {
+      "check": "authorized account deletion works only without retained official history",
+      "status": "PASS"
+    },
+    {
+      "check": "legitimate deletion trigger exception is retained and scoped to the transaction",
+      "status": "PASS"
+    },
+    {
+      "check": "stored test functions expose only denial, no embedded credential expression or response",
+      "status": "PASS"
+    },
+    {
+      "check": "second installation stops rather than reapplying or changing data",
+      "status": "PASS"
+    },
+    {
+      "check": "ACL drift gate",
+      "status": "PASS"
+    },
+    {
+      "check": "Function drift gate",
+      "status": "PASS"
+    },
+    {
+      "check": "Whole transaction rollback on injected grant error",
+      "status": "PASS"
+    },
+    {
+      "check": "Candidate hash and no live-data/Auth/Storage mutation scope",
+      "status": "PASS"
+    }
+  ],
+  "passed": 83,
+  "concurrency": "NOT TESTED: single PGlite connection",
+  "liveWrites": false
+}

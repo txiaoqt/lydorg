@@ -1,0 +1,1938 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "startedAt": "2026-10-10T20:27:28.950Z",
+  "steps": [
+    {
+      "name": "Fresh exact-target staging preflight",
+      "status": "PASS",
+      "authUsers": 6,
+      "organizations": 4,
+      "submissions": 4,
+      "submissionFiles": 19,
+      "renewals": 1,
+      "accreditationTerms": 3,
+      "storageObjects": 29,
+      "buckets": 10,
+      "requiredTestDocuments": 2,
+      "priorRevisionPhaseComplete": true,
+      "activeSuspendedFixturePreserved": true,
+      "existingOrgCAuthIdentityReused": true
+    },
+    {
+      "name": "Reuse the exact journal-recorded synthetic Auth identity; no second Auth create call",
+      "status": "PASS",
+      "stagingIdentityRevalidatedByPreflight": true,
+      "authCreateCallsInContinuation": 0
+    },
+    {
+      "name": "Authenticate synthetic Org C with a genuine owner JWT",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Normal owner password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 205
+        }
+      ],
+      "tokenLogged": false
+    },
+    {
+      "name": "Create one owner-owned incomplete synthetic organization profile",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Create organization profile using owner-authenticated PostgREST",
+          "method": "POST",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 201,
+          "durationMs": 166
+        }
+      ],
+      "profileStatus": "incomplete"
+    },
+    {
+      "name": "Create one owner-owned draft registration submission",
+      "status": "draft",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Create one draft registration submission",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 201,
+          "durationMs": 129
+        }
+      ]
+    },
+    {
+      "name": "Upload and register one initial synthetic PDF: Constitution and By-Laws",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Upload one initial synthetic PDF: Constitution and By-Laws",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 200,
+          "durationMs": 246
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Upload one initial synthetic PDF: Constitution and By-Laws",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 136
+        }
+      ],
+      "size": 661,
+      "sha256": "4e070cb2eea5d8e35214f5d52c74d9c0d420e349b13e1a67c39dc6d694948c53",
+      "storagePathRedacted": true
+    },
+    {
+      "name": "Upload and register one initial synthetic PDF: NYC YORP Registration Form (Form B)",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Upload one initial synthetic PDF: NYC YORP Registration Form (Form B)",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 200,
+          "durationMs": 225
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Upload one initial synthetic PDF: NYC YORP Registration Form (Form B)",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 131
+        }
+      ],
+      "size": 672,
+      "sha256": "0ac59676f7aa8053c1fbabfcb5f466f763d6c959eba38ed6e680357ebe1cceb0",
+      "storagePathRedacted": true
+    },
+    {
+      "name": "Submit the two uploaded PDFs through the existing owner review workflow",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Submit registration documents for Admin review",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 122
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Submit registration documents for Admin review",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 126
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Submit registration documents for Admin review",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 142
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Submit registration documents for Admin review",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 127
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Submit registration documents for Admin review",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 130
+        }
+      ],
+      "parentStatus": "under_admin_review",
+      "fileCount": 2
+    },
+    {
+      "name": "Authorized Super Admin requests revision on one file; peer remains under review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Staging Super Admin session",
+          "step": "Request correction on exactly one Org C document",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 131
+        },
+        {
+          "actor": "Staging Super Admin session",
+          "step": "Request correction on exactly one Org C document",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 121
+        },
+        {
+          "actor": "Staging Super Admin session",
+          "step": "Request correction on exactly one Org C document",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 123
+        }
+      ],
+      "flaggedDocuments": 1,
+      "unchangedPeerStatus": "under_admin_review"
+    },
+    {
+      "name": "Approve only the peer PDF while overall registration remains incomplete",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Staging Super Admin session",
+          "step": "Approve the unrelated peer PDF for immutability check",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 126
+        },
+        {
+          "actor": "Staging Super Admin session",
+          "step": "Approve the unrelated peer PDF for immutability check",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 126
+        },
+        {
+          "actor": "Staging Super Admin session",
+          "step": "Approve the unrelated peer PDF for immutability check",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 122
+        }
+      ],
+      "peerStatus": "approved_green",
+      "parentStatus": "needs_revision",
+      "accreditationApproval": false
+    },
+    {
+      "name": "Organization A cannot download Org C private document",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A cannot download Org C private document",
+          "step": "Attempt unauthorized private document download",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 400,
+          "durationMs": 809
+        },
+        {
+          "actor": "Organization A cannot download Org C private document",
+          "step": "Attempt unauthorized private document download",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 127
+        },
+        {
+          "actor": "Organization A cannot download Org C private document",
+          "step": "Attempt unauthorized private document download",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 120
+        }
+      ],
+      "protectedRowsUnchanged": true
+    },
+    {
+      "name": "Organization A cannot replace Org C flagged document",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization A cannot replace Org C flagged document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 400,
+          "durationMs": 140
+        },
+        {
+          "actor": "Organization A cannot replace Org C flagged document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Organization A cannot replace Org C flagged document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 121
+        }
+      ],
+      "protectedRowsUnchanged": true
+    },
+    {
+      "name": "Anonymous caller cannot download Org C private document",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous caller cannot download Org C private document",
+          "step": "Attempt unauthorized private document download",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 400,
+          "durationMs": 332
+        },
+        {
+          "actor": "Anonymous caller cannot download Org C private document",
+          "step": "Attempt unauthorized private document download",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 124
+        },
+        {
+          "actor": "Anonymous caller cannot download Org C private document",
+          "step": "Attempt unauthorized private document download",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 122
+        }
+      ],
+      "protectedRowsUnchanged": true
+    },
+    {
+      "name": "Anonymous caller cannot replace Org C flagged document",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous caller cannot replace Org C flagged document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 401,
+          "durationMs": 123
+        },
+        {
+          "actor": "Anonymous caller cannot replace Org C flagged document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 131
+        },
+        {
+          "actor": "Anonymous caller cannot replace Org C flagged document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 123
+        }
+      ],
+      "protectedRowsUnchanged": true
+    },
+    {
+      "name": "Owner cannot replace the approved peer document",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Owner cannot replace the approved peer document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 400,
+          "durationMs": 128
+        },
+        {
+          "actor": "Owner cannot replace the approved peer document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Owner cannot replace the approved peer document",
+          "step": "Attempt unauthorized document replacement",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 118
+        }
+      ],
+      "protectedRowsUnchanged": true
+    },
+    {
+      "name": "Owner uploads exactly one corrected synthetic PDF",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Upload exactly one corrected PDF through private Storage",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 200,
+          "durationMs": 272
+        }
+      ],
+      "size": 675,
+      "sha256": "eff909582c12ba82bc1fcdbc8f88a8f8df3f12a1101be978d6ef7cacc19f13a5",
+      "storagePathRedacted": true
+    },
+    {
+      "name": "Existing owner replacement RPC links the corrected file and resubmits for review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Replace the flagged document using the portal RPC and optimistic updated_at",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 200,
+          "durationMs": 130
+        }
+      ],
+      "fileStatus": "under_admin_review",
+      "resubmission": true
+    },
+    {
+      "name": "Original, corrected and peer PDF downloads match recorded bytes; peer row is unchanged",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Organization C JWT",
+          "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 200,
+          "durationMs": 474
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 200,
+          "durationMs": 899
+        },
+        {
+          "actor": "Organization C JWT",
+          "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+          "status": 200,
+          "durationMs": 677
+        }
+      ],
+      "downloadHashes": [
+        {
+          "label": "SYNTHETIC-ORG-C-CONSTITUTION.pdf",
+          "size": 661,
+          "sha256": "4e070cb2eea5d8e35214f5d52c74d9c0d420e349b13e1a67c39dc6d694948c53"
+        },
+        {
+          "label": "SYNTHETIC-ORG-C-CONSTITUTION-CORRECTED.pdf",
+          "size": 675,
+          "sha256": "eff909582c12ba82bc1fcdbc8f88a8f8df3f12a1101be978d6ef7cacc19f13a5"
+        },
+        {
+          "label": "SYNTHETIC-ORG-C-FORM-B.pdf",
+          "size": 672,
+          "sha256": "0ac59676f7aa8053c1fbabfcb5f466f763d6c959eba38ed6e680357ebe1cceb0"
+        }
+      ],
+      "revisionHistoryEntries": 1,
+      "peerRowUnchanged": true,
+      "registrationApproved": false,
+      "accreditationCreated": false
+    },
+    {
+      "name": "Final read-only preservation inventory",
+      "status": "PASS",
+      "existingAuthUsers": 5,
+      "existingProfiles": 4,
+      "existingSubmissions": 4,
+      "existingDocumentFiles": 19,
+      "renewalCountUnchanged": 1,
+      "accreditationTermCountUnchanged": 3,
+      "originalStorageObjectsPreserved": 29,
+      "newStorageObjects": 3,
+      "totalStorageObjects": 32,
+      "protectedExistingRowsUnchanged": true
+    },
+    {
+      "name": "Org C post-patch registration revision/resubmission validation complete",
+      "status": "PASS",
+      "newAuthIdentities": 1,
+      "newOrganizationProfiles": 1,
+      "newSubmissions": 1,
+      "initialPdfs": 2,
+      "correctedPdfs": 1,
+      "objectsDeleted": 0,
+      "accreditationApproval": false
+    },
+    {
+      "name": "Revoke the transient Admin review session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Staging Super Admin session",
+          "step": "Revoke this run’s transient Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 128
+        }
+      ],
+      "tokenLogged": false
+    },
+    {
+      "name": "Sign out a test Organization Auth session",
+      "status": "PASS"
+    },
+    {
+      "name": "Sign out a test Organization Auth session",
+      "status": "PASS"
+    }
+  ],
+  "http": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 778
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 142
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 393
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 408
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 396
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 395
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 608
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 180
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/move-files",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/template-files",
+      "status": 200,
+      "durationMs": 424
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/template-files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/news-release-images",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/news-release-images",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/brand-logo",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/registration-seed-file",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/transparency-attachments",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 150
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 125
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Normal owner password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 205
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Create organization profile using owner-authenticated PostgREST",
+      "method": "POST",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 201,
+      "durationMs": 166
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Create one draft registration submission",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 201,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Upload one initial synthetic PDF: Constitution and By-Laws",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 200,
+      "durationMs": 246
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Upload one initial synthetic PDF: Constitution and By-Laws",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 136
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Upload one initial synthetic PDF: NYC YORP Registration Form (Form B)",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 200,
+      "durationMs": 225
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Upload one initial synthetic PDF: NYC YORP Registration Form (Form B)",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 131
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 142
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Submit registration documents for Admin review",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Request correction on exactly one Org C document",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Request correction on exactly one Org C document",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Request correction on exactly one Org C document",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Approve the unrelated peer PDF for immutability check",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Approve the unrelated peer PDF for immutability check",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Approve the unrelated peer PDF for immutability check",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Approve the unrelated peer PDF for immutability check",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Approve the unrelated peer PDF for immutability check",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Approve the unrelated peer PDF for immutability check",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 200
+    },
+    {
+      "actor": "Organization A cannot download Org C private document",
+      "step": "Attempt unauthorized private document download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 400,
+      "durationMs": 809
+    },
+    {
+      "actor": "Organization A cannot download Org C private document",
+      "step": "Attempt unauthorized private document download",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization A cannot download Org C private document",
+      "step": "Attempt unauthorized private document download",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Organization A cannot replace Org C flagged document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 400,
+      "durationMs": 140
+    },
+    {
+      "actor": "Organization A cannot replace Org C flagged document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Organization A cannot replace Org C flagged document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Anonymous caller cannot download Org C private document",
+      "step": "Attempt unauthorized private document download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 400,
+      "durationMs": 332
+    },
+    {
+      "actor": "Anonymous caller cannot download Org C private document",
+      "step": "Attempt unauthorized private document download",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Anonymous caller cannot download Org C private document",
+      "step": "Attempt unauthorized private document download",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Anonymous caller cannot replace Org C flagged document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 401,
+      "durationMs": 123
+    },
+    {
+      "actor": "Anonymous caller cannot replace Org C flagged document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "Anonymous caller cannot replace Org C flagged document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "actor": "Owner cannot replace the approved peer document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 400,
+      "durationMs": 128
+    },
+    {
+      "actor": "Owner cannot replace the approved peer document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Owner cannot replace the approved peer document",
+      "step": "Attempt unauthorized document replacement",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Upload exactly one corrected PDF through private Storage",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 200,
+      "durationMs": 272
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Replace the flagged document using the portal RPC and optimistic updated_at",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Replace the flagged document using the portal RPC and optimistic updated_at",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Replace the flagged document using the portal RPC and optimistic updated_at",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Replace the flagged document using the portal RPC and optimistic updated_at",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 200,
+      "durationMs": 474
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 200,
+      "durationMs": 899
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/3ca68a83-a8ec-4ad2-96d3-149500fb87cb",
+      "status": 200,
+      "durationMs": 677
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 144
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 153
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/move-files",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/template-files",
+      "status": 200,
+      "durationMs": 410
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/template-files",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/news-release-images",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/news-release-images",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/brand-logo",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/registration-seed-file",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Organization C JWT",
+      "step": "Verify original, corrected and peer PDF bytes by SHA-256",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/transparency-attachments",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Revoke this run’s transient Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 128
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Revoke this run’s transient Admin session",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 133
+    },
+    {
+      "actor": "Staging Super Admin session",
+      "step": "Revoke this run’s transient Admin session",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 127
+    }
+  ],
+  "preservation": {
+    "existingAuthUsers": 5,
+    "existingProfiles": 4,
+    "existingSubmissions": 4,
+    "existingDocumentFiles": 19,
+    "renewalCountUnchanged": 1,
+    "accreditationTermCountUnchanged": 3,
+    "originalStorageObjectsPreserved": 29,
+    "newStorageObjects": 3,
+    "totalStorageObjects": 32,
+    "protectedExistingRowsUnchanged": true
+  },
+  "incompleteOrStopped": false,
+  "finishedAt": "2026-10-10T20:27:57.642Z"
+}

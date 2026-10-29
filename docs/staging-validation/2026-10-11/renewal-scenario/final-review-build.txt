@@ -1,0 +1,67 @@
+
+> vite_react_shadcn_ts@1.0.0 build
+> vite build --outDir tmp/renewal-final-review-build
+
+vite v5.4.19 building for production...
+transforming...
+Browserslist: browsers data (caniuse-lite) is 16 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 4103 modules transformed.
+rendering chunks...
+computing gzip size...
+tmp/renewal-final-review-build/index.html                                               1.88 kB │ gzip:   0.69 kB
+tmp/renewal-final-review-build/assets/about-hero-CYTwmDDX.webp                         15.04 kB
+tmp/renewal-final-review-build/assets/pdf.worker.min-D39lNQBd.mjs                   1,299.17 kB
+tmp/renewal-final-review-build/assets/ytrace-overview-upscaled-BHODuOy5.jpeg        2,415.63 kB
+tmp/renewal-final-review-build/assets/hero-image-upscaled-DMBKzXU7.jpeg             3,367.08 kB
+tmp/renewal-final-review-build/assets/leaflet-Dgihpmma.css                             15.04 kB │ gzip:   6.38 kB
+tmp/renewal-final-review-build/assets/PasigBudgetMap-sa5bjIxU.css                      25.35 kB │ gzip:   4.19 kB
+tmp/renewal-final-review-build/assets/AdminPortal-VndWF7ip.css                         35.52 kB │ gzip:   5.35 kB
+tmp/renewal-final-review-build/assets/index-nn-gkKHN.css                              385.75 kB │ gzip:  59.12 kB
+tmp/renewal-final-review-build/assets/clock-CenOz-Kc.js                                 0.35 kB │ gzip:   0.27 kB
+tmp/renewal-final-review-build/assets/lock-BjI1mKSC.js                                  0.38 kB │ gzip:   0.29 kB
+tmp/renewal-final-review-build/assets/banknote-CUii_t9V.js                              0.41 kB │ gzip:   0.31 kB
+tmp/renewal-final-review-build/assets/calendar-DxOv1sCw.js                              0.43 kB │ gzip:   0.30 kB
+tmp/renewal-final-review-build/assets/file-check-D0XmMaZD.js                            0.43 kB │ gzip:   0.30 kB
+tmp/renewal-final-review-build/assets/send-BLvFm9UX.js                                  0.46 kB │ gzip:   0.33 kB
+tmp/renewal-final-review-build/assets/search-C1rFYeqz.js                                0.62 kB │ gzip:   0.33 kB
+tmp/renewal-final-review-build/assets/admin-storage-access-BOb9Es6b.js                  1.22 kB │ gzip:   0.59 kB
+tmp/renewal-final-review-build/assets/layout-grid-BqddCX6t.js                           1.29 kB │ gzip:   0.52 kB
+tmp/renewal-final-review-build/assets/LegalPolicy-B4Tj5RZR.js                           2.73 kB │ gzip:   1.05 kB
+tmp/renewal-final-review-build/assets/PublicNewsReleaseCard-Bc3BSlIJ.js                 3.25 kB │ gzip:   1.27 kB
+tmp/renewal-final-review-build/assets/SiteMap-DYxU3oPb.js                               3.48 kB │ gzip:   1.39 kB
+tmp/renewal-final-review-build/assets/switch-BwozuEdO.js                                4.83 kB │ gzip:   1.90 kB
+tmp/renewal-final-review-build/assets/PublicTemplates-Bhgdgxh8.js                       4.86 kB │ gzip:   2.17 kB
+tmp/renewal-final-review-build/assets/portal-ui-bqXmY_GG.js                             5.27 kB │ gzip:   1.85 kB
+tmp/renewal-final-review-build/assets/yorp-organization-report-DUaFFv0v.js              6.56 kB │ gzip:   2.90 kB
+tmp/renewal-final-review-build/assets/PublicBudgetTransparency-C_Y7pv8G.js              7.28 kB │ gzip:   2.57 kB
+tmp/renewal-final-review-build/assets/NewsReleases-BCQIv9AM.js                          7.93 kB │ gzip:   2.32 kB
+tmp/renewal-final-review-build/assets/Contacts-Su8Sx4Ne.js                              7.96 kB │ gzip:   2.30 kB
+tmp/renewal-final-review-build/assets/Faqs-B-zhK8oD.js                                 11.76 kB │ gzip:   3.67 kB
+tmp/renewal-final-review-build/assets/YpopValidationComputationPopover-DWBkm69s.js     12.44 kB │ gzip:   4.02 kB
+tmp/renewal-final-review-build/assets/PasigBudgetMap-BgyK8-0n.js                       14.48 kB │ gzip:   5.24 kB
+tmp/renewal-final-review-build/assets/About-up8zupfS.js                                21.23 kB │ gzip:   4.40 kB
+tmp/renewal-final-review-build/assets/PublicBudgetOverview-BbYiQMhk.js                 21.45 kB │ gzip:   5.82 kB
+tmp/renewal-final-review-build/assets/UserPortalTemplatesWorkspaceView-D33eyQ4f.js     22.52 kB │ gzip:   5.53 kB
+tmp/renewal-final-review-build/assets/purify.es-CPrKKeqe.js                            28.07 kB │ gzip:  10.66 kB
+tmp/renewal-final-review-build/assets/Index-CtmBEkbc.js                                31.66 kB │ gzip:   6.96 kB
+tmp/renewal-final-review-build/assets/PortalDocumentDrawer-DMUxaWAL.js                 32.78 kB │ gzip:   5.78 kB
+tmp/renewal-final-review-build/assets/index-DlcadkkR.js                                60.16 kB │ gzip:  15.84 kB
+tmp/renewal-final-review-build/assets/jszip.min-CrUr456C.js                           116.87 kB │ gzip:  36.67 kB
+tmp/renewal-final-review-build/assets/index.es-CSGDBZfB.js                            151.42 kB │ gzip:  51.96 kB
+tmp/renewal-final-review-build/assets/leaflet-Bvar14lg.js                             153.65 kB │ gzip:  44.88 kB
+tmp/renewal-final-review-build/assets/PwaUserPortal-CB6BBNEF.js                       167.98 kB │ gzip:  42.87 kB
+tmp/renewal-final-review-build/assets/html2canvas.esm-CBrSDip1.js                     201.42 kB │ gzip:  48.03 kB
+tmp/renewal-final-review-build/assets/AccountSuspendedScreen-CeQQyEoT.js              216.92 kB │ gzip:  51.18 kB
+tmp/renewal-final-review-build/assets/UserPortal-BUY9gGxl.js                          405.96 kB │ gzip:  80.41 kB
+tmp/renewal-final-review-build/assets/sheet-DWWWp0ST.js                               550.32 kB │ gzip: 166.31 kB
+tmp/renewal-final-review-build/assets/exceljs.min-Btsk3QJk.js                         938.41 kB │ gzip: 270.96 kB
+tmp/renewal-final-review-build/assets/index-ByNWkrzj.js                             1,245.37 kB │ gzip: 335.08 kB
+tmp/renewal-final-review-build/assets/AdminPortal-CBvmKq7D.js                       2,874.15 kB │ gzip: 944.88 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 32.16s

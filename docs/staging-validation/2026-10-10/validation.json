@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-10",
+  "focused_tests": {
+    "numPassedTests": 179,
+    "numFailedTests": 0,
+    "numTotalTestSuites": 52,
+    "success": true,
+    "test_file_count": 14
+  },
+  "typescript": "PASS: npx tsc --noEmit",
+  "build": "PASS: npm.cmd run build -- --manifest --outDir tmp/staging-validation-build",
+  "build_environment": "Synthetic invalid API host/public key; no production credential use for validation",
+  "actual_storage_api": "BLOCKED: no authorized isolated target",
+  "full_vitest": "NOT TESTED in this task; prior baseline 151 failures remains unresolved",
+  "isolated_postgresql": "Previous remediation evidence only; not rerun or relabeled as Storage API testing",
+  "production_writes": false,
+  "new_cloud_resources": false,
+  "diff_check": "PASS: git diff --check; existing line-ending warnings only"
+}

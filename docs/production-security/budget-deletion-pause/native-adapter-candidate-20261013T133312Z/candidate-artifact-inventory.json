@@ -1,0 +1,66 @@
+{
+  "candidateBundleSha256": "390afb8cfa01d68cc6ad74472730fc6096775a40e9f8a98c17f6b8b2fed1d865",
+  "candidateManifestSha256": "7099f8dce1a195aa7df8f6d279c45ba451b31ab46cd4e13114a2fea7b9bcfd1b",
+  "files": [
+    {
+      "file": "budget-runner-core.mjs",
+      "bytes": 46357,
+      "sha256": "6181be1317389ba5dd4ff801e0ffcfd0b85ffad4bae4524ae35ebb2ee44e6f9b"
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "bytes": 15120,
+      "sha256": "679284536020375873e0e6e2735cfd398ead084ef9492390b85ed4e8632f0be5"
+    },
+    {
+      "file": "focused-tests-01.tap",
+      "bytes": 9670,
+      "sha256": "2e9a500fc6b032a946f4063f0cc3b7011adf633dcd8422cc5a9ed68f05460844"
+    },
+    {
+      "file": "local-check-results-01.json",
+      "bytes": 509,
+      "sha256": "df3adc220de5601f43842ada87e7242e07466443c9e3ce8e0322af798f93b3dc"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "bytes": 32972,
+      "sha256": "f0f13fff29fdee9d95ba84f9b5265c923ff917c088c743f86175a0ccc832b885"
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "bytes": 4609,
+      "sha256": "9ad5b0fb5cad52b7557f2a57289b544957283d8fab7ad4cc11190282313d19e3"
+    },
+    {
+      "file": "operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "original-preservation-verification.json",
+      "bytes": 25388,
+      "sha256": "0e19852ea3f35489df6fa46c903208e1e0f21052d662d35a790ec821dc78aee3"
+    },
+    {
+      "file": "readiness-review.md",
+      "bytes": 7512,
+      "sha256": "d94ec16b154377af5f672506c6d84fa474fd690220938a7a9b71b752afbd7852"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "7099f8dce1a195aa7df8f6d279c45ba451b31ab46cd4e13114a2fea7b9bcfd1b"
+    },
+    {
+      "file": "security-correction.patch",
+      "bytes": 25337,
+      "sha256": "609f1e54a1711fcfad986ae43b4c706624c2197c02d4d628eebefd814a2cb206"
+    },
+    {
+      "file": "validation-summary.json",
+      "bytes": 3559,
+      "sha256": "e877ac172b43b8c91ce7e5a69600caa83d925443f3c4333535a81431d624b443"
+    }
+  ]
+}

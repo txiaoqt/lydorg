@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "priorArchiveSha256": "d1ff2d73d53d43b43e08a9f77237058159fa97b03d0e137d245efd457ae7874d",
+  "approvedRuntimeFiles": 7,
+  "allSevenUnchanged": true,
+  "packagingFilesChanged": [
+    "package.json",
+    "requirements.txt",
+    "scripts/build-organization-release.mjs",
+    "scripts/build-organization-release.test.mjs",
+    "scripts/organization-release-config.json",
+    "vercel.json"
+  ],
+  "dependenciesUnchanged": true,
+  "lockfileUnchanged": true,
+  "apiWorkerUnchanged": true,
+  "routesAndHeadersUnchanged": true,
+  "rootHead": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "rootBranch": "ui-refactor",
+  "trackedDirtyPathsPreserved": 61,
+  "priorEvidenceUnchanged": true,
+  "privateEnvFilesRead": false,
+  "gitDiffCheck": "PASS"
+}

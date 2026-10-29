@@ -1,0 +1,8 @@
+{
+  "repository": "supabase/mcp",
+  "path": "packages/mcp-server-supabase/src/tools/destructive-sql.ts",
+  "blobSha": "14a517caa1cbd9ecc8092f29a80f247b8de4b2e2",
+  "url": "https://github.com/supabase/mcp/blob/main/packages/mcp-server-supabase/src/tools/destructive-sql.ts",
+  "retrievedAt": "2026-10-11T13:04:08Z",
+  "scope": "Current public upstream implementation, not proof of the deployed hosted MCP version"
+}

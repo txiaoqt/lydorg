@@ -1,0 +1,47 @@
+{
+  "baseDeployment": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+  "baseSourceRevision": "0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
+  "files": [
+    {
+      "kind": "workspace",
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "baseSha256": "c3a8b445e51178c061407b8f60d6793093769e6943514149f6346dcd8c386353",
+      "proposedSha256": "eadcd1abf0766827c0f92386b2e15fb0f4a1f9ecc56bb42a30b3374ff73083ba"
+    },
+    {
+      "kind": "isolated-live-base-overlay",
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "baseSha256": "4add5f7330483335a6b6a34fe6bc70da8f46906540d52ca1a1d318a48f35814f",
+      "proposedSha256": "1575e18e2e9e90288d8b37e3ecd1c44a7911b20c569fa3581d47ae9870b527ca"
+    },
+    {
+      "kind": "workspace",
+      "path": "src/admin/AdminPortal.tsx",
+      "baseSha256": "0ab2356753e5fa569ba9918988d4277e2a73fd7b03cadd69e522644cf6d8c7ee",
+      "proposedSha256": "0264f74666ffc03317da7f9ddbed3038a15589ce1e5804a533f71847844a5945"
+    },
+    {
+      "kind": "isolated-live-base-overlay",
+      "path": "src/admin/AdminPortal.tsx",
+      "baseSha256": "0ab2356753e5fa569ba9918988d4277e2a73fd7b03cadd69e522644cf6d8c7ee",
+      "proposedSha256": "0264f74666ffc03317da7f9ddbed3038a15589ce1e5804a533f71847844a5945"
+    },
+    {
+      "kind": "workspace",
+      "path": "src/admin/components/BudgetRequestsTable.tsx",
+      "baseSha256": "5b2a471d17811f34ad076e18897b7b1a68238fa66eafcf7a3973d703f65b50fe",
+      "proposedSha256": "7099dc549c5764641698c58979974f746653d793163f7f334890a93d8e0de9dd"
+    },
+    {
+      "kind": "isolated-live-base-overlay",
+      "path": "src/admin/components/BudgetRequestsTable.tsx",
+      "baseSha256": "e195be42a020ad90a4f108e932fdeec82b954c48329d4d1166e02ca01bde64f5",
+      "proposedSha256": "7099dc549c5764641698c58979974f746653d793163f7f334890a93d8e0de9dd"
+    },
+    {
+      "kind": "new-shared-message",
+      "path": "src/lib/admin-budget-deletion-pause.ts",
+      "proposedSha256": "fb8764d9d004e2cedcf6cb643a5a9d258985d071c9cabbf4ef4348debaa34225"
+    }
+  ]
+}

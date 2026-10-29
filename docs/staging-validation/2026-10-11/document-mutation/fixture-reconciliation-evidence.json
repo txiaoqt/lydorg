@@ -1,0 +1,201 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "organizationId": "2615fa09-a72b-48c6-8540-2f0e9cab810f",
+  "renewal": {
+    "id": "be35b31c-2bbe-42ab-a4aa-52e9c7123b65",
+    "organization_id": "2615fa09-a72b-48c6-8540-2f0e9cab810f",
+    "cycle_number": 2,
+    "current_accreditation_id": "7e192ae4-4278-435b-b53d-d0ddbb36b9ac",
+    "status": "approved",
+    "submitted_at": "2026-10-10T17:53:10.176787+00:00",
+    "reviewed_by": "f3cd6008-41ee-46dd-969d-35f86bacf063",
+    "reviewed_at": "2026-10-10T18:26:37.378251+00:00",
+    "admin_remarks": "SYNTHETIC complete preserved staging renewal cycle 2",
+    "created_at": "2026-10-10T17:53:06.635079+00:00",
+    "updated_at": "2026-10-10T18:26:37.378251+00:00",
+    "revision_requested_at": "2026-10-10T17:53:10.461039+00:00",
+    "revision_due_at": "2026-10-15T17:53:10.461039+00:00",
+    "revision_locked_at": null,
+    "revision_locked": false,
+    "revision_unlocked_at": null,
+    "revision_unlocked_by": null,
+    "certificate_urn": "14-26-003"
+  },
+  "submission": {
+    "id": "8e1f2447-5e3f-46a2-b35c-405d341d4ecb",
+    "organization_id": "2615fa09-a72b-48c6-8540-2f0e9cab810f",
+    "submitted_by": "51b0757b-5f08-498a-99bb-25de224ee31b",
+    "status": "approved_green",
+    "user_confirmed": false,
+    "submitted_at": "2026-10-10T17:53:10.176787+00:00",
+    "reviewed_by": "f3cd6008-41ee-46dd-969d-35f86bacf063",
+    "reviewed_at": "2026-10-10T18:26:37.378251+00:00",
+    "overall_remarks": "SYNTHETIC complete preserved staging renewal cycle 2",
+    "created_at": "2026-10-10T17:53:06.632443+00:00",
+    "updated_at": "2026-10-10T18:26:37.376757+00:00",
+    "submission_scope": "renewal",
+    "renewal_id": "be35b31c-2bbe-42ab-a4aa-52e9c7123b65",
+    "revision_requested_at": "2026-10-10T17:53:10.461039+00:00",
+    "revision_due_at": null,
+    "revision_locked_at": null,
+    "revision_locked": false,
+    "revision_unlocked_at": null,
+    "revision_unlocked_by": null,
+    "is_seeded_sample_data": false,
+    "seed_batch": null
+  },
+  "target": {
+    "id": "bf21c513-6466-44ac-9487-c791544ee4ad",
+    "submission_id": "8e1f2447-5e3f-46a2-b35c-405d341d4ecb",
+    "document_type_id": "729554c2-5b7c-4be3-8915-3b6fa12b992c",
+    "file_url": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+    "file_name": "SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+    "file_type": "application/pdf",
+    "file_size": 673,
+    "validation_status": "correct",
+    "admin_status": "submitted",
+    "admin_remarks": null,
+    "uploaded_at": "2026-10-10T18:26:42.587189+00:00",
+    "reviewed_at": null,
+    "created_at": "2026-10-10T17:53:07.309716+00:00",
+    "updated_at": "2026-10-10T18:26:42.585322+00:00",
+    "revision_history": [
+      {
+        "action": "replaced",
+        "replacedAt": "2026-10-10T18:26:34.254124+00:00",
+        "reviewedAt": "2026-10-10T17:53:10.461039+00:00",
+        "adminRemarks": "SYNTHETIC correct the dedicated renewal PDF",
+        "previousStatus": "needs_revision",
+        "previousFileUrl": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+        "previousFileName": "SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+        "previousFileSize": 673,
+        "previousFileType": "application/pdf"
+      },
+      {
+        "action": "replaced",
+        "replacedAt": "2026-10-10T18:26:42.586987+00:00",
+        "reviewedAt": "2026-10-10T18:26:37.240878+00:00",
+        "adminRemarks": "SYNTHETIC controlled renewal recovery document approval",
+        "previousStatus": "approved_green",
+        "previousFileUrl": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/revisions/a6d8c2cc-df26-4c58-80af-babd59d7b3d5-SYNTHETIC-renewal-corrected.pdf",
+        "previousFileName": "SYNTHETIC-renewal-corrected.pdf",
+        "previousFileSize": 674,
+        "previousFileType": "application/pdf"
+      }
+    ],
+    "revision_requested_at": "2026-10-10T17:53:10.461039+00:00",
+    "revision_due_at": null,
+    "revision_locked": false,
+    "revision_unlocked_at": null,
+    "revision_unlocked_by": null,
+    "is_seeded_sample_data": false,
+    "seed_batch": null,
+    "revision_locked_at": null
+  },
+  "original": {
+    "kind": "renewal",
+    "bucket": "organization-documents",
+    "path": "2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+    "fileName": "SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+    "sha256": "6e71339ae9f1ed382362a22da0ad7ae6f272a39e3ee565de51beb16f3e35103f",
+    "size": 673,
+    "storageUri": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+    "metadataId": "bf21c513-6466-44ac-9487-c791544ee4ad"
+  },
+  "corrected": {
+    "bucket": "organization-documents",
+    "path": "2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/revisions/a6d8c2cc-df26-4c58-80af-babd59d7b3d5-SYNTHETIC-renewal-corrected.pdf",
+    "storageUri": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/revisions/a6d8c2cc-df26-4c58-80af-babd59d7b3d5-SYNTHETIC-renewal-corrected.pdf",
+    "fileName": "SYNTHETIC-renewal-corrected.pdf",
+    "size": 674,
+    "sha256": "67bba8968f41f97923e82f9fcfcf2d90871de9605d1b897ff336d452652a4f0d"
+  },
+  "audits": [
+    {
+      "id": "60c1539e-5aa6-4991-82c2-75b54add63f1",
+      "action": "approved_renewal",
+      "related_id": "be35b31c-2bbe-42ab-a4aa-52e9c7123b65",
+      "created_at": "2026-10-10T18:26:37.378251+00:00"
+    },
+    {
+      "id": "23dbd71d-c14c-4ac8-b4c0-28264c80b813",
+      "action": "reviewed_documents",
+      "related_id": "8e1f2447-5e3f-46a2-b35c-405d341d4ecb",
+      "created_at": "2026-10-10T18:26:37.240025+00:00"
+    },
+    {
+      "id": "25055873-27bd-4c20-9a79-af9985fe5d84",
+      "action": "renewal_resubmitted",
+      "related_id": "be35b31c-2bbe-42ab-a4aa-52e9c7123b65",
+      "created_at": "2026-10-10T18:26:35.856464+00:00"
+    },
+    {
+      "id": "78b953fa-2857-40e1-acb2-f4d563167edc",
+      "action": "reviewed_documents",
+      "related_id": "8e1f2447-5e3f-46a2-b35c-405d341d4ecb",
+      "created_at": "2026-10-10T17:53:10.458918+00:00"
+    },
+    {
+      "id": "743e7a34-c4bc-48ae-93b7-b6c5ea74f19e",
+      "action": "renewal_submitted",
+      "related_id": "be35b31c-2bbe-42ab-a4aa-52e9c7123b65",
+      "created_at": "2026-10-10T17:53:10.1753+00:00"
+    },
+    {
+      "id": "f532d7da-b9ae-4d4d-8ad0-3ec3e12c40e5",
+      "action": "staging_renewal_simulated",
+      "related_id": "7e192ae4-4278-435b-b53d-d0ddbb36b9ac",
+      "created_at": "2026-10-10T17:53:06.296246+00:00"
+    },
+    {
+      "id": "c300621e-39fc-4036-94a0-e0383c6f338d",
+      "action": "staging_renewal_fixture_bound",
+      "related_id": "2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "created_at": "2026-10-10T17:53:06.141393+00:00"
+    },
+    {
+      "id": "89ddb12a-dba9-4628-96eb-3556ee5b526b",
+      "action": "Verified organization registration",
+      "related_id": "2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "created_at": "2026-10-10T17:51:08.182204+00:00"
+    },
+    {
+      "id": "91b93978-eb46-4287-a3a0-37ff745bce97",
+      "action": "reviewed_documents",
+      "related_id": "d6d1efec-1eba-40be-bef9-a1ea2488d5e7",
+      "created_at": "2026-10-10T17:51:08.177386+00:00"
+    }
+  ],
+  "terms": [
+    {
+      "id": "7e192ae4-4278-435b-b53d-d0ddbb36b9ac",
+      "organization_id": "2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "term_number": 1,
+      "start_date": "2023-11-09",
+      "end_date": "2026-11-09",
+      "certificate_urn": "14-26-002",
+      "status": "superseded",
+      "is_legacy_inferred": false,
+      "approved_by": "f3cd6008-41ee-46dd-969d-35f86bacf063",
+      "approved_at": "2026-10-10T17:51:08.182204+00:00",
+      "created_at": "2026-10-10T17:51:08.182204+00:00",
+      "revoked_at": null,
+      "revocation_reason": null
+    },
+    {
+      "id": "df1b5676-ee12-4b27-a6d5-924c1cb153e4",
+      "organization_id": "2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "term_number": 2,
+      "start_date": "2026-11-09",
+      "end_date": "2029-11-09",
+      "certificate_urn": "14-26-003",
+      "status": "active",
+      "is_legacy_inferred": false,
+      "approved_by": "f3cd6008-41ee-46dd-969d-35f86bacf063",
+      "approved_at": "2026-10-10T18:26:37.378251+00:00",
+      "created_at": "2026-10-10T18:26:37.378251+00:00",
+      "revoked_at": null,
+      "revocation_reason": null
+    }
+  ]
+}

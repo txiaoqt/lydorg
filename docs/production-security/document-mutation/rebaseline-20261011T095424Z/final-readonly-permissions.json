@@ -1,0 +1,9 @@
+{
+  "permission_baseline": {
+    "relation_acl_rls": "5f88ac85303e95fd1b466b39a86b4478",
+    "all_policy_catalog": "badea3ac4e8877ef1a919bab0883a854",
+    "existing_schema_acls": "a2babb6c4c9bcfefebbbed7ccfcae4d4",
+    "test_utility_active_calls": 0,
+    "unrelated_function_catalog": "513d8915579c8c0f1d5ae1737b7f1c65"
+  }
+}

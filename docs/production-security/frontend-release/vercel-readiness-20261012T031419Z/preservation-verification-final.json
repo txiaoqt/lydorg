@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-10-12T03:37:28.948Z",
+  "snapshotEntries": 4126,
+  "originalPresentFilesHashed": 4108,
+  "originalMissingEntriesPreserved": 18,
+  "changedOriginalFiles": [
+    "src/lib/admin-storage-resolver.integration.test.ts",
+    "src/lib/lydo-connect-supabase.ts"
+  ],
+  "status": "PASS",
+  "clarification": "The snapshot explicitly marks 18 generated assets missing=true. The earlier local recheck incorrectly treated those already-missing entries as new deletions. This final check honors the saved missing-state flags; no restoration or file mutation occurred."
+}

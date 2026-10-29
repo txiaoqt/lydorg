@@ -1,0 +1,14 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "submittedAt": {
+    "current_time": "2026-10-11 12:36:30 UTC"
+  },
+  "respondedAt": {
+    "current_time": "2026-10-11 12:44:46 UTC"
+  },
+  "isError": true,
+  "response": "McpServerError: Invalid or expired requestState",
+  "attempts": 1,
+  "automaticRetries": 0
+}

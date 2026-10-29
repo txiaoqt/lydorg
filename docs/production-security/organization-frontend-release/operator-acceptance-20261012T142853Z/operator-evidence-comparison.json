@@ -1,0 +1,41 @@
+{
+  "comparedAt": "2026-10-12T14:36:23.662Z",
+  "status": "PASS",
+  "evidenceOrigin": "Operator-executed browser output; independently compared locally, not independently captured",
+  "inputSha256": "111b76321ace31085a654a99c71400a1172813104112abbf40497fbc3cbb438c",
+  "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "identityMatches": true,
+  "inventoryMatches": true,
+  "expectedInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+  "observedInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+  "matchedFiles": 53,
+  "files": 53,
+  "totalAssetBytes": 19518681,
+  "fileDifferences": [],
+  "routeDifferences": [],
+  "reportedHeaderMismatches": 0,
+  "rootAndDeepRoutes": "7 matching HTTP 200 SPA shells",
+  "pythonGet": {
+    "http": 405,
+    "bytes": 55,
+    "sha256": "22896991070817cae33008d58b74501edb9e1863044e18be144e686ad8791370"
+  },
+  "pythonOptions": {
+    "http": 204,
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "pythonBodiesMatch": true,
+  "scanPass": true,
+  "scanFiles": 33,
+  "summaryMatches": true,
+  "scopeMatches": true,
+  "networkBypass": {
+    "operatorConfirmed": true,
+    "workerControllerPresent": true,
+    "independentlyAttested": false,
+    "limitation": "DevTools bypass confirmed by operator. The checker records worker presence but cannot attest that setting; preserve this evidence limitation."
+  },
+  "newNetworkRequests": 0,
+  "productionMutationsByThisComparator": 0
+}

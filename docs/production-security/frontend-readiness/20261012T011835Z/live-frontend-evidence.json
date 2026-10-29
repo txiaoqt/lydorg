@@ -1,0 +1,88 @@
+{
+  "observedAt": "2026-10-12T01:23:09.400Z",
+  "method": "bounded unauthenticated public HTML and entry JS/CSS GETs; no JavaScript executed; no Supabase request",
+  "githubEvidence": {
+    "repository": "txiaoqt/lydorg",
+    "defaultBranch": "main",
+    "commit": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+    "remoteUiRefactorFound": false,
+    "statuses": [
+      {
+        "context": "Vercel – lydorg",
+        "state": "success",
+        "target": "https://vercel.com/toffs-projects-81b2ce10/lydorg/3xkY2hTr9ght98vNXqrjZTtrEPCQ"
+      },
+      {
+        "context": "Vercel – yorbms_user",
+        "state": "success",
+        "target": "https://vercel.com/toffs-projects-81b2ce10/yorbms_user/HGFE2BwongbW7ncM4kn6cQ48ffeV"
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "label": "admin-production",
+      "url": "https://y-trace-admin.vercel.app",
+      "http": 200,
+      "html": {
+        "bytes": 1884,
+        "sha256": "fabd94e4fe69d9fa197088cfc97a24d6208ba3b862d14cdccbca460e8a88ae93"
+      },
+      "entry": {
+        "path": "/assets/index-O-y4BvcB.js",
+        "bytes": 5669528,
+        "sha256": "51811e680f40833b8cac0a337bfe1e06cb6e2873307cb63231e7eb16499ddea5",
+        "version": "1.0.0+20261008175317.2f6e742",
+        "gatewayNamePresent": false
+      }
+    },
+    {
+      "label": "user-production",
+      "url": "https://ytrace.app",
+      "http": 200,
+      "html": {
+        "bytes": 1884,
+        "sha256": "4f0b8c4e695467a4baf6171cf164b58ad149b87fca71ff2d7149fa762ea404b8"
+      },
+      "entry": {
+        "path": "/assets/index-BUidbxI_.js",
+        "bytes": 5669435,
+        "sha256": "3bd8bbf60b9aa9831fc809a3d5b4ab97ef8db4c87f6778c69dcaf472fba7892b",
+        "version": "1.0.0+20261008175023.2f6e742",
+        "gatewayNamePresent": false
+      }
+    }
+  ],
+  "sharedStylesheet": {
+    "path": "/assets/index-nVUCXF5z.css",
+    "bytes": 461647,
+    "sha256": "935b3678166468f49e4382c23bfa7f367a9eacf5e3f5d9ba7c87e6c12091ce51"
+  },
+  "entryScan": {
+    "projectRefs": [
+      "mqqaykksadotbrghbexz"
+    ],
+    "jwtRoles": [
+      "anon"
+    ],
+    "serviceCredentialDetected": false,
+    "limit": "Entry assets only; not a complete deployed bundle/secret audit"
+  },
+  "immutableHosts": [
+    {
+      "url": "https://lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app",
+      "http": 302,
+      "redirectHost": "vercel.com"
+    },
+    {
+      "url": "https://yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app",
+      "http": 302,
+      "redirectHost": "vercel.com"
+    }
+  ],
+  "providerMetadata": {
+    "status": "BLOCKED",
+    "reason": "Vercel CLI has no accessible authenticated project metadata. Operator supplied exact targets; live embedded commit and GitHub successful deployment links corroborate them."
+  },
+  "noTokensSignedUrlsOrPrivateContentsPersisted": true
+}

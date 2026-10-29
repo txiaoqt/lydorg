@@ -1,0 +1,585 @@
+diff --git a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/windows-archive-fixture.cs b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/windows-archive-fixture.cs
+new file mode 100644
+--- /dev/null
++++ b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/windows-archive-fixture.cs
+@@ -0,0 +1,246 @@
++// OFFLINE F2-A FIXTURE LIBRARY ONLY. No production adapter or executable entrypoint.
++// Only the hard-coded candidate fixture tree is admitted. No protected-state binding.
++// Win32 x64 FILE_RENAME_INFO (class 3), ReplaceIfExists = FALSE, NULL RootDirectory.
++// Absolute destination stays within the held and identity-checked parent/ancestor chain.
++// No MoveFileEx, copy, delete, cleanup, restore, alternate primitive, or retry.
++using System;
++using System.Collections.Generic;
++using System.IO;
++using System.Runtime.InteropServices;
++using System.Security.Cryptography;
++using System.Text;
++using System.Text.RegularExpressions;
++using System.Threading;
++using Microsoft.Win32.SafeHandles;
++
++namespace YTraceF2A {
++    public sealed class ArchiveFault : Exception {
++        public readonly string Code;
++        public ArchiveFault(string code) : base(code) { Code = code; }
++    }
++    public sealed class FileBinding {
++        public string DirectoryId { get; internal set; }
++        public string SourceId { get; internal set; }
++        public string Sha256 { get; internal set; }
++        public long Bytes { get; internal set; }
++        public long Creation { get; internal set; }
++        public long LastWrite { get; internal set; }
++    }
++    public sealed class ArchiveResult {
++        public string Status { get; internal set; }
++        public int NativeError { get; internal set; }
++        public int Submissions { get; internal set; }
++    }
++    internal static class Native {
++        internal const uint Read = 0x80000000, Delete = 0x00010000, Attributes = 0x80;
++        internal const uint ShareRead = 1, ShareAll = 7, OpenExisting = 3;
++        internal const uint Backup = 0x02000000, OpenReparse = 0x00200000;
++        internal const uint Directory = 0x10, Reparse = 0x400;
++        [StructLayout(LayoutKind.Sequential)]
++        internal struct Time { internal uint Low; internal uint High;
++            internal long Value { get { return ((long)High << 32) | Low; } } }
++        [StructLayout(LayoutKind.Sequential)]
++        internal struct Info {
++            internal uint Attributes; internal Time Creation, Access, Write;
++            internal uint Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow;
++            internal string Id { get { return Volume.ToString("x8")+":"+IndexHigh.ToString("x8")+IndexLow.ToString("x8"); } }
++            internal long Size { get { return ((long)SizeHigh << 32) | SizeLow; } }
++        }
++        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
++        internal static extern SafeFileHandle CreateFileW(string name, uint access, uint share,
++            IntPtr security, uint creation, uint flags, IntPtr template);
++        [DllImport("kernel32.dll", SetLastError=true)]
++        [return: MarshalAs(UnmanagedType.Bool)]
++        internal static extern bool GetFileInformationByHandle(SafeFileHandle handle, out Info info);
++        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
++        internal static extern uint GetFinalPathNameByHandleW(SafeFileHandle handle, StringBuilder path, uint size, uint flags);
++        [DllImport("kernel32.dll", SetLastError=true)]
++        [return: MarshalAs(UnmanagedType.Bool)]
++        internal static extern bool SetFileInformationByHandle(SafeFileHandle handle, int infoClass, IntPtr info, uint size);
++        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
++        internal static extern uint GetFileAttributesW(string path);
++        internal static Info Inspect(SafeFileHandle h) {
++            Info info;
++            if (!GetFileInformationByHandle(h, out info)) throw new ArchiveFault("HANDLE_INFO_FAILED");
++            return info;
++        }
++        internal static string Final(SafeFileHandle h) {
++            var text = new StringBuilder(32768);
++            uint count = GetFinalPathNameByHandleW(h, text, (uint)text.Capacity, 0);
++            if (count == 0 || count >= text.Capacity) throw new ArchiveFault("FINAL_PATH_FAILED");
++            string result = text.ToString();
++            if (!result.StartsWith(@"\\?\", StringComparison.Ordinal)) throw new ArchiveFault("FINAL_PATH_NAMESPACE");
++            return result.Substring(4).TrimEnd('\\');
++        }
++    }
++    public static class FixtureArchive {
++        public const string FixtureRoot = @"C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-f2a-windows-archive-20261014T145700Z\fixtures";
++        internal static void Need(bool condition, string code) { if (!condition) throw new ArchiveFault(code); }
++        internal static string DirectoryPath(string input) {
++            Need(OperatingSystem.IsWindows() && IntPtr.Size == 8, "WINDOWS_X64_REQUIRED");
++            Need(input != null && input.StartsWith(FixtureRoot+"\\", StringComparison.OrdinalIgnoreCase), "FIXTURE_ROOT_ONLY");
++            Need(!input.Contains('/') && !input.Contains('\0'), "NONCANONICAL_PATH");
++            string full = Path.GetFullPath(input);
++            Need(String.Equals(full, input, StringComparison.OrdinalIgnoreCase), "NONCANONICAL_PATH");
++            foreach (string piece in input.Substring(3).Split('\\')) {
++                Need(piece.Length > 0 && piece != "." && piece != ".." &&
++                    !piece.EndsWith(".") && !piece.EndsWith(" ") && !piece.Contains(':'), "UNSAFE_COMPONENT");
++            }
++            return full;
++        }
++        internal static void Leaf(string leaf) {
++            Need(leaf != null && Regex.IsMatch(leaf, @"\A[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\z") &&
++                !leaf.EndsWith(".") && !Regex.IsMatch(leaf, @"\A(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9])(\.|\z)", RegexOptions.IgnoreCase),
++                "UNSAFE_LEAF");
++        }
++        internal static List<SafeFileHandle> HoldChain(string dir) {
++            var held = new List<SafeFileHandle>();
++            try {
++                string current = Path.GetPathRoot(dir);
++                var pieces = new List<string> { current };
++                foreach (string piece in dir.Substring(current.Length).Split('\\')) {
++                    current = Path.Combine(current, piece); pieces.Add(current);
++                }
++                foreach (string path in pieces) {
++                    var handle = Native.CreateFileW(path, Native.Attributes, Native.ShareRead,
++                        IntPtr.Zero, Native.OpenExisting, Native.Backup|Native.OpenReparse, IntPtr.Zero);
++                    if (handle.IsInvalid) { handle.Dispose(); throw new ArchiveFault("DIRECTORY_OPEN_FAILED"); }
++                    held.Add(handle);
++                    var info = Native.Inspect(handle);
++                    Need((info.Attributes & Native.Directory) != 0, "DIRECTORY_REQUIRED");
++                    Need((info.Attributes & Native.Reparse) == 0, "REPARSE_DIRECTORY_REJECTED");
++                    Need(String.Equals(Native.Final(handle), path.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase),
++                        "DIRECTORY_FINAL_PATH_MISMATCH");
++                }
++                return held;
++            } catch { Release(held); throw; }
++        }
++        internal static void Release(List<SafeFileHandle> handles) {
++            for (int i=handles.Count-1; i>=0; i--) handles[i].Dispose();
++        }
++        internal static SafeFileHandle OpenSource(string path, bool forRename) {
++            var h = Native.CreateFileW(path, Native.Read|(forRename?Native.Delete:0), forRename?Native.ShareRead:Native.ShareAll,
++                IntPtr.Zero, Native.OpenExisting, Native.OpenReparse, IntPtr.Zero);
++            if (h.IsInvalid) { h.Dispose(); throw new ArchiveFault("SOURCE_OPEN_FAILED"); }
++            try {
++                var info = Native.Inspect(h);
++                Need((info.Attributes & (Native.Directory|Native.Reparse)) == 0, "REGULAR_SOURCE_REQUIRED");
++                Need(info.Links == 1, "HARDLINK_SOURCE_REJECTED");
++                Need(info.Size >= 0 && info.Size <= 65536, "FIXTURE_SIZE_BOUND");
++                Need(String.Equals(Native.Final(h), path, StringComparison.OrdinalIgnoreCase), "SOURCE_FINAL_PATH_MISMATCH");
++                return h;
++            } catch { h.Dispose(); throw; }
++        }
++        internal static string Hash(FileStream stream) {
++            stream.Position=0;
++            return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
++        }
++        public static FileBinding Capture(string directory, string sourceLeaf) {
++            string dir = DirectoryPath(directory); Leaf(sourceLeaf);
++            var chain = HoldChain(dir);
++            try {
++                using (var h = OpenSource(Path.Combine(dir, sourceLeaf), true))
++                using (var stream = new FileStream(h, FileAccess.Read)) {
++                    var info = Native.Inspect(h);
++                    return new FileBinding { DirectoryId=Native.Inspect(chain[chain.Count-1]).Id, SourceId=info.Id,
++                        Sha256=Hash(stream), Bytes=info.Size, Creation=info.Creation.Value, LastWrite=info.Write.Value };
++                }
++            } finally { Release(chain); }
++        }
++        public static PreparedArchive Prepare(string directory, string sourceLeaf, string destinationLeaf, FileBinding expected) {
++            string dir = DirectoryPath(directory); Leaf(sourceLeaf); Leaf(destinationLeaf);
++            Need(!String.Equals(sourceLeaf,destinationLeaf,StringComparison.OrdinalIgnoreCase), "SAME_LEAF_REJECTED");
++            Need(expected != null, "BINDING_REQUIRED");
++            return new PreparedArchive(dir,sourceLeaf,destinationLeaf,expected);
++        }
++        public static ArchiveResult ArchiveOnce(string directory, string sourceLeaf, string destinationLeaf, FileBinding expected) {
++            using (var operation=Prepare(directory,sourceLeaf,destinationLeaf,expected)) {
++                operation.SubmitOnce(); return operation.VerifySubmitted();
++            }
++        }
++    }
++    public sealed class PreparedArchive : IDisposable {
++        private readonly string dir, source, destination;
++        private readonly FileBinding expected;
++        private readonly List<SafeFileHandle> chain;
++        private readonly SafeFileHandle handle;
++        private readonly FileStream stream;
++        private int submitted, nativeError; private bool nativeOk;
++        public int Submissions { get { return Volatile.Read(ref submitted); } }
++        internal PreparedArchive(string directory,string sourceLeaf,string destinationLeaf,FileBinding binding) {
++            dir=directory; source=Path.Combine(dir,sourceLeaf); destination=Path.Combine(dir,destinationLeaf);
++            // Freeze the binding. Caller mutation cannot change the admitted source.
++            expected=new FileBinding { DirectoryId=binding.DirectoryId, SourceId=binding.SourceId, Sha256=binding.Sha256,
++                Bytes=binding.Bytes, Creation=binding.Creation, LastWrite=binding.LastWrite };
++            chain=FixtureArchive.HoldChain(dir);
++            try {
++                FixtureArchive.Need(Native.Inspect(chain[chain.Count-1]).Id == expected.DirectoryId, "DIRECTORY_IDENTITY_CHANGED");
++                handle=FixtureArchive.OpenSource(source,true);
++                stream=new FileStream(handle,FileAccess.Read);
++                MatchSource();
++            } catch {
++                if (stream != null) stream.Dispose();
++                if (handle != null) handle.Dispose();
++                FixtureArchive.Release(chain); throw;
++            }
++        }
++        private void MatchSource() {
++            var info=Native.Inspect(handle);
++            FixtureArchive.Need(info.Id==expected.SourceId, "SOURCE_IDENTITY_CHANGED");
++            FixtureArchive.Need(info.Links==1 && info.Size==expected.Bytes &&
++                info.Creation.Value==expected.Creation && info.Write.Value==expected.LastWrite &&
++                FixtureArchive.Hash(stream)==expected.Sha256, "SOURCE_CONTENT_OR_METADATA_CHANGED");
++        }
++        // Exposed only to the synthetic crash harness; this candidate supplies no production entrypoint.
++        // A second call on this object is rejected before touching the filesystem.
++        public int SubmitOnce() {
++            FixtureArchive.Need(Interlocked.CompareExchange(ref submitted,1,0)==0, "SUBMISSION_ALREADY_CONSUMED");
++            MatchSource();
++            FixtureArchive.Need(String.Equals(Native.Final(handle),source,StringComparison.OrdinalIgnoreCase), "SOURCE_MOVED_BEFORE_SUBMISSION");
++            FixtureArchive.Need(String.Equals(Native.Final(chain[chain.Count-1]),dir,StringComparison.OrdinalIgnoreCase), "DIRECTORY_MOVED_BEFORE_SUBMISSION");
++            // x64 FILE_RENAME_INFO: BOOLEAN/union at 0, RootDirectory at 8, FileNameLength at 16, UTF16 name at 20.
++            byte[] name=Encoding.Unicode.GetBytes(destination);
++            int length=Math.Max(32,20+name.Length+2);
++            IntPtr buffer=Marshal.AllocHGlobal(length);
++            try {
++                Marshal.Copy(new byte[length],0,buffer,length);
++                Marshal.WriteInt32(buffer,0,0); // ReplaceIfExists FALSE. No replace, POSIX, or copy flags.
++                Marshal.WriteIntPtr(buffer,8,IntPtr.Zero); // Win32 FILE_RENAME_INFO RootDirectory must be NULL here.
++                Marshal.WriteInt32(buffer,16,name.Length);
++                Marshal.Copy(name,0,IntPtr.Add(buffer,20),name.Length);
++                nativeOk=Native.SetFileInformationByHandle(handle,3,buffer,(uint)length);
++                nativeError=nativeOk?0:Marshal.GetLastWin32Error();
++                return nativeError;
++            } finally { Marshal.FreeHGlobal(buffer); }
++        }
++        public ArchiveResult VerifySubmitted() {
++            FixtureArchive.Need(Submissions==1,"NO_SUBMISSION");
++            try {
++                MatchSource();
++                if (!nativeOk) {
++                    FixtureArchive.Need(String.Equals(Native.Final(handle),source,StringComparison.OrdinalIgnoreCase), "FAILURE_SOURCE_UNRESOLVED");
++                    return new ArchiveResult { Status=(nativeError==80||nativeError==183)?"REJECTED_DESTINATION_EXISTS":"UNRESOLVED_NATIVE_FAILURE",
++                        NativeError=nativeError,Submissions=1 };
++                }
++                FixtureArchive.Need(String.Equals(Native.Final(handle),destination,StringComparison.OrdinalIgnoreCase),"ARCHIVE_FINAL_PATH_MISMATCH");
++                using (var archived=FixtureArchive.OpenSource(destination,false)) {
++                    FixtureArchive.Need(Native.Inspect(archived).Id==expected.SourceId,"ARCHIVE_IDENTITY_MISMATCH");
++                }
++                uint attrs=Native.GetFileAttributesW(source);
++                int error=Marshal.GetLastWin32Error();
++                FixtureArchive.Need(attrs==UInt32.MaxValue && error==2,"SOURCE_ABSENCE_UNRESOLVED");
++                return new ArchiveResult { Status="ARCHIVED_AND_VERIFIED",NativeError=0,Submissions=1 };
++            } catch (ArchiveFault) {
++                return new ArchiveResult { Status="UNRESOLVED_AFTER_SUBMISSION",NativeError=nativeError,Submissions=1 };
++            } catch (IOException) {
++                return new ArchiveResult { Status="UNRESOLVED_AFTER_SUBMISSION",NativeError=nativeError,Submissions=1 };
++            }
++        }
++        // Close handles only. Dispose never removes, restores, repairs, or retries any filesystem entry.
++        public void Dispose() {
++            if(stream!=null) stream.Dispose();
++            if(handle!=null) handle.Dispose();
++            FixtureArchive.Release(chain);
++        }
++    }
++}
+diff --git a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/windows-archive-fixture.tests.cs b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/windows-archive-fixture.tests.cs
+new file mode 100644
+--- /dev/null
++++ b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/windows-archive-fixture.tests.cs
+@@ -0,0 +1,269 @@
++// Actual Windows filesystem tests only; all paths are under FixtureArchive.FixtureRoot.
++// No network, environment/credential reads, production imports, protected state, or cleanup.
++using System;
++using System.IO;
++using System.Linq;
++using System.Text;
++using System.Threading;
++using System.Threading.Tasks;
++
++namespace YTraceF2A {
++    public static class FixtureTests {
++        private static int total, passed, failed;
++        public static readonly string Session=Path.Combine(FixtureArchive.FixtureRoot,"session-01");
++        private const string Original="SYNTHETIC F2A SOURCE BYTES\n";
++        public static int Total { get { return total; } }
++        public static int Passed { get { return passed; } }
++        public static int Failed { get { return failed; } }
++        public static void Check(bool value,string code) { if(!value) throw new ArchiveFault(code); }
++        public static void Case(string name,Action test) {
++            total++;
++            try { test(); passed++; Console.WriteLine("ok "+total+" - "+name); }
++            catch(Exception ex) {
++                failed++;
++                var fault=ex as ArchiveFault;
++                string code=fault!=null?fault.Code:ex.GetType().Name;
++                Console.WriteLine("not ok "+total+" - "+name+" # "+code);
++            }
++        }
++        private static string Dir(string leaf) {
++            string path=Path.Combine(Session,leaf);
++            Check(!Directory.Exists(path) && !File.Exists(path),"FIXTURE_ALREADY_EXISTS");
++            Directory.CreateDirectory(path); return path;
++        }
++        public static void Write(string path,string value) {
++            byte[] bytes=Encoding.UTF8.GetBytes(value);
++            using(var stream=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
++                stream.Write(bytes,0,bytes.Length); stream.Flush(true);
++            }
++        }
++        private static void Text(string path,string value) {
++            // Read-only assertions must share DELETE with a live rename handle.
++            using(var file=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete))
++            using(var reader=new StreamReader(file,Encoding.UTF8)) { Check(reader.ReadToEnd()==value,"BYTES_NOT_PRESERVED"); }
++        }
++        private static void Rejected(Action action,string code) {
++            bool matched=false;
++            try { action(); } catch(ArchiveFault fault) { matched=fault.Code==code; }
++            Check(matched,"EXPECTED_"+code);
++        }
++        private static void Archived(ArchiveResult result) {
++            Check(result.Status=="ARCHIVED_AND_VERIFIED" && result.NativeError==0 && result.Submissions==1,"ARCHIVE_NOT_VERIFIED_"+result.NativeError);
++        }
++        public static void RunMainCases() {
++            Check(!Directory.Exists(FixtureArchive.FixtureRoot),"FIXTURE_ROOT_ALREADY_EXISTS");
++            Directory.CreateDirectory(Session);
++            Case("actual same-directory Win32 rename preserves file ID, bytes and timestamps",()=>{
++                string dir=Dir("normal");
++                Write(Path.Combine(dir,"source.bin"),Original);
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                var result=FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",before);
++                Archived(result);
++                var after=FixtureArchive.Capture(dir,"archive.bin");
++                Check(before.SourceId==after.SourceId && before.Sha256==after.Sha256 &&
++                    before.Creation==after.Creation && before.LastWrite==after.LastWrite,"NATIVE_IDENTITY_OR_TIMES_CHANGED");
++                Check(!File.Exists(Path.Combine(dir,"source.bin")),"SOURCE_STILL_PRESENT");
++                Text(Path.Combine(dir,"archive.bin"),Original);
++                Console.WriteLine("# native FileRenameInfo=3 replace=FALSE error="+result.NativeError);
++            });
++            // Each iteration is a distinct fixture and deliberate independent race, never a retry.
++            for(int i=0;i<16;i++) {
++                int race=i;
++                Case("two concurrent kernel contenders / unique fixture "+race,()=>{
++                    string dir=Dir("race-"+race.ToString("D2"));
++                    string a="SYNTHETIC CONTENDER A "+race, b="SYNTHETIC CONTENDER B "+race;
++                    Write(Path.Combine(dir,"source-a.bin"),a); Write(Path.Combine(dir,"source-b.bin"),b);
++                    var ba=FixtureArchive.Capture(dir,"source-a.bin");
++                    var bb=FixtureArchive.Capture(dir,"source-b.bin");
++                    using(var oa=FixtureArchive.Prepare(dir,"source-a.bin","archive.bin",ba))
++                    using(var ob=FixtureArchive.Prepare(dir,"source-b.bin","archive.bin",bb))
++                    using(var barrier=new Barrier(3)) {
++                        Func<PreparedArchive,ArchiveResult> run=(op)=>{
++                            Check(barrier.SignalAndWait(TimeSpan.FromSeconds(10)),"CONTENDER_BARRIER_TIMEOUT");
++                            op.SubmitOnce(); return op.VerifySubmitted();
++                        };
++                        var ta=Task.Run(()=>run(oa)); var tb=Task.Run(()=>run(ob));
++                        Check(barrier.SignalAndWait(TimeSpan.FromSeconds(10)),"PARENT_BARRIER_TIMEOUT");
++                        Check(Task.WaitAll(new Task[]{ta,tb},TimeSpan.FromSeconds(10)),"CONTENDER_TIMEOUT");
++                        var ra=ta.Result; var rb=tb.Result;
++                        bool aw=ra.Status=="ARCHIVED_AND_VERIFIED",bw=rb.Status=="ARCHIVED_AND_VERIFIED";
++                        Check(aw^bw,"NOT_EXACTLY_ONE_WINNER");
++                        var loser=aw?rb:ra;
++                        Check(loser.Status=="REJECTED_DESTINATION_EXISTS" && (loser.NativeError==80||loser.NativeError==183),"LOSER_NOT_NO_OVERWRITE");
++                        Check(ra.Submissions==1 && rb.Submissions==1,"CONTENDER_SUBMISSION_COUNT");
++                        // Close handles before taking a new DELETE-capable snapshot; never remove fixture data.
++                        oa.Dispose(); ob.Dispose();
++                        Text(Path.Combine(dir,"archive.bin"),aw?a:b);
++                        Text(Path.Combine(dir,aw?"source-b.bin":"source-a.bin"),aw?b:a);
++                        Check(!File.Exists(Path.Combine(dir,aw?"source-a.bin":"source-b.bin")),"WINNER_SOURCE_REMAINS");
++                        Check(FixtureArchive.Capture(dir,"archive.bin").SourceId==(aw?ba.SourceId:bb.SourceId),"DESTINATION_NOT_WINNER_INODE");
++                        Console.WriteLine("# race="+race+" winner="+(aw?"A":"B")+" loserWin32="+loser.NativeError+" submissions=2");
++                    }
++                });
++            }
++            Case("preexisting destination rejected and both file identities/bytes retained",()=>{
++                string dir=Dir("preexisting");
++                Write(Path.Combine(dir,"source.bin"),Original);
++                Write(Path.Combine(dir,"archive.bin"),"SYNTHETIC EXISTING DESTINATION");
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                var dest=FixtureArchive.Capture(dir,"archive.bin");
++                var result=FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",before);
++                Check(result.Status=="REJECTED_DESTINATION_EXISTS" && result.Submissions==1,"DESTINATION_OVERWRITE_NOT_REJECTED");
++                Check(FixtureArchive.Capture(dir,"source.bin").SourceId==before.SourceId,"SOURCE_ID_LOST");
++                Check(FixtureArchive.Capture(dir,"archive.bin").SourceId==dest.SourceId,"DESTINATION_ID_REPLACED");
++                Text(Path.Combine(dir,"source.bin"),Original);
++                Text(Path.Combine(dir,"archive.bin"),"SYNTHETIC EXISTING DESTINATION");
++            });
++            Case("destination appearing after handle preparation is rejected by kernel",()=>{
++                string dir=Dir("late-destination"); Write(Path.Combine(dir,"source.bin"),Original);
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                using(var op=FixtureArchive.Prepare(dir,"source.bin","archive.bin",before)) {
++                    Write(Path.Combine(dir,"archive.bin"),"SYNTHETIC LATE DESTINATION");
++                    op.SubmitOnce(); var result=op.VerifySubmitted();
++                    Check(result.Status=="REJECTED_DESTINATION_EXISTS","LATE_DESTINATION_OVERWRITTEN");
++                    Text(Path.Combine(dir,"source.bin"),Original);
++                    Text(Path.Combine(dir,"archive.bin"),"SYNTHETIC LATE DESTINATION");
++                }
++            });
++            Case("source pathname replacement after capture rejects changed identity",()=>{
++                string dir=Dir("source-substitution"); Write(Path.Combine(dir,"source.bin"),Original);
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                File.Move(Path.Combine(dir,"source.bin"),Path.Combine(dir,"original-retained.bin"));
++                Write(Path.Combine(dir,"source.bin"),Original);
++                Rejected(()=>FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",before),"SOURCE_IDENTITY_CHANGED");
++                Text(Path.Combine(dir,"original-retained.bin"),Original); Text(Path.Combine(dir,"source.bin"),Original);
++                Check(!File.Exists(Path.Combine(dir,"archive.bin")),"SUBSTITUTED_SOURCE_RENAMED");
++            });
++            Case("directory pathname replacement after capture rejects changed identity",()=>{
++                string dir=Dir("directory-substitution"); Write(Path.Combine(dir,"source.bin"),Original);
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                Directory.Move(dir,dir+"-retained");
++                Directory.CreateDirectory(dir); Write(Path.Combine(dir,"source.bin"),Original);
++                Rejected(()=>FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",before),"DIRECTORY_IDENTITY_CHANGED");
++                Text(Path.Combine(dir+"-retained","source.bin"),Original); Text(Path.Combine(dir,"source.bin"),Original);
++                Check(!File.Exists(Path.Combine(dir,"archive.bin")),"SUBSTITUTED_DIRECTORY_USED");
++            });
++            Case("same-file content change after capture rejects changed bytes",()=>{
++                string dir=Dir("content-change"); Write(Path.Combine(dir,"source.bin"),Original);
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                File.WriteAllText(Path.Combine(dir,"source.bin"),"SYNTHETIC CHANGED BY OTHER TEST ACTOR");
++                Rejected(()=>FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",before),"SOURCE_CONTENT_OR_METADATA_CHANGED");
++                Text(Path.Combine(dir,"source.bin"),"SYNTHETIC CHANGED BY OTHER TEST ACTOR");
++                Check(!File.Exists(Path.Combine(dir,"archive.bin")),"CHANGED_BYTES_RENAMED");
++            });
++            Case("held parent/source handles reject move and write interference",()=>{
++                string dir=Dir("held-handles"); Write(Path.Combine(dir,"source.bin"),Original);
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                using(var op=FixtureArchive.Prepare(dir,"source.bin","archive.bin",before)) {
++                    bool parentBlocked=false,sourceBlocked=false,writeBlocked=false;
++                    try { Directory.Move(dir,dir+"-unexpected"); } catch(IOException) { parentBlocked=true; }
++                    try { File.Move(Path.Combine(dir,"source.bin"),Path.Combine(dir,"unexpected.bin")); } catch(IOException) { sourceBlocked=true; }
++                    try { using(var writer=new FileStream(Path.Combine(dir,"source.bin"),FileMode.Open,FileAccess.Write,FileShare.ReadWrite|FileShare.Delete)){} }
++                    catch(IOException) { writeBlocked=true; }
++                    Check(parentBlocked && sourceBlocked && writeBlocked,"HELD_HANDLE_INTERFERENCE_NOT_BLOCKED");
++                    op.SubmitOnce(); Archived(op.VerifySubmitted());
++                }
++                Text(Path.Combine(dir,"archive.bin"),Original);
++            });
++            Case("one prepared operation cannot submit twice, including after rejection",()=>{
++                string dir=Dir("one-submission"); Write(Path.Combine(dir,"source.bin"),Original);
++                Write(Path.Combine(dir,"archive.bin"),"SYNTHETIC EXISTING");
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                using(var op=FixtureArchive.Prepare(dir,"source.bin","archive.bin",before)) {
++                    op.SubmitOnce(); Check(op.VerifySubmitted().Status=="REJECTED_DESTINATION_EXISTS","FIRST_RESULT");
++                    Rejected(()=>op.SubmitOnce(),"SUBMISSION_ALREADY_CONSUMED");
++                    Check(op.Submissions==1,"RETRY_COUNT_CHANGED");
++                }
++                Text(Path.Combine(dir,"source.bin"),Original); Text(Path.Combine(dir,"archive.bin"),"SYNTHETIC EXISTING");
++            });
++            Case("fixture root, traversal, alternate stream and same-leaf inputs fail before rename",()=>{
++                string dir=Dir("unsafe-inputs"); Write(Path.Combine(dir,"archive.bin"),Original);
++                Rejected(()=>FixtureArchive.Capture(@"C:\not-an-admitted-fixture","source.bin"),"FIXTURE_ROOT_ONLY");
++                Rejected(()=>FixtureArchive.Capture(dir+@"\..\normal","archive.bin"),"NONCANONICAL_PATH");
++                Rejected(()=>FixtureArchive.Capture(dir,"archive.bin:stream"),"UNSAFE_LEAF");
++                var before=FixtureArchive.Capture(dir,"archive.bin");
++                Rejected(()=>FixtureArchive.ArchiveOnce(dir,"archive.bin","ARCHIVE.BIN",before),"SAME_LEAF_REJECTED");
++            });
++        }
++        public static void RunDirectoryDestinationCase() {
++            Case("preexisting directory destination rejected without replacing directory or source",()=>{
++                string dir=Dir("directory-destination"); Write(Path.Combine(dir,"source.bin"),Original);
++                Directory.CreateDirectory(Path.Combine(dir,"archive.bin"));
++                Write(Path.Combine(dir,"archive.bin","sentinel.bin"),"SYNTHETIC RETAINED DIRECTORY");
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                var result=FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",before);
++                Check(result.Status!="ARCHIVED_AND_VERIFIED","DIRECTORY_DESTINATION_REPLACED");
++                Text(Path.Combine(dir,"source.bin"),Original);
++                Text(Path.Combine(dir,"archive.bin","sentinel.bin"),"SYNTHETIC RETAINED DIRECTORY");
++                Console.WriteLine("# existing directory nativeError="+result.NativeError+" status="+result.Status);
++            });
++        }
++        public static void PrepareProcessRace() {
++            string dir=Dir("process-race");
++            Write(Path.Combine(dir,"source-a.bin"),"SYNTHETIC PROCESS A");
++            Write(Path.Combine(dir,"source-b.bin"),"SYNTHETIC PROCESS B");
++        }
++        public static void RaceChildOnly(string contender) {
++            Check(contender=="A"||contender=="B","FIXED_CONTENDER_ONLY");
++            string dir=Path.Combine(Session,"process-race");
++            string leaf=contender=="A"?"source-a.bin":"source-b.bin";
++            var before=FixtureArchive.Capture(dir,leaf);
++            using(var op=FixtureArchive.Prepare(dir,leaf,"archive.bin",before)) {
++                Console.WriteLine("READY"); Console.Out.Flush();
++                Check(Console.ReadLine()=="GO","FIXED_RACE_GO_REQUIRED");
++                op.SubmitOnce(); var result=op.VerifySubmitted();
++                Console.WriteLine(result.Status+"|"+result.NativeError+"|"+result.Submissions);
++                Console.Out.Flush();
++            }
++        }
++        public static void CheckProcessRace(string first,string second) {
++            Case("two actual child processes contend for the same destination",()=>{
++                bool a=first=="ARCHIVED_AND_VERIFIED|0|1",b=second=="ARCHIVED_AND_VERIFIED|0|1";
++                Check(a^b,"PROCESS_RACE_NOT_ONE_WINNER");
++                string loser=a?second:first;
++                Check(loser=="REJECTED_DESTINATION_EXISTS|183|1" || loser=="REJECTED_DESTINATION_EXISTS|80|1","PROCESS_RACE_LOSER_NOT_COLLISION");
++                string dir=Path.Combine(Session,"process-race");
++                Text(Path.Combine(dir,"archive.bin"),a?"SYNTHETIC PROCESS A":"SYNTHETIC PROCESS B");
++                Text(Path.Combine(dir,a?"source-b.bin":"source-a.bin"),a?"SYNTHETIC PROCESS B":"SYNTHETIC PROCESS A");
++                Check(!File.Exists(Path.Combine(dir,a?"source-a.bin":"source-b.bin")),"PROCESS_RACE_WINNER_SOURCE_REMAINS");
++                Console.WriteLine("# independentProcesses=2 dispatches=2 winner="+(a?"A":"B")+" loser="+loser);
++            });
++        }
++        public static FileBinding PrepareHardlinkFixture() {
++            string dir=Dir("hardlink-source"); Write(Path.Combine(dir,"source.bin"),Original);
++            return FixtureArchive.Capture(dir,"source.bin");
++        }
++        public static void CheckHardlink(FileBinding binding) {
++            Case("actual source hardlink rejected and both names retained",()=>{
++                string dir=Path.Combine(Session,"hardlink-source");
++                Rejected(()=>FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",binding),"HARDLINK_SOURCE_REJECTED");
++                Text(Path.Combine(dir,"source.bin"),Original); Text(Path.Combine(dir,"alias.bin"),Original);
++                Check(!File.Exists(Path.Combine(dir,"archive.bin")),"HARDLINK_RENAMED");
++            });
++        }
++        public static void PrepareCrashFixture() {
++            string dir=Dir("crash-after-kernel"); Write(Path.Combine(dir,"source.bin"),Original);
++        }
++        public static void CrashChildOnly() {
++            string dir=Path.Combine(Session,"crash-after-kernel");
++            var before=FixtureArchive.Capture(dir,"source.bin");
++            using(var op=FixtureArchive.Prepare(dir,"source.bin","archive.bin",before)) {
++                int error=op.SubmitOnce();
++                if(error!=0) { Console.WriteLine("CHILD_NATIVE_REJECTED_"+error); Environment.Exit(74); }
++                Console.WriteLine("CHILD_NATIVE_RENAME_SUCCEEDED_NO_VERIFIED_RECEIPT");
++                Console.Out.Flush();
++                Environment.Exit(73); // Abrupt process exit before VerifySubmitted. No cleanup/restore/retry.
++            }
++        }
++        public static void CheckCrashResult(int exitCode,string childOutput) {
++            Case("real child exit after kernel rename is unresolved; retained archive and no resubmit",()=>{
++                Check(exitCode==73 && childOutput.Trim()=="CHILD_NATIVE_RENAME_SUCCEEDED_NO_VERIFIED_RECEIPT","CRASH_POINT_NOT_REACHED");
++                string dir=Path.Combine(Session,"crash-after-kernel");
++                Check(!File.Exists(Path.Combine(dir,"source.bin")),"CRASH_SOURCE_STATE_UNEXPECTED");
++                Text(Path.Combine(dir,"archive.bin"),Original);
++                // Inspect existing fixture only. Do not resubmit, recreate source, restore, or clean up.
++                Console.WriteLine("# classification=UNRESOLVED_NO_VERIFIED_RECEIPT childLaunches=1 retries=0 cleanup=0 retained=archive.bin");
++            });
++        }
++    }
++}
+diff --git a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/invoke-fixture-tests.ps1 b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/invoke-fixture-tests.ps1
+new file mode 100644
+--- /dev/null
++++ b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145700Z/invoke-fixture-tests.ps1
+@@ -0,0 +1,55 @@
++# OFFLINE F2-A FIXTURE TESTS ONLY. Not a preflight or production entrypoint.
++[CmdletBinding()]
++param([switch]$CrashFixtureOnly,[ValidateSet('A','B')][string]$RaceFixtureOnly)
++$ErrorActionPreference='Stop'
++$expected='C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-f2a-windows-archive-20261014T145700Z'
++if(-not [String]::Equals($PSScriptRoot,$expected,[StringComparison]::OrdinalIgnoreCase)){throw 'FIXED_CANDIDATE_DIRECTORY_REQUIRED'}
++if($CrashFixtureOnly -and $RaceFixtureOnly){throw 'ONE_FIXTURE_MODE_ONLY'}
++Add-Type -Path @((Join-Path $PSScriptRoot 'windows-archive-fixture.cs'),(Join-Path $PSScriptRoot 'windows-archive-fixture.tests.cs')) -ErrorAction Stop
++if($CrashFixtureOnly){[YTraceF2A.FixtureTests]::CrashChildOnly();throw 'CRASH_CHILD_RETURNED'}
++if($RaceFixtureOnly){[YTraceF2A.FixtureTests]::RaceChildOnly($RaceFixtureOnly);exit 0}
++function New-FixtureChild([string[]]$ExtraArgs){
++    $start=[Diagnostics.ProcessStartInfo]::new()
++    $start.FileName='C:\Users\Christopher x Angel\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.exe'
++    $start.UseShellExecute=$false;$start.CreateNoWindow=$true
++    $start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true;$start.RedirectStandardInput=$true
++    foreach($arg in @('-NoLogo','-NoProfile','-NonInteractive','-File',(Join-Path $PSScriptRoot 'invoke-fixture-tests.ps1'))+$ExtraArgs){$start.ArgumentList.Add($arg)}
++    $start.WorkingDirectory=$PSScriptRoot
++    $start.Environment.Clear()
++    $start.Environment['SystemRoot']='C:\Windows';$start.Environment['WINDIR']='C:\Windows'
++    $start.Environment['TEMP']=(Join-Path $PSScriptRoot 'compiler-temp');$start.Environment['TMP']=(Join-Path $PSScriptRoot 'compiler-temp')
++    $child=[Diagnostics.Process]::new();$child.StartInfo=$start
++    $null=$child.Start()
++    return $child
++}
++Write-Output '# Actual Windows NTFS disposable-fixture suite; no production I/O'
++[YTraceF2A.FixtureTests]::RunMainCases()
++[YTraceF2A.FixtureTests]::RunDirectoryDestinationCase()
++$session=[YTraceF2A.FixtureTests]::Session
++# Preserve real Access-is-denied evidence from the two earlier revisions.
++# No retry via an alternate API or privilege escalation; these properties remain BLOCKED.
++Write-Output '# BLOCKED: actual junction/redirection and hardlink fixtures; creation was denied in preserved prior runs. No alternate attempt.'
++[YTraceF2A.FixtureTests]::PrepareProcessRace()
++$a=New-FixtureChild -ExtraArgs @('-RaceFixtureOnly','A')
++$b=New-FixtureChild -ExtraArgs @('-RaceFixtureOnly','B')
++$ea=$a.StandardError.ReadToEndAsync();$eb=$b.StandardError.ReadToEndAsync()
++$readyA=$a.StandardOutput.ReadLineAsync();$readyB=$b.StandardOutput.ReadLineAsync()
++if(-not $readyA.Wait(15000) -or -not $readyB.Wait(15000)){throw 'PROCESS_RACE_READY_TIMEOUT_UNRESOLVED_RETAIN_FIXTURES_NO_RETRY'}
++if($readyA.Result -ne 'READY' -or $readyB.Result -ne 'READY'){throw 'PROCESS_RACE_READY_MISMATCH'}
++$a.StandardInput.WriteLine('GO');$a.StandardInput.Flush();$a.StandardInput.Close()
++$b.StandardInput.WriteLine('GO');$b.StandardInput.Flush();$b.StandardInput.Close()
++$oa=$a.StandardOutput.ReadToEndAsync();$ob=$b.StandardOutput.ReadToEndAsync()
++if(-not $a.WaitForExit(15000) -or -not $b.WaitForExit(15000)){throw 'PROCESS_RACE_EXIT_TIMEOUT_UNRESOLVED_RETAIN_FIXTURES_NO_RETRY'}
++if($a.ExitCode -ne 0 -or $b.ExitCode -ne 0 -or $ea.GetAwaiter().GetResult().Length -ne 0 -or $eb.GetAwaiter().GetResult().Length -ne 0){throw 'PROCESS_RACE_CHILD_FAILED'}
++[YTraceF2A.FixtureTests]::CheckProcessRace($oa.GetAwaiter().GetResult().Trim(),$ob.GetAwaiter().GetResult().Trim())
++[YTraceF2A.FixtureTests]::PrepareCrashFixture()
++$child=New-FixtureChild -ExtraArgs @('-CrashFixtureOnly')
++$out=$child.StandardOutput.ReadToEndAsync();$err=$child.StandardError.ReadToEndAsync()
++if(-not $child.WaitForExit(15000)){throw 'OFFLINE_CRASH_CHILD_TIMEOUT_UNRESOLVED_RETAIN_FIXTURES_NO_RETRY'}
++$childOut=$out.GetAwaiter().GetResult();$childErr=$err.GetAwaiter().GetResult()
++if($childErr.Length -ne 0){throw 'OFFLINE_CRASH_CHILD_STDERR_NONEMPTY'}
++[YTraceF2A.FixtureTests]::CheckCrashResult($child.ExitCode,$childOut)
++Write-Output ('1..'+[YTraceF2A.FixtureTests]::Total)
++Write-Output ('# pass='+[YTraceF2A.FixtureTests]::Passed+' fail='+[YTraceF2A.FixtureTests]::Failed+' blockedProperties=2 fixtures-retained=true')
++if([YTraceF2A.FixtureTests]::Failed -ne 0){exit 1}
++exit 0

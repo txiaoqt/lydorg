@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-10-12T12:02:36.743Z",
+  "status": "PASS",
+  "scope": "Every generated textual browser artifact; static pattern and explicit canary scan only, not a universal secret-detection guarantee.",
+  "files": 32,
+  "bytes": 9133764,
+  "productionAnonJwtLiterals": 1,
+  "serviceRoleJwtLiterals": 0,
+  "secretKeyLiterals": 0,
+  "operatorVariableLiterals": 0,
+  "unexpectedSupabaseOrigins": 0,
+  "canaryLiterals": 0,
+  "fixedReleaseVersionLiterals": 1,
+  "sourceMaps": 0,
+  "secretValuesRecorded": false
+}

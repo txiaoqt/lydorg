@@ -1,0 +1,130 @@
+{
+  "recordedAt": "2026-10-12T09:31:40.830Z",
+  "files": [
+    {
+      "path": "domain-scope-discovery-1791796763512.json",
+      "bytes": 467,
+      "sha256": "4740199fd1380bd5789511dc93979da13304eb4657eac195acf02fde830a4999"
+    },
+    {
+      "path": "domain-scope-discovery-1791796980988.json",
+      "bytes": 467,
+      "sha256": "ba8c53430e660ad4d7bd71498c2afd6a9458d609b76d7ec0d481051747c0b74a"
+    },
+    {
+      "path": "execution-report.md",
+      "bytes": 6736,
+      "sha256": "840a34af52c4b910bf98ac692df9aff6034abf6e5a34a110430b5bfc16300058"
+    },
+    {
+      "path": "final-alias-verification.json",
+      "bytes": 582,
+      "sha256": "60624573106979f6745a7c2cbe3bc8eb89ead31f864d495629df655c4a98df54"
+    },
+    {
+      "path": "final-promotion-receipt.json",
+      "bytes": 3101,
+      "sha256": "7abcc787614d4842c1ec580c9866ec77d1e04e63c47cd8977d1032dad8949ae2"
+    },
+    {
+      "path": "gateway-immediate-preflight.json",
+      "bytes": 389,
+      "sha256": "08eed0b464ea30b1821721bb7d0134c06074341ad31f78e2ca060156043a71f5"
+    },
+    {
+      "path": "gateway-postflight.json",
+      "bytes": 389,
+      "sha256": "b065112a910671b8c01c20deee2812c14cff4e0b8dcee294fe841956bf8690f3"
+    },
+    {
+      "path": "guard-local-validation.json",
+      "bytes": 224,
+      "sha256": "fa1d424013e9b24f6632ec7775f712676fc1188d8f22edcb5ef2b3ec0c5d5888"
+    },
+    {
+      "path": "immediate-locked-preflight.json",
+      "bytes": 4601,
+      "sha256": "75efa7cfaf8a399fbd600f78ba48ea12eafacdd5c4b90e4362c2bece65405688"
+    },
+    {
+      "path": "preflight.json",
+      "bytes": 4559,
+      "sha256": "8c88165544928ee4c31b8626e202c2d50bd67ae8f269091423f933c6116ab6c4"
+    },
+    {
+      "path": "preservation.json",
+      "bytes": 740,
+      "sha256": "f1eec9d8d9aec763a58bcfa315202132adcad07a3b1ac30b6ec7a5e1a660cbfa"
+    },
+    {
+      "path": "promotion-submission-receipt.json",
+      "bytes": 1258,
+      "sha256": "b78b142da85c1f4ab0d81973396470fce50b01e1fc463c92a131da0346594d25"
+    },
+    {
+      "path": "provider-authoritative-observation-1791797137235.json",
+      "bytes": 3646,
+      "sha256": "1aa2d0d236cf79ceb42a1e42b4406e7cd02778a583bb939b17a200aabc0014eb"
+    },
+    {
+      "path": "provider-postflight.json",
+      "bytes": 3922,
+      "sha256": "aaac68a9afa21f22dceee1d15de0dc87551965b621ffd96df37f93d79330fca5"
+    },
+    {
+      "path": "public-http-postflight.json",
+      "bytes": 87094,
+      "sha256": "e11af392a1ef7a2be95fadd584cd2ab3b4c26ea0a110a0cc16275eb15b319fac"
+    },
+    {
+      "path": "transport-guard-receipt.json",
+      "bytes": 553,
+      "sha256": "9d991fde7d254e23cb5c2919eac4a9d34b4b3b05bd11ac224f2806cdb5f30ef0"
+    }
+  ],
+  "localOperationFiles": [
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/cli-no-retry-preload.mjs",
+      "bytes": 1336,
+      "sha256": "278d0fc944a53cfeb7cf0b8e8a81ffc4b09fc4ea153a8d6f1d8d9150985a4937"
+    },
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/preflight.mjs",
+      "bytes": 6273,
+      "sha256": "2a8b062a568090e2eaad7efa0a25d576f1369f961d40a6291f314d7b125481b1"
+    },
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/promote-once.mjs",
+      "bytes": 5140,
+      "sha256": "fc2d5a0d9b0706d508de5b076748618ae99de6c26fe94bcbc2466953441c8492"
+    },
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/promotion-attempt.json",
+      "bytes": 983,
+      "sha256": "81a249ed92bea11ca22b5a52a3c01759e70e4087cb1e16647ef57d37b7d01ee5"
+    },
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/single-request-guard.mjs",
+      "bytes": 1446,
+      "sha256": "76947a865963a6f11c89338a7e7fb8aada0f32eb1994856a77772e76e4428967"
+    },
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/verify-provider.mjs",
+      "bytes": 4654,
+      "sha256": "14d29f48ff9908debd7ec94b48437a4e12a0d3571afd5f48e15b88c53609e0c1"
+    },
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/verify-public-http.mjs",
+      "bytes": 10328,
+      "sha256": "582133c54532fa4a46ec0cc202cb3593ec56004b7acfa8a152093eeea418eae4"
+    },
+    {
+      "path": ".agent/admin-promotion-20261012T091404Z/write-final-report.mjs",
+      "bytes": 13180,
+      "sha256": "54b0f79b84d1266827b03f2f5c4b4c31f58434f980c6b6afb847014ffb0097c3"
+    }
+  ],
+  "inventorySha256": "7c2062f9a1b13613064bf508ee91aa1f50fc080ad9cfdb0dd9d255aae68d8e27",
+  "localOperationInventorySha256": "e8a9b56894643e1a246eda302b3fc86bdaa2c01c40cb30e326cbc23d79912e81",
+  "selfExcluded": true
+}

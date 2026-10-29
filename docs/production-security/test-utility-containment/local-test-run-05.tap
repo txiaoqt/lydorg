@@ -1,0 +1,437 @@
+TAP version 13
+# Subtest: production containment actual PostgreSQL validation
+    # Subtest: unmodified production manifest fails closed on an isolated local catalog
+    ok 1 - unmodified production manifest fails closed on an isolated local catalog
+      ---
+      duration_ms: 66.282
+      ...
+    # Subtest: exact candidate bodies install atomically with only a declared local catalog substitution
+    ok 2 - exact candidate bodies install atomically with only a declared local catalog substitution
+      ---
+      duration_ms: 73.1424
+      ...
+    # Subtest: anon: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 3 - anon: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 23.5132
+      ...
+    # Subtest: anon: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+    ok 4 - anon: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+      ---
+      duration_ms: 23.3516
+      ...
+    # Subtest: anon: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+    ok 5 - anon: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+      ---
+      duration_ms: 25.6792
+      ...
+    # Subtest: anon: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+    ok 6 - anon: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+      ---
+      duration_ms: 31.7461
+      ...
+    # Subtest: anon: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+    ok 7 - anon: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 31.1495
+      ...
+    # Subtest: anon: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+    ok 8 - anon: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 31.7006
+      ...
+    # Subtest: anon: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+    ok 9 - anon: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+      ---
+      duration_ms: 30.297
+      ...
+    # Subtest: anon: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 10 - anon: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 32.6236
+      ...
+    # Subtest: anon: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+    ok 11 - anon: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 33.4812
+      ...
+    # Subtest: anon: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+    ok 12 - anon: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+      ---
+      duration_ms: 32.1136
+      ...
+    # Subtest: anon: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+    ok 13 - anon: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+      ---
+      duration_ms: 29.1111
+      ...
+    # Subtest: anon: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+    ok 14 - anon: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+      ---
+      duration_ms: 24.4669
+      ...
+    # Subtest: authenticated: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 15 - authenticated: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 30.5193
+      ...
+    # Subtest: authenticated: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+    ok 16 - authenticated: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+      ---
+      duration_ms: 20.1268
+      ...
+    # Subtest: authenticated: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+    ok 17 - authenticated: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+      ---
+      duration_ms: 21.6379
+      ...
+    # Subtest: authenticated: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+    ok 18 - authenticated: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+      ---
+      duration_ms: 24.1571
+      ...
+    # Subtest: authenticated: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+    ok 19 - authenticated: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 28.0666
+      ...
+    # Subtest: authenticated: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+    ok 20 - authenticated: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 24.3702
+      ...
+    # Subtest: authenticated: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+    ok 21 - authenticated: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+      ---
+      duration_ms: 20.3144
+      ...
+    # Subtest: authenticated: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 22 - authenticated: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 24.018
+      ...
+    # Subtest: authenticated: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+    ok 23 - authenticated: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 23.036
+      ...
+    # Subtest: authenticated: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+    ok 24 - authenticated: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+      ---
+      duration_ms: 24.1339
+      ...
+    # Subtest: authenticated: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+    ok 25 - authenticated: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+      ---
+      duration_ms: 31.0702
+      ...
+    # Subtest: authenticated: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+    ok 26 - authenticated: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+      ---
+      duration_ms: 22.1479
+      ...
+    # Subtest: service_role: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 27 - service_role: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 20.9299
+      ...
+    # Subtest: service_role: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+    ok 28 - service_role: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+      ---
+      duration_ms: 23.9244
+      ...
+    # Subtest: service_role: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+    ok 29 - service_role: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+      ---
+      duration_ms: 21.845
+      ...
+    # Subtest: service_role: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+    ok 30 - service_role: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+      ---
+      duration_ms: 19.3326
+      ...
+    # Subtest: service_role: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+    ok 31 - service_role: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 18.7944
+      ...
+    # Subtest: service_role: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+    ok 32 - service_role: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 22.4083
+      ...
+    # Subtest: service_role: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+    ok 33 - service_role: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+      ---
+      duration_ms: 19.0542
+      ...
+    # Subtest: service_role: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 34 - service_role: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 20.2136
+      ...
+    # Subtest: service_role: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+    ok 35 - service_role: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 25.775
+      ...
+    # Subtest: service_role: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+    ok 36 - service_role: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+      ---
+      duration_ms: 18.2851
+      ...
+    # Subtest: service_role: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+    ok 37 - service_role: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+      ---
+      duration_ms: 20.6403
+      ...
+    # Subtest: service_role: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+    ok 38 - service_role: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+      ---
+      duration_ms: 20.8335
+      ...
+    # Subtest: postgres: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 39 - postgres: admin_cleanup_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 18.2609
+      ...
+    # Subtest: postgres: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+    ok 40 - postgres: admin_ensure_renewal_test_account_profile(text) denied with protected data unchanged
+      ---
+      duration_ms: 17.5391
+      ...
+    # Subtest: postgres: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+    ok 41 - postgres: admin_get_or_create_renewal_test_account(text) denied with protected data unchanged
+      ---
+      duration_ms: 20.9428
+      ...
+    # Subtest: postgres: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+    ok 42 - postgres: admin_prepare_renewal_test_scenario(text,integer,date) denied with protected data unchanged
+      ---
+      duration_ms: 21.4772
+      ...
+    # Subtest: postgres: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+    ok 43 - postgres: admin_reset_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 19.6718
+      ...
+    # Subtest: postgres: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+    ok 44 - postgres: admin_restore_renewal_test_scenario(text) denied with protected data unchanged
+      ---
+      duration_ms: 18.3369
+      ...
+    # Subtest: postgres: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+    ok 45 - postgres: admin_seed_renewal_test_registration_documents(text) denied with protected data unchanged
+      ---
+      duration_ms: 22.9854
+      ...
+    # Subtest: postgres: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+    ok 46 - postgres: admin_seed_yorp_sample_dataset(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 19.0261
+      ...
+    # Subtest: postgres: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+    ok 47 - postgres: admin_seed_yorp_sample_dataset_core(text,text) denied with protected data unchanged
+      ---
+      duration_ms: 16.8221
+      ...
+    # Subtest: postgres: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+    ok 48 - postgres: diversify_yorp_seed_projects_and_budgets() denied with protected data unchanged
+      ---
+      duration_ms: 22.3147
+      ...
+    # Subtest: postgres: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+    ok 49 - postgres: rebalance_yorp_seed_reporting_quarters() denied with protected data unchanged
+      ---
+      duration_ms: 20.6883
+      ...
+    # Subtest: postgres: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+    ok 50 - postgres: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text) denied with protected data unchanged
+      ---
+      duration_ms: 18.6081
+      ...
+    # Subtest: Super Admin token cannot run production-disabled test mutations
+    ok 51 - Super Admin token cannot run production-disabled test mutations
+      ---
+      duration_ms: 223.5737
+      ...
+    # Subtest: no production-disabled mutation retains PUBLIC or API/inherited EXECUTE
+    ok 52 - no production-disabled mutation retains PUBLIC or API/inherited EXECUTE
+      ---
+      duration_ms: 18.4926
+      ...
+    # Subtest: environment fails closed for every editable setting and missing setting
+    ok 53 - environment fails closed for every editable setting and missing setting
+      ---
+      duration_ms: 12.8028
+      ...
+    # Subtest: retained sample status rejects reviewer session
+    ok 54 - retained sample status rejects reviewer session
+      ---
+      duration_ms: 30.3711
+      ...
+    # Subtest: retained sample status rejects expired session
+    ok 55 - retained sample status rejects expired session
+      ---
+      duration_ms: 18.7098
+      ...
+    # Subtest: retained sample status rejects revoked session
+    ok 56 - retained sample status rejects revoked session
+      ---
+      duration_ms: 23.1066
+      ...
+    # Subtest: retained sample status rejects invalid session
+    ok 57 - retained sample status rejects invalid session
+      ---
+      duration_ms: 22.2465
+      ...
+    # Subtest: retained status accepts active Super Admin over anon custom-session transport
+    ok 58 - retained status accepts active Super Admin over anon custom-session transport
+      ---
+      duration_ms: 11.1358
+      ...
+    # Subtest: inactive Super Admin is denied by the real captured token validator
+    ok 59 - inactive Super Admin is denied by the real captured token validator
+      ---
+      duration_ms: 21.1612
+      ...
+    # Subtest: anon: fixture markers cannot be changed
+    ok 60 - anon: fixture markers cannot be changed
+      ---
+      duration_ms: 88.5172
+      ...
+    # Subtest: authenticated: fixture markers cannot be changed
+    ok 61 - authenticated: fixture markers cannot be changed
+      ---
+      duration_ms: 92.8745
+      ...
+    # Subtest: service_role: fixture markers cannot be changed
+    ok 62 - service_role: fixture markers cannot be changed
+      ---
+      duration_ms: 90.2506
+      ...
+    # Subtest: postgres: fixture markers cannot be changed
+    ok 63 - postgres: fixture markers cannot be changed
+      ---
+      duration_ms: 90.0309
+      ...
+    # Subtest: ordinary new profiles cannot introduce any fixture marker
+    ok 64 - ordinary new profiles cannot introduce any fixture marker
+      ---
+      duration_ms: 90.8235
+      ...
+    # Subtest: security-definer owner cannot bypass marker protection for an organization caller
+    ok 65 - security-definer owner cannot bypass marker protection for an organization caller
+      ---
+      duration_ms: 18.7153
+      ...
+    # Subtest: normal profile edits retain existing fixture markers
+    ok 66 - normal profile edits retain existing fixture markers
+      ---
+      duration_ms: 3.6495
+      ...
+    # Subtest: fixture flag and arbitrary test GUC cannot alter or delete accreditation history
+    ok 67 - fixture flag and arbitrary test GUC cannot alter or delete accreditation history
+      ---
+      duration_ms: 149.2897
+      ...
+    # Subtest: fixture flag and test GUC cannot reopen or delete terminal renewals
+    ok 68 - fixture flag and test GUC cannot reopen or delete terminal renewals
+      ---
+      duration_ms: 38.7015
+      ...
+    # Subtest: budget_requests: owner and definer cannot change seed markers; normal edits still work
+    ok 69 - budget_requests: owner and definer cannot change seed markers; normal edits still work
+      ---
+      duration_ms: 132.0165
+      ...
+    # Subtest: liquidation_reports: owner and definer cannot change seed markers; normal edits still work
+    ok 70 - liquidation_reports: owner and definer cannot change seed markers; normal edits still work
+      ---
+      duration_ms: 131.6519
+      ...
+    # Subtest: document_submissions: owner and definer cannot change seed markers; normal edits still work
+    ok 71 - document_submissions: owner and definer cannot change seed markers; normal edits still work
+      ---
+      duration_ms: 139.7007
+      ...
+    # Subtest: document_submission_files: owner and definer cannot change seed markers; normal edits still work
+    ok 72 - document_submission_files: owner and definer cannot change seed markers; normal edits still work
+      ---
+      duration_ms: 142.2127
+      ...
+    # Subtest: normal revocation works; revoked term and revocation evidence cannot be rewritten
+    ok 73 - normal revocation works; revoked term and revocation evidence cannot be rewritten
+      ---
+      duration_ms: 40.2419
+      ...
+    # Subtest: normal renewal draft, submission, valid Admin review and three-year approval remain operational
+    ok 74 - normal renewal draft, submission, valid Admin review and three-year approval remain operational
+      ---
+      duration_ms: 171.3232
+      ...
+    # Subtest: normal registration revision, Admin review and initial accreditation remain operational
+    ok 75 - normal registration revision, Admin review and initial accreditation remain operational
+      ---
+      duration_ms: 39.7354
+      ...
+    # Subtest: authorized account deletion works only without retained official history
+    ok 76 - authorized account deletion works only without retained official history
+      ---
+      duration_ms: 38.3924
+      ...
+    # Subtest: legitimate deletion trigger exception is retained and scoped to the transaction
+    ok 77 - legitimate deletion trigger exception is retained and scoped to the transaction
+      ---
+      duration_ms: 21.3548
+      ...
+    # Subtest: stored test functions expose only denial, no embedded credential expression or response
+    ok 78 - stored test functions expose only denial, no embedded credential expression or response
+      ---
+      duration_ms: 10.4681
+      ...
+    # Subtest: second installation stops rather than reapplying or changing data
+    ok 79 - second installation stops rather than reapplying or changing data
+      ---
+      duration_ms: 40.8933
+      ...
+    1..79
+ok 1 - production containment actual PostgreSQL validation
+  ---
+  duration_ms: 5899.1775
+  ...
+# Subtest: catalog drift and postcondition failure roll back the whole proposed transaction
+    # Subtest: ACL drift rejected before mutation
+    ok 1 - ACL drift rejected before mutation
+      ---
+      duration_ms: 48.2024
+      ...
+    # Subtest: function-body drift rejected before mutation
+    ok 2 - function-body drift rejected before mutation
+      ---
+      duration_ms: 23.0552
+      ...
+    # Subtest: postcondition failure atomically restores all original functions/grants and history
+    ok 3 - postcondition failure atomically restores all original functions/grants and history
+      ---
+      duration_ms: 78.6492
+      ...
+    1..3
+ok 2 - catalog drift and postcondition failure roll back the whole proposed transaction
+  ---
+  duration_ms: 2138.0983
+  ...
+# Subtest: artifact integrity and deployment scope
+ok 3 - artifact integrity and deployment scope
+  ---
+  duration_ms: 1.7358
+  ...
+1..3
+# tests 85
+# suites 0
+# pass 85
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8287.9987

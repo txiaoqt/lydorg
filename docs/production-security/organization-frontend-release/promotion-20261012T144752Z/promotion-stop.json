@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-10-12T15:12:46.604Z",
+  "status": "STOP_AFTER_PROMOTION_ATTEMPT",
+  "reason": "PROMOTION_JOB_NOT_COMPLETED",
+  "attemptMarkerConsumed": true,
+  "acknowledged": true,
+  "automaticRetries": 0,
+  "noAutomaticRollback": true
+}

@@ -1,0 +1,33 @@
+{
+  "evidenceType": "DISPOSABLE_PGLITE_POSTGRESQL",
+  "localEngine": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+  "liveHTTP": false,
+  "productionWrites": 0,
+  "limitation": "Existing runtime is PostgreSQL 18.3. Local installation test substitutes the two whole-catalog hashes and local major-version gate only. Exact pause body, contract/data checks and transaction remain unchanged. Original production candidate tested untouched for fail-closed rejection. No native PostgreSQL 17, live concurrency or HTTP assertions.",
+  "results": [
+    {
+      "check": "Single unconditional function body; original cutover and all predicates preserved",
+      "status": "PASS"
+    },
+    {
+      "check": "Untouched production candidate rejects this local PostgreSQL 18 environment; rollback preserves rows and function",
+      "status": "PASS"
+    },
+    {
+      "check": "Exact pause body/full transaction with local catalog/version gates preserves OID, signature, owner, ACL, settings and all synthetic rows",
+      "status": "PASS"
+    },
+    {
+      "check": "32 PostgreSQL role/session combinations plus null/empty/unknown/mixed IDs denied PT409; validator never runs; rows, notifications, audits, session timestamps and Storage objects unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "Actual captured budget detail, document review and release functions work on disposable records; definitions unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "Cost-contract drift, wrong production origin and injected pre-COMMIT failure abort; atomic rollback preserves original function and rows",
+      "status": "PASS"
+    }
+  ]
+}

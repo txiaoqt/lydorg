@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-10-12T06:03:55.632Z",
+  "deploymentId": "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS",
+  "url": "https://lydorg-1011y7luy-toffs-projects-81b2ce10.vercel.app",
+  "state": "ERROR",
+  "outcome": "STOPPED_AFTER_ONE_ATTEMPT",
+  "failure": "UNREVIEWED_PUBLIC_VARIABLE",
+  "sourceIdentity": "PASS",
+  "productionAliasPreservation": "PASS",
+  "organizationPreservation": "PASS",
+  "gatewayPreservation": "PASS",
+  "hostedAcceptance": "BLOCKED",
+  "promotionDecision": "NO-GO",
+  "automaticRetries": 0,
+  "report": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\frontend-release\\candidate-deployment-20261012T054338Z\\execution-report.md"
+}

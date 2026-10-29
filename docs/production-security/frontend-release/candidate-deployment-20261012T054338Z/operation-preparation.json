@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-12T05:46:22.313Z",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "rootStatus": " M .gitignore\n M build/apple-touch-icon.png\n D build/assets/About-BgE2NY5_.js\n D build/assets/Contacts-PVxhRUkh.js\n D build/assets/Faqs-C1BTPjfA.js\n D build/assets/Index-CKmzLnSI.js\n D build/assets/LegalPolicy-rOEY3vG8.js\n D build/assets/NewsReleases-B8yw4yk-.js\n D build/assets/PublicBudgetTransparency-DleAq-zl.js\n D build/assets/PublicNewsReleaseCard-Bp70quGQ.js\n D build/assets/PublicTemplates-BXSB9xGm.js\n D build/assets/PwaUserPortal-BwzxXVpY.js\n D build/assets/SiteMap-Bv3paW95.js\n D build/assets/exceljs.min-CuiCxha2.js\n D build/assets/facebook-CMEyvuS-.js\n D build/assets/hero-image-_uJVR4fB.webp\n M build/assets/html2canvas.esm-CBrSDip1.js\n D build/assets/index-BcOz4wp7.js\n D build/assets/index-CvrzG9oa.css\n D build/assets/index.es-03HJTjHp.js\n M build/assets/pdf.worker.min-D39lNQBd.mjs\n M build/assets/purify.es-CPrKKeqe.js\n D build/assets/ytrace-community-workshop-azmEJAYn.png\n M build/favicon.ico\n M build/icons/icon-192.png\n M build/icons/icon-512.png\n M build/index.html\n M build/manifest-admin.webmanifest\n M build/manifest.webmanifest\n M build/sw.js\n M build/y-trace-logo-blue.png\n M index.html\n M playwright.config.ts\n M public/manifest-admin.webmanifest\n M public/manifest.webmanifest\n M public/sw.js\n M src/App.tsx\n M src/admin/components/AdminSettingsPage.tsx\n M src/admin/components/RenewalTestEnvironmentPanel.tsx\n M src/admin/renewal-test-environment.test.tsx\n M src/components/portal/UserPortalRenewalWorkspaceView.tsx\n M src/components/portal/UserPortalResponsiveWorkspace.test.tsx\n M src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx\n M src/components/public/PublicTemplatesCatalog.tsx\n M src/lib/admin-lifecycle-user-sync.test.tsx\n M src/lib/admin-system-settings.ts\n M src/lib/audit-records-hardening.test.ts\n M src/lib/lydo-connect-store.tsx\n M src/lib/lydo-connect-supabase.ts\n M src/lib/query-client.ts\n M src/lib/renewal-realtime.test.ts\n M src/lib/report-export.test.ts\n M src/lib/section35-reporting.test.ts\n M src/main.tsx\n M src/test/setup.ts\n M src/user/UserPortalEntry.tsx\n M src/user/pwa/PwaAppShell.tsx\n M src/user/pwa/PwaDocumentPreview.tsx\n M src/user/pwa/PwaOrganizationAvatar.tsx\n M src/user/pwa/renewals/PwaRenewalPage.tsx\n M supabase/.temp/cli-latest\n M supabase/config.toml\n M vite.config.ts\n M vitest.config.ts\n",
+  "priorAttemptMarkerSha256": "e1f4541a15c52a7a0e944a9880dcd64d70683ec76040849301689db81fdc18b6",
+  "priorAttemptPreserved": true,
+  "newAttemptCreated": false,
+  "sourceRevision": "51a18dbc3a799b39d074834edcfe6a9c88de1dd9d115277061e071f9f38c1959",
+  "sourceZipSha256": "324ea22858359d71c4cd94f7da2ee7a658d98327a2bca4e9b7d9facfc10e7984",
+  "sourceZipBytes": 15422629,
+  "artifactInventorySha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d",
+  "deploymentAuthorized": true,
+  "promotionAuthorized": false
+}

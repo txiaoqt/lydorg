@@ -1,0 +1,250 @@
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\budget-runner-core.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\budget-runner-core.mjs"
+index 34dc580..748a852 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\budget-runner-core.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\budget-runner-core.mjs"	
+@@ -56,7 +56,8 @@ export const EXPECTED_FOUNDATION_FINGERPRINTS=Object.freeze({
+   documentSecurityTriggers:'7c6ac12418623c36145f617917db808b65565ed2ea68c81352504a8b92961abf',
+ });
+ export const REVIEWED_CODE_FILES=Object.freeze([
+-  'budget-runner-core.mjs','native-budget-pause-runner.mjs','operation-acl.ps1','native-budget-pause.test.mjs',
++  'budget-runner-core.mjs','native-budget-pause-runner.mjs','operation-acl.ps1',
++  'native-budget-pause-supervisor.mjs','budget-safety-controls.test.mjs',
+ ]);
+ 
+ const canonicalize=value=>{
+@@ -300,7 +301,8 @@ export function verifyControlPlaneProof(value,{now=Date.now(),maxAgeMs=300000}={
+   const expected=['project','host','status','verifiedVia','verifiedAt'];
+   requireGuard(value&&canonicalJson(Object.keys(value).sort())===canonicalJson(expected.sort()),'CONTROL_PLANE_PROOF_SHAPE_MISMATCH');
+   requireGuard(value.project===TARGET.project&&value.host===TARGET.host&&value.status==='ACTIVE_HEALTHY'&&value.verifiedVia==='supabase-control-plane-get-project','CONTROL_PLANE_PROJECT_MISMATCH');
+-  const age=now-Date.parse(value.verifiedAt);
++  requireGuard(Number.isSafeInteger(maxAgeMs)&&maxAgeMs>0&&maxAgeMs<=300000,'CONTROL_PLANE_FRESHNESS_LIMIT_INVALID');
++  const age=now-parseExplicitIso(value.verifiedAt);
+   requireGuard(Number.isFinite(age)&&age>=0&&age<=maxAgeMs,'CONTROL_PLANE_PROOF_EXPIRED');
+   return value;
+ }
+@@ -310,7 +312,7 @@ export function verifyAuthorization(value,{bundleSha256,caSha256,preflightEviden
+   requireGuard(value&&canonicalJson(Object.keys(value).sort())===canonicalJson([...fields].sort()),'AUTHORIZATION_FIELDS_MISMATCH');
+   requireGuard(value.version===1&&value.approved===true&&value.project===TARGET.project&&value.host===TARGET.host&&value.port===TARGET.port&&value.database===TARGET.database&&value.user===TARGET.user&&value.route===TARGET.route&&value.sqlSha256===SQL_SHA&&value.sqlBytes===SQL_BYTES&&value.runnerBundleSha256===bundleSha256&&value.caSha256===caSha256&&value.preflightEvidenceSha256===preflightEvidenceSha256&&/^[a-f0-9]{64}$/.test(value.preflightStateSha256)&&value.exclusiveWindowConfirmed===true&&value.existingDeletionRequestsDrained===true,'AUTHORIZATION_SCOPE_MISMATCH');
+   requireGuard(typeof value.authorizationReference==='string'&&/^[A-Za-z0-9_-]{8,100}$/.test(value.authorizationReference),'AUTHORIZATION_REFERENCE_INVALID');
+-  const approved=Date.parse(value.approvedAt),expires=Date.parse(value.expiresAt);
++  const approved=parseExplicitIso(value.approvedAt),expires=parseExplicitIso(value.expiresAt);
+   requireGuard(Number.isFinite(approved)&&Number.isFinite(expires)&&approved<=now&&expires>now&&expires-approved<=1800000,'AUTHORIZATION_EXPIRED');
+   return value;
+ }
+@@ -406,13 +408,96 @@ export async function verifyOriginalBackendFinished(client,identity){
+ }
+ 
+ export function classifyReconciliation({priorBackendFinished,preState,postState,preservationMatches}){
+-  if(priorBackendFinished!==true)return {classification:'UNRESOLVED',stop:true};
+-  if(preservationMatches!==true)return {classification:'COMMITTED_WITH_DRIFT',stop:true};
+-  const old=preState?.compatibility_sha256===PRE_CATALOG_SHA&&preState?.catalog_matches===true&&preState?.function_matches===true&&preState?.function?.definition_md5===EXPECTED_FUNCTION.definition_md5&&preState?.function?.source_md5===EXPECTED_FUNCTION.source_md5;
+-  const updated=postState?.compatibility_sha256===POST_CATALOG_SHA&&postState?.catalog_matches===true&&postState?.function_matches===true&&postState?.function?.definition_md5===EXPECTED_PAUSED_FUNCTION.definition_md5&&postState?.function?.source_md5===EXPECTED_PAUSED_FUNCTION.source_md5;
+-  if(updated)return {classification:'COMMITTED_AND_VERIFIED',stop:true};
+-  if(old)return {classification:'NOT_INSTALLED_VERIFIED',stop:true};
+-  return {classification:'UNRESOLVED',stop:true};
++  const unresolved={classification:'UNRESOLVED',installationPresence:'UNRESOLVED',preservationStatus:'NOT_VERIFIED',stop:true,sqlResubmitted:false};
++  if(priorBackendFinished!==true||typeof preservationMatches!=='boolean')return unresolved;
++  // Both independent catalog views must describe the same actual function.
++  // Neither a status label nor a preservation failure establishes presence.
++  try{
++    validateBudgetStateShape(preState,'pre');
++    validateBudgetStateShape(postState,'post');
++    requireGuard(preState.compatibility_sha256===postState.compatibility_sha256&&canonicalJson(preState.function)===canonicalJson(postState.function),'RECONCILIATION_SNAPSHOT_CHANGED');
++    const updated=postState.compatibility_sha256===POST_CATALOG_SHA;
++    verifyBudgetState(updated?postState:preState,updated?'post':'pre');
++    return {
++      classification:updated?(preservationMatches?'INSTALLED_AND_PRESERVED':'INSTALLED_WITH_DRIFT'):(preservationMatches?'NOT_INSTALLED_VERIFIED':'NOT_INSTALLED_WITH_DRIFT'),
++      installationPresence:updated?'PRESENT':'ABSENT',
++      preservationStatus:preservationMatches?'MATCH':'DRIFT',
++      rawEvidence:{catalogSha256:preState.compatibility_sha256,functionDefinitionMd5:preState.function.definition_md5,functionSourceMd5:preState.function.source_md5},
++      stop:true,sqlResubmitted:false,
++    };
++  }catch{return unresolved;}
++}
++
++export function parseExplicitIso(value){
++  requireGuard(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.test(value),'EXPLICIT_ISO_TIMESTAMP_REQUIRED');
++  const time=Date.parse(value);
++  requireGuard(Number.isFinite(time),'ISO_TIMESTAMP_INVALID');
++  return time;
++}
++
++function boundedJson(bytes,limit){
++  requireGuard(Buffer.isBuffer(bytes)&&bytes.length>0&&bytes.length<=limit,'EVIDENCE_BYTES_INVALID');
++  const text=bytes.toString('utf8');
++  requireGuard(Buffer.from(text,'utf8').equals(bytes),'EVIDENCE_UTF8_INVALID');
++  let parsed;
++  try{parsed=JSON.parse(text);}catch{requireGuard(false,'EVIDENCE_JSON_INVALID');}
++  return scrubReceiptValue(parsed);
++}
++
++export function verifyControlPlaneProofJson(bytes,{now=Date.now()}={}){
++  const proof=boundedJson(bytes,16384);
++  verifyControlPlaneProof(proof,{now});
++  return {proof,sha256:sha256(bytes),ageSeconds:(now-parseExplicitIso(proof.verifiedAt))/1000};
++}
++
++export function verifyInstallationReceipt({result,receiptBytes,markerBytes,preflightBytes,expectedBundleSha256,expectedRelations,expectedFoundation}){
++  requireGuard(result?.status==='COMMITTED_AND_VERIFIED'&&result.commitAcknowledged===true&&result.submissionCount===1&&result.automaticRetries===0&&result.rollbackStatementsSent===0&&result.retainLock===false&&result.retainAttemptMarker===true&&result.stopForHumanReview!==true,'INSTALL_RESULT_NOT_VERIFIED_SUCCESS');
++  requireGuard(/^[a-f0-9]{64}$/.test(expectedBundleSha256)&&result.project===TARGET.project&&result.sqlSha256===SQL_SHA&&result.runnerBundleSha256===expectedBundleSha256,'INSTALL_RESULT_SCOPE_MISMATCH');
++  requireGuard(Buffer.isBuffer(receiptBytes)&&receiptBytes.length>0&&receiptBytes.length<=1048576,'RECEIPT_SIZE_INVALID');
++  const text=receiptBytes.toString('utf8');
++  requireGuard(Buffer.from(text,'utf8').equals(receiptBytes)&&text.endsWith('\n'),'RECEIPT_INCOMPLETE');
++  const lines=text.slice(0,-1).split('\n');
++  requireGuard(lines.length===4&&lines.every(line=>line.length>0),'RECEIPT_EVENT_COUNT_INVALID');
++  const events=lines.map(line=>boundedJson(Buffer.from(line,'utf8'),262144));
++  requireGuard(events.map(event=>event.event).join(',')==='ATTEMPT_ARMED,COMMIT_ACKNOWLEDGED,POSTFLIGHT_EVIDENCE,POSTFLIGHT_VERIFIED','RECEIPT_EVENT_SEQUENCE_INVALID');
++  const times=events.map(event=>parseExplicitIso(event.capturedAt));
++  requireGuard(times.every((time,index)=>index===0||time>=times[index-1]),'RECEIPT_TIME_SEQUENCE_INVALID');
++  requireGuard(events.every(event=>event.project===TARGET.project&&event.sqlSha256===SQL_SHA),'RECEIPT_SCOPE_MISMATCH');
++  const [armed,commit,post,verified]=events;
++  requireGuard(canonicalJson(commit.commands)===canonicalJson(['COMMIT'])&&verified.commitAcknowledged===true,'RECEIPT_TERMINAL_COMMIT_MISSING');
++  const marker=boundedJson(markerBytes,65536),pre=boundedJson(preflightBytes,2097152);
++  const app=armed.applicationIdentity;
++  requireGuard(app&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(app.nonce)&&app.applicationName==='ytrace-budget-pause-i-'+app.nonce&&app.runnerBundleSha256===expectedBundleSha256,'RECEIPT_APPLICATION_IDENTITY_MISMATCH');
++  requireGuard(Number.isSafeInteger(app.backendPid)&&app.backendPid>0&&typeof app.backendStart==='string','RECEIPT_BACKEND_IDENTITY_MISMATCH');
++  parseExplicitIso(app.backendStart);
++  requireGuard(marker.project===TARGET.project&&marker.route===TARGET.route&&marker.sqlSha256===SQL_SHA&&marker.runnerBundleSha256===expectedBundleSha256&&marker.attempt===1&&marker.submissionMayHaveOccurred===true,'RECEIPT_MARKER_SCOPE_MISMATCH');
++  requireGuard(marker.nonce===app.nonce&&marker.applicationName===app.applicationName&&marker.backendPid===app.backendPid&&marker.backendStart===app.backendStart&&Number.isSafeInteger(marker.lockPid)&&marker.lockPid>0&&typeof marker.lockNonce==='string'&&marker.lockNonce.length>0,'RECEIPT_MARKER_IDENTITY_MISMATCH');
++  const markerTime=parseExplicitIso(marker.startedAt);
++  requireGuard(markerTime>=times[0]&&markerTime<=times[1],'RECEIPT_MARKER_TIME_MISMATCH');
++  requireGuard(marker.preflightFile==='install-preflight-'+app.nonce+'.json'&&result.preflightFile===marker.preflightFile&&result.evidenceFile==='execution-'+app.nonce+'.jsonl'&&marker.preflightSha256===sha256(preflightBytes)&&marker.preflightStateSha256===pre.approvalFingerprint,'RECEIPT_PREFLIGHT_BINDING_MISMATCH');
++  requireGuard(pre.recordType==='YTRACE_BUDGET_PAUSE_NATIVE_PREFLIGHT'&&pre.status==='READ_ONLY_PREFLIGHT_PASS'&&pre.project===TARGET.project&&pre.host===TARGET.host&&pre.route===TARGET.route&&pre.sqlSha256===SQL_SHA&&pre.sqlBytes===SQL_BYTES&&pre.runnerBundleSha256===expectedBundleSha256,'RECEIPT_PREFLIGHT_SCOPE_MISMATCH');
++  requireGuard(pre.approvalFingerprint===preflightStateFingerprint(pre)&&parseExplicitIso(pre.capturedAt)<=times[0],'RECEIPT_PREFLIGHT_STATE_MISMATCH');
++  requireGuard(pre.tls?.chainVerified===true&&pre.tls.hostnameVerified===true&&pre.tls.caSha256===app.caSha256,'RECEIPT_PREFLIGHT_TLS_MISMATCH');
++  requireGuard(Number(pre.identity?.backend_pid)===app.backendPid&&pre.identity.backend_start===app.backendStart&&pre.identity.application_name===app.applicationName,'RECEIPT_PREFLIGHT_BACKEND_MISMATCH');
++  verifyBudgetState(pre.budget,'pre');
++  const protectedData=protectedDataDigest(pre.protectedData,expectedRelations);
++  const stable=stableFoundation(pre.foundation?.value);
++  requireGuard(protectedData.sha256===pre.protectedData.sha256&&hashJson(stable)===pre.foundation.sha256,'RECEIPT_PREFLIGHT_PRESERVATION_MISMATCH');
++  requireGuard(hashJson(foundationStructure(pre.foundation.value))===expectedFoundation.sha256&&canonicalJson(foundationStructure(pre.foundation.value))===canonicalJson(expectedFoundation.structure),'RECEIPT_FOUNDATION_REFERENCE_MISMATCH');
++  requireGuard(post.status==='PASS'&&post.runnerBundleSha256===expectedBundleSha256&&post.catalogSha256===POST_CATALOG_SHA,'RECEIPT_POSTFLIGHT_CATALOG_MISMATCH');
++  validateFunctionContract(post.function,EXPECTED_PAUSED_FUNCTION);
++  requireGuard(canonicalJson(post.migrationHistory)===canonicalJson(HISTORY)&&post.storagePolicyCount===15&&post.storageObjects===pre.budget.storage_objects&&post.organizationProfiles===pre.budget.organization_profiles,'RECEIPT_POSTFLIGHT_COUNTS_MISMATCH');
++  requireGuard(post.protectedInventoryCount===57&&post.protectedInventoriesSha256===protectedData.sha256&&post.foundationSha256===pre.foundation.sha256,'RECEIPT_POSTFLIGHT_PRESERVATION_MISMATCH');
++  requireGuard(post.backend?.pid===app.backendPid&&post.backend.startedAt===app.backendStart&&post.backend.applicationName===app.applicationName,'RECEIPT_POSTFLIGHT_BACKEND_MISMATCH');
++  return {status:'PASS',receiptSha256:sha256(receiptBytes),markerSha256:sha256(markerBytes),preflightSha256:sha256(preflightBytes),terminalCommand:'COMMIT',eventCount:4,protectedInventories:57,catalogSha256:POST_CATALOG_SHA};
++}
++
++export function resultExitCode(mode,result){
++  if(mode==='--review')return result?.status==='PASS'&&result.mode==='OFFLINE_REVIEW'&&result.installationActivated===false?0:2;
++  if(mode==='--preflight')return result?.status==='PASS'&&result.mode==='READ_ONLY_PREFLIGHT'&&result.installationActivated===false?0:2;
++  if(mode!=='--install')return 2; // Reconciliation always stops for human review.
++  const proof=result?.receiptVerification;
++  return result?.status==='COMMITTED_AND_VERIFIED'&&result.commitAcknowledged===true&&result.submissionCount===1&&result.automaticRetries===0&&result.rollbackStatementsSent===0&&result.retainLock===false&&result.retainAttemptMarker===true&&result.stopForHumanReview!==true&&proof?.status==='PASS'&&proof.terminalCommand==='COMMIT'&&proof.eventCount===4&&proof.protectedInventories===57&&proof.catalogSha256===POST_CATALOG_SHA&&['receiptSha256','markerSha256','preflightSha256'].every(key=>/^[a-f0-9]{64}$/.test(proof[key]))?0:2;
+ }
+ 
+ export async function pathExists(path){try{await lstat(path);return true;}catch(error){if(error?.code==='ENOENT')return false;throw error;}}
+@@ -431,6 +516,7 @@ export function environmentSafety(env){
+   const forbidden=['DATABASE_URL','SUPABASE_DB_URL','YTRACE_PRODUCTION_DATABASE_URL','PGSERVICEFILE','PGSERVICE'];
+   requireGuard(forbidden.every(name=>!env[name]),'CONNECTION_STRING_OR_SERVICE_OVERRIDE_FORBIDDEN');
+   requireGuard(env.NODE_OPTIONS===undefined&&env.NODE_EXTRA_CA_CERTS===undefined,'NODE_RUNTIME_OVERRIDE_FORBIDDEN');
++  requireGuard(env.NODE_PG_FORCE_NATIVE===undefined,'NATIVE_DRIVER_OVERRIDE_FORBIDDEN');
+   requireGuard(env.NODE_TLS_REJECT_UNAUTHORIZED!=='0','INSECURE_TLS_ENVIRONMENT');
+   const fixedPg={PGHOST:TARGET.host,PGPORT:String(TARGET.port),PGDATABASE:TARGET.database,PGUSER:TARGET.user};
+   for(const name of Object.keys(env).filter(key=>/^PG[A-Z0-9_]*$/i.test(key))){
+@@ -461,7 +547,7 @@ export function checkManifestShape(manifest){
+ 
+ export function bundleSha256(manifestBytes,codeHashes){
+   const sorted=[...codeHashes].sort((a,b)=>a.file<b.file?-1:a.file>b.file?1:0);
+-  requireGuard(sorted.length===4&&new Set(sorted.map(item=>item.file)).size===4&&sorted.every(item=>/^[a-f0-9]{64}$/.test(item.sha256)),'BUNDLE_CODE_MANIFEST_INVALID');
++  requireGuard(sorted.length===REVIEWED_CODE_FILES.length&&new Set(sorted.map(item=>item.file)).size===REVIEWED_CODE_FILES.length&&canonicalJson(sorted.map(item=>item.file))===canonicalJson([...REVIEWED_CODE_FILES].sort())&&sorted.every(item=>/^[a-f0-9]{64}$/.test(item.sha256)),'BUNDLE_CODE_MANIFEST_INVALID');
+   return sha256(Buffer.from(JSON.stringify({manifestSha256:sha256(manifestBytes),codeHashes:sorted}), 'utf8'));
+ }
+ 
+
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause-runner.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\native-budget-pause-runner.mjs"
+index beeb6c9..a3f20cc 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause-runner.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\native-budget-pause-runner.mjs"	
+@@ -18,7 +18,7 @@ import {
+   readJson,claimBudgetLock,runOneShot,verifyOriginalBackendFinished,classifyReconciliation,
+   verifyTlsSocket,environmentSafety,createInstallApplicationName,checkManifestShape,
+   bundleSha256,pathExists,preflightStateFingerprint,scrubReceiptValue,checkNoSymlink,
+-  REVIEWED_CODE_FILES,
++  REVIEWED_CODE_FILES,verifyInstallationReceipt,resultExitCode,
+ } from './budget-runner-core.mjs';
+ import {verifyFoundationEnvironment} from '../../../../scripts/security/verify-foundation-environment.mjs';
+ 
+@@ -364,8 +364,29 @@ async function runInstall(loaded){
+         await invokeAcl('Verify',receiptPath);
+       },
+     });
++    const outcome={...result,project:TARGET.project,runnerBundleSha256:loaded.bundleSha256,sqlSha256:SQL_SHA,attemptMarkerRetained:true,evidenceFile:receiptFilename,preflightFile:preflightFilename};
++    if(result.status==='COMMITTED_AND_VERIFIED'){
++      // Verify the durable bytes before releasing the owned lock or reporting success.
++      retainLock=true;
++      try{
++        await verifyStateAcl([receiptPath,preflightPath,statePath(STATE_FILES.marker)]);
++        await lock.verify(path=>invokeAcl('Verify',path));
++        const [receiptBytes,markerBytes,preflightBytes]=await Promise.all([
++          readFile(receiptPath),readFile(statePath(STATE_FILES.marker)),readFile(preflightPath),
++        ]);
++        const receiptVerification=verifyInstallationReceipt({
++          result:outcome,receiptBytes,markerBytes,preflightBytes,
++          expectedBundleSha256:loaded.bundleSha256,expectedRelations:loaded.relations,expectedFoundation:loaded.foundationExpected,
++        });
++        retainLock=false;
++        return {...outcome,receiptVerification};
++      }catch(error){
++        try{await durableAppendJsonLine(receiptPath,{event:'COMMITTED_POSTFLIGHT_FAILED',project:TARGET.project,sqlSha256:SQL_SHA,commitAcknowledged:true,error:safeError(error),retainLock:true,retainAttemptMarker:true,capturedAt:new Date().toISOString()});}catch{}
++        return {...outcome,status:'COMMITTED_POSTFLIGHT_FAILED',retainLock:true,stopForHumanReview:true,error:safeError(error)};
++      }
++    }
+     retainLock=result.retainLock;
+-    return {...result,project:TARGET.project,runnerBundleSha256:loaded.bundleSha256,sqlSha256:SQL_SHA,attemptMarkerRetained:true};
++    return {...outcome,stopForHumanReview:true};
+   } catch(error){
+     if(attemptConsumed){retainLock=true;}
+     throw error;
+@@ -400,15 +421,22 @@ async function runReconcile(loaded){
+       scrubReceiptValue(evidence);
+       const path=statePath(`reconciliation-${compactStamp()}-${randomUUID()}.json`);
+       await durableCreateJson(path,evidence);await verifyStateAcl([path]);
+-      return {status:'UNRESOLVED',project:TARGET.project,priorBackendFinished:false,sqlResubmitted:false,evidenceFile:relative(stateDir,path)};
++      return {status:'UNRESOLVED',installationPresence:'UNRESOLVED',project:TARGET.project,priorBackendFinished:false,sqlResubmitted:false,stopForHumanReview:true,evidenceFile:relative(stateDir,path)};
+     }
+     const currentPre=verifierRow(await connection.client.query(loaded.inputs.preSql.toString('utf8')),'preSql');
+     const currentPost=verifierRow(await connection.client.query(loaded.inputs.postSql.toString('utf8')),'postSql');
+-    for(const state of [currentPre,currentPost]){
+-      validateBudgetStateShape(state,state.phase);
+-      requireGuard(state.function.oid===pre.budget.function.oid&&canonicalJson(state.migration_history)===canonicalJson(pre.budget.migration_history),'RECONCILIATION_VERIFIER_IDENTITY_MISMATCH');
++    try{
++      for(const state of [currentPre,currentPost]){
++        validateBudgetStateShape(state,state.phase);
++        requireGuard(state.function.oid===pre.budget.function.oid&&canonicalJson(state.migration_history)===canonicalJson(pre.budget.migration_history),'RECONCILIATION_VERIFIER_IDENTITY_MISMATCH');
++      }
++      requireGuard(currentPre.compatibility_sha256===currentPost.compatibility_sha256&&canonicalJson(currentPre.function)===canonicalJson(currentPost.function),'RECONCILIATION_SNAPSHOT_CHANGED');
++    }catch(error){
++      const evidence={recordType:'YTRACE_BUDGET_PAUSE_RECONCILIATION',classification:'UNRESOLVED',installationPresence:'UNRESOLVED',priorBackendFinished:true,project:TARGET.project,sqlSha256:SQL_SHA,runnerBundleSha256:loaded.bundleSha256,submissionCount:1,sqlResubmitted:false,stop:true,error:safeError(error),capturedAt:new Date().toISOString()};
++      const path=statePath('reconciliation-'+compactStamp()+'-'+randomUUID()+'.json');
++      scrubReceiptValue(evidence);await durableCreateJson(path,evidence);await verifyStateAcl([path]);
++      return {status:'UNRESOLVED',installationPresence:'UNRESOLVED',project:TARGET.project,priorBackendFinished:true,sqlResubmitted:false,stopForHumanReview:true,evidenceFile:relative(stateDir,path)};
+     }
+-    requireGuard(currentPre.compatibility_sha256===currentPost.compatibility_sha256&&currentPre.function.definition_md5===currentPost.function.definition_md5&&currentPre.function.source_md5===currentPost.function.source_md5,'RECONCILIATION_SNAPSHOT_CHANGED');
+     const currentData=verifierRow(await connection.client.query(loaded.inputs.protectedDataSql.toString('utf8')),'protectedDataSql');
+     const currentDigest=protectedDataDigest(currentData,loaded.relations);
+     const currentFoundation=verifierRow(await connection.client.query(loaded.inputs.foundationSql.toString('utf8')),'foundationSql');
+@@ -416,11 +444,11 @@ async function runReconcile(loaded){
+     let preservation=true;
+     try{comparePreservation({budget:pre.budget,protectedData:pre.protectedData,foundation:pre.foundation.value},snapshot,loaded.relations,loaded.foundationExpected);}catch{preservation=false;}
+     const classification=classifyReconciliation({priorBackendFinished:true,preState:currentPre,postState:currentPost,preservationMatches:preservation});
+-    const evidence={recordType:'YTRACE_BUDGET_PAUSE_RECONCILIATION',classification:classification.classification,priorBackendFinished:true,project:TARGET.project,sqlSha256:SQL_SHA,runnerBundleSha256:loaded.bundleSha256,controlPlaneEvidenceSha256:control.sha256,submissionCount:1,sqlResubmitted:false,preservationMatches:preservation,catalogSha256:currentPre.compatibility_sha256,functionDefinitionMd5:currentPre.function.definition_md5,functionSourceMd5:currentPre.function.source_md5,protectedInventoryCount:currentDigest.rows.length,protectedInventoriesSha256:currentDigest.sha256,foundationStructureSha256:loaded.foundationExpected.sha256,stop:true,capturedAt:new Date().toISOString()};
++    const evidence={recordType:'YTRACE_BUDGET_PAUSE_RECONCILIATION',classification:classification.classification,installationPresence:classification.installationPresence,preservationStatus:classification.preservationStatus,priorBackendFinished:true,project:TARGET.project,sqlSha256:SQL_SHA,runnerBundleSha256:loaded.bundleSha256,controlPlaneEvidenceSha256:control.sha256,submissionCount:1,sqlResubmitted:false,preservationMatches:preservation,catalogSha256:currentPre.compatibility_sha256,functionDefinitionMd5:currentPre.function.definition_md5,functionSourceMd5:currentPre.function.source_md5,protectedInventoryCount:currentDigest.rows.length,protectedInventoriesSha256:currentDigest.sha256,foundationStructureSha256:loaded.foundationExpected.sha256,stop:true,capturedAt:new Date().toISOString()};
+     scrubReceiptValue(evidence);
+     const path=statePath(`reconciliation-${compactStamp()}-${randomUUID()}.json`);
+     await durableCreateJson(path,evidence);await verifyStateAcl([path]);
+-    return {status:classification.classification,project:TARGET.project,priorBackendFinished:true,preservationMatches:preservation,sqlResubmitted:false,stopForHumanReview:true,evidenceFile:relative(stateDir,path)};
++    return {status:classification.classification,installationPresence:classification.installationPresence,preservationStatus:classification.preservationStatus,rawEvidence:classification.rawEvidence,project:TARGET.project,priorBackendFinished:true,preservationMatches:preservation,sqlResubmitted:false,stopForHumanReview:true,evidenceFile:relative(stateDir,path)};
+   } finally {await connection.client.end().catch(()=>{});}
+ }
+ 
+@@ -439,7 +467,7 @@ async function main(){
+ if(isDirect){
+   main().then(result=>{
+     console.log(JSON.stringify(scrubReceiptValue(result)));
+-    if(!['PASS','READ_ONLY_PREFLIGHT','COMMITTED_AND_VERIFIED','COMMITTED_POSTFLIGHT_FAILED','UNRESOLVED','NOT_INSTALLED_VERIFIED','COMMITTED_WITH_DRIFT'].includes(result.status))process.exitCode=2;
++    process.exitCode=resultExitCode(process.argv[2]??'--review',result);
+   }).catch(error=>{
+     console.log(JSON.stringify({status:'BLOCKED',project:TARGET.project,error:safeError(error),automaticRetries:0,action:'Stop; preserve operation state and review sanitized evidence.'}));
+     process.exitCode=2;

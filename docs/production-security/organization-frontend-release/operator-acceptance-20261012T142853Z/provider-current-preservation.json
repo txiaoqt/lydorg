@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-10-12T14:37:15.977Z",
+  "status": "PASS",
+  "candidate": {
+    "id": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+    "url": "yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+    "state": "READY",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR"
+  },
+  "adminAlias": {
+    "alias": "y-trace-admin.vercel.app",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "deploymentUrl": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app"
+  },
+  "organizationAlias": {
+    "alias": "ytrace.app",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+  },
+  "www": {
+    "name": "www.ytrace.app",
+    "verified": true,
+    "redirect": "ytrace.app",
+    "redirectStatusCode": 307
+  },
+  "projectProductionTargets": {
+    "admin": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "organization": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV"
+  },
+  "readOnlyProviderGets": 6,
+  "deployments": 0,
+  "promotions": 0,
+  "environmentValuesRead": false
+}

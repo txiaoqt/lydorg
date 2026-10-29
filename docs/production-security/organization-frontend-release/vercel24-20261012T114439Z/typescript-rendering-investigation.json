@@ -1,0 +1,33 @@
+{
+  "capturedAt": "2026-10-12T11:58:06.939Z",
+  "status": "FAIL",
+  "typecheckStatus": "FAIL",
+  "baselineErrors": 651,
+  "candidateErrors": 651,
+  "rawChangedDiagnosticRenderings": 1,
+  "file": "src/lib/report-export.ts",
+  "code": "TS2352",
+  "sameLocation": true,
+  "sourceMatchesBaseCommit": false,
+  "sourceSha256": "2ba32c293ce353cb95421844622eab5c26375f0a07030111e0fc0bc175c6feb3",
+  "nestedErrorChainIdenticalAfterKnownPathNormalization": true,
+  "baselineHeader": "src/lib/report-export.ts(738,25): error TS2352: Conversion of type '{ default: typeof import(\"<dependency-root>/node_modules/exceljs/index\"); RelationshipType: typeof RelationshipType; DocumentType: typeof DocumentType; ... 8 more ...; stream: typeof stream; }' to type 'ExcelJsModuleShape' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.",
+  "candidateHeader": "src/lib/report-export.ts(738,25): error TS2352: Conversion of type '{ default: typeof import(\"<dependency-root>/node_modules/exceljs/index\"); ... 10 more ...; stream: typeof stream; }' to type 'ExcelJsModuleShape' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.",
+  "nestedChainSha256": "969a297df14acc5f2ebc6fef0cfc7aeed0cf5e788930664109b3abdd8946a39e",
+  "declarations": [
+    {
+      "path": "typescript/lib/typescript.js",
+      "baselineSha256": "dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0",
+      "candidateSha256": "dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0",
+      "equal": true
+    },
+    {
+      "path": "exceljs/index.d.ts",
+      "baselineSha256": "d10d70b4fe21847c61cb0ab72b60162d2cc23ef64e5606822d110cce2dbc9dd8",
+      "candidateSha256": "d10d70b4fe21847c61cb0ab72b60162d2cc23ef64e5606822d110cce2dbc9dd8",
+      "equal": true
+    }
+  ],
+  "classification": "Unresolved diagnostic difference; do not classify as baseline.",
+  "reviewedReleaseIntroducedDiagnostics": null
+}

@@ -1,0 +1,118 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "scope": "Read-only diagnostic evidence; not an installation receipt",
+  "createdAt": "2026-10-11T13:16:23.601Z",
+  "reviewedArtifact": {
+    "file": "docs/production-security/storage-cutover/20261011T113322Z/production_storage_foundation_review.sql",
+    "bytes": 47407,
+    "sha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2"
+  },
+  "priorExecutionReceipt": "docs/production-security/storage-cutover/executions/20261011T122743Z/execution-receipt.json",
+  "files": [
+    {
+      "file": "absence-readonly.json",
+      "bytes": 380,
+      "sha256": "524983f7f86e8078bba55a640b58dfe1a921ece4c68e5e0700bcf7cb362027b0"
+    },
+    {
+      "file": "catalog-readonly.json",
+      "bytes": 214671,
+      "sha256": "9ad7221797bdf93cfea81190fec25bcf0c00bdac9bab9c44748248a7500c6895"
+    },
+    {
+      "file": "diagnosis.md",
+      "bytes": 13598,
+      "sha256": "af09a67cec6acdd90466261c7faa86939785cb253a6b6c226b90e0452f5ad358"
+    },
+    {
+      "file": "diagnostic-summary.json",
+      "bytes": 2637,
+      "sha256": "e3ce218f6e50c56f05053f3cf6c28d6571dffa7860c6a2d8aef357715aa6fdc3"
+    },
+    {
+      "file": "environment-prerequisites.json",
+      "bytes": 398,
+      "sha256": "e5ca306723e944669eff7aad82787d3abb4373e3f550e70158cfc1af94757128"
+    },
+    {
+      "file": "finalize-diagnostic-evidence.mjs",
+      "bytes": 2497,
+      "sha256": "77c1ec8ee1322eb7cee64b5b23057072362f89f5a2d88a295ee392f7df4279c8"
+    },
+    {
+      "file": "local-preservation.json",
+      "bytes": 321,
+      "sha256": "d822ccbd006a5a0e0d1d24e48dfbbb867dda2f273ce039a93ab7aa6370d94279"
+    },
+    {
+      "file": "local-readonly-probe.test.mjs",
+      "bytes": 2084,
+      "sha256": "44fa90abcfd0694a7e15f84dccf159e2073f4b7d0718f332f9e4fda15030c1a7"
+    },
+    {
+      "file": "local-validation.json",
+      "bytes": 5699,
+      "sha256": "3f492b728185397b2733aad1cc4459ee8f9dfc05e9303aeeab010cfc72b81db6"
+    },
+    {
+      "file": "native-postgres-readonly-probe.mjs",
+      "bytes": 4174,
+      "sha256": "3ac37215adafd1bf17bb7b578e9df3b2fa8e42c198f4e01ab29874fef1e69973"
+    },
+    {
+      "file": "offline-detector-check.mjs",
+      "bytes": 2318,
+      "sha256": "a19726b11e99e730e5b55d706286e72e0b376024ba5166fcdb5b26bd8e71b165"
+    },
+    {
+      "file": "offline-detector-result.json",
+      "bytes": 830,
+      "sha256": "ddbdb57f6b1d1f5ea8c708517ca499e4640417b2b44e43fe07060f92327df1cf"
+    },
+    {
+      "file": "project-readonly.json",
+      "bytes": 534,
+      "sha256": "3f57870223ad2a8d4b319020ece55541db465ec7748a3f83f3d5c114bc68e814"
+    },
+    {
+      "file": "same-size-readonly-result.json",
+      "bytes": 232,
+      "sha256": "9dc1cbb3ac8b5951ccdb25c40324be6d2d820b2042a76de6b0e6417055ff4cdf"
+    },
+    {
+      "file": "single-attempt-installation-checklist.md",
+      "bytes": 10155,
+      "sha256": "09d17abe5897f3a98f221e8ee2e1399b3cb0f2a774a39b19140e1716d8e1d95e"
+    },
+    {
+      "file": "small-readonly-result.json",
+      "bytes": 821,
+      "sha256": "08f3a2ad7fb37168aa6d6a5b2651c6c3b8a3d156f75221619fc895095296de21"
+    },
+    {
+      "file": "upstream-destructive-sql.ts",
+      "bytes": 4810,
+      "sha256": "f134bdcb66c6b87198fb4d72457890c78d8014ec802d56796d5f713b6beaaecc"
+    },
+    {
+      "file": "upstream-detector-source.json",
+      "bytes": 415,
+      "sha256": "8124f13e1aacf652c1b5326c926954551a9a729ae22a514147e76d439728b569"
+    },
+    {
+      "file": "windowed-project-logs.json",
+      "bytes": 1295,
+      "sha256": "5602474b633877c03e778164dcf5a4406d6d1f9fde91fcaf01872e24e758efcc"
+    },
+    {
+      "file": "working-tree-after.txt",
+      "bytes": 6786,
+      "sha256": "fa659b09dae39ab49db4a154ade7099519836473a1f337754aea0a2812bc6096"
+    },
+    {
+      "file": "working-tree-before.txt",
+      "bytes": 6786,
+      "sha256": "fa659b09dae39ab49db4a154ade7099519836473a1f337754aea0a2812bc6096"
+    }
+  ]
+}

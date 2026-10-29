@@ -1,0 +1,67 @@
+
+> vite_react_shadcn_ts@1.0.0 build
+> vite build --outDir tmp/document-mutation-build
+
+vite v5.4.19 building for production...
+transforming...
+Browserslist: browsers data (caniuse-lite) is 16 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 4103 modules transformed.
+rendering chunks...
+computing gzip size...
+tmp/document-mutation-build/index.html                                               1.88 kB │ gzip:   0.69 kB
+tmp/document-mutation-build/assets/about-hero-CYTwmDDX.webp                         15.04 kB
+tmp/document-mutation-build/assets/pdf.worker.min-D39lNQBd.mjs                   1,299.17 kB
+tmp/document-mutation-build/assets/ytrace-overview-upscaled-BHODuOy5.jpeg        2,415.63 kB
+tmp/document-mutation-build/assets/hero-image-upscaled-DMBKzXU7.jpeg             3,367.08 kB
+tmp/document-mutation-build/assets/leaflet-Dgihpmma.css                             15.04 kB │ gzip:   6.38 kB
+tmp/document-mutation-build/assets/PasigBudgetMap-sa5bjIxU.css                      25.35 kB │ gzip:   4.19 kB
+tmp/document-mutation-build/assets/AdminPortal-VndWF7ip.css                         35.52 kB │ gzip:   5.35 kB
+tmp/document-mutation-build/assets/index-nn-gkKHN.css                              385.75 kB │ gzip:  59.12 kB
+tmp/document-mutation-build/assets/clock-CyGqvVlc.js                                 0.35 kB │ gzip:   0.27 kB
+tmp/document-mutation-build/assets/lock-Bqduy7ZK.js                                  0.38 kB │ gzip:   0.29 kB
+tmp/document-mutation-build/assets/banknote-CpTvZqMR.js                              0.41 kB │ gzip:   0.31 kB
+tmp/document-mutation-build/assets/calendar-CRez1j8U.js                              0.43 kB │ gzip:   0.30 kB
+tmp/document-mutation-build/assets/file-check-CkmTTLNp.js                            0.43 kB │ gzip:   0.30 kB
+tmp/document-mutation-build/assets/send-BgQliD6F.js                                  0.46 kB │ gzip:   0.33 kB
+tmp/document-mutation-build/assets/search-BupoGaQA.js                                0.62 kB │ gzip:   0.33 kB
+tmp/document-mutation-build/assets/admin-storage-access-Q04iGNMn.js                  1.22 kB │ gzip:   0.59 kB
+tmp/document-mutation-build/assets/layout-grid-FLNbtJ0i.js                           1.29 kB │ gzip:   0.52 kB
+tmp/document-mutation-build/assets/LegalPolicy-Bj8B3SQp.js                           2.73 kB │ gzip:   1.05 kB
+tmp/document-mutation-build/assets/PublicNewsReleaseCard-Bjulwosv.js                 3.25 kB │ gzip:   1.27 kB
+tmp/document-mutation-build/assets/SiteMap-BxN27Usj.js                               3.48 kB │ gzip:   1.39 kB
+tmp/document-mutation-build/assets/switch-BC5LULJe.js                                4.83 kB │ gzip:   1.90 kB
+tmp/document-mutation-build/assets/PublicTemplates-0eeoHQWo.js                       4.86 kB │ gzip:   2.17 kB
+tmp/document-mutation-build/assets/portal-ui-YFNI5SJy.js                             5.27 kB │ gzip:   1.85 kB
+tmp/document-mutation-build/assets/yorp-organization-report-BjyV4eFJ.js              6.56 kB │ gzip:   2.90 kB
+tmp/document-mutation-build/assets/PublicBudgetTransparency-CrFhAiRi.js              7.28 kB │ gzip:   2.57 kB
+tmp/document-mutation-build/assets/NewsReleases-CIPUX3kb.js                          7.93 kB │ gzip:   2.32 kB
+tmp/document-mutation-build/assets/Contacts-CgnReW2A.js                              7.96 kB │ gzip:   2.30 kB
+tmp/document-mutation-build/assets/Faqs-2bx4NtTQ.js                                 11.76 kB │ gzip:   3.67 kB
+tmp/document-mutation-build/assets/YpopValidationComputationPopover-C2wkVdkj.js     12.44 kB │ gzip:   4.02 kB
+tmp/document-mutation-build/assets/PasigBudgetMap-DvUEuIZB.js                       14.48 kB │ gzip:   5.24 kB
+tmp/document-mutation-build/assets/About-yCpi3ZIy.js                                21.23 kB │ gzip:   4.40 kB
+tmp/document-mutation-build/assets/PublicBudgetOverview-MKSBkWfO.js                 21.45 kB │ gzip:   5.82 kB
+tmp/document-mutation-build/assets/UserPortalTemplatesWorkspaceView-cP4Z1FGJ.js     22.52 kB │ gzip:   5.53 kB
+tmp/document-mutation-build/assets/purify.es-CPrKKeqe.js                            28.07 kB │ gzip:  10.66 kB
+tmp/document-mutation-build/assets/Index-CrSpakDF.js                                31.66 kB │ gzip:   6.95 kB
+tmp/document-mutation-build/assets/PortalDocumentDrawer-C3o53jZo.js                 32.78 kB │ gzip:   5.78 kB
+tmp/document-mutation-build/assets/index-C8oKugQn.js                                60.16 kB │ gzip:  15.84 kB
+tmp/document-mutation-build/assets/jszip.min-DuJyiKFY.js                           116.87 kB │ gzip:  36.68 kB
+tmp/document-mutation-build/assets/index.es-DneCi5RY.js                            151.42 kB │ gzip:  51.96 kB
+tmp/document-mutation-build/assets/leaflet-CUgCEIom.js                             153.65 kB │ gzip:  44.88 kB
+tmp/document-mutation-build/assets/PwaUserPortal-DmxKox5n.js                       167.98 kB │ gzip:  42.86 kB
+tmp/document-mutation-build/assets/html2canvas.esm-CBrSDip1.js                     201.42 kB │ gzip:  48.03 kB
+tmp/document-mutation-build/assets/AccountSuspendedScreen-RGHVi1W0.js              216.92 kB │ gzip:  51.18 kB
+tmp/document-mutation-build/assets/UserPortal-BRamQMVU.js                          405.96 kB │ gzip:  80.41 kB
+tmp/document-mutation-build/assets/sheet-dBOl7gKd.js                               550.32 kB │ gzip: 166.31 kB
+tmp/document-mutation-build/assets/exceljs.min-Bu4k_Dg6.js                         938.41 kB │ gzip: 270.96 kB
+tmp/document-mutation-build/assets/index-BMOdT36Q.js                             1,245.37 kB │ gzip: 335.07 kB
+tmp/document-mutation-build/assets/AdminPortal-QBWW4r5Z.js                       2,874.15 kB │ gzip: 944.88 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 37.46s

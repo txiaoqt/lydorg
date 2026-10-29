@@ -1,0 +1,521 @@
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-runner-core.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\budget-runner-core.mjs"
+index 2c78816..595bca4 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-runner-core.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\budget-runner-core.mjs"	
+@@ -359,16 +359,85 @@ export async function claimBudgetLock(path,{bundleSha256,pid=process.pid,io={cre
+     await io.unlink(path); // The sole removal path, after independent verification.
+   }};
+ }
+-export async function attachWorkerLock(path,{claim,bundleSha256,parentPid=process.ppid,io={readJson,alive:processAlive}}={}){
++// A live lease is bound to the original inherited IPC channel, never to PID
++// existence. Once lost/ambiguous, it cannot be revived or rebound to a new peer.
++export const SUPERVISOR_CHALLENGE='YTRACE_BUDGET_SUPERVISOR_CHALLENGE_V1';
++export const SUPERVISOR_ACK='YTRACE_BUDGET_SUPERVISOR_ACK_V1';
++export function supervisorChallenge(claim,workerPid,sequence,challenge){
++  return {protocol:SUPERVISOR_CHALLENGE,project:TARGET.project,runnerBundleSha256:claim.runnerBundleSha256,claimSha256:hashJson(claim),operationNonce:claim.nonce,supervisorPid:claim.pid,workerPid,sequence,challenge};
++}
++export function verifySupervisorChallenge(message,{claim,workerPid,lastSequence}){
++  requireGuard(Number.isSafeInteger(message?.sequence)&&message.sequence===lastSequence+1&&typeof message.challenge==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(message.challenge),'SUPERVISOR_CHALLENGE_INVALID');
++  requireGuard(canonicalJson(message)===canonicalJson(supervisorChallenge(claim,workerPid,message.sequence,message.challenge)),'SUPERVISOR_CHALLENGE_SCOPE_MISMATCH');
++  return {...message,protocol:SUPERVISOR_ACK};
++}
++export function createWorkerSupervisorChannel({claim,bundleSha256,transport=process,workerPid=process.pid,parentPid=process.ppid,timeoutMs=2000}){
+   verifySupervisorClaim(claim,bundleSha256);
+   requireGuard(claim.pid===parentPid,'WORKER_PARENT_IDENTITY_MISMATCH');
+-  const lease={claim,async verify(aclVerifier){
+-    requireGuard(io.alive(claim.pid)===true,'SUPERVISOR_PROCESS_NOT_ALIVE');
++  requireGuard(transport.connected===true&&typeof transport.send==='function','SUPERVISOR_IPC_REQUIRED');
++  requireGuard(Number.isSafeInteger(timeoutMs)&&timeoutMs>0&&timeoutMs<=2000,'SUPERVISOR_ACK_TIMEOUT_INVALID');
++  let failed=null,closed=false,pending=null,sequence=0;
++  let rejectFailure;
++  const failure=new Promise((_,reject)=>{rejectFailure=reject;});
++  failure.catch(()=>{}); // A disconnect may occur between guarded operations.
++  const invalidate=code=>{
++    if(failed||closed)return;
++    try{requireGuard(false,code);}catch(error){failed=error;}
++    if(pending){clearTimeout(pending.timer);pending.reject(failed);pending=null;}
++    rejectFailure(failed);
++  };
++  const assertLive=()=>{
++    if(!closed&&transport.connected!==true)invalidate('SUPERVISOR_CHANNEL_DISCONNECTED');
++    if(failed)throw failed;
++    requireGuard(!closed,'SUPERVISOR_CHANNEL_CLOSED');
++  };
++  const onDisconnect=()=>invalidate('SUPERVISOR_CHANNEL_DISCONNECTED');
++  const onError=()=>invalidate('SUPERVISOR_CHANNEL_ERROR');
++  const onMessage=message=>{
++    if(failed||closed)return;
++    try{
++      if(!pending||canonicalJson(message)!==canonicalJson(pending.expected)){invalidate('SUPERVISOR_ACK_INVALID');return;}
++      // Expiry is checked against monotonic time even if the timer callback was delayed.
++      if(performance.now()>pending.deadline){invalidate('SUPERVISOR_ACK_TIMEOUT');return;}
++      const current=pending;pending=null;clearTimeout(current.timer);current.resolve();
++    }catch{invalidate('SUPERVISOR_ACK_INVALID');}
++  };
++  transport.on('disconnect',onDisconnect);transport.on('error',onError);transport.on('message',onMessage);
++  const channel={claim,assertLive,isLive:()=>!failed&&!closed&&transport.connected===true,
++    async verify(){
++      assertLive();
++      if(pending){invalidate('SUPERVISOR_ACK_OVERLAP');throw failed;}
++      const request=supervisorChallenge(claim,workerPid,++sequence,randomUUID());
++      await new Promise((resolveAck,rejectAck)=>{
++        pending={expected:{...request,protocol:SUPERVISOR_ACK},resolve:resolveAck,reject:rejectAck,deadline:performance.now()+timeoutMs,timer:null};
++        pending.timer=setTimeout(()=>invalidate('SUPERVISOR_ACK_TIMEOUT'),timeoutMs);
++        try{transport.send(request,error=>{if(error)invalidate('SUPERVISOR_CHANNEL_SEND_FAILED');});}catch{invalidate('SUPERVISOR_CHANNEL_SEND_FAILED');}
++      });
++      assertLive();
++    },
++    async guard(operation){assertLive();const value=await Promise.race([operation,failure]);assertLive();return value;},
++    close(){
++      if(pending)invalidate('SUPERVISOR_CHANNEL_CLOSED');
++      closed=true;transport.off('disconnect',onDisconnect);transport.off('error',onError);transport.off('message',onMessage);
++      if(transport.connected)transport.disconnect();
++    },
++  };
++  return channel;
++}
++
++export async function attachWorkerLock(path,{claim,bundleSha256,supervisorChannel,parentPid=process.ppid,io={readJson}}={}){
++  verifySupervisorClaim(claim,bundleSha256);
++  requireGuard(claim.pid===parentPid,'WORKER_PARENT_IDENTITY_MISMATCH');
++  requireGuard(supervisorChannel&&canonicalJson(supervisorChannel.claim)===canonicalJson(claim)&&['verify','assertLive','guard','isLive'].every(key=>typeof supervisorChannel[key]==='function'),'SUPERVISOR_LIVE_CHANNEL_REQUIRED');
++  const lease={claim,assertLive:()=>supervisorChannel.assertLive(),guard:operation=>supervisorChannel.guard(operation),isLive:()=>supervisorChannel.isLive(),async verify(aclVerifier){
++    await supervisorChannel.verify();
+     requireGuard(canonicalJson(await io.readJson(path))===canonicalJson(claim),'BUDGET_LOCK_OWNERSHIP_MISMATCH');
+     if(aclVerifier)await aclVerifier(path);
++    await supervisorChannel.verify(); // Fresh acknowledgment after asynchronous disk/ACL checks.
++    supervisorChannel.assertLive();
+   }};
+   await lease.verify();
+-  return lease; // Deliberately no release or mutation capability.
++  return lease; // No release, PID-existence fallback, reconnect or mutation capability.
+ }
+ 
+ // Resolve first, verify paths and bytes, then load the absolute verified entry.
+@@ -394,36 +463,41 @@ export async function verifyPgDriverBinding({root,manifest,resolution,io={lstat,
+   return {entryPath:expectedEntry,packagePath:expectedPackage,name:pkg.name,version:pkg.version,closureSha256:manifest.driverTree.sha256};
+ }
+ 
+-export async function runOneShot({client,sqlBytes,markerPath,receiptPath,lock,preflight,preflightEvidence,postflight,applicationIdentity,verifyStatePath=async()=>{},write=durableAppendJsonLine}){
++export async function runOneShot({client,sqlBytes,markerPath,receiptPath,lock,preflight,preflightEvidence,postflight,applicationIdentity,verifyStatePath=async()=>{},write=durableAppendJsonLine,stateIo={pathExists,createJson:durableCreateJson}}){
+   const sql=verifyBudgetSql(sqlBytes);
+   await lock.verify(verifyStatePath);
+-  requireGuard(!await pathExists(markerPath),'BUDGET_ATTEMPT_ALREADY_CONSUMED');
+-  requireGuard(!await pathExists(receiptPath),'BUDGET_RECEIPT_ALREADY_EXISTS');
++  requireGuard(!await stateIo.pathExists(markerPath),'BUDGET_ATTEMPT_ALREADY_CONSUMED');
++  requireGuard(!await stateIo.pathExists(receiptPath),'BUDGET_RECEIPT_ALREADY_EXISTS');
+   await write(receiptPath,{event:'ATTEMPT_ARMED',project:TARGET.project,sqlSha256:SQL_SHA,applicationIdentity,capturedAt:new Date().toISOString()});
+-  await durableCreateJson(markerPath,{project:TARGET.project,route:TARGET.route,sqlSha256:SQL_SHA,runnerBundleSha256:applicationIdentity.runnerBundleSha256,preflightFile:preflightEvidence?.file,preflightSha256:preflightEvidence?.sha256,preflightStateSha256:preflightEvidence?.stateSha256,attempt:1,nonce:applicationIdentity.nonce,applicationName:applicationIdentity.applicationName,backendPid:applicationIdentity.backendPid,backendStart:applicationIdentity.backendStart,lockPid:lock.claim.pid,lockNonce:lock.claim.nonce,startedAt:new Date().toISOString(),submissionMayHaveOccurred:true});
++  await stateIo.createJson(markerPath,{project:TARGET.project,route:TARGET.route,sqlSha256:SQL_SHA,runnerBundleSha256:applicationIdentity.runnerBundleSha256,preflightFile:preflightEvidence?.file,preflightSha256:preflightEvidence?.sha256,preflightStateSha256:preflightEvidence?.stateSha256,attempt:1,nonce:applicationIdentity.nonce,applicationName:applicationIdentity.applicationName,backendPid:applicationIdentity.backendPid,backendStart:applicationIdentity.backendStart,lockPid:lock.claim.pid,lockNonce:lock.claim.nonce,startedAt:new Date().toISOString(),submissionMayHaveOccurred:true});
+   await verifyStatePath(markerPath);
+-  await lock.verify(verifyStatePath);
+-  let commitAcknowledged=false;
++  let commitAcknowledged=false,submissionCount=0;
+   try{
+-    const results=await client.query(sql); // Exactly one simple-query submission, no parameters, retry or recovery query.
++    await lock.verify(verifyStatePath);
++    lock.assertLive(); // Last synchronous check before the single submission.
++    submissionCount=1;
++    const results=await lock.guard(client.query(sql)); // Exactly one simple-query submission, no parameters, retry or recovery query.
+     const list=Array.isArray(results)?results:[results];
+     const commands=list.map(item=>item.command);
+     client.__ytraceLastCommandTag=commands.at(-1);
+     requireGuard(commands.at(-1)==='COMMIT','COMMIT_ACKNOWLEDGEMENT_MISSING');
+     commitAcknowledged=true;
++    await lock.verify(verifyStatePath);
+   }catch(error){
+-    const record={event:'SUBMISSION_OUTCOME_UNCERTAIN',project:TARGET.project,sqlSha256:SQL_SHA,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0,commitAcknowledged:false,error:safeError(error),capturedAt:new Date().toISOString(),retainLock:true,retainAttemptMarker:true};
++    const record={event:'SUBMISSION_OUTCOME_UNCERTAIN',project:TARGET.project,sqlSha256:SQL_SHA,submissionCount,automaticRetries:0,rollbackStatementsSent:0,commitAcknowledged,error:safeError(error),capturedAt:new Date().toISOString(),retainLock:true,retainAttemptMarker:true};
+     try{await write(receiptPath,record);}catch{}
+-    return {status:'UNRESOLVED',commitAcknowledged:false,retainLock:true,retainAttemptMarker:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0};
++    return {status:'UNRESOLVED',commitAcknowledged,retainLock:true,retainAttemptMarker:true,submissionCount,automaticRetries:0,rollbackStatementsSent:0};
+   }
+   try{
+     await write(receiptPath,{event:'COMMIT_ACKNOWLEDGED',project:TARGET.project,sqlSha256:SQL_SHA,commands:commitAckAcknowledgementList(client),capturedAt:new Date().toISOString()});
+-    await postflight(preflight);
++    await lock.guard(postflight(preflight));
++    await lock.verify(verifyStatePath);
+     await write(receiptPath,{event:'POSTFLIGHT_VERIFIED',project:TARGET.project,sqlSha256:SQL_SHA,commitAcknowledged:true,capturedAt:new Date().toISOString()});
++    lock.assertLive();
+     return {status:'COMMITTED_AWAITING_SUPERVISOR_VERIFICATION',commitAcknowledged:true,retainLock:true,retainAttemptMarker:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0};
+   }catch(error){
+     try{await write(receiptPath,{event:'COMMITTED_POSTFLIGHT_FAILED',project:TARGET.project,sqlSha256:SQL_SHA,commitAcknowledged,error:safeError(error),capturedAt:new Date().toISOString(),retainLock:true,retainAttemptMarker:true});}catch{}
+-    return {status:'COMMITTED_POSTFLIGHT_FAILED',commitAcknowledged:true,retainLock:true,retainAttemptMarker:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0};
++    return {status:lock.isLive()?'COMMITTED_POSTFLIGHT_FAILED':'UNRESOLVED',commitAcknowledged:true,retainLock:true,retainAttemptMarker:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0};
+   }
+ }
+ 
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-safety-controls.test.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\budget-safety-controls.test.mjs"
+index 1306859..363b3b0 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-safety-controls.test.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\budget-safety-controls.test.mjs"	
+@@ -7,13 +7,14 @@ import {fileURLToPath} from 'node:url';
+ import {spawnSync,spawn} from 'node:child_process';
+ import {resolve} from 'node:path';
+ import {createRequire} from 'node:module';
++import {EventEmitter} from 'node:events';
+ import {
+   TARGET,SQL_SHA,SQL_BYTES,PRE_CATALOG_SHA,POST_CATALOG_SHA,
+   EXPECTED_FUNCTION,EXPECTED_PAUSED_FUNCTION,sha256,hashJson,
+   preflightStateFingerprint,expectedRelationsFromSql,foundationStructure,
+   verifyInstallationReceipt,resultExitCode,classifyReconciliation,
+   verifyControlPlaneProofJson,verifyControlPlaneProof,environmentSafety,
+-  claimBudgetLock,attachWorkerLock,verifySupervisorClaim,verifyPgDriverBinding,workerReadyForVerification,verifyOriginalBackendFinished,canonicalJson,
++  claimBudgetLock,attachWorkerLock,createWorkerSupervisorChannel,supervisorChallenge,verifySupervisorChallenge,SUPERVISOR_ACK,runOneShot,verifySupervisorClaim,verifyPgDriverBinding,workerReadyForVerification,verifyOriginalBackendFinished,canonicalJson,
+ } from './budget-runner-core.mjs';
+ import {superviseInstallation as realSupervise,launchWorkerOnce} from './native-budget-pause-supervisor.mjs';
+ import {loadReviewedInputs} from './native-budget-pause-runner.mjs';
+@@ -320,21 +321,23 @@ test('release requires the exact owner and independently complete receipt proof'
+   assert.equal(state.present,true);assert.equal(state.releaseCalls,0);
+ });
+ 
+-test('worker has only a verification lease and cannot unlink a live or dead supervisor lock',async()=>{
+-  const {state,lock,io}=await ownedMemoryLock();
+-  const lease=await attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,io});
+-  assert.deepEqual(Object.keys(lease).sort(),['claim','verify']);
+-  await lease.verify();state.alive=false;
+-  await assert.rejects(lease.verify(),/SUPERVISOR_PROCESS_NOT_ALIVE/);
++test('worker has only a verification lease and cannot unlink a disconnected supervisor lock',async()=>{
++  const {state,lock,io}=await ownedMemoryLock(),peer=memorySupervisorChannel(lock.claim);
++  const lease=await attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,supervisorChannel:peer.channel,io});
++  assert.deepEqual(Object.keys(lease).sort(),['assertLive','claim','guard','isLive','verify']);
++  await lease.verify();peer.disconnect();
++  await assert.rejects(lease.verify(),/SUPERVISOR_CHANNEL_DISCONNECTED/);
+   assert.equal(state.present,true);assert.equal(state.marker,true);assert.equal(state.releaseCalls,0);
++  peer.channel.close();
+ });
+ 
+ test('worker rejects wrong parent, bundle or changed claim before arming',async()=>{
+-  const {state,lock,io}=await ownedMemoryLock();
+-  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:5555,io}),/WORKER_PARENT_IDENTITY_MISMATCH/);
+-  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:'d'.repeat(64),parentPid:4242,io}),/SUPERVISOR_LOCK_SCOPE_MISMATCH/);
++  const {state,lock,io}=await ownedMemoryLock(),peer=memorySupervisorChannel(lock.claim);
++  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:5555,supervisorChannel:peer.channel,io}),/WORKER_PARENT_IDENTITY_MISMATCH/);
++  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:'d'.repeat(64),parentPid:4242,supervisorChannel:peer.channel,io}),/SUPERVISOR_LOCK_SCOPE_MISMATCH/);
+   state.current.nonce='00000000-0000-4000-8000-000000000000';
+-  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,io}),/BUDGET_LOCK_OWNERSHIP_MISMATCH/);
++  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,supervisorChannel:peer.channel,io}),/BUDGET_LOCK_OWNERSHIP_MISMATCH/);
++  peer.channel.close();
+ });
+ 
+ test('dead supervisor state permits only read-only classification after the recorded writer finishes',async()=>{
+@@ -433,3 +436,181 @@ test('all connection sites load only the reverified absolute entry and closure',
+   assert.ok(runner.includes("if(mode==='--install-worker')requireGuard(process.connected===true"));
+   assert.equal(runner.includes("if(mode==='--install')"),false);
+ });
++
++// Process-identity regressions. IPC transports and operation state below are
++// synthetic and in memory; Client.query is a stub, never a database connection.
++function memorySupervisorChannel(claim,{timeoutMs=100}={}){
++  const transport=new EventEmitter();transport.connected=true;
++  const requests=[];let lastSequence=0,responder;
++  transport.send=(request,callback)=>{requests.push(structuredClone(request));callback?.(null);queueMicrotask(()=>responder(request));};
++  const disconnect=()=>{transport.connected=false;transport.emit('disconnect');};
++  transport.disconnect=disconnect;
++  const ack=request=>verifySupervisorChallenge(request,{claim,workerPid:77,lastSequence:lastSequence++});
++  responder=request=>transport.emit('message',ack(request));
++  const channel=createWorkerSupervisorChannel({claim,bundleSha256:bundle,transport,workerPid:77,parentPid:claim.pid,timeoutMs});
++  return {channel,transport,requests,disconnect,ack,setResponder:fn=>{responder=fn;}};
++}
++
++test('live original IPC channel supplies fresh operation-specific acknowledgments',async()=>{
++  const f=fixture(),peer=memorySupervisorChannel(f.expectedLockClaim);
++  try{
++    await peer.channel.verify();await peer.channel.verify();
++    assert.equal(peer.channel.isLive(),true);assert.equal(peer.requests.length,2);
++    const [first,second]=peer.requests;
++    assert.equal(first.operationNonce,f.expectedLockClaim.nonce);assert.equal(first.claimSha256,hashJson(f.expectedLockClaim));
++    assert.equal(first.runnerBundleSha256,bundle);assert.equal(first.supervisorPid,4242);assert.equal(first.workerPid,77);
++    assert.equal(first.sequence,1);assert.equal(second.sequence,2);assert.notEqual(first.challenge,second.challenge);
++  }finally{peer.channel.close();}
++});
++
++test('original channel loss is fatal while the original PID still appears present',async()=>{
++  const {state,lock,io}=await ownedMemoryLock(),peer=memorySupervisorChannel(lock.claim);
++  const lease=await attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,supervisorChannel:peer.channel,io});
++  assert.equal(state.alive,true);peer.disconnect();
++  await assert.rejects(lease.verify(),/SUPERVISOR_CHANNEL_DISCONNECTED/);
++  assert.equal(state.alive,true);assert.equal(state.present,true);assert.equal(state.releaseCalls,0);peer.channel.close();
++});
++
++test('a different process reusing the PID cannot revive the lost original channel or unchanged claim',async()=>{
++  const {state,lock,io}=await ownedMemoryLock(),peer=memorySupervisorChannel(lock.claim);
++  const original=canonicalJson(state.current);
++  const lease=await attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,supervisorChannel:peer.channel,io});
++  peer.disconnect();state.alive=true;peer.transport.connected=true; // Simulated new occupant; not actual OS recycling.
++  await assert.rejects(lease.verify(),/SUPERVISOR_CHANNEL_DISCONNECTED/);
++  assert.equal(canonicalJson(state.current),original);assert.equal(state.present,true);assert.equal(state.marker,true);assert.equal(state.releaseCalls,0);
++  peer.channel.close();
++});
++
++test('PID/file evidence without an original live channel is rejected',async()=>{
++  const {state,lock,io}=await ownedMemoryLock();
++  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,io}),/SUPERVISOR_LIVE_CHANNEL_REQUIRED/);
++  assert.equal(state.alive,true);assert.equal(state.present,true);assert.equal(state.releaseCalls,0);
++});
++
++for(const [name,mutate] of [
++  ['wrong nonce',ack=>{ack.operationNonce='00000000-0000-4000-8000-000000000000';}],
++  ['wrong challenge',ack=>{ack.challenge='00000000-0000-4000-8000-000000000000';}],
++  ['wrong claim hash',ack=>{ack.claimSha256='0'.repeat(64);}],
++  ['wrong bundle',ack=>{ack.runnerBundleSha256='0'.repeat(64);}],
++  ['wrong parent',ack=>{ack.supervisorPid=5555;}],
++  ['wrong worker',ack=>{ack.workerPid=5555;}],
++  ['wrong sequence',ack=>{ack.sequence++;}],
++  ['malformed protocol',ack=>{ack.protocol='unrecognized';}],
++  ['extra field',ack=>{ack.extra=true;}],
++]){
++  test('invalid acknowledgment permanently fails closed: '+name,async()=>{
++    const peer=memorySupervisorChannel(fixture().expectedLockClaim);
++    peer.setResponder(request=>{const ack=peer.ack(request);mutate(ack);peer.transport.emit('message',ack);});
++    await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_INVALID/);
++    await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_INVALID/);
++    assert.equal(peer.requests.length,1);peer.channel.close();
++  });
++}
++
++test('missing acknowledgment expires and cannot be retried on the same lease',async()=>{
++  const peer=memorySupervisorChannel(fixture().expectedLockClaim,{timeoutMs:20});peer.setResponder(()=>{});
++  await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_TIMEOUT/);
++  await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_TIMEOUT/);
++  assert.equal(peer.requests.length,1);peer.channel.close();
++});
++
++test('replayed stale acknowledgment is rejected for the next fresh challenge',async()=>{
++  const peer=memorySupervisorChannel(fixture().expectedLockClaim);let stale;
++  peer.setResponder(request=>{stale=peer.ack(request);peer.transport.emit('message',stale);});
++  await peer.channel.verify();
++  peer.setResponder(()=>peer.transport.emit('message',stale));
++  await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_INVALID/);peer.channel.close();
++});
++
++test('delayed valid acknowledgment after timeout cannot restore the lease',async()=>{
++  const peer=memorySupervisorChannel(fixture().expectedLockClaim,{timeoutMs:20});let delayed;
++  peer.setResponder(request=>{delayed=peer.ack(request);});
++  await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_TIMEOUT/);
++  peer.transport.emit('message',delayed);
++  await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_TIMEOUT/);
++  assert.equal(peer.channel.isLive(),false);peer.channel.close();
++});
++
++test('monotonic deadline rejects a late acknowledgment even before its delayed timer runs',async()=>{
++  const peer=memorySupervisorChannel(fixture().expectedLockClaim,{timeoutMs:20});
++  peer.setResponder(request=>{const ack=peer.ack(request);const deadline=performance.now()+30;while(performance.now()<deadline){}peer.transport.emit('message',ack);});
++  await assert.rejects(peer.channel.verify(),/SUPERVISOR_ACK_TIMEOUT/);peer.channel.close();
++});
++
++test('disconnect during pending acknowledgment and send failure both latch failure',async()=>{
++  for(const scenario of ['disconnect','send error']){
++    const peer=memorySupervisorChannel(fixture().expectedLockClaim);
++    if(scenario==='disconnect')peer.setResponder(()=>peer.disconnect());
++    else peer.transport.send=(_,callback)=>callback(Error('synthetic send failure'));
++    await assert.rejects(peer.channel.verify(),/SUPERVISOR_CHANNEL_(DISCONNECTED|SEND_FAILED)/);
++    assert.equal(peer.channel.isLive(),false);peer.channel.close();
++  }
++});
++
++test('supervisor rejects wrong claim, worker and sequence before acknowledging',()=>{
++  const claim=fixture().expectedLockClaim;
++  for(const change of [{operationNonce:'wrong'},{workerPid:88},{sequence:2},{claimSha256:'0'.repeat(64)}]){
++    const request={...supervisorChallenge(claim,77,1,'11111111-2222-4333-8444-555555555555'),...change};
++    assert.throws(()=>verifySupervisorChallenge(request,{claim,workerPid:77,lastSequence:0}),/SUPERVISOR_CHALLENGE_(INVALID|SCOPE_MISMATCH)/);
++  }
++});
++
++async function simulatedSubmission(stage){
++  const {state,lock:owner,io}=await ownedMemoryLock(),peer=memorySupervisorChannel(owner.claim);
++  const lease=await attachWorkerLock(':memory-only:',{claim:owner.claim,bundleSha256:bundle,parentPid:4242,supervisorChannel:peer.channel,io});
++  const events=[],files=new Map();let submissions=0,postflights=0;
++  const client={query(){submissions++;if(stage==='during-query')return new Promise(resolve=>queueMicrotask(()=>{peer.disconnect();resolve({command:'COMMIT'});}));return Promise.resolve({command:'COMMIT'});}};
++  const args={client,sqlBytes:await readRelative('../20261012T165000Z/budget_deletion_pause_production.sql'),markerPath:':memory-marker:',receiptPath:':memory-receipt:',lock:lease,preflight:{},preflightEvidence:{},applicationIdentity:{nonce,bundleSha256:bundle,runnerBundleSha256:bundle,backendPid:31337,backendStart:stamp(0),applicationName:'ytrace-budget-pause-i-'+nonce},
++    stateIo:{async pathExists(path){return files.has(path);},async createJson(path,value){assert.equal(files.has(path),false);files.set(path,clone(value));if(stage==='before-submission')peer.disconnect();}},
++    write:async(path,event)=>{events.push(event);if(stage==='after-commit'&&event.event==='COMMIT_ACKNOWLEDGED')peer.disconnect();},
++    postflight:async()=>{postflights++;if(stage==='during-postflight')peer.disconnect();},
++    verifyStatePath:async()=>{},
++  };
++  const result=await runOneShot(args);
++  const evidence={result,submissions,postflights,markerPresent:files.has(':memory-marker:'),lockPresent:state.present,releaseCalls:state.releaseCalls,events};
++  peer.channel.close();return evidence;
++}
++
++for(const [stage,count] of [['before-submission',0],['during-query',1],['after-commit',1],['during-postflight',1]]){
++  test('channel loss '+stage+' stops unresolved, retains lock/marker and never resubmits',async()=>{
++    const evidence=await simulatedSubmission(stage);
++    assert.equal(evidence.result.status,'UNRESOLVED');assert.equal(evidence.submissions,count);
++    assert.equal(evidence.result.submissionCount,count);assert.equal(evidence.result.automaticRetries,0);
++    assert.equal(evidence.result.retainLock,true);assert.equal(evidence.result.retainAttemptMarker,true);
++    assert.equal(evidence.markerPresent,true);assert.equal(evidence.lockPresent,true);assert.equal(evidence.releaseCalls,0);
++    assert.equal(resultExitCode('--install',evidence.result),2);
++  });
++}
++
++test('live channel allows one simulated submission with provisional receipt status only',async()=>{
++  const evidence=await simulatedSubmission('live');
++  assert.equal(evidence.submissions,1);assert.equal(evidence.postflights,1);
++  assert.equal(evidence.result.status,'COMMITTED_AWAITING_SUPERVISOR_VERIFICATION');
++  assert.equal(evidence.result.automaticRetries,0);assert.equal(evidence.lockPresent,true);assert.equal(evidence.markerPresent,true);assert.equal(evidence.releaseCalls,0);
++  assert.equal(resultExitCode('--install',evidence.result),2);
++});
++
++test('real harmless child verifies two fresh challenges over its original inherited IPC channel',async()=>{
++  const {state,lock}=await ownedMemoryLock();lock.claim.pid=process.pid;state.current.pid=process.pid;
++  const program='(async()=>{const {createWorkerSupervisorChannel}=await import("./budget-runner-core.mjs");process.once("message",async m=>{let channel;try{channel=createWorkerSupervisorChannel({claim:m.claim,bundleSha256:"'+bundle+'"});await channel.verify();await channel.verify();channel.assertLive();console.log(JSON.stringify({status:"SYNTHETIC_ACK_VERIFIED",checks:2}));}catch{process.exitCode=2;}finally{channel?.close();}});process.send({protocol:"YTRACE_BUDGET_WORKER_READY_V1",pid:process.pid,bundleSha256:"'+bundle+'"});})();';
++  let launches=0;
++  // Pass the same permission arguments explicitly: inherited NODE_OPTIONS alone
++  // does not reliably preserve Windows paths for dynamic imports in Node -e.
++  const permissionArgs=process.execArgv.filter(arg=>arg==='--permission'||arg==='--allow-child-process'||arg.startsWith('--allow-fs-read='));
++  const child=await launchWorkerOnce({runner:':never-executed:',lock,bundleSha256:bundle,spawnProcess:(file,args,options)=>{launches++;return spawn(file,[...permissionArgs,'-e',program],{...options,cwd:fileURLToPath(new URL('.',import.meta.url))});}});
++  assert.equal(launches,1);assert.equal(child.status,0);assert.equal(child.leaseSent,true);
++  assert.deepEqual(JSON.parse(child.stdout),{status:'SYNTHETIC_ACK_VERIFIED',checks:2});
++  assert.equal(state.present,true);assert.equal(state.marker,true);assert.equal(state.releaseCalls,0);
++});
++
++test('worker keeps IPC through final result; no reconnect/PID fallback and sole supervisor release remain',async()=>{
++  const runner=(await readRelative('./native-budget-pause-runner.mjs')).toString('utf8');
++  const core=(await readRelative('./budget-runner-core.mjs')).toString('utf8');
++  const receive=runner.slice(runner.indexOf('async function receiveSupervisorClaim'),runner.indexOf('async function runInstallWorker'));
++  assert.equal(receive.includes('process.disconnect()'),false);
++  assert.ok(receive.includes('createWorkerSupervisorChannel('));assert.ok(runner.includes('await channel.verify(); // After database shutdown'));
++  const lease=core.slice(core.indexOf('export async function attachWorkerLock'),core.indexOf('// Resolve first, verify paths'));
++  assert.equal(lease.includes('io.alive'),false);assert.equal(lease.includes('process.kill'),false);
++  assert.ok(core.includes('lock.assertLive(); // Last synchronous check'));assert.ok(core.includes('await lock.guard(client.query(sql))'));
++  assert.equal(runner.includes('lock.release'),false);
++});
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-runner.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\native-budget-pause-runner.mjs"
+index cffbf1c..762f99c 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-runner.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\native-budget-pause-runner.mjs"	
+@@ -15,7 +15,7 @@ import {
+   protectedDataDigest,verifyBudgetState,stableFoundation,foundationStructure,
+   verifyFoundationReceipt,comparePreservation,verifyNativeIdentity,
+   verifyControlPlaneProof,verifyAuthorization,validateBudgetStateShape,canonicalJson,durableCreateJson,durableAppendJsonLine,
+-  readJson,attachWorkerLock,verifySupervisorClaim,verifyPgDriverBinding,runOneShot,verifyOriginalBackendFinished,classifyReconciliation,
++  readJson,attachWorkerLock,createWorkerSupervisorChannel,verifySupervisorClaim,verifyPgDriverBinding,runOneShot,verifyOriginalBackendFinished,classifyReconciliation,
+   verifyTlsSocket,environmentSafety,createInstallApplicationName,checkManifestShape,
+   bundleSha256,pathExists,preflightStateFingerprint,scrubReceiptValue,checkNoSymlink,
+   REVIEWED_CODE_FILES,verifyInstallationReceipt,resultExitCode,
+@@ -43,6 +43,7 @@ const inputPaths=Object.freeze({
+ });
+ const codeFiles=REVIEWED_CODE_FILES;
+ const statePath=name=>resolve(stateDir,name);
++let activeSupervisorChannel=null;
+ const isDirect=process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href;
+ 
+ function within(parent,child){const rel=relative(parent,child);return rel!==''&&rel!=='..'&&!rel.startsWith('..'+sep)&&!rel.startsWith('..\\')&&!rel.includes(':');}
+@@ -334,14 +335,13 @@ export async function prepareInstallation(loaded,{workerClaim}={}){
+ async function receiveSupervisorClaim(loaded){
+   requireGuard(process.connected===true&&typeof process.send==='function','SUPERVISOR_IPC_REQUIRED');
+   return await new Promise((accept,reject)=>{
++    const cleanup=()=>{clearTimeout(timer);process.off('message',onMessage);process.off('disconnect',fail);};
+     const fail=()=>{cleanup();reject(new Error('SUPERVISOR_LEASE_UNAVAILABLE'));};
+-    const cleanup=()=>{clearTimeout(timer);process.off('message',onMessage);process.off('disconnect',fail);if(process.connected)process.disconnect();};
+     const onMessage=message=>{
+       try{
+         requireGuard(message?.protocol==='YTRACE_BUDGET_SUPERVISOR_LEASE_V1','SUPERVISOR_LEASE_PROTOCOL_INVALID');
+-        verifySupervisorClaim(message.claim,loaded.bundleSha256);
+-        requireGuard(message.claim.pid===process.ppid,'WORKER_PARENT_IDENTITY_MISMATCH');
+-        cleanup();accept(message.claim);
++        const channel=createWorkerSupervisorChannel({claim:message.claim,bundleSha256:loaded.bundleSha256});
++        cleanup();activeSupervisorChannel=channel;accept(channel); // Keep the original channel open.
+       }catch{fail();}
+     };
+     const timer=setTimeout(fail,5000);
+@@ -350,8 +350,9 @@ async function receiveSupervisorClaim(loaded){
+   });
+ }
+ 
+-async function runInstallWorker(loaded,claim){
+-  const lock=await attachWorkerLock(statePath(STATE_FILES.lock),{claim,bundleSha256:loaded.bundleSha256});
++async function runInstallWorker(loaded,supervisorChannel){
++  const claim=supervisorChannel.claim;
++  const lock=await attachWorkerLock(statePath(STATE_FILES.lock),{claim,bundleSha256:loaded.bundleSha256,supervisorChannel});
+   const {control,caSha,records}=await prepareInstallation(loaded,{workerClaim:claim});
+   let client;
+   try{
+@@ -497,17 +498,28 @@ async function main(){
+   await ensureDriverAndInputs(loaded);
+   if(mode==='--review')return {status:'PASS',mode:'OFFLINE_REVIEW',project:TARGET.project,host:TARGET.host,sqlBytes:SQL_BYTES,sqlSha256:SQL_SHA,runnerBundleSha256:loaded.bundleSha256,driverVersion:loaded.manifest.driverVersion,driverRuntimeFiles:loaded.driver.files.length,protectedInventoryRelations:loaded.relations.length,readOnlyContracts:loaded.readOnlyContracts,foundationStructureSha256:loaded.foundationExpected.sha256,connectionAttempted:false,installationActivated:false};
+   if(mode==='--preflight')return await runPreflight(loaded);
+-  if(mode==='--install-worker')return await runInstallWorker(loaded,await receiveSupervisorClaim(loaded));
++  if(mode==='--install-worker'){
++    const channel=await receiveSupervisorClaim(loaded);
++    const result=await runInstallWorker(loaded,channel);
++    await channel.verify(); // After database shutdown and worker receipt verification.
++    channel.assertLive();
++    return result;
++  }
+   return await runReconcile(loaded);
+ }
+ 
+ if(isDirect){
+   main().then(result=>{
++    if(process.argv[2]==='--install-worker')activeSupervisorChannel?.assertLive();
+     console.log(JSON.stringify(scrubReceiptValue(result)));
+     process.exitCode=resultExitCode(process.argv[2]??'--review',result);
+   }).catch(error=>{
+-    console.log(JSON.stringify({status:'BLOCKED',project:TARGET.project,error:safeError(error),automaticRetries:0,action:'Stop; preserve operation state and review sanitized evidence.'}));
++    console.log(JSON.stringify({status:process.argv[2]==='--install-worker'?'UNRESOLVED':'BLOCKED',retainLock:true,retainAttemptMarker:true,stopForHumanReview:true,project:TARGET.project,error:safeError(error),automaticRetries:0,action:'Stop; preserve operation state and review sanitized evidence.'}));
+     process.exitCode=2;
++  }).finally(()=>{
++    // Only after emitting the terminal worker result; never a lock release.
++    if(activeSupervisorChannel)activeSupervisorChannel.close();
++    else if(process.argv[2]==='--install-worker'&&process.connected)process.disconnect();
+   });
+ }
+ 
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-supervisor.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\native-budget-pause-supervisor.mjs"
+index bcf97db..e036c59 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-supervisor.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T161403Z\\native-budget-pause-supervisor.mjs"	
+@@ -7,7 +7,7 @@ import {spawn} from 'node:child_process';
+ import {
+   TARGET,STATE_REL,STATE_FILES,SQL_SHA,canonicalJson,requireGuard,safeError,
+   scrubReceiptValue,environmentSafety,verifyInstallationReceipt,resultExitCode,
+-  workerReadyForVerification,claimBudgetLock,
++  workerReadyForVerification,claimBudgetLock,verifySupervisorChallenge,SUPERVISOR_CHALLENGE,
+ } from './budget-runner-core.mjs';
+ import {loadReviewedInputs,invokeAcl,prepareInstallation} from './native-budget-pause-runner.mjs';
+ 
+@@ -16,7 +16,7 @@ import {loadReviewedInputs,invokeAcl,prepareInstallation} from './native-budget-
+ export async function launchWorkerOnce({runner,lock,bundleSha256,spawnProcess=spawn,verifyLock}){
+   await lock.verify(verifyLock);
+   return await new Promise(resolveChild=>{
+-    let stdout='',settled=false,leaseSent=false;
++    let stdout='',settled=false,leaseSent=false,challengePending=false,lastSequence=0;
+     const child=spawnProcess(process.execPath,[runner,'--install-worker'],{
+       cwd:resolve(fileURLToPath(new URL('.',import.meta.url)),'../../../..'),
+       windowsHide:true,env:{...process.env},stdio:['ignore','pipe','ignore','ipc'],
+@@ -29,13 +29,28 @@ export async function launchWorkerOnce({runner,lock,bundleSha256,spawnProcess=sp
+     child.stdout.on('error',fail);
+     child.on('error',fail);
+     child.on('message',async message=>{
+-      if(leaseSent||message?.protocol!=='YTRACE_BUDGET_WORKER_READY_V1'||message.pid!==child.pid||message.bundleSha256!==bundleSha256){fail();return;}
+-      leaseSent=true; // At most one IPC lease and one worker launch, including failures.
++      if(settled)return;
+       try{
+-        await lock.verify(verifyLock);
++        if(!leaseSent){
++          requireGuard(message?.protocol==='YTRACE_BUDGET_WORKER_READY_V1'&&message.pid===child.pid&&message.bundleSha256===bundleSha256,'WORKER_READY_SCOPE_MISMATCH');
++          leaseSent=true;
++          challengePending=true;
++          await lock.verify(verifyLock);
++          if(settled)return;
++          requireGuard(child.connected===true,'SUPERVISOR_CHANNEL_DISCONNECTED');
++          challengePending=false;
++          child.send({protocol:'YTRACE_BUDGET_SUPERVISOR_LEASE_V1',claim:lock.claim},error=>{if(error)fail();});
++          clearTimeout(timer);
++          return;
++        }
++        requireGuard(message?.protocol===SUPERVISOR_CHALLENGE&&!challengePending,'SUPERVISOR_CHALLENGE_UNEXPECTED');
++        const ack=verifySupervisorChallenge(message,{claim:lock.claim,workerPid:child.pid,lastSequence});
++        lastSequence=message.sequence;challengePending=true;
++        await lock.verify(verifyLock); // Only the original supervisor on this IPC channel can acknowledge.
+         if(settled)return;
+-        child.send({protocol:'YTRACE_BUDGET_SUPERVISOR_LEASE_V1',claim:lock.claim},error=>{if(error)fail();});
+-        clearTimeout(timer);
++        requireGuard(child.connected===true,'SUPERVISOR_CHANNEL_DISCONNECTED');
++        challengePending=false;
++        child.send(ack,error=>{if(error)fail();});
+       }catch{fail();}
+     });
+     child.on('close',(status,signal)=>finish({status,signal,stdout,leaseSent}));

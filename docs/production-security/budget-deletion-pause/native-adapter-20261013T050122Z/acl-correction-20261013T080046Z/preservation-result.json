@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "operatorSnapshotSha256": "d39f410abbe9b5ac702a63c9da9a7346e8f4cbf2c509451cdb8e1a0ee6cb9e9b",
+  "beforeAfterSnapshotBytesEqual": true,
+  "proofSha256": "0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd",
+  "temporaryAclFixtureDirectoriesRemaining": 0,
+  "sqlBytes": 11945,
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "diffChecks": "PASS",
+  "databaseConnectionAttempted": false
+}

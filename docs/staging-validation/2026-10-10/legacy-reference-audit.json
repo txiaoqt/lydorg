@@ -1,0 +1,224 @@
+{
+  "scope": "Production read-only aggregate counts (read-only transaction). No object names, URLs, organization identifiers or personal data.",
+  "project": "mqqaykksadotbrghbexz",
+  "ambiguous_cross_org_objects": 0,
+  "asset_references": [
+    {
+      "form": "legacy-public-url:this-project",
+      "kind": "news",
+      "live_flag": true,
+      "percent_encoded": 0,
+      "total": 3
+    },
+    {
+      "form": "canonical",
+      "kind": "template",
+      "live_flag": true,
+      "percent_encoded": 0,
+      "total": 13
+    }
+  ],
+  "captured_at": "2026-10-09T17:13:24.472293+00:00",
+  "objects_by_bucket": [
+    {
+      "bucket_id": "budget-request-files",
+      "legacy_owner_only": 0,
+      "objects": 37,
+      "owner_disagree": 0,
+      "unowned": 0,
+      "unreferenced": 31
+    },
+    {
+      "bucket_id": "liquidation-report-files",
+      "legacy_owner_only": 0,
+      "objects": 21,
+      "owner_disagree": 0,
+      "unowned": 0,
+      "unreferenced": 16
+    },
+    {
+      "bucket_id": "move-files",
+      "legacy_owner_only": 0,
+      "objects": 1,
+      "owner_disagree": 0,
+      "unowned": 0,
+      "unreferenced": 1
+    },
+    {
+      "bucket_id": "news-release-images",
+      "legacy_owner_only": 0,
+      "objects": 15,
+      "owner_disagree": 0,
+      "unowned": 15,
+      "unreferenced": 12
+    },
+    {
+      "bucket_id": "organization-documents",
+      "legacy_owner_only": 0,
+      "objects": 189,
+      "owner_disagree": 0,
+      "unowned": 0,
+      "unreferenced": 152
+    },
+    {
+      "bucket_id": "template-files",
+      "legacy_owner_only": 0,
+      "objects": 69,
+      "owner_disagree": 0,
+      "unowned": 69,
+      "unreferenced": 56
+    },
+    {
+      "bucket_id": "ypop-files",
+      "legacy_owner_only": 0,
+      "objects": 38,
+      "owner_disagree": 0,
+      "unowned": 0,
+      "unreferenced": 17
+    }
+  ],
+  "objects_referenced_more_than_once": 0,
+  "private_reference_states": [
+    {
+      "kind": "budget",
+      "state": "budget_released",
+      "total": 5
+    },
+    {
+      "kind": "budget",
+      "state": "needs_revision",
+      "total": 1
+    },
+    {
+      "kind": "liquidation",
+      "state": "completed_liquidated",
+      "total": 4
+    },
+    {
+      "kind": "liquidation",
+      "state": "draft",
+      "total": 1
+    },
+    {
+      "kind": "registration",
+      "state": "approved_green",
+      "total": 539
+    },
+    {
+      "kind": "registration",
+      "state": "needs_revision",
+      "total": 1
+    },
+    {
+      "kind": "registration",
+      "state": "rejected_red",
+      "total": 1
+    },
+    {
+      "kind": "registration",
+      "state": "under_admin_review",
+      "total": 6
+    },
+    {
+      "kind": "ypop-city-proof",
+      "state": "verified",
+      "total": 17
+    },
+    {
+      "kind": "ypop-org-activity",
+      "state": "approved",
+      "total": 4
+    }
+  ],
+  "private_references": [
+    {
+      "canonical": 6,
+      "http_reference": 0,
+      "kind": "budget",
+      "non_uuid_parent_prefix": 0,
+      "object_exists": 6,
+      "object_missing": 0,
+      "other_form": 0,
+      "owner_id_null_legacy_owner_only": 0,
+      "owner_matches_parent_org_user": 6,
+      "owner_mismatch": 0,
+      "owner_null": 0,
+      "owner_owner_id_disagree": 0,
+      "references_total": 6,
+      "wrong_org_prefix": 0
+    },
+    {
+      "canonical": 5,
+      "http_reference": 0,
+      "kind": "liquidation",
+      "non_uuid_parent_prefix": 0,
+      "object_exists": 5,
+      "object_missing": 0,
+      "other_form": 0,
+      "owner_id_null_legacy_owner_only": 0,
+      "owner_matches_parent_org_user": 5,
+      "owner_mismatch": 0,
+      "owner_null": 0,
+      "owner_owner_id_disagree": 0,
+      "references_total": 5,
+      "wrong_org_prefix": 0
+    },
+    {
+      "canonical": 547,
+      "http_reference": 0,
+      "kind": "registration",
+      "non_uuid_parent_prefix": 0,
+      "object_exists": 37,
+      "object_missing": 0,
+      "other_form": 0,
+      "owner_id_null_legacy_owner_only": 0,
+      "owner_matches_parent_org_user": 37,
+      "owner_mismatch": 0,
+      "owner_null": 0,
+      "owner_owner_id_disagree": 0,
+      "references_total": 547,
+      "wrong_org_prefix": 0
+    },
+    {
+      "canonical": 17,
+      "http_reference": 0,
+      "kind": "ypop-city-proof",
+      "non_uuid_parent_prefix": 0,
+      "object_exists": 17,
+      "object_missing": 0,
+      "other_form": 0,
+      "owner_id_null_legacy_owner_only": 0,
+      "owner_matches_parent_org_user": 17,
+      "owner_mismatch": 0,
+      "owner_null": 0,
+      "owner_owner_id_disagree": 0,
+      "references_total": 17,
+      "wrong_org_prefix": 0
+    },
+    {
+      "canonical": 4,
+      "http_reference": 0,
+      "kind": "ypop-org-activity",
+      "non_uuid_parent_prefix": 0,
+      "object_exists": 4,
+      "object_missing": 0,
+      "other_form": 0,
+      "owner_id_null_legacy_owner_only": 0,
+      "owner_matches_parent_org_user": 4,
+      "owner_mismatch": 0,
+      "owner_null": 0,
+      "owner_owner_id_disagree": 0,
+      "references_total": 4,
+      "wrong_org_prefix": 0
+    }
+  ],
+  "profile_images_published_candidates": 0,
+  "profile_images_published_with_image_mime": 0,
+  "registration_revision_history": {
+    "history_entries": 2,
+    "rows_with_canonical_in_history": 2,
+    "rows_with_history": 2,
+    "rows_with_http_in_history": 0
+  },
+  "suspended_organizations": 1
+}

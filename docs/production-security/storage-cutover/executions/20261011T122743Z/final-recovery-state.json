@@ -1,0 +1,12 @@
+{
+  "database": "postgres",
+  "captured_at": "2026-10-11T12:46:31.643259+00:00",
+  "current_user": "postgres",
+  "session_user": "postgres",
+  "foundation_locks": [],
+  "environment_guard": false,
+  "foundation_rpc_count": 0,
+  "foundation_trigger_count": 0,
+  "foundation_namespace_count": 0,
+  "other_foundation_transactions": []
+}

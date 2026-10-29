@@ -1,0 +1,11 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "status": "ACTIVE_HEALTHY",
+  "verifiedVia": "supabase-control-plane-get-project",
+  "verifiedAt": "2026-10-13T12:33:34.351Z",
+  "platformVersion": "17.6.1.127",
+  "actualRoute": "supabase-cli-2.118.0-projects-list-json (operator-approved substitute for MCP get_project; same Management API project record)",
+  "requestedAt": "2026-10-13T12:33:31.834Z",
+  "onlySanitizedMetadataSaved": true
+}

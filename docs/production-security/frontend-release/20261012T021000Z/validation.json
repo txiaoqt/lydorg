@@ -1,0 +1,208 @@
+{
+  "preparedAt": "2026-10-12T02:40:26.260Z",
+  "environment": {
+    "platform": "win32",
+    "node": "v22.14.0",
+    "dependencyVersions": [
+      {
+        "name": "vite",
+        "locked": "5.4.19",
+        "installed": "5.4.19"
+      },
+      {
+        "name": "typescript",
+        "locked": "5.8.3",
+        "installed": "5.8.3"
+      },
+      {
+        "name": "vitest",
+        "locked": "3.2.4",
+        "installed": "3.2.4"
+      },
+      {
+        "name": "@supabase/supabase-js",
+        "locked": "2.99.0",
+        "installed": "2.99.0"
+      },
+      {
+        "name": "@tanstack/react-query",
+        "locked": "5.83.0",
+        "installed": "5.83.0"
+      },
+      {
+        "name": "@radix-ui/react-select",
+        "locked": "2.2.5",
+        "installed": "2.2.5"
+      }
+    ]
+  },
+  "focusedTests": {
+    "result": "PASS",
+    "passed": 91,
+    "failed": 0,
+    "files": [
+      {
+        "path": "src/lib/admin-storage-access.test.ts",
+        "passed": 19,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/admin-storage-resolver.integration.test.ts",
+        "passed": 37,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/private-query-cache.test.ts",
+        "passed": 2,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/query-client.test.ts",
+        "passed": 3,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/signed-storage-url-cache.test.ts",
+        "passed": 15,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/signed-storage-url.integration.test.ts",
+        "passed": 9,
+        "failed": 0
+      },
+      {
+        "path": "src/test/production-supabase-network-guard.test.ts",
+        "passed": 4,
+        "failed": 0
+      },
+      {
+        "path": "src/admin/components/AdminRenewalDocumentPreview.test.tsx",
+        "passed": 2,
+        "failed": 0
+      }
+    ]
+  },
+  "typecheck": {
+    "result": "PASS",
+    "exitCode": 0,
+    "command": "node <repository>/node_modules/typescript/bin/tsc --noEmit",
+    "cwd": "candidate-complete"
+  },
+  "productionBuild": {
+    "result": "PASS",
+    "exitCode": 0,
+    "surface": "admin",
+    "configuration": {
+      "productionProject": "mqqaykksadotbrghbexz",
+      "keyClass": "anon",
+      "surface": "admin",
+      "passedPublicVariableNames": [
+        "VITE_APP_VERSION",
+        "VITE_DEPLOY_SURFACE",
+        "VITE_ENABLE_STANDALONE_USER_PWA_UI",
+        "VITE_SUPABASE_ANON_KEY",
+        "VITE_SUPABASE_URL"
+      ],
+      "configurationSha256": "84a9bfb7f547708cc2bdb414e2d186177b98161ce82f651396bdfd0bdb5a3e77",
+      "privateOperatorVariablesPassed": false,
+      "foundationEnvFileLoaded": false,
+      "fixedVersion": "1.0.0-admin-storage-rc+20261012021000.src-ffe95e19a23e"
+    }
+  },
+  "reproduction": {
+    "result": "PASS",
+    "allFilesByteIdentical": true,
+    "freshSourceExtraction": true,
+    "dependencyInstallation": "shared existing installation, matching unchanged base package-lock; not a second machine or fresh npm ci"
+  },
+  "secretScan": {
+    "result": "PASS",
+    "serviceRoleJwts": 0,
+    "secretApiKeys": 0,
+    "literalAdminSessionTokens": 0,
+    "privateOperatorVariableNames": 0,
+    "publicAnonJwts": 1,
+    "otherProjectPublicJwts": 0,
+    "productionClientOriginPresent": true,
+    "gatewayNamePresent": true,
+    "fixedVersionPresent": true,
+    "limitation": "Bounded literal/pattern scan; not proof against every possible encoding or inherited non-session literal."
+  },
+  "preservation": {
+    "result": "PASS",
+    "initialFilesChecked": 4126,
+    "changedOriginalFiles": [
+      "src/lib/admin-storage-resolver.integration.test.ts",
+      "src/lib/lydo-connect-supabase.ts"
+    ],
+    "privateEnvironmentFilesRead": false,
+    "existingGeneratedRootBuildPreserved": true
+  },
+  "diffChecks": {
+    "result": "PASS",
+    "rootExitCode": 0,
+    "isolatedNoIndexExitCode": 1,
+    "isolatedDiagnosticBytes": 0,
+    "explanation": "No-index exit 1 denotes intentional source differences; zero diagnostics with CRLF recognized as line endings. Root git diff --check returned 0."
+  },
+  "vercel": {
+    "result": "BLOCKED",
+    "cliVersion": "49.2.0",
+    "authenticatedAccess": false,
+    "reason": "NO_EXISTING_CREDENTIALS",
+    "rootDirectoryVerified": false,
+    "buildSettingsVerified": false,
+    "environmentVerified": false,
+    "rollbackEligibilityVerified": false
+  },
+  "liveAuthorizationTests": "NOT TESTED in this local implementation task",
+  "fullRepositoryTests": "NOT TESTED; focused scope only",
+  "evidence": [
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/prepare-complete-candidate.mjs",
+      "bytes": 7973,
+      "sha256": "4fa8291edd11b7dbf4ff297996dd1e6914e7284dfa6e2602bf07196c3747a2a2"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/build-complete-admin.mjs",
+      "bytes": 7285,
+      "sha256": "5aa47c7950f9fdf35ce0785c9917e812ca5e41b900a2a53f542fb31823f5be18"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/verify-release-artifacts.mjs",
+      "bytes": 7293,
+      "sha256": "3322ddccd6dd221af3de37ba673f755150c0b0a0aaee5d463adb98af47f8e212"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-isolated-tests.json",
+      "bytes": 27537,
+      "sha256": "fb1da210e48c26b6b2bcc7b474f5d48332426bab481a2f6cf86f9f6fc66cc5d2"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-build.log",
+      "bytes": 775,
+      "sha256": "c4dabbe299d3374084948af32ddd16a6d9be888dc379cd6e8785430cccae7a7c"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-reproduction-build.log",
+      "bytes": 774,
+      "sha256": "5d404d3d9e58b034edd24bcc64ef9cb069af63f1eb36c3e05218ef44622baaae"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/vercel-access.log",
+      "bytes": 158,
+      "sha256": "0f8bdc17c56d85b36dc6af3e7633337f66c3cee1bc62782763af6187b6c01415"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/initial-worktree.json",
+      "bytes": 806230,
+      "sha256": "b0d24e9554106c399d23fde4a7b665e083a02d7e1bbe30a91e4175a59bf27c37"
+    }
+  ]
+}

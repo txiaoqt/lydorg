@@ -1,0 +1,64 @@
+// Authenticated read-only browser smoke; refuses network egress outside localhost/staging.
+import {chromium} from '@playwright/test';
+import {readFile,writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const ref='zroudsvpswqsjlyttkjf',stageHost=`${ref}.supabase.co`,prodHost='mqqaykksadotbrghbexz.supabase.co';
+const base='http://127.0.0.1:4173',out='docs/staging-validation/2026-10-11/document-mutation/execution-20261011-02/browser-smoke.json';
+const state=JSON.parse(await readFile('.ytrace-staging-fixtures.local','utf8'));
+const envRaw=await readFile('.env.staging.local','utf8'),env=new Map();
+for(const line of envRaw.split(/\r?\n/)){const m=line.match(/^\s*(YTRACE_STAGING_PROJECT_REF|YTRACE_STAGING_BOOTSTRAP_PASSWORD)\s*=\s*(.*?)\s*$/);if(m){let v=m[2];if((v.startsWith('"')&&v.endsWith('"'))||(v.startsWith("'")&&v.endsWith("'")))v=v.slice(1,-1);env.set(m[1],v);}}
+if(env.get('YTRACE_STAGING_PROJECT_REF')!==ref)throw Error('Staging project guard failed');
+const evidence={projectRef:ref,at:new Date().toISOString(),status:[],network:[],productionRequestsBlocked:0,otherExternalRequestsBlocked:0,pageErrors:0};
+const browser=await chromium.launch({headless:true});
+try{
+ const context=await browser.newContext({viewport:{width:1365,height:900},acceptDownloads:false});
+ await context.route('**/*',async route=>{const u=new URL(route.request().url());if(['127.0.0.1','localhost'].includes(u.hostname)||u.hostname===stageHost)return route.continue();if(u.hostname===prodHost)evidence.productionRequestsBlocked++;else evidence.otherExternalRequestsBlocked++;return route.abort();});
+ const page=await context.newPage();page.on('pageerror',()=>evidence.pageErrors++);
+ const mark=(name,status,details={})=>{evidence.status.push({name,status,...details});};
+ const go=async path=>{await page.goto(base+path,{waitUntil:'domcontentloaded',timeout:60000});await page.locator('body').waitFor({state:'visible'});};
+ const signInOrg=async actor=>{await go('/signin');await page.locator('#email').fill(actor.email);await page.locator('#password').fill(actor.password);await page.getByRole('button',{name:'Sign In'}).click();await page.waitForURL(/dashboard|app|portal/,{timeout:60000});};
+ await signInOrg(state.renewalScenario);
+ mark('Organization normal Auth login','PASS',{authenticatedRoute:new URL(page.url()).pathname});
+ const orgTitle=await page.locator('body').innerText();
+ mark('Synthetic approved renewal visible to owner',/renewal/i.test(orgTitle)&&/approved/i.test(orgTitle)?'PASS':'BLOCKED');
+ await go('/renewals');
+ const renewalText=await page.locator('body').innerText();
+ mark('Owner renewal page loads and shows approval state',/approved/i.test(renewalText)?'PASS':'BLOCKED',{route:'/renewals'});
+ await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(1500);
+ mark('Auth session restores on page reload',new URL(page.url()).pathname!=='/signin'?'PASS':'FAIL',{route:new URL(page.url()).pathname});
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(700);
+ const mobile=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,height:innerHeight}));
+ mark('Mobile viewport has no horizontal page overflow',mobile.scrollWidth<=mobile.width?'PASS':'FAIL',{width:mobile.width,scrollWidth:mobile.scrollWidth});
+ await go('/app');
+ mark('Organization app/PWA route renders after authentication',new URL(page.url()).pathname==='/app'?'PASS':'BLOCKED',{route:new URL(page.url()).pathname});
+ const signOut=page.getByRole('button',{name:/sign out/i});
+ if(await signOut.count()) {await signOut.first().click();await page.waitForURL(/signin|\/$/, {timeout:30000});mark('Organization UI logout','PASS',{route:new URL(page.url()).pathname});}
+ else mark('Organization UI logout','BLOCKED',{reason:'Sign-out control not located'});
+ await go('/renewals');
+ mark('Logged-out direct renewal route is protected',new URL(page.url()).pathname==='/signin'?'PASS':'FAIL',{route:new URL(page.url()).pathname});
+ await signInOrg(state.actors.B);
+ const switchedBody=await page.locator('body').innerText();
+ const staleA=switchedBody.includes(state.renewalScenario.name);
+ mark('Account switch does not retain previous synthetic organization data',!staleA?'PASS':'FAIL');
+ await go('/signin');
+ await page.getByRole('button',{name:'Admin',exact:true}).click();
+ await page.locator('#username').fill('staging-super-admin');
+ await page.locator('#password').fill(env.get('YTRACE_STAGING_BOOTSTRAP_PASSWORD')??'');
+ await page.getByRole('button',{name:'Sign In'}).click();await page.waitForURL(/admin/, {timeout:60000});
+ mark('Admin normal custom-session login','PASS',{route:new URL(page.url()).pathname});
+ await go('/admin/renewals');await page.waitForTimeout(2500);
+ const adminBody=await page.locator('body').innerText();
+ mark('Admin Renewals route renders authenticated content',/renewal/i.test(adminBody)&&!/not authorized/i.test(adminBody)?'PASS':'BLOCKED');
+ evidence.network.push({note:'Requests are captured by route policy; request payloads and query strings are never recorded.'});
+ if(evidence.productionRequestsBlocked)evidence.status.push({name:'Production network isolation',status:'FAIL',blockedRequests:evidence.productionRequestsBlocked});
+ else mark('No request attempted against production Supabase','PASS');
+ if(evidence.otherExternalRequestsBlocked)mark('Third-party external requests were blocked by test guard','PASS',{count:evidence.otherExternalRequestsBlocked});
+ mark('File preview/download in browser','BLOCKED',{reason:'The approved cycle has no safe UI action for opening its preserved evidence; no destructive or state-changing control was invoked'});
+ mark('Browser revision/resubmission and interrupted upload','BLOCKED',{reason:'No separate editable fixture; no upload was attempted'});
+ mark('True session expiration/recovery','BLOCKED',{reason:'No expired test session available; did not alter a persisted session'});
+ mark('Physical installed PWA/offline service worker','BLOCKED',{reason:'Local DEV server does not register production service worker; no installed-device session available'});
+ evidence.finalRoute=new URL(page.url()).pathname;evidence.pageErrors=evidence.pageErrors;
+ await writeFile(out,JSON.stringify(evidence,null,2),{flag:'wx'});
+ console.log(JSON.stringify({saved:out,checks:evidence.status.map(x=>({name:x.name,status:x.status})),productionRequestsBlocked:evidence.productionRequestsBlocked,pageErrors:evidence.pageErrors}));
+ await context.close();
+}finally{await browser.close();}

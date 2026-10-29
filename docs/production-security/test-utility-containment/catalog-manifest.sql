@@ -1,0 +1,23 @@
+-- Read-only production catalog manifest; contains fingerprints, never function bodies or credentials.
+SELECT jsonb_build_object(
+ 'functions',(SELECT jsonb_agg(jsonb_build_object(
+  'signature',p.oid::regprocedure::text,'md5',md5(pg_get_functiondef(p.oid)),
+  'owner',pg_get_userbyid(p.proowner),'security_definer',p.prosecdef,'volatility',p.provolatile,
+  'acl',(SELECT jsonb_agg(jsonb_build_object('grantee',coalesce(r.rolname,'PUBLIC'),'privilege',a.privilege_type,'grantable',a.is_grantable,'grantor',pg_get_userbyid(a.grantor)) ORDER BY coalesce(r.rolname,'PUBLIC'),a.privilege_type,a.is_grantable) FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a LEFT JOIN pg_roles r ON r.oid=a.grantee)
+ ) ORDER BY n.nspname,p.proname,p.oid::regprocedure::text)
+ FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+ WHERE (n.nspname='public' AND p.proname IN ('admin_approve_renewal','admin_cleanup_yorp_sample_dataset','admin_ensure_renewal_test_account_profile','admin_get_or_create_renewal_test_account','admin_get_yorp_sample_dataset_status','admin_prepare_renewal_test_scenario','admin_reset_renewal_test_scenario','admin_restore_renewal_test_scenario','admin_seed_renewal_test_registration_documents','admin_seed_yorp_sample_dataset','admin_seed_yorp_sample_dataset_core','calculate_organization_renewal_eligibility','delete_organization_account_canonical','diversify_yorp_seed_projects_and_budgets','enforce_accreditation_immutability','enforce_renewal_terminal_immutability','guard_organization_identity_privileges','guard_submitted_registration_document_edits','is_development_or_test_environment','promote_renewal_submission_files_for_review','rebalance_yorp_seed_reporting_quarters','repair_yorp_seeded_fixture_relationships','replace_organization_document_file','update_admin_document_submission_file_review','user_replace_document_submission_file','user_resubmit_renewal','user_start_or_get_renewal_draft','user_submit_renewal','validate_admin_session_token'))
+ OR (n.nspname='ytrace_identity' AND p.proname IN ('authorize_reviewer','has_retained_history'))),
+ 'tables',(SELECT jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,'owner',pg_get_userbyid(c.relowner),'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,
+ 'acl',(SELECT jsonb_agg(jsonb_build_object('grantee',coalesce(r.rolname,'PUBLIC'),'privilege',a.privilege_type,'grantable',a.is_grantable,'grantor',pg_get_userbyid(a.grantor)) ORDER BY coalesce(r.rolname,'PUBLIC'),a.privilege_type,a.is_grantable) FROM aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a LEFT JOIN pg_roles r ON r.oid=a.grantee),
+ 'columns',(SELECT md5(string_agg(a.attname||':'||format_type(a.atttypid,a.atttypmod)||':'||a.attnotnull||':'||coalesce(pg_get_expr(d.adbin,d.adrelid),''),E'\n' ORDER BY a.attnum)) FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum WHERE a.attrelid=c.oid AND a.attnum>0 AND NOT a.attisdropped),
+ 'constraints',(SELECT md5(coalesce(string_agg(con.conname||':'||pg_get_constraintdef(con.oid),E'\n' ORDER BY con.conname),'')) FROM pg_constraint con WHERE con.conrelid=c.oid),
+ 'triggers',(SELECT md5(coalesce(string_agg(t.tgname||':'||t.tgenabled::text||':'||pg_get_triggerdef(t.oid),E'\n' ORDER BY t.tgname),'')) FROM pg_trigger t WHERE t.tgrelid=c.oid AND NOT t.tgisinternal)
+ ) ORDER BY n.nspname,c.relname)
+ FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+ WHERE (n.nspname='public' AND c.relname IN ('organization_profiles','organization_accreditations','organization_renewals','document_submissions','document_submission_files','admin_accounts','admin_sessions','roles','budget_requests','liquidation_reports'))
+ OR (n.nspname='supabase_migrations' AND c.relname='schema_migrations')),
+ 'policies',(SELECT md5(coalesce(string_agg(schemaname||':'||tablename||':'||policyname||':'||roles::text||':'||cmd||':'||permissive||':'||coalesce(qual,'')||':'||coalesce(with_check,''),E'\n' ORDER BY schemaname,tablename,policyname),'')) FROM pg_policies WHERE schemaname IN ('public','storage')),
+ 'roles',(SELECT jsonb_agg(jsonb_build_object('name',r.rolname,'inherit',r.rolinherit,'bypass_rls',r.rolbypassrls,'superuser',r.rolsuper,'memberships',(SELECT coalesce(jsonb_agg(parent.rolname ORDER BY parent.rolname),'[]'::jsonb) FROM pg_auth_members m JOIN pg_roles parent ON parent.oid=m.roleid WHERE m.member=r.oid)) ORDER BY r.rolname) FROM pg_roles r WHERE r.rolname IN ('anon','authenticated','service_role','postgres','authenticator')),
+ 'migrations',(SELECT jsonb_build_object('count',count(*),'latest',max(version),'fingerprint',md5(coalesce(string_agg(version||':'||coalesce(name,''),E'\n' ORDER BY version),''))) FROM supabase_migrations.schema_migrations)
+) AS manifest;

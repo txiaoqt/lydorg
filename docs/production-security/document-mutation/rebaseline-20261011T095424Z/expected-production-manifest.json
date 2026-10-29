@@ -1,0 +1,4569 @@
+{
+  "absence": {
+    "guard_name_collisions": 0,
+    "patch_namespace_absent": true
+  },
+  "catalog": {
+    "roles": [
+      {
+        "name": "anon",
+        "inherit": true,
+        "superuser": false,
+        "bypass_rls": false,
+        "memberships": []
+      },
+      {
+        "name": "authenticated",
+        "inherit": true,
+        "superuser": false,
+        "bypass_rls": false,
+        "memberships": []
+      },
+      {
+        "name": "authenticator",
+        "inherit": false,
+        "superuser": false,
+        "bypass_rls": false,
+        "memberships": [
+          "anon",
+          "authenticated",
+          "service_role"
+        ]
+      },
+      {
+        "name": "postgres",
+        "inherit": true,
+        "superuser": false,
+        "bypass_rls": true,
+        "memberships": [
+          "anon",
+          "authenticated",
+          "authenticator",
+          "pg_create_subscription",
+          "pg_monitor",
+          "pg_read_all_data",
+          "pg_signal_backend",
+          "service_role",
+          "supabase_privileged_role"
+        ]
+      },
+      {
+        "name": "service_role",
+        "inherit": true,
+        "superuser": false,
+        "bypass_rls": true,
+        "memberships": []
+      }
+    ],
+    "tables": [
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "admin_accounts",
+        "schema": "public",
+        "columns": "4551aa8da02e2592f39e9e64211be064",
+        "triggers": "1a1499842d5f27edacd4e1d6f2570f98",
+        "force_rls": false,
+        "constraints": "75a8fadb2e396dff4c711ac5e2916c06"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "admin_sessions",
+        "schema": "public",
+        "columns": "8634257d5bac18b9b6ff371e86a411a7",
+        "triggers": "d41d8cd98f00b204e9800998ecf8427e",
+        "force_rls": false,
+        "constraints": "97e5656f5e0631c1e8d3025e1f9c7847"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "budget_requests",
+        "schema": "public",
+        "columns": "3096f91420f62d972ea1ab4675ad746e",
+        "triggers": "97f63e10c05f3dcdbe8e125b8c129d82",
+        "force_rls": false,
+        "constraints": "c5f77f29023039863a8f616a1ec45c5d"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "document_submission_files",
+        "schema": "public",
+        "columns": "f0e8a7e204774430ae6be40404e00bfa",
+        "triggers": "b694a5934a232f11177512b8038b1fd8",
+        "force_rls": false,
+        "constraints": "bcf6f972eac64aafe2545ed58165498e"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "document_submissions",
+        "schema": "public",
+        "columns": "aa73f305418b2801c8579b1c3f0253a9",
+        "triggers": "a4a2edfc5ff6f05984da8c3865893669",
+        "force_rls": false,
+        "constraints": "6fbcdb4e9de2cbd2cf385d7346a5246d"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "liquidation_reports",
+        "schema": "public",
+        "columns": "f2cb0b35fc2c3e8ce52e46fa60abb8ed",
+        "triggers": "81f7c36b10901f13f21ced5bc45eb792",
+        "force_rls": false,
+        "constraints": "bd6da7b36b9d4fc9943f21719d6821ca"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "organization_accreditations",
+        "schema": "public",
+        "columns": "cd7cd233f91788ef690357b8068839ac",
+        "triggers": "c72d28c86b31fd42730d24f261dd8d82",
+        "force_rls": false,
+        "constraints": "a6533b63860bb8fe4a84a518fafb99b3"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "organization_profiles",
+        "schema": "public",
+        "columns": "294d48d903a30c6f2aeffd7f041e62cf",
+        "triggers": "09102523d10651bef58689c05ab16bb4",
+        "force_rls": false,
+        "constraints": "f5bfa675b135ad63287f4a70e04f3999"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "organization_renewals",
+        "schema": "public",
+        "columns": "74977b28c3b8674b9112ab6d10bc3831",
+        "triggers": "f40ca4827bad3c5bde2a95b076f386c8",
+        "force_rls": false,
+        "constraints": "f04ada1d2eb94e6a05f598c2c2d367bd"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": true,
+        "owner": "postgres",
+        "table": "roles",
+        "schema": "public",
+        "columns": "5e0dde8a5f0b0e0bac4b5383185d7c9f",
+        "triggers": "d41d8cd98f00b204e9800998ecf8427e",
+        "force_rls": false,
+        "constraints": "8ed6742f27efeb959b05f537a069828e"
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "MAINTAIN"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "UPDATE"
+          }
+        ],
+        "rls": false,
+        "owner": "postgres",
+        "table": "schema_migrations",
+        "schema": "supabase_migrations",
+        "columns": "b1ec9c72c85d36c594e0356c8e2cfb31",
+        "triggers": "d41d8cd98f00b204e9800998ecf8427e",
+        "force_rls": false,
+        "constraints": "e1104827b3e948a2eceabea7d1cb1ebb"
+      }
+    ],
+    "policies": "badea3ac4e8877ef1a919bab0883a854",
+    "functions": [
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "33ba7c606820f771e4ed79709bcd188b",
+        "owner": "postgres",
+        "signature": "admin_approve_renewal(text,uuid,text,text)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "804caabb51c48bde392768971a9b6c91",
+        "owner": "postgres",
+        "signature": "admin_cleanup_yorp_sample_dataset(text,text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "e08abef51274c58a5202440fd5242eb1",
+        "owner": "postgres",
+        "signature": "admin_ensure_renewal_test_account_profile(text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "1fe788c8e9983ecc49a925e76f1cd6c9",
+        "owner": "postgres",
+        "signature": "admin_get_or_create_renewal_test_account(text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "4b274df3cba7af260c503260e9fc92f2",
+        "owner": "postgres",
+        "signature": "admin_get_yorp_sample_dataset_status(text,text)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "037a3b0b0844a38619f6ce768cb3372b",
+        "owner": "postgres",
+        "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "8ce7c63826f845120f0616bf3faa2324",
+        "owner": "postgres",
+        "signature": "admin_reset_renewal_test_scenario(text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "d83a26a06867d1b2d1f21027d3e4c6f0",
+        "owner": "postgres",
+        "signature": "admin_restore_renewal_test_scenario(text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "a3e4de38869718a570b7e6b8b2e22d1f",
+        "owner": "postgres",
+        "signature": "admin_seed_renewal_test_registration_documents(text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "b6e376ab185fbe42cc4cd2da3b14c874",
+        "owner": "postgres",
+        "signature": "admin_seed_yorp_sample_dataset(text,text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "33ccae7f636011a5e2a3310035fdc0a0",
+        "owner": "postgres",
+        "signature": "admin_seed_yorp_sample_dataset_core(text,text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "6c46228859ad6e8163988ecbf2db6877",
+        "owner": "postgres",
+        "signature": "calculate_organization_renewal_eligibility(uuid)",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "5c1f0179b9f279eb7a99ff9ee8627c3f",
+        "owner": "postgres",
+        "signature": "delete_organization_account_canonical(text,uuid)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "8e784def2e544f558c0a87cd718204cb",
+        "owner": "postgres",
+        "signature": "diversify_yorp_seed_projects_and_budgets()",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "5ea02f1e637d463c4df2e3c7e333aa4b",
+        "owner": "postgres",
+        "signature": "enforce_accreditation_immutability()",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "bdafdef3fded73e5816c199a5ede36c7",
+        "owner": "postgres",
+        "signature": "enforce_renewal_terminal_immutability()",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "3a0fa47c620efc033eec091090bbee1c",
+        "owner": "postgres",
+        "signature": "guard_organization_identity_privileges()",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "c6265ae36e8db8678de7a4e69691008e",
+        "owner": "postgres",
+        "signature": "guard_submitted_registration_document_edits()",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "683db5c6c05d3012f8b9bb36398f61b9",
+        "owner": "postgres",
+        "signature": "is_development_or_test_environment()",
+        "volatility": "s",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+        "owner": "postgres",
+        "signature": "promote_renewal_submission_files_for_review()",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "e486017358c8e1f9264752f8ef5cdbe9",
+        "owner": "postgres",
+        "signature": "rebalance_yorp_seed_reporting_quarters()",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "7121da46bd1bf383ab352d49eda2235a",
+        "owner": "postgres",
+        "signature": "repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "acl": [
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+        "owner": "postgres",
+        "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "252754fd75505948c26afe27f6b0b760",
+        "owner": "postgres",
+        "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "59370b100efed37d5975dc16983d786a",
+        "owner": "postgres",
+        "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "d19a1d0415f3eb900bab7dea241f0b21",
+        "owner": "postgres",
+        "signature": "user_resubmit_renewal(uuid)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "52bbac2146c7a9473898fb1b6b8908c8",
+        "owner": "postgres",
+        "signature": "user_start_or_get_renewal_draft(uuid)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "d41b680681db2323aba2c62693f59131",
+        "owner": "postgres",
+        "signature": "user_submit_renewal(uuid)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "50d5dcf06885fa593fe5355fc8892d69",
+        "owner": "postgres",
+        "signature": "validate_admin_session_token(text)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "0f5766e8fe835c30681dab0ea86571db",
+        "owner": "postgres",
+        "signature": "ytrace_identity.authorize_reviewer(text)",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "md5": "608aaefe8b604986f752ea289ebed5f5",
+        "owner": "postgres",
+        "signature": "ytrace_identity.has_retained_history(uuid)",
+        "volatility": "s",
+        "security_definer": true
+      }
+    ],
+    "migrations": {
+      "count": 164,
+      "latest": "20261011230000",
+      "fingerprint": "2d1ea52795f2d3c97c71e229819d9a7c"
+    }
+  },
+  "environment_guard": false,
+  "containment_helper": {
+    "acl": "{postgres=X/postgres}",
+    "owner": "postgres",
+    "config": [
+      "search_path=pg_catalog, pg_temp"
+    ],
+    "signature": "ytrace_production_containment.freeze_fixture_markers()",
+    "volatility": "v",
+    "definition_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+    "security_definer": false
+  },
+  "containment_schema": {
+    "acl": "{postgres=UC/postgres}",
+    "owner": "postgres",
+    "api_access": [
+      {
+        "role": "anon",
+        "usage": false,
+        "create": false
+      },
+      {
+        "role": "authenticated",
+        "usage": false,
+        "create": false
+      },
+      {
+        "role": "service_role",
+        "usage": false,
+        "create": false
+      }
+    ]
+  },
+  "containment_receipt": {
+    "name": "production_test_utility_containment",
+    "version": "20261011230000",
+    "record_md5": "5fe4536e323cd22859c65244bced406f"
+  },
+  "complete_history_md5": "1f5eca911f6e2057ae070a955eaca3dc",
+  "trigger_dependencies": [
+    {
+      "name": "RI_ConstraintTrigger_a_18059",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18059\" AFTER DELETE ON public.budget_requests FROM budget_request_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18060",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18060\" AFTER UPDATE ON public.budget_requests FROM budget_request_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18077",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18077\" AFTER DELETE ON public.budget_requests FROM liquidation_reports NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18078",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18078\" AFTER UPDATE ON public.budget_requests FROM liquidation_reports NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18041",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18041\" AFTER INSERT ON public.budget_requests FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18042",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18042\" AFTER UPDATE ON public.budget_requests FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18046",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18046\" AFTER INSERT ON public.budget_requests FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18047",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18047\" AFTER UPDATE ON public.budget_requests FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_26626",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_26626\" AFTER INSERT ON public.budget_requests FROM ypop_entries NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_26627",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_26627\" AFTER UPDATE ON public.budget_requests FROM ypop_entries NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "budget_requests_enforce_purpose_advocacy",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "enforce_budget_request_purpose_advocacy()",
+      "internal": false,
+      "definition": "CREATE TRIGGER budget_requests_enforce_purpose_advocacy BEFORE INSERT OR UPDATE OF organization_id, purpose_category ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION enforce_budget_request_purpose_advocacy()",
+      "function_md5": "926f312b8f40b1583b39a3915af62dd2",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_admin_track_budget_version",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "admin_track_budget_version()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_admin_track_budget_version AFTER INSERT OR DELETE OR UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION admin_track_budget_version()",
+      "function_md5": "850e1e4c4cb6778b8da31168f279a380",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_budget_request_notify",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "notify_budget_change()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_budget_request_notify AFTER UPDATE ON public.budget_requests FOR EACH ROW WHEN ((old.status IS DISTINCT FROM new.status)) EXECUTE FUNCTION notify_budget_change()",
+      "function_md5": "686ea2ace5f32569b67919c70a87c6a7",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_budget_request_status_sync",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "ensure_liquidation_report_for_budget()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_budget_request_status_sync AFTER INSERT OR UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION ensure_liquidation_report_for_budget()",
+      "function_md5": "1e8df8d4dc0c9c112e2953e4937e7305",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_budget_request_ypop_eligibility",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "enforce_budget_request_ypop_eligibility()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_budget_request_ypop_eligibility BEFORE INSERT ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION enforce_budget_request_ypop_eligibility()",
+      "function_md5": "285806ebbbe64543f943854d6a87bfff",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_budget_requests_updated_at",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "set_updated_at()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_budget_requests_updated_at BEFORE UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION set_updated_at()",
+      "function_md5": "8de7ae383447503e8949149bfb3f0efb",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_enforce_budget_request_resubmission",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "enforce_budget_request_resubmission_lifecycle()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_enforce_budget_request_resubmission BEFORE UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION enforce_budget_request_resubmission_lifecycle()",
+      "function_md5": "79d9bc7e8cbce5fb3b7241a51795b762",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_enforce_budget_request_terminal_status",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "enforce_budget_request_terminal_status()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_enforce_budget_request_terminal_status BEFORE INSERT OR UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION enforce_budget_request_terminal_status()",
+      "function_md5": "9c611f8c5fb3e6e80328cbb84c7c3355",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_identity_budget_write",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "guard_organization_identity_financial_write()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_identity_budget_write BEFORE INSERT OR UPDATE OF organization_id, status ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION guard_organization_identity_financial_write()",
+      "function_md5": "34d8cf0a90d5b8da1a75ee0dfdd87688",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_set_budget_request_fiscal_year",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "set_budget_request_fiscal_year()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_set_budget_request_fiscal_year BEFORE INSERT ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION set_budget_request_fiscal_year()",
+      "function_md5": "db25e3d6a0e4a4f15e455dc2f9411840",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18012",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18012\" AFTER INSERT ON public.document_submission_files FROM document_submissions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18013",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18013\" AFTER UPDATE ON public.document_submission_files FROM document_submissions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_33424",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_33424\" AFTER INSERT ON public.document_submission_files FROM required_document_types NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_33425",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_33425\" AFTER UPDATE ON public.document_submission_files FROM required_document_types NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_admin_track_document_file_version",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "admin_track_document_file_version()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_admin_track_document_file_version AFTER INSERT OR DELETE OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION admin_track_document_file_version()",
+      "function_md5": "36f6fe0e336b1ebe464249051f47bc1d",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_document_submission_files_updated_at",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "set_updated_at()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_document_submission_files_updated_at BEFORE UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION set_updated_at()",
+      "function_md5": "8de7ae383447503e8949149bfb3f0efb",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_guard_submitted_registration_document_edits",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "guard_submitted_registration_document_edits()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_guard_submitted_registration_document_edits BEFORE DELETE OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION guard_submitted_registration_document_edits()",
+      "function_md5": "c6265ae36e8db8678de7a4e69691008e",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_immutable_renewal_test_registration_file",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "guard_renewal_test_registration_packet_immutable()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_immutable_renewal_test_registration_file BEFORE INSERT OR DELETE OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION guard_renewal_test_registration_packet_immutable()",
+      "function_md5": "82fe24048d3d32b9c3643409873441ea",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18010",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18010\" AFTER DELETE ON public.document_submissions FROM document_submission_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18011",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18011\" AFTER UPDATE ON public.document_submissions FROM document_submission_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_17980",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_17980\" AFTER INSERT ON public.document_submissions FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_17981",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_17981\" AFTER UPDATE ON public.document_submissions FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_17985",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_17985\" AFTER INSERT ON public.document_submissions FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_17986",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_17986\" AFTER UPDATE ON public.document_submissions FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31716",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31716\" AFTER INSERT ON public.document_submissions FROM organization_renewals NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31717",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31717\" AFTER UPDATE ON public.document_submissions FROM organization_renewals NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_32772",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_32772\" AFTER INSERT ON public.document_submissions FROM admin_accounts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_32773",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_32773\" AFTER UPDATE ON public.document_submissions FROM admin_accounts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_admin_track_document_submission_version",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "admin_track_document_submission_version()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_admin_track_document_submission_version AFTER INSERT OR DELETE OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION admin_track_document_submission_version()",
+      "function_md5": "21d7a797af2af446678a16750235646c",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_document_submission_notify",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "notify_submission_change()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_document_submission_notify AFTER UPDATE ON public.document_submissions FOR EACH ROW WHEN ((old.status IS DISTINCT FROM new.status)) EXECUTE FUNCTION notify_submission_change()",
+      "function_md5": "0da3cdcd6af21b6b28016853b205685f",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_document_submissions_updated_at",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "set_updated_at()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_document_submissions_updated_at BEFORE UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION set_updated_at()",
+      "function_md5": "8de7ae383447503e8949149bfb3f0efb",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_identity_documents_owner",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "guard_historical_organization_owner()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_identity_documents_owner BEFORE UPDATE OF organization_id ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION guard_historical_organization_owner()",
+      "function_md5": "9568bb785b8d832a58e1acc894d74610",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_immutable_renewal_test_registration_submission",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "guard_renewal_test_registration_packet_immutable()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_immutable_renewal_test_registration_submission BEFORE DELETE OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION guard_renewal_test_registration_packet_immutable()",
+      "function_md5": "82fe24048d3d32b9c3643409873441ea",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_promote_renewal_files_for_admin_review",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "promote_renewal_submission_files_for_review()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_promote_renewal_files_for_admin_review AFTER UPDATE OF status ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION promote_renewal_submission_files_for_review()",
+      "function_md5": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18102",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18102\" AFTER DELETE ON public.liquidation_reports FROM liquidation_report_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18103",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18103\" AFTER UPDATE ON public.liquidation_reports FROM liquidation_report_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18079",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18079\" AFTER INSERT ON public.liquidation_reports FROM budget_requests NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18080",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18080\" AFTER UPDATE ON public.liquidation_reports FROM budget_requests NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18084",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18084\" AFTER INSERT ON public.liquidation_reports FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18085",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18085\" AFTER UPDATE ON public.liquidation_reports FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18089",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18089\" AFTER INSERT ON public.liquidation_reports FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_18090",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_18090\" AFTER UPDATE ON public.liquidation_reports FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.liquidation_reports FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_admin_track_liquidation_version",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "admin_track_liquidation_version()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_admin_track_liquidation_version AFTER INSERT OR DELETE OR UPDATE ON public.liquidation_reports FOR EACH ROW EXECUTE FUNCTION admin_track_liquidation_version()",
+      "function_md5": "83a56786814153d81ce56eabb40aaebf",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_identity_liquidation_owner",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "guard_historical_organization_owner()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_identity_liquidation_owner BEFORE UPDATE OF organization_id ON public.liquidation_reports FOR EACH ROW EXECUTE FUNCTION guard_historical_organization_owner()",
+      "function_md5": "9568bb785b8d832a58e1acc894d74610",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_liquidation_report_status_sync",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "notify_liquidation_change()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_liquidation_report_status_sync BEFORE INSERT OR UPDATE ON public.liquidation_reports FOR EACH ROW EXECUTE FUNCTION notify_liquidation_change()",
+      "function_md5": "3307b668e41b44a85323bb20de15aca0",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_liquidation_reports_updated_at",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "set_updated_at()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_liquidation_reports_updated_at BEFORE UPDATE ON public.liquidation_reports FOR EACH ROW EXECUTE FUNCTION set_updated_at()",
+      "function_md5": "8de7ae383447503e8949149bfb3f0efb",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31695",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_setnull_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31695\" AFTER DELETE ON public.organization_accreditations FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_setnull_del\"()",
+      "function_md5": "1c38b71d4bcb1bebb247fb6d1c518e23",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31696",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31696\" AFTER UPDATE ON public.organization_accreditations FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_33734",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_setnull_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_33734\" AFTER DELETE ON public.organization_accreditations FROM organization_renewals NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_setnull_del\"()",
+      "function_md5": "1c38b71d4bcb1bebb247fb6d1c518e23",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_33735",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_33735\" AFTER UPDATE ON public.organization_accreditations FROM organization_renewals NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31648",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31648\" AFTER INSERT ON public.organization_accreditations FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31649",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31649\" AFTER UPDATE ON public.organization_accreditations FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31653",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31653\" AFTER INSERT ON public.organization_accreditations FROM admin_accounts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31654",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31654\" AFTER UPDATE ON public.organization_accreditations FROM admin_accounts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "trg_accreditation_immutability",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "enforce_accreditation_immutability()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_accreditation_immutability BEFORE DELETE OR UPDATE ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION enforce_accreditation_immutability()",
+      "function_md5": "5ea02f1e637d463c4df2e3c7e333aa4b",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_admin_track_accreditation_version",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "admin_track_renewal_version()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_admin_track_accreditation_version AFTER INSERT OR DELETE OR UPDATE ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION admin_track_renewal_version()",
+      "function_md5": "9fe607265fe31cfe89c3aa96296134d5",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_identity_accreditation_owner",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "guard_historical_organization_owner()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_identity_accreditation_owner BEFORE UPDATE OF organization_id ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION guard_historical_organization_owner()",
+      "function_md5": "9568bb785b8d832a58e1acc894d74610",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_sync_organization_accreditation_projection",
+      "table": "public.organization_accreditations",
+      "enabled": "O",
+      "function": "sync_organization_accreditation_projection()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_sync_organization_accreditation_projection AFTER INSERT OR UPDATE ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION sync_organization_accreditation_projection()",
+      "function_md5": "d9d4d85fbc26cee78618d591073393b7",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_17978",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_17978\" AFTER DELETE ON public.organization_profiles FROM document_submissions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_17979",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_17979\" AFTER UPDATE ON public.organization_profiles FROM document_submissions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18039",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18039\" AFTER DELETE ON public.organization_profiles FROM budget_requests NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18040",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18040\" AFTER UPDATE ON public.organization_profiles FROM budget_requests NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18082",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18082\" AFTER DELETE ON public.organization_profiles FROM liquidation_reports NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18083",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18083\" AFTER UPDATE ON public.organization_profiles FROM liquidation_reports NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18152",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18152\" AFTER DELETE ON public.organization_profiles FROM compliance_remarks NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18153",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18153\" AFTER UPDATE ON public.organization_profiles FROM compliance_remarks NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18182",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18182\" AFTER DELETE ON public.organization_profiles FROM notifications NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18183",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18183\" AFTER UPDATE ON public.organization_profiles FROM notifications NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18201",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18201\" AFTER DELETE ON public.organization_profiles FROM activity_logs NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_18202",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_18202\" AFTER UPDATE ON public.organization_profiles FROM activity_logs NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_20304",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_20304\" AFTER DELETE ON public.organization_profiles FROM ypop_entries NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_20305",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_20305\" AFTER UPDATE ON public.organization_profiles FROM ypop_entries NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_20330",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_20330\" AFTER DELETE ON public.organization_profiles FROM ypop_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_20331",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_20331\" AFTER UPDATE ON public.organization_profiles FROM ypop_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25534",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25534\" AFTER DELETE ON public.organization_profiles FROM ypop_event_participations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25535",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25535\" AFTER UPDATE ON public.organization_profiles FROM ypop_event_participations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25565",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25565\" AFTER DELETE ON public.organization_profiles FROM ypop_event_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25566",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25566\" AFTER UPDATE ON public.organization_profiles FROM ypop_event_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25724",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25724\" AFTER DELETE ON public.organization_profiles FROM move_applications NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25725",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25725\" AFTER UPDATE ON public.organization_profiles FROM move_applications NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25751",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25751\" AFTER DELETE ON public.organization_profiles FROM move_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_25752",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_25752\" AFTER UPDATE ON public.organization_profiles FROM move_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_26004",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_26004\" AFTER DELETE ON public.organization_profiles FROM inquiries NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_26005",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_26005\" AFTER UPDATE ON public.organization_profiles FROM inquiries NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_26282",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_26282\" AFTER DELETE ON public.organization_profiles FROM ypop_org_activities NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_26283",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_26283\" AFTER UPDATE ON public.organization_profiles FROM ypop_org_activities NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_26308",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_26308\" AFTER DELETE ON public.organization_profiles FROM ypop_org_activity_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_26309",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_26309\" AFTER UPDATE ON public.organization_profiles FROM ypop_org_activity_files NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_28353",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_28353\" AFTER DELETE ON public.organization_profiles FROM urn_review_history NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_28354",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_28354\" AFTER UPDATE ON public.organization_profiles FROM urn_review_history NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31646",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31646\" AFTER DELETE ON public.organization_profiles FROM organization_accreditations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31647",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31647\" AFTER UPDATE ON public.organization_profiles FROM organization_accreditations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31677",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31677\" AFTER DELETE ON public.organization_profiles FROM organization_renewals NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31678",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31678\" AFTER UPDATE ON public.organization_profiles FROM organization_renewals NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_35135",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_35135\" AFTER DELETE ON public.organization_profiles FROM organization_contacts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_35136",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_35136\" AFTER UPDATE ON public.organization_profiles FROM organization_contacts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_35965",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_cascade_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_35965\" AFTER DELETE ON public.organization_profiles FROM ypop_submission_deletion_receipts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+      "function_md5": "370af44ecc509ef17eb22b658ab8a6cb",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_35966",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_35966\" AFTER UPDATE ON public.organization_profiles FROM ypop_submission_deletion_receipts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_37042",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_restrict_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_37042\" AFTER DELETE ON public.organization_profiles FROM ytrace_identity.cases NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+      "function_md5": "253aa1f96333ac2ce5f05cd227965091",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_37043",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_37043\" AFTER UPDATE ON public.organization_profiles FROM ytrace_identity.cases NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_17947",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_17947\" AFTER INSERT ON public.organization_profiles FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_17948",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_17948\" AFTER UPDATE ON public.organization_profiles FROM auth.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31697",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31697\" AFTER INSERT ON public.organization_profiles FROM organization_accreditations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31698",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31698\" AFTER UPDATE ON public.organization_profiles FROM organization_accreditations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "trg_a_identity_privileges",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "guard_organization_identity_privileges()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_a_identity_privileges BEFORE INSERT OR UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION guard_organization_identity_privileges()",
+      "function_md5": "3a0fa47c620efc033eec091090bbee1c",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_admin_track_organization_profile_version",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "admin_track_organization_profile_version()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_admin_track_organization_profile_version AFTER INSERT OR UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION admin_track_organization_profile_version()",
+      "function_md5": "b7b68871d40f08aa00f6a45953f6f3e1",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_generate_organization_reference_id",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "generate_organization_reference_id()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_generate_organization_reference_id BEFORE INSERT ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION generate_organization_reference_id()",
+      "function_md5": "10d4c5bfa843d3e9e8e0fafbb230a9dd",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_identity_retained_deletion",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "guard_retained_organization_deletion()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_identity_retained_deletion BEFORE DELETE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION guard_retained_organization_deletion()",
+      "function_md5": "4dd28db38030a73ee633b024e78db340",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_normalize_organization_contact_arrays",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "normalize_organization_contact_arrays()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_normalize_organization_contact_arrays BEFORE INSERT OR UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION normalize_organization_contact_arrays()",
+      "function_md5": "0e7dd3bb3ecdbfe4844b6fa61752c7e9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_notify_urn_review_change",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "notify_urn_review_change()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_notify_urn_review_change AFTER UPDATE OF urn_review_status ON public.organization_profiles FOR EACH ROW WHEN ((old.urn_review_status IS DISTINCT FROM new.urn_review_status)) EXECUTE FUNCTION notify_urn_review_change()",
+      "function_md5": "883712e9886a8ea09a9cac09768c6617",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_organization_profile_review_notify",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "notify_organization_profile_review_change()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_organization_profile_review_notify AFTER UPDATE ON public.organization_profiles FOR EACH ROW WHEN ((old.profile_status IS DISTINCT FROM new.profile_status)) EXECUTE FUNCTION notify_organization_profile_review_change()",
+      "function_md5": "49c49daff222b4c46d84bc9a9c97c551",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_organization_profiles_updated_at",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "set_updated_at()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_organization_profiles_updated_at BEFORE UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION set_updated_at()",
+      "function_md5": "8de7ae383447503e8949149bfb3f0efb",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_protect_urn_review_fields",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "protect_urn_review_fields()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_protect_urn_review_fields BEFORE UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION protect_urn_review_fields()",
+      "function_md5": "43ecae00db3ef932746904cfab03b67e",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_sync_organization_contacts_from_profile",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "sync_organization_contacts_from_profile()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_sync_organization_contacts_from_profile AFTER INSERT OR UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION sync_organization_contacts_from_profile()",
+      "function_md5": "829594ce5fb4c6224dfc2c8b53c8e633",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_sync_organization_profile_structured_fields",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "sync_organization_profile_structured_fields()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_sync_organization_profile_structured_fields BEFORE INSERT OR UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION sync_organization_profile_structured_fields()",
+      "function_md5": "6ab38b753f91a655969b82aa238318a0",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_sync_organization_urn",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "sync_organization_urn()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_sync_organization_urn BEFORE INSERT OR UPDATE OF registration_type, urn ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION sync_organization_urn()",
+      "function_md5": "a0eeea260974ab12a20746ec6742b716",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_z_enforce_organization_profile_headquarters_location",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "enforce_organization_profile_headquarters_location()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_z_enforce_organization_profile_headquarters_location BEFORE INSERT OR UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION enforce_organization_profile_headquarters_location()",
+      "function_md5": "e386f17c704e6ad96da38bda84781c5c",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_zz_identity_verification",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "guard_organization_identity_verification()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_zz_identity_verification BEFORE INSERT OR UPDATE ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION guard_organization_identity_verification()",
+      "function_md5": "2d62e48e928a1a99dc211d5ff32faf97",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trigger_auto_generate_urn",
+      "table": "public.organization_profiles",
+      "enabled": "O",
+      "function": "handle_organization_profile_urn_auto_gen()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trigger_auto_generate_urn BEFORE INSERT ON public.organization_profiles FOR EACH ROW EXECUTE FUNCTION handle_organization_profile_urn_auto_gen()",
+      "function_md5": "1533a6e82c08e031343e65787e10bc5a",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31714",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_setnull_del\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31714\" AFTER DELETE ON public.organization_renewals FROM document_submissions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_setnull_del\"()",
+      "function_md5": "1c38b71d4bcb1bebb247fb6d1c518e23",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_a_31715",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31715\" AFTER UPDATE ON public.organization_renewals FROM document_submissions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_md5": "dae4248018b89ad39b9bd38c0eaa5a54",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31679",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31679\" AFTER INSERT ON public.organization_renewals FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31680",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31680\" AFTER UPDATE ON public.organization_renewals FROM organization_profiles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31689",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31689\" AFTER INSERT ON public.organization_renewals FROM admin_accounts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_31690",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31690\" AFTER UPDATE ON public.organization_renewals FROM admin_accounts NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_33736",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_33736\" AFTER INSERT ON public.organization_renewals FROM organization_accreditations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_md5": "1d61f37aa5d841868619bc5213e05cb7",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "RI_ConstraintTrigger_c_33737",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "internal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_33737\" AFTER UPDATE ON public.organization_renewals FROM organization_accreditations NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_md5": "91f3ff61ee7527b0688ce1a1f11db752",
+      "function_owner": "supabase_admin"
+    },
+    {
+      "name": "trg_admin_track_renewal_version",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "admin_track_renewal_version()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_admin_track_renewal_version AFTER INSERT OR DELETE OR UPDATE ON public.organization_renewals FOR EACH ROW EXECUTE FUNCTION admin_track_renewal_version()",
+      "function_md5": "9fe607265fe31cfe89c3aa96296134d5",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_identity_renewal_owner",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "guard_historical_organization_owner()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_identity_renewal_owner BEFORE UPDATE OF organization_id ON public.organization_renewals FOR EACH ROW EXECUTE FUNCTION guard_historical_organization_owner()",
+      "function_md5": "9568bb785b8d832a58e1acc894d74610",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "trg_renewal_terminal_immutability",
+      "table": "public.organization_renewals",
+      "enabled": "O",
+      "function": "enforce_renewal_terminal_immutability()",
+      "internal": false,
+      "definition": "CREATE TRIGGER trg_renewal_terminal_immutability BEFORE DELETE OR UPDATE ON public.organization_renewals FOR EACH ROW EXECUTE FUNCTION enforce_renewal_terminal_immutability()",
+      "function_md5": "bdafdef3fded73e5816c199a5ede36c7",
+      "function_owner": "postgres"
+    }
+  ],
+  "mutation_dependencies": [
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "admin_approve_renewal(text,uuid,text,text)",
+      "volatility": "v",
+      "definition_md5": "33ba7c606820f771e4ed79709bcd188b",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public, extensions"
+      ],
+      "signature": "delete_organization_account_canonical(text,uuid)",
+      "volatility": "v",
+      "definition_md5": "5c1f0179b9f279eb7a99ff9ee8627c3f",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "signature": "guard_submitted_registration_document_edits()",
+      "volatility": "v",
+      "definition_md5": "c6265ae36e8db8678de7a4e69691008e",
+      "security_definer": false
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "hard_delete_admin_template_document(text,uuid)",
+      "volatility": "v",
+      "definition_md5": "36de9fc3fb6c5ad090579f3261f77bbf",
+      "security_definer": true
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "promote_renewal_submission_files_for_review()",
+      "volatility": "v",
+      "definition_md5": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+      "volatility": "v",
+      "definition_md5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "security_definer": true
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+      "volatility": "v",
+      "definition_md5": "252754fd75505948c26afe27f6b0b760",
+      "security_definer": true
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+      "volatility": "v",
+      "definition_md5": "59370b100efed37d5975dc16983d786a",
+      "security_definer": true
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "user_resubmit_renewal(uuid)",
+      "volatility": "v",
+      "definition_md5": "d19a1d0415f3eb900bab7dea241f0b21",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "signature": "user_submit_renewal(uuid)",
+      "volatility": "v",
+      "definition_md5": "d41b680681db2323aba2c62693f59131",
+      "security_definer": true
+    }
+  ]
+}

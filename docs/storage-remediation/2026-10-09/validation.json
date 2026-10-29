@@ -1,0 +1,36 @@
+{
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "production_mutations": false,
+  "deployed": false,
+  "migrations_applied": false,
+  "focused_regression": {
+    "numPassedTests": 179,
+    "numFailedTests": 0,
+    "numTotalTestSuites": 52,
+    "success": true
+  },
+  "final_followup_after_admin_context_refinement": {
+    "numPassedTests": 34,
+    "numFailedTests": 0,
+    "numTotalTestSuites": 4,
+    "success": true
+  },
+  "isolated_postgresql": {
+    "passed": 1,
+    "failed": 0,
+    "scope": "Aggregate synthetic PostgreSQL RLS/function matrix; not actual Storage HTTP/JWT or binary end-to-end validation"
+  },
+  "typescript": "PASS: npx tsc --noEmit",
+  "production_build": "PASS: npm run build",
+  "diff_check": "PASS: git diff --check (line-ending warnings only)",
+  "full_vitest": "NOT RERUN; previous readiness baseline had 151 failures, not recertified by this task",
+  "blocked": [
+    "Actual isolated Supabase Storage HTTP/JWT authorization",
+    "Deployed custom Admin Edge integration",
+    "Installed PWA and interrupted mobile TUS workflows",
+    "Complete MOVE phase and permission validation",
+    "Deno entry-point runtime check: Deno unavailable"
+  ],
+  "prior_work": "Preserved including unapplied 33-policy performance migration"
+}

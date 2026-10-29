@@ -1,0 +1,84 @@
+{
+  "status": "SQL_REVIEW_PASS_EXECUTION_NO_GO",
+  "files": {
+    "sql": {
+      "path": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+      "bytes": 11945,
+      "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+    },
+    "pre": {
+      "path": "docs/production-security/budget-deletion-pause/20261012T165000Z/pre-install-readonly.sql",
+      "bytes": 5927,
+      "sha256": "0feb7b7510621ec3c06e2ee12e751bd1982ef9d5070d5a3be70aceaecba66384"
+    },
+    "post": {
+      "path": "docs/production-security/budget-deletion-pause/20261012T165000Z/post-install-readonly.sql",
+      "bytes": 5929,
+      "sha256": "5f226308872e2e613b07a93a9c6fdebfb52392532dafd3b4d84987099f621465"
+    },
+    "data": {
+      "path": "docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql",
+      "bytes": 13900,
+      "sha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d"
+    },
+    "foundationRunner": {
+      "path": "docs/production-security/storage-cutover/native-runner-20261011T132539Z/native-foundation-runner.mjs",
+      "bytes": 9919,
+      "sha256": "08d9bcc7843efe69ec0ef0ec9e606c92c79b546166bfc665c52b318357edc2bb"
+    },
+    "foundationCore": {
+      "path": "docs/production-security/storage-cutover/native-runner-20261011T132539Z/runner-core.mjs",
+      "bytes": 14530,
+      "sha256": "90b0d860823507f11893312643b33c683fe9cb75f03ea19361d7b81bdd81fdae"
+    },
+    "environmentVerifier": {
+      "path": "scripts/security/verify-foundation-environment.mjs",
+      "bytes": 2466,
+      "sha256": "4881f45e1ff8723d38b5f64f12e05d4d77fef7afd0d625ee58d8fe4b6c13320b"
+    },
+    "foundationCatalog": {
+      "path": "docs/production-security/storage-cutover/final-readiness-20261012T160633Z/foundation-readonly.sql",
+      "bytes": 5923,
+      "sha256": "61c81752a121232734465e9cd3f4f0078d6bd1457ea4cd4d5ed981096bde4639"
+    }
+  },
+  "sqlChecks": {
+    "hash": true,
+    "bytes": true,
+    "oneFunctionReplacement": true,
+    "noDestructiveBody": true,
+    "lockTimeout": "1s",
+    "statementTimeout": "30s",
+    "originalTransactionPreserved": true,
+    "contractAndDataGuards": true
+  },
+  "adapter": {
+    "status": "BLOCKED",
+    "path": null,
+    "bundleSha256": null,
+    "operatorConfirmedNoSeparateAdapter": true,
+    "existingFoundationRunnerIsIncompatible": true,
+    "foundationRunnerModified": false
+  },
+  "tls": {
+    "requirementsReviewed": true,
+    "expectedHost": "db.mqqaykksadotbrghbexz.supabase.co",
+    "freshNativeHandshakePerformed": false,
+    "privateEnvironmentLoaded": false,
+    "certificateRead": false
+  },
+  "preservation": {
+    "inventories": 57,
+    "inventorySha256": "b75653ccd05c87f36a65d2c8c75a6ec76a088be3d4d44daa80419d16dff10490",
+    "canonicalization": "JSON.stringify of objects with ordered keys relation,row_count,content_fingerprint, sorted by relation code-point order",
+    "reviewSnapshotOnly": true,
+    "baselineAdopted": false,
+    "changedSincePriorSnapshot": [],
+    "foundationCatalogExcludedFromMainHash": true,
+    "supplementalFoundationVerificationRequired": true
+  },
+  "productionWrites": 0,
+  "stagingWrites": 0,
+  "installationActivated": false,
+  "completedTestsRepeated": false
+}

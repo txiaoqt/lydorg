@@ -1,0 +1,17 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "capturedDate": "2026-10-11",
+  "manifestUnchanged": true,
+  "functions": 31,
+  "tables": 11,
+  "migrations": {
+    "count": 163,
+    "latest": "20261008174154",
+    "fingerprint": "380c842e791bfbcf5c7a939371e24738"
+  },
+  "candidateInstalled": false,
+  "authMutations": false,
+  "businessMutations": false,
+  "storageMutations": false,
+  "stagingAccess": "No staging writes or operations; local tests only"
+}

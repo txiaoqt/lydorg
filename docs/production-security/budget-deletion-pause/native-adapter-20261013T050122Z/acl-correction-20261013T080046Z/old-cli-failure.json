@@ -1,0 +1,10 @@
+{
+  "scope": "READ_ONLY_LOCAL_ACL_CLI",
+  "exitCode": 2,
+  "result": {
+    "status": "BLOCKED",
+    "code": "ONLY_FIXED_BUDGET_STATE_PATH_ALLOWED",
+    "secretValuesRead": false
+  },
+  "databaseConnectionAttempted": false
+}

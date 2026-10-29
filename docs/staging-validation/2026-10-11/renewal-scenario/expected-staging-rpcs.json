@@ -1,0 +1,56 @@
+[
+  {
+    "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "name": "admin_ensure_renewal_test_account_profile",
+    "config": [
+      "search_path=public, auth, extensions"
+    ],
+    "signature": "admin_ensure_renewal_test_account_profile(text)",
+    "definition": "CREATE OR REPLACE FUNCTION public.admin_ensure_renewal_test_account_profile(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+  },
+  {
+    "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "name": "admin_get_or_create_renewal_test_account",
+    "config": [
+      "search_path=public, auth, extensions"
+    ],
+    "signature": "admin_get_or_create_renewal_test_account(text)",
+    "definition": "CREATE OR REPLACE FUNCTION public.admin_get_or_create_renewal_test_account(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+  },
+  {
+    "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "name": "admin_prepare_renewal_test_scenario",
+    "config": [
+      "search_path=public, auth, extensions"
+    ],
+    "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+    "definition": "CREATE OR REPLACE FUNCTION public.admin_prepare_renewal_test_scenario(p_session_token text, p_expiration_days_ahead integer DEFAULT 30, p_custom_expiration_date date DEFAULT NULL::date)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+  },
+  {
+    "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "name": "admin_reset_renewal_test_scenario",
+    "config": [
+      "search_path=public, auth, extensions"
+    ],
+    "signature": "admin_reset_renewal_test_scenario(text)",
+    "definition": "CREATE OR REPLACE FUNCTION public.admin_reset_renewal_test_scenario(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+  },
+  {
+    "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "name": "admin_restore_renewal_test_scenario",
+    "config": [
+      "search_path=public, auth, extensions"
+    ],
+    "signature": "admin_restore_renewal_test_scenario(text)",
+    "definition": "CREATE OR REPLACE FUNCTION public.admin_restore_renewal_test_scenario(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+  },
+  {
+    "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "name": "admin_seed_renewal_test_registration_documents",
+    "config": [
+      "search_path=public, auth, extensions, storage"
+    ],
+    "signature": "admin_seed_renewal_test_registration_documents(text)",
+    "definition": "CREATE OR REPLACE FUNCTION public.admin_seed_renewal_test_registration_documents(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions', 'storage'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+  }
+]

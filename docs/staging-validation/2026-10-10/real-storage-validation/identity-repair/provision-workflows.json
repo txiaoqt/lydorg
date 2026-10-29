@@ -1,0 +1,701 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T10:53:47.207Z",
+  "results": [
+    {
+      "check": "Create synthetic open YPOP period through normal Admin RPC",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Create synthetic open YPOP period through normal Admin RPC",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_create_ypop_period",
+          "status": 200,
+          "durationMs": 150
+        }
+      ]
+    },
+    {
+      "check": "A: normal YPOP creation, proof upload, submission and review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/rest/v1/ypop_entries",
+          "status": 201,
+          "durationMs": 166
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+          "status": 200,
+          "durationMs": 240
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/rest/v1/ypop_files",
+          "status": 201,
+          "durationMs": 133
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal YPOP creation, proof upload, submission and review",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/ypop_entries",
+          "status": 200,
+          "durationMs": 132
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_update_ypop_entry",
+          "status": 200,
+          "durationMs": 132
+        }
+      ]
+    },
+    {
+      "check": "A: normal budget creation, attachment, submission and Admin release",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/budget_requests",
+          "status": 201,
+          "durationMs": 137
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+          "status": 200,
+          "durationMs": 258
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/budget_request_files",
+          "status": 201,
+          "durationMs": 144
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal budget creation, attachment, submission and Admin release",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/budget_requests",
+          "status": 200,
+          "durationMs": 144
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+          "status": 200,
+          "durationMs": 137
+        },
+        {
+          "actor": "A JWT / Super Admin",
+          "step": "A: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+          "status": 200,
+          "durationMs": 130
+        }
+      ]
+    },
+    {
+      "check": "A: linked liquidation and owned attachment",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "A: linked liquidation and owned attachment",
+          "method": "GET",
+          "endpoint": "/rest/v1/liquidation_reports",
+          "status": 200,
+          "durationMs": 127
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: linked liquidation and owned attachment",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+          "status": 200,
+          "durationMs": 471
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: linked liquidation and owned attachment",
+          "method": "POST",
+          "endpoint": "/rest/v1/liquidation_report_files",
+          "status": 201,
+          "durationMs": 137
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: linked liquidation and owned attachment",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/liquidation_reports",
+          "status": 200,
+          "durationMs": 128
+        }
+      ]
+    },
+    {
+      "check": "B: normal YPOP creation, proof upload, submission and review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/rest/v1/ypop_entries",
+          "status": 201,
+          "durationMs": 156
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+          "status": 200,
+          "durationMs": 439
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/rest/v1/ypop_files",
+          "status": 201,
+          "durationMs": 143
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal YPOP creation, proof upload, submission and review",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/ypop_entries",
+          "status": 200,
+          "durationMs": 139
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal YPOP creation, proof upload, submission and review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_update_ypop_entry",
+          "status": 200,
+          "durationMs": 131
+        }
+      ]
+    },
+    {
+      "check": "B: normal budget creation, attachment, submission and Admin release",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/budget_requests",
+          "status": 201,
+          "durationMs": 142
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+          "status": 200,
+          "durationMs": 276
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/budget_request_files",
+          "status": 201,
+          "durationMs": 135
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal budget creation, attachment, submission and Admin release",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/budget_requests",
+          "status": 200,
+          "durationMs": 141
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+          "status": 200,
+          "durationMs": 138
+        },
+        {
+          "actor": "B JWT / Super Admin",
+          "step": "B: normal budget creation, attachment, submission and Admin release",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+          "status": 200,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "B: linked liquidation and owned attachment",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B JWT",
+          "step": "B: linked liquidation and owned attachment",
+          "method": "GET",
+          "endpoint": "/rest/v1/liquidation_reports",
+          "status": 200,
+          "durationMs": 137
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: linked liquidation and owned attachment",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+          "status": 200,
+          "durationMs": 240
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: linked liquidation and owned attachment",
+          "method": "POST",
+          "endpoint": "/rest/v1/liquidation_report_files",
+          "status": 201,
+          "durationMs": 137
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: linked liquidation and owned attachment",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/liquidation_reports",
+          "status": 200,
+          "durationMs": 140
+        }
+      ]
+    },
+    {
+      "check": "B: supported renewal initialization",
+      "status": "BLOCKED",
+      "code": "P0001",
+      "reason": "Sanitized operation failure",
+      "http": [
+        {
+          "actor": "B JWT",
+          "step": "B: supported renewal initialization",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 400,
+          "durationMs": 155
+        }
+      ]
+    },
+    {
+      "check": "Provisioning stopped without bypass or automatic retry",
+      "status": "BLOCKED",
+      "reason": "Expected"
+    },
+    {
+      "check": "Revoke fixture-setup Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Revoke fixture-setup Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 173
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/settings",
+      "status": 200,
+      "durationMs": 705
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 427
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 157
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 177
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 169
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 170
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Create synthetic open YPOP period through normal Admin RPC",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_create_ypop_period",
+      "status": 200,
+      "durationMs": 150
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 216
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 201,
+      "durationMs": 166
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+      "status": 200,
+      "durationMs": 240
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/rest/v1/ypop_files",
+      "status": 201,
+      "durationMs": 133
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal YPOP creation, proof upload, submission and review",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_update_ypop_entry",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 201,
+      "durationMs": 137
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+      "status": 200,
+      "durationMs": 258
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/budget_request_files",
+      "status": 201,
+      "durationMs": 144
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal budget creation, attachment, submission and Admin release",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200,
+      "durationMs": 144
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "A JWT / Super Admin",
+      "step": "A: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: linked liquidation and owned attachment",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: linked liquidation and owned attachment",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+      "status": 200,
+      "durationMs": 471
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: linked liquidation and owned attachment",
+      "method": "POST",
+      "endpoint": "/rest/v1/liquidation_report_files",
+      "status": 201,
+      "durationMs": 137
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: linked liquidation and owned attachment",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: linked liquidation and owned attachment",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 132
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 546
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 201,
+      "durationMs": 156
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+      "status": 200,
+      "durationMs": 439
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/rest/v1/ypop_files",
+      "status": 201,
+      "durationMs": 143
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal YPOP creation, proof upload, submission and review",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal YPOP creation, proof upload, submission and review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_update_ypop_entry",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 201,
+      "durationMs": 142
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+      "status": 200,
+      "durationMs": 276
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/budget_request_files",
+      "status": 201,
+      "durationMs": 135
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal budget creation, attachment, submission and Admin release",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "B JWT / Super Admin",
+      "step": "B: normal budget creation, attachment, submission and Admin release",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_budget_request",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: linked liquidation and owned attachment",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: linked liquidation and owned attachment",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+      "status": 200,
+      "durationMs": 240
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: linked liquidation and owned attachment",
+      "method": "POST",
+      "endpoint": "/rest/v1/liquidation_report_files",
+      "status": 201,
+      "durationMs": 137
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: linked liquidation and owned attachment",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: linked liquidation and owned attachment",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 134
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 211
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: supported renewal initialization",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 400,
+      "durationMs": 155
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: supported renewal initialization",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 134
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Revoke fixture-setup Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 173
+    }
+  ]
+}

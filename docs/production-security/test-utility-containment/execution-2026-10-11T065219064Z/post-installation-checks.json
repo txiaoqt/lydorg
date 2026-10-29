@@ -1,0 +1,474 @@
+[
+  {
+    "name": "single migration receipt",
+    "status": "PASS",
+    "evidence": [
+      {
+        "name": "production_test_utility_containment",
+        "version": "20261011230000",
+        "statements": [
+          "Standalone reviewed test-utility containment; see separately recorded candidate SHA-256."
+        ]
+      }
+    ]
+  },
+  {
+    "name": "migration history count and latest",
+    "status": "PASS",
+    "evidence": {
+      "count": 164,
+      "latest": "20261011230000",
+      "fingerprint": "2d1ea52795f2d3c97c71e229819d9a7c"
+    }
+  },
+  {
+    "name": "production environment guard false",
+    "status": "PASS",
+    "evidence": false
+  },
+  {
+    "name": "original table structure/constraints/ACL/RLS/triggers unchanged",
+    "status": "PASS",
+    "evidence": {
+      "tables": 11,
+      "newReviewedTriggersExcludedFromOriginalTriggerFingerprint": true
+    }
+  },
+  {
+    "name": "roles unchanged",
+    "status": "PASS",
+    "evidence": {
+      "roles": 5
+    }
+  },
+  {
+    "name": "policies unchanged",
+    "status": "PASS",
+    "evidence": {
+      "fingerprint": "badea3ac4e8877ef1a919bab0883a854"
+    }
+  },
+  {
+    "name": "unchanged monitored functions and permissions",
+    "status": "PASS",
+    "evidence": {
+      "functions": 14
+    }
+  },
+  {
+    "name": "reviewed function: admin_cleanup_yorp_sample_dataset(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_cleanup_yorp_sample_dataset(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_ensure_renewal_test_account_profile(text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_ensure_renewal_test_account_profile(text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_get_or_create_renewal_test_account(text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_get_or_create_renewal_test_account(text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_prepare_renewal_test_scenario(text,integer,date)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_prepare_renewal_test_scenario(text,integer,date)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_reset_renewal_test_scenario(text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_reset_renewal_test_scenario(text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_restore_renewal_test_scenario(text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_restore_renewal_test_scenario(text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_seed_renewal_test_registration_documents(text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_seed_renewal_test_registration_documents(text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_seed_yorp_sample_dataset(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_seed_yorp_sample_dataset(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_seed_yorp_sample_dataset_core(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_seed_yorp_sample_dataset_core(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: diversify_yorp_seed_projects_and_budgets()",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: diversify_yorp_seed_projects_and_budgets()",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: rebalance_yorp_seed_reporting_quarters()",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: rebalance_yorp_seed_reporting_quarters()",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "6d670f664473257d4bf0b98e127337d1",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: is_development_or_test_environment()",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "7d69bbf21ad55293e15c24da50eaaa11",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "s"
+    }
+  },
+  {
+    "name": "reviewed ACL: is_development_or_test_environment()",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "postgres",
+        "service_role"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: admin_get_yorp_sample_dataset_status(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "5bc2f180ec6d55ad22598412c1472022",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: admin_get_yorp_sample_dataset_status(text,text)",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "service_role"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: enforce_accreditation_immutability()",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "19f9ecf4571f21795abc9160661f51b6",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: enforce_accreditation_immutability()",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "postgres",
+        "service_role"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: enforce_renewal_terminal_immutability()",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "dd7f062b7a42f5cbc3782e225cc04d7d",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: enforce_renewal_terminal_immutability()",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "PUBLIC",
+        "anon",
+        "authenticated",
+        "postgres",
+        "service_role"
+      ]
+    }
+  },
+  {
+    "name": "reviewed function: guard_organization_identity_privileges()",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "ebe6884dd019667b7ac127f627b993ce",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "volatility": "v"
+    }
+  },
+  {
+    "name": "reviewed ACL: guard_organization_identity_privileges()",
+    "status": "PASS",
+    "evidence": {
+      "grantees": [
+        "postgres",
+        "service_role"
+      ]
+    }
+  },
+  {
+    "name": "12 denial-only mutation RPCs with API privileges revoked",
+    "status": "PASS",
+    "evidence": {
+      "functions": 12,
+      "denialBodyMd5": "6d670f664473257d4bf0b98e127337d1",
+      "productionMutationCallsExecuted": 0
+    }
+  },
+  {
+    "name": "retained status requires active Super Admin",
+    "status": "PASS",
+    "evidence": {
+      "sourceMd5": "5bc2f180ec6d55ad22598412c1472022",
+      "verification": "Catalog/body fingerprint; status RPC was not invoked because session validation can update session usage"
+    }
+  },
+  {
+    "name": "accreditation and terminal-renewal test exceptions absent",
+    "status": "PASS",
+    "evidence": [
+      {
+        "signature": "enforce_accreditation_immutability()",
+        "sourceMd5": "19f9ecf4571f21795abc9160661f51b6"
+      },
+      {
+        "signature": "enforce_renewal_terminal_immutability()",
+        "sourceMd5": "dd7f062b7a42f5cbc3782e225cc04d7d"
+      }
+    ]
+  },
+  {
+    "name": "four exact enabled fixture marker triggers",
+    "status": "PASS",
+    "evidence": {
+      "tables": [
+        "budget_requests",
+        "document_submission_files",
+        "document_submissions",
+        "liquidation_reports"
+      ]
+    }
+  },
+  {
+    "name": "private helper exact reviewed source and ACL",
+    "status": "PASS",
+    "evidence": {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, pg_temp"
+      ],
+      "signature": "ytrace_production_containment.freeze_fixture_markers()",
+      "source_md5": "73223cc8d66adfa64e1c1877249d19b3",
+      "volatility": "v",
+      "security_definer": false
+    }
+  },
+  {
+    "name": "all preserved production data inventories unchanged",
+    "status": "PASS",
+    "evidence": {
+      "relations": 57,
+      "includes": "All 53 public tables, Storage buckets/objects, Auth user/identity inventories"
+    }
+  },
+  {
+    "name": "unrelated functions, schema grants, relation ACL/RLS and policies unchanged",
+    "status": "PASS",
+    "evidence": {
+      "relation_acl_rls": "5f88ac85303e95fd1b466b39a86b4478",
+      "all_policy_catalog": "badea3ac4e8877ef1a919bab0883a854",
+      "existing_schema_acls": "a2babb6c4c9bcfefebbbed7ccfcae4d4",
+      "test_utility_active_calls": 0,
+      "unrelated_function_catalog": "513d8915579c8c0f1d5ae1737b7f1c65"
+    }
+  }
+]

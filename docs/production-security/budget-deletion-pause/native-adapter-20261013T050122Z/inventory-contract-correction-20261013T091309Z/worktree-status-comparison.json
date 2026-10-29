@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "existingPorcelainStatusUnchanged": true,
+  "scope": "Tracked and top-level untracked status only; corrected local files are within the already untracked docs directory."
+}

@@ -1,0 +1,6 @@
+{
+  "originalSourceSha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d",
+  "executedReviewQuerySha256": "459a48ea2fdaf0393063f3fe796b4a0302bf0f440485f82d3dedaae1c5e07c34",
+  "change": "Read-only review copy changes terminal COMMIT to ROLLBACK for MCP inspection; original file and production pause SQL remain unchanged.",
+  "transactionReadOnly": true
+}

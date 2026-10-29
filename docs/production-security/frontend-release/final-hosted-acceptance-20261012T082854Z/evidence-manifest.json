@@ -1,0 +1,42 @@
+{
+  "recordedAt": "2026-10-12T08:36:54.304Z",
+  "files": [
+    {
+      "path": "gateway-readonly.json",
+      "bytes": 389,
+      "sha256": "0dc23df76a19560299a70d3d1049bad197bcd2b574054eba52756225a5af0360"
+    },
+    {
+      "path": "operator-browser-acceptance.json",
+      "bytes": 937,
+      "sha256": "555d8fa14050fb4ab91f2601e322c47429c1acb7d9f83c6819ab80967a5ab7aa"
+    },
+    {
+      "path": "operator-hosted-check.js",
+      "bytes": 14578,
+      "sha256": "688023bc5d94d16d54b7fd419dcaac48d7e97aab70519d02a443a01bd8583b81"
+    },
+    {
+      "path": "operator-instructions.md",
+      "bytes": 2701,
+      "sha256": "e78f34d0340302a3ea5d870edfe88dd9418035d127ad70575152181630a6c0af"
+    },
+    {
+      "path": "read-only-verification.json",
+      "bytes": 1892,
+      "sha256": "e320cb4b8578f12dea5050309d4df9f81ed0243d1fd096702a26e96eaf0fda07"
+    },
+    {
+      "path": "readiness-receipt.json",
+      "bytes": 1221,
+      "sha256": "857ef9a5c31a89ecb351d062f96a06a0aab34619e32faf3959f6518636d5ccb5"
+    },
+    {
+      "path": "readiness-report.md",
+      "bytes": 7881,
+      "sha256": "6c3b69c212b8489634a3dcd9e97644bfe93825fd39b526012322b8571380df65"
+    }
+  ],
+  "inventorySha256": "8d7b8a800ce402e0383da987d8b867269e71b96ce5cf11f76c21aa2682b7ed14",
+  "selfExcluded": true
+}

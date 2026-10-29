@@ -1,0 +1,10 @@
+{
+  "status": "PROJECTED_ONLY_NOT_AUTHORIZED",
+  "originalSha256": "3f98f268be5a0815873802f6c4f284cd9acf381c65140fb904b9c0c0255a432c",
+  "proposedSha256": "f77ceae769301affc2b8150db1bf922fbbaf3ee4db6f20a65939d95495ab5f8c",
+  "changedOccurrences": 2,
+  "oldHash": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "newHash": "e189e64d9291386c8c90cb885ec283f92b1fa582b92717dac477fce2cfdebc1f",
+  "securityPredicatesUnchanged": true,
+  "prerequisite": "Deploy pause only after separate approval, then capture exact full read-only production catalog and confirm the projected fingerprint. Review fresh preservation inventories separately; no baseline is silently adopted."
+}

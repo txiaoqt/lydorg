@@ -1,0 +1,81 @@
+{
+  "task": "READ_ONLY_PRODUCTION_STORAGE_FOUNDATION_SUBMISSION_DIAGNOSIS",
+  "project": "mqqaykksadotbrghbexz",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "sqlBytes": 47407,
+  "diagnosis": {
+    "confirmedCategory": "MCP request-state validation/continuation failure",
+    "leadingHypothesis": "Confirmation continuation expiration; not confirmed",
+    "exactRootCauseConfirmed": false,
+    "hostedRequestStateTtlKnown": false,
+    "postgresExecutionAcknowledged": false
+  },
+  "submission": {
+    "priorAttempts": 1,
+    "priorRetries": 0,
+    "submittedAtUtc": "2026-10-11T12:36:30Z",
+    "respondedAtUtc": "2026-10-11T12:44:46Z",
+    "elapsedSeconds": 496
+  },
+  "currentTask": {
+    "productionSqlWrites": 0,
+    "stagingContacts": 0,
+    "installationAttempts": 0,
+    "credentialMutations": 0,
+    "storageMutations": 0,
+    "deployments": 0,
+    "gitPushes": 0
+  },
+  "freshChecks": {
+    "foundationPresent": false,
+    "matchingActiveFoundationTransactions": 0,
+    "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "migrationRecords": 164,
+    "historyMd5": "1f5eca911f6e2057ae070a955eaca3dc",
+    "sameSizeReadOnlyRequest": {
+      "status": "PASS",
+      "bytes": 47407,
+      "toolElapsedMs": 7343,
+      "databaseExecutionMs": null
+    },
+    "controlPlaneReadOnly": "PASS"
+  },
+  "nativeRoute": {
+    "recommended": "Direct native PostgreSQL using installed pg.Client",
+    "status": "BLOCKED",
+    "version": "8.23.0",
+    "connectionAttempted": false,
+    "missingPrerequisites": [
+      "YTRACE_PRODUCTION_DB_PASSWORD",
+      "YTRACE_PRODUCTION_DB_CA_FILE",
+      "YTRACE_PRODUCTION_DB_CA_SHA256"
+    ],
+    "networkAndTlsIntegration": "NOT TESTED",
+    "writeRunnerImplemented": false,
+    "readOnlyProbeImplemented": true
+  },
+  "localValidation": {
+    "probeSyntax": {
+      "status": "PASS",
+      "exitCode": 0
+    },
+    "probeGuardTests": {
+      "status": "PASS",
+      "passed": 3,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "gitDiffCheck": {
+      "status": "PASS",
+      "exitCode": 0,
+      "note": "Initial fsmonitor IPC diagnostic; repeated with per-command core.fsmonitor=false. Existing LF/CRLF advisory warnings; no whitespace errors."
+    },
+    "upstreamClassifier": "PASS (offline only)",
+    "applicationSuites": "NOT RUN; no application changes"
+  },
+  "decisions": {
+    "diagnosticPreparation": "GO",
+    "productionInstallationNow": "NO-GO",
+    "nativeProcedure": "CONDITIONAL GO after read-only TLS/identity probe, installer review, fresh exact-artifact authorization and exclusive window"
+  }
+}

@@ -1,0 +1,439 @@
+[
+  {
+    "schema_name": "public",
+    "table_name": "activity_announcements",
+    "foreign_key": "activity_announcements_sent_by_fkey",
+    "definition": "FOREIGN KEY (sent_by) REFERENCES admin_accounts(id) ON DELETE SET NULL",
+    "approximate_rows": 6,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX activity_announcements_pkey ON public.activity_announcements USING btree (id)",
+      "CREATE UNIQUE INDEX activity_announcements_idempotency_key_key ON public.activity_announcements USING btree (idempotency_key)",
+      "CREATE INDEX idx_activity_announcements_activity_id ON public.activity_announcements USING btree (activity_id)",
+      "CREATE INDEX idx_activity_announcements_status ON public.activity_announcements USING btree (status)",
+      "CREATE INDEX idx_activity_announcements_idempotency ON public.activity_announcements USING btree (idempotency_key)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "activity_logs",
+    "foreign_key": "activity_logs_actor_user_id_fkey",
+    "definition": "FOREIGN KEY (actor_user_id) REFERENCES admin_accounts(id) ON DELETE SET NULL",
+    "approximate_rows": 3329,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX activity_logs_pkey ON public.activity_logs USING btree (id)",
+      "CREATE INDEX idx_activity_logs_org ON public.activity_logs USING btree (organization_id, created_at DESC)",
+      "CREATE UNIQUE INDEX uq_activity_logs_accreditation_expired ON public.activity_logs USING btree (organization_id, action, related_id) WHERE ((action = 'accreditation_expired'::text) AND (related_type = 'accreditation'::text))",
+      "CREATE INDEX idx_activity_logs_created_at_desc ON public.activity_logs USING btree (created_at DESC, id)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "admin_accounts",
+    "foreign_key": "admin_accounts_role_id_fkey",
+    "definition": "FOREIGN KEY (role_id) REFERENCES roles(id)",
+    "approximate_rows": 2,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX admin_accounts_pkey ON public.admin_accounts USING btree (id)",
+      "CREATE UNIQUE INDEX admin_accounts_username_key ON public.admin_accounts USING btree (username)",
+      "CREATE UNIQUE INDEX admin_accounts_email_key ON public.admin_accounts USING btree (email)",
+      "CREATE INDEX idx_admin_accounts_username ON public.admin_accounts USING btree (username)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "admin_accounts",
+    "foreign_key": "admin_accounts_unit_id_fkey",
+    "definition": "FOREIGN KEY (unit_id) REFERENCES units(id)",
+    "approximate_rows": 2,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX admin_accounts_pkey ON public.admin_accounts USING btree (id)",
+      "CREATE UNIQUE INDEX admin_accounts_username_key ON public.admin_accounts USING btree (username)",
+      "CREATE UNIQUE INDEX admin_accounts_email_key ON public.admin_accounts USING btree (email)",
+      "CREATE INDEX idx_admin_accounts_username ON public.admin_accounts USING btree (username)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "admin_system_settings",
+    "foreign_key": "admin_system_settings_updated_by_fkey",
+    "definition": "FOREIGN KEY (updated_by) REFERENCES admin_accounts(id) ON DELETE SET NULL",
+    "approximate_rows": 68,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX admin_system_settings_pkey ON public.admin_system_settings USING btree (id)",
+      "CREATE UNIQUE INDEX admin_system_settings_setting_key_key ON public.admin_system_settings USING btree (setting_key)",
+      "CREATE INDEX idx_admin_system_settings_key ON public.admin_system_settings USING btree (setting_key)",
+      "CREATE INDEX idx_admin_system_settings_category ON public.admin_system_settings USING btree (category)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "budget_requests",
+    "foreign_key": "budget_requests_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE CASCADE",
+    "approximate_rows": 90,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX budget_requests_pkey ON public.budget_requests USING btree (id)",
+      "CREATE INDEX idx_budget_requests_org ON public.budget_requests USING btree (organization_id, created_at DESC)",
+      "CREATE INDEX idx_budget_requests_status ON public.budget_requests USING btree (status)",
+      "CREATE INDEX idx_budget_requests_fiscal_year ON public.budget_requests USING btree (fiscal_year)",
+      "CREATE INDEX idx_budget_requests_seeded_sample_data ON public.budget_requests USING btree (is_seeded_sample_data, seed_batch) WHERE (is_seeded_sample_data = true)",
+      "CREATE INDEX budget_requests_monitoring_period_idx ON public.budget_requests USING btree (fiscal_year, created_at DESC, id DESC) WHERE (status <> 'draft'::budget_request_status)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "budget_requests",
+    "foreign_key": "budget_requests_ypop_entry_id_fkey",
+    "definition": "FOREIGN KEY (ypop_entry_id) REFERENCES ypop_entries(id) ON DELETE SET NULL",
+    "approximate_rows": 90,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX budget_requests_pkey ON public.budget_requests USING btree (id)",
+      "CREATE INDEX idx_budget_requests_org ON public.budget_requests USING btree (organization_id, created_at DESC)",
+      "CREATE INDEX idx_budget_requests_status ON public.budget_requests USING btree (status)",
+      "CREATE INDEX idx_budget_requests_fiscal_year ON public.budget_requests USING btree (fiscal_year)",
+      "CREATE INDEX idx_budget_requests_seeded_sample_data ON public.budget_requests USING btree (is_seeded_sample_data, seed_batch) WHERE (is_seeded_sample_data = true)",
+      "CREATE INDEX budget_requests_monitoring_period_idx ON public.budget_requests USING btree (fiscal_year, created_at DESC, id DESC) WHERE (status <> 'draft'::budget_request_status)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "compliance_remarks",
+    "foreign_key": "compliance_remarks_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX compliance_remarks_pkey ON public.compliance_remarks USING btree (id)",
+      "CREATE INDEX idx_compliance_remarks_org ON public.compliance_remarks USING btree (organization_id, created_at DESC)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "compliance_remarks",
+    "foreign_key": "compliance_remarks_resolved_by_fkey",
+    "definition": "FOREIGN KEY (resolved_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX compliance_remarks_pkey ON public.compliance_remarks USING btree (id)",
+      "CREATE INDEX idx_compliance_remarks_org ON public.compliance_remarks USING btree (organization_id, created_at DESC)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "disclosure_documents",
+    "foreign_key": "disclosure_documents_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX disclosure_documents_pkey ON public.disclosure_documents USING btree (id)",
+      "CREATE UNIQUE INDEX disclosure_documents_doc_code_key ON public.disclosure_documents USING btree (doc_code)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "document_submission_files",
+    "foreign_key": "document_submission_files_document_type_id_fkey",
+    "definition": "FOREIGN KEY (document_type_id) REFERENCES required_document_types(id) ON DELETE SET NULL",
+    "approximate_rows": 547,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX document_submission_files_pkey ON public.document_submission_files USING btree (id)",
+      "CREATE UNIQUE INDEX uq_document_submission_file ON public.document_submission_files USING btree (submission_id, document_type_id)",
+      "CREATE INDEX idx_document_submission_files_submission ON public.document_submission_files USING btree (submission_id)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "document_submissions",
+    "foreign_key": "document_submissions_reviewed_by_fkey",
+    "definition": "FOREIGN KEY (reviewed_by) REFERENCES admin_accounts(id) ON DELETE SET NULL",
+    "approximate_rows": 92,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX document_submissions_pkey ON public.document_submissions USING btree (id)",
+      "CREATE INDEX idx_document_submissions_org ON public.document_submissions USING btree (organization_id, created_at DESC)",
+      "CREATE INDEX idx_document_submissions_status ON public.document_submissions USING btree (status)",
+      "CREATE INDEX idx_document_submissions_renewal_id ON public.document_submissions USING btree (renewal_id)",
+      "CREATE UNIQUE INDEX uq_document_submissions_single_renewal ON public.document_submissions USING btree (renewal_id) WHERE (renewal_id IS NOT NULL)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "document_submissions",
+    "foreign_key": "document_submissions_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE CASCADE",
+    "approximate_rows": 92,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX document_submissions_pkey ON public.document_submissions USING btree (id)",
+      "CREATE INDEX idx_document_submissions_org ON public.document_submissions USING btree (organization_id, created_at DESC)",
+      "CREATE INDEX idx_document_submissions_status ON public.document_submissions USING btree (status)",
+      "CREATE INDEX idx_document_submissions_renewal_id ON public.document_submissions USING btree (renewal_id)",
+      "CREATE UNIQUE INDEX uq_document_submissions_single_renewal ON public.document_submissions USING btree (renewal_id) WHERE (renewal_id IS NOT NULL)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "events",
+    "foreign_key": "events_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX events_pkey ON public.events USING btree (id)",
+      "CREATE UNIQUE INDEX events_slug_key ON public.events USING btree (slug)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "inquiries",
+    "foreign_key": "inquiries_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE CASCADE",
+    "approximate_rows": 4,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX inquiries_pkey ON public.inquiries USING btree (id)",
+      "CREATE INDEX idx_inquiries_org ON public.inquiries USING btree (organization_id, created_at DESC)",
+      "CREATE INDEX idx_inquiries_status ON public.inquiries USING btree (status, created_at DESC)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "liquidation_reports",
+    "foreign_key": "liquidation_reports_organization_id_fkey",
+    "definition": "FOREIGN KEY (organization_id) REFERENCES organization_profiles(id) ON DELETE CASCADE",
+    "approximate_rows": 62,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX liquidation_reports_pkey ON public.liquidation_reports USING btree (id)",
+      "CREATE UNIQUE INDEX liquidation_reports_budget_request_id_key ON public.liquidation_reports USING btree (budget_request_id)",
+      "CREATE INDEX idx_liquidation_reports_budget ON public.liquidation_reports USING btree (budget_request_id)",
+      "CREATE INDEX idx_liquidation_reports_status ON public.liquidation_reports USING btree (status)",
+      "CREATE INDEX idx_liquidation_reports_seeded_sample_data ON public.liquidation_reports USING btree (is_seeded_sample_data, seed_batch) WHERE (is_seeded_sample_data = true)",
+      "CREATE INDEX liquidation_reports_monitoring_latest_idx ON public.liquidation_reports USING btree (budget_request_id, updated_at DESC, created_at DESC)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "liquidation_reports",
+    "foreign_key": "liquidation_reports_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE CASCADE",
+    "approximate_rows": 62,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX liquidation_reports_pkey ON public.liquidation_reports USING btree (id)",
+      "CREATE UNIQUE INDEX liquidation_reports_budget_request_id_key ON public.liquidation_reports USING btree (budget_request_id)",
+      "CREATE INDEX idx_liquidation_reports_budget ON public.liquidation_reports USING btree (budget_request_id)",
+      "CREATE INDEX idx_liquidation_reports_status ON public.liquidation_reports USING btree (status)",
+      "CREATE INDEX idx_liquidation_reports_seeded_sample_data ON public.liquidation_reports USING btree (is_seeded_sample_data, seed_batch) WHERE (is_seeded_sample_data = true)",
+      "CREATE INDEX liquidation_reports_monitoring_latest_idx ON public.liquidation_reports USING btree (budget_request_id, updated_at DESC, created_at DESC)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "move_applications",
+    "foreign_key": "move_applications_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX move_applications_pkey ON public.move_applications USING btree (id)",
+      "CREATE INDEX idx_move_applications_organization_id ON public.move_applications USING btree (organization_id)",
+      "CREATE INDEX idx_move_applications_status ON public.move_applications USING btree (status)",
+      "CREATE INDEX idx_move_applications_start_date ON public.move_applications USING btree (start_date)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "news_releases",
+    "foreign_key": "news_releases_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES admin_accounts(id) ON DELETE SET NULL",
+    "approximate_rows": 3,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX news_releases_pkey ON public.news_releases USING btree (id)",
+      "CREATE INDEX idx_news_releases_visibility ON public.news_releases USING btree (visibility_status, date_posted DESC)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "notifications",
+    "foreign_key": "notifications_organization_id_fkey",
+    "definition": "FOREIGN KEY (organization_id) REFERENCES organization_profiles(id) ON DELETE CASCADE",
+    "approximate_rows": 173,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)",
+      "CREATE INDEX idx_notifications_user_read ON public.notifications USING btree (user_id, is_read, created_at DESC)",
+      "CREATE UNIQUE INDEX uq_notifications_time_driven_term ON public.notifications USING btree (organization_id, type, related_id) WHERE (related_type = 'accreditation'::text)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "organization_accreditations",
+    "foreign_key": "organization_accreditations_approved_by_fkey",
+    "definition": "FOREIGN KEY (approved_by) REFERENCES admin_accounts(id) ON DELETE SET NULL",
+    "approximate_rows": 89,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX organization_accreditations_pkey ON public.organization_accreditations USING btree (id)",
+      "CREATE UNIQUE INDEX uq_organization_term_number ON public.organization_accreditations USING btree (organization_id, term_number)",
+      "CREATE UNIQUE INDEX idx_org_single_active_accreditation ON public.organization_accreditations USING btree (organization_id) WHERE (status = 'active'::text)",
+      "CREATE INDEX idx_accreditations_org_dates ON public.organization_accreditations USING btree (organization_id, start_date, end_date)",
+      "CREATE INDEX idx_accreditations_end_date ON public.organization_accreditations USING btree (end_date)",
+      "CREATE INDEX idx_accreditations_status ON public.organization_accreditations USING btree (status)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "organization_profiles",
+    "foreign_key": "organization_profiles_current_accreditation_id_fkey",
+    "definition": "FOREIGN KEY (current_accreditation_id) REFERENCES organization_accreditations(id) ON DELETE SET NULL",
+    "approximate_rows": 92,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX organization_profiles_pkey ON public.organization_profiles USING btree (id)",
+      "CREATE UNIQUE INDEX organization_profiles_user_id_key ON public.organization_profiles USING btree (user_id)",
+      "CREATE INDEX idx_organization_profiles_barangay ON public.organization_profiles USING btree (barangay)",
+      "CREATE INDEX idx_organization_profiles_status ON public.organization_profiles USING btree (profile_status)",
+      "CREATE INDEX idx_organization_profiles_public_directory ON public.organization_profiles USING btree (organization_name) WHERE ((profile_status = 'verified'::profile_status) AND (directory_visibility = true))",
+      "CREATE INDEX idx_org_profiles_renewal_test_account ON public.organization_profiles USING btree (is_renewal_test_account) WHERE (is_renewal_test_account = true)",
+      "CREATE INDEX idx_org_profiles_seeded_sample_data ON public.organization_profiles USING btree (is_seeded_sample_data, seed_batch) WHERE (is_seeded_sample_data = true)",
+      "CREATE UNIQUE INDEX organization_profiles_one_verified_urn_idx ON public.organization_profiles USING btree (urn_normalized) WHERE ((urn_review_status = 'verified'::urn_review_status) AND (urn_normalized IS NOT NULL))",
+      "CREATE UNIQUE INDEX uq_organization_profiles_urn_normalized ON public.organization_profiles USING btree (upper(TRIM(BOTH FROM organization_identifier_number))) WHERE ((organization_identifier_number IS NOT NULL) AND (TRIM(BOTH FROM organization_identifier_number) <> ''::text))",
+      "CREATE INDEX idx_organization_profiles_created_at_desc ON public.organization_profiles USING btree (created_at DESC, id)",
+      "CREATE UNIQUE INDEX uq_organization_profiles_urn_col_normalized ON public.organization_profiles USING btree (upper(TRIM(BOTH FROM urn))) WHERE ((urn IS NOT NULL) AND (TRIM(BOTH FROM urn) <> ''::text))",
+      "CREATE UNIQUE INDEX uq_organization_profiles_reference_id ON public.organization_profiles USING btree (reference_id) WHERE (reference_id IS NOT NULL)",
+      "CREATE INDEX organization_identity_name_trgm_idx ON public.organization_profiles USING gin (identity_name_key gin_trgm_ops)",
+      "CREATE INDEX organization_identity_name_idx ON public.organization_profiles USING btree (identity_name_key)",
+      "CREATE INDEX organization_identity_anchor_location_idx ON public.organization_profiles USING btree (identity_name_anchor, barangay)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "organization_renewals",
+    "foreign_key": "organization_renewals_reviewed_by_fkey",
+    "definition": "FOREIGN KEY (reviewed_by) REFERENCES admin_accounts(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX organization_renewals_pkey ON public.organization_renewals USING btree (id)",
+      "CREATE UNIQUE INDEX uq_organization_renewal_cycle ON public.organization_renewals USING btree (organization_id, cycle_number)",
+      "CREATE UNIQUE INDEX idx_single_active_renewal_per_org ON public.organization_renewals USING btree (organization_id) WHERE (status = ANY (ARRAY['draft'::text, 'submitted'::text, 'under_review'::text, 'needs_revision'::text, 'resubmitted'::text]))",
+      "CREATE INDEX idx_renewals_org_status ON public.organization_renewals USING btree (organization_id, status)",
+      "CREATE INDEX idx_renewals_current_accreditation ON public.organization_renewals USING btree (current_accreditation_id)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "organizations",
+    "foreign_key": "organizations_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX organizations_pkey ON public.organizations USING btree (id)",
+      "CREATE UNIQUE INDEX organizations_slug_key ON public.organizations USING btree (slug)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "programs",
+    "foreign_key": "programs_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX programs_pkey ON public.programs USING btree (id)",
+      "CREATE UNIQUE INDEX programs_slug_key ON public.programs USING btree (slug)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "transparency_posts",
+    "foreign_key": "transparency_posts_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX transparency_posts_pkey ON public.transparency_posts USING btree (id)",
+      "CREATE INDEX idx_transparency_posts_visibility ON public.transparency_posts USING btree (visibility_status, post_date DESC)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "urn_review_history",
+    "foreign_key": "urn_review_history_organization_id_fkey",
+    "definition": "FOREIGN KEY (organization_id) REFERENCES organization_profiles(id) ON DELETE CASCADE",
+    "approximate_rows": 0,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX urn_review_history_pkey ON public.urn_review_history USING btree (id)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "user_policy_acceptance",
+    "foreign_key": "user_policy_acceptance_policy_version_id_fkey",
+    "definition": "FOREIGN KEY (policy_version_id) REFERENCES policy_versions(id) ON DELETE RESTRICT",
+    "approximate_rows": 8,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX user_policy_acceptance_pkey ON public.user_policy_acceptance USING btree (id)",
+      "CREATE UNIQUE INDEX uq_user_policy_acceptance ON public.user_policy_acceptance USING btree (user_id, policy_version_id)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "user_roles",
+    "foreign_key": "user_roles_assigned_by_fkey",
+    "definition": "FOREIGN KEY (assigned_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 94,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX user_roles_pkey ON public.user_roles USING btree (user_id, role_id)",
+      "CREATE INDEX idx_user_roles_user_id ON public.user_roles USING btree (user_id)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "user_roles",
+    "foreign_key": "user_roles_role_id_fkey",
+    "definition": "FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE RESTRICT",
+    "approximate_rows": 94,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX user_roles_pkey ON public.user_roles USING btree (user_id, role_id)",
+      "CREATE INDEX idx_user_roles_user_id ON public.user_roles USING btree (user_id)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "ypop_entries",
+    "foreign_key": "ypop_entries_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 5,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX ypop_entries_pkey ON public.ypop_entries USING btree (id)",
+      "CREATE INDEX idx_ypop_entries_organization_id ON public.ypop_entries USING btree (organization_id)",
+      "CREATE INDEX idx_ypop_entries_semester ON public.ypop_entries USING btree (semester)",
+      "CREATE UNIQUE INDEX idx_ypop_entries_org_semester_unique ON public.ypop_entries USING btree (organization_id, semester)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "ypop_event_participations",
+    "foreign_key": "ypop_event_participations_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 14,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX ypop_event_participations_pkey ON public.ypop_event_participations USING btree (id)",
+      "CREATE UNIQUE INDEX ypop_event_participations_org_activity_unique ON public.ypop_event_participations USING btree (organization_id, activity_id)",
+      "CREATE INDEX idx_ypop_event_participations_organization_id ON public.ypop_event_participations USING btree (organization_id)",
+      "CREATE INDEX idx_ypop_event_participations_activity_id ON public.ypop_event_participations USING btree (activity_id)",
+      "CREATE INDEX idx_ypop_event_participations_status ON public.ypop_event_participations USING btree (status)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "ypop_org_activities",
+    "foreign_key": "ypop_org_activities_submitted_by_fkey",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES auth.users(id) ON DELETE SET NULL",
+    "approximate_rows": 3,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX ypop_org_activities_pkey ON public.ypop_org_activities USING btree (id)",
+      "CREATE INDEX idx_ypop_org_activities_entry_id ON public.ypop_org_activities USING btree (ypop_entry_id)",
+      "CREATE INDEX idx_ypop_org_activities_org_id ON public.ypop_org_activities USING btree (organization_id)",
+      "CREATE INDEX idx_ypop_org_activities_status ON public.ypop_org_activities USING btree (status)"
+    ]
+  },
+  {
+    "schema_name": "public",
+    "table_name": "ypop_submission_deletion_receipts",
+    "foreign_key": "ypop_submission_deletion_receipts_organization_id_fkey",
+    "definition": "FOREIGN KEY (organization_id) REFERENCES organization_profiles(id) ON DELETE CASCADE",
+    "approximate_rows": 2,
+    "existing_indexes": [
+      "CREATE UNIQUE INDEX ypop_submission_deletion_receipts_pkey ON public.ypop_submission_deletion_receipts USING btree (operation_id, organization_id)"
+    ]
+  }
+]

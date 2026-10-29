@@ -1,0 +1,280 @@
+TAP version 13
+# Subtest: accepts the expected marker and documented email-provider app metadata
+ok 1 - accepts the expected marker and documented email-provider app metadata
+  ---
+  duration_ms: 2.9835
+  ...
+# Subtest: continuation-only preparation never creates an identity when recovery state is absent
+ok 2 - continuation-only preparation never creates an identity when recovery state is absent
+  ---
+  duration_ms: 1.3904
+  ...
+# Subtest: continuation-only preparation reuses exactly the verified existing identity
+ok 3 - continuation-only preparation reuses exactly the verified existing identity
+  ---
+  duration_ms: 1.5952
+  ...
+# Subtest: uses a full Auth detail record when the user inventory omits identities
+ok 4 - uses a full Auth detail record when the user inventory omits identities
+  ---
+  duration_ms: 2.057
+  ...
+# Subtest: accepts an empty app-metadata provider envelope with the exact marker
+ok 5 - accepts an empty app-metadata provider envelope with the exact marker
+  ---
+  duration_ms: 0.6339
+  ...
+# Subtest: accepts only Supabase's generated email_verified user metadata
+ok 6 - accepts only Supabase's generated email_verified user metadata
+  ---
+  duration_ms: 0.7878
+  ...
+# Subtest: rejects wrong project, wrong email, missing marker, and mismatched recorded ID
+ok 7 - rejects wrong project, wrong email, missing marker, and mismatched recorded ID
+  ---
+  duration_ms: 0.5761
+  ...
+# Subtest: requires exactly one matching email identity
+ok 8 - requires exactly one matching email identity
+  ---
+  duration_ms: 0.3855
+  ...
+# Subtest: rejects an unrecognized bootstrap identity and unsafe metadata
+ok 9 - rejects an unrecognized bootstrap identity and unsafe metadata
+  ---
+  duration_ms: 1.2724
+  ...
+# Subtest: accepts exactly the pending staging Super Admin and empty operational baseline
+ok 10 - accepts exactly the pending staging Super Admin and empty operational baseline
+  ---
+  duration_ms: 1.3619
+  ...
+# Subtest: matches the existing role when its database ID is numeric
+ok 11 - matches the existing role when its database ID is numeric
+  ---
+  duration_ms: 0.3657
+  ...
+# Subtest: bootstrap preflight rejects extra or activated Admin accounts
+ok 12 - bootstrap preflight rejects extra or activated Admin accounts
+  ---
+  duration_ms: 0.528
+  ...
+# Subtest: bootstrap preflight rejects a mismatched super_admin role assignment
+ok 13 - bootstrap preflight rejects a mismatched super_admin role assignment
+  ---
+  duration_ms: 0.2858
+  ...
+# Subtest: bootstrap preflight requires zero Auth, session, and business records
+ok 14 - bootstrap preflight requires zero Auth, session, and business records
+  ---
+  duration_ms: 0.8352
+  ...
+# Subtest: bootstrap preflight refuses Storage drift, a local lock, a journal, or a competing script
+ok 15 - bootstrap preflight refuses Storage drift, a local lock, a journal, or a competing script
+  ---
+  duration_ms: 0.751
+  ...
+# Subtest: classifies multiple unrelated Node.js processes as safe
+ok 16 - classifies multiple unrelated Node.js processes as safe
+  ---
+  duration_ms: 0.2569
+  ...
+# Subtest: blocks one process invoking the staging bootstrap
+ok 17 - blocks one process invoking the staging bootstrap
+  ---
+  duration_ms: 0.2747
+  ...
+# Subtest: fails closed when a Node.js command line is inaccessible
+ok 18 - fails closed when a Node.js command line is inaccessible
+  ---
+  duration_ms: 0.2417
+  ...
+# Subtest: does not classify the current bootstrap process as a competitor
+ok 19 - does not classify the current bootstrap process as a competitor
+  ---
+  duration_ms: 0.1722
+  ...
+# Subtest: process inspection fails closed when the Windows inventory is unavailable
+ok 20 - process inspection fails closed when the Windows inventory is unavailable
+  ---
+  duration_ms: 0.4379
+  ...
+# Subtest: rejects an ID mismatch and duplicate Auth users before any mutation
+ok 21 - rejects an ID mismatch and duplicate Auth users before any mutation
+  ---
+  duration_ms: 0.2719
+  ...
+# Subtest: missing Auth identity returns null from read-only inventory validation
+ok 22 - missing Auth identity returns null from read-only inventory validation
+  ---
+  duration_ms: 0.1646
+  ...
+# Subtest: missing journal refuses to adopt an existing Auth identity
+ok 23 - missing journal refuses to adopt an existing Auth identity
+  ---
+  duration_ms: 0.2246
+  ...
+# Subtest: fresh creation records the returned user ID before returning the identity
+ok 24 - fresh creation records the returned user ID before returning the identity
+  ---
+  duration_ms: 0.6047
+  ...
+# Subtest: a failed createUser response stops before recording or cleanup
+ok 25 - a failed createUser response stops before recording or cleanup
+  ---
+  duration_ms: 0.3674
+  ...
+# Subtest: a created user with unexpected metadata is journaled but not activated or deleted
+ok 26 - a created user with unexpected metadata is journaled but not activated or deleted
+  ---
+  duration_ms: 0.4596
+  ...
+# Subtest: retries an interrupted bootstrap only for the exact recorded identity
+ok 27 - retries an interrupted bootstrap only for the exact recorded identity
+  ---
+  duration_ms: 0.5187
+  ...
+# Subtest: activation failure signs out and never calls cleanup
+ok 28 - activation failure signs out and never calls cleanup
+  ---
+  duration_ms: 2.4679
+  ...
+# Subtest: cleanup starts only after activation, Admin verification, eligibility checks, and temporary-session revocation
+ok 29 - cleanup starts only after activation, Admin verification, eligibility checks, and temporary-session revocation
+  ---
+  duration_ms: 1.9357
+  ...
+# Subtest: post-activation verification failure revokes the temporary session and preserves identity for recovery
+ok 30 - post-activation verification failure revokes the temporary session and preserves identity for recovery
+  ---
+  duration_ms: 0.7435
+  ...
+# Subtest: cleanup rejection and identity mismatch fail before deleteUser
+ok 31 - cleanup rejection and identity mismatch fail before deleteUser
+  ---
+  duration_ms: 0.6694
+  ...
+# Subtest: existing organization ownership blocks temporary identity cleanup
+ok 32 - existing organization ownership blocks temporary identity cleanup
+  ---
+  duration_ms: 0.3557
+  ...
+# Subtest: cleanup deletes only after identity and association guards pass
+ok 33 - cleanup deletes only after identity and association guards pass
+  ---
+  duration_ms: 0.4468
+  ...
+# Subtest: journal stores and clears only the same staging identity
+ok 34 - journal stores and clears only the same staging identity
+  ---
+  duration_ms: 49.8404
+  ...
+# Subtest: same-script concurrent invocations are serialized by the local staging lock
+ok 35 - same-script concurrent invocations are serialized by the local staging lock
+  ---
+  duration_ms: 15.2356
+  ...
+# Subtest: a stale lock is preserved and blocks startup
+ok 36 - a stale lock is preserved and blocks startup
+  ---
+  duration_ms: 8.3634
+  ...
+# Subtest: the canonical state path is stable when TMP/TEMP select a different directory
+ok 37 - the canonical state path is stable when TMP/TEMP select a different directory
+  ---
+  duration_ms: 31.3957
+  ...
+# Subtest: case-variant Windows paths are reconciled by physical directory identity
+ok 38 - case-variant Windows paths are reconciled by physical directory identity
+  ---
+  duration_ms: 26.6811
+  ...
+# Subtest: a mocked Windows junction alias points to one physical journal
+ok 39 - a mocked Windows junction alias points to one physical journal
+  ---
+  duration_ms: 28.9661
+  ...
+# Subtest: distinct directories with equivalent journals are reported but never merged
+ok 40 - distinct directories with equivalent journals are reported but never merged
+  ---
+  duration_ms: 35.7107
+  ...
+# Subtest: distinct directories with conflicting journals fail closed without exposing the IDs
+ok 41 - distinct directories with conflicting journals fail closed without exposing the IDs
+  ---
+  duration_ms: 27.3174
+  ...
+# Subtest: an incomplete second state directory is not adopted
+ok 42 - an incomplete second state directory is not adopted
+  ---
+  duration_ms: 22.1491
+  ...
+# Subtest: malformed journal copies are classified invalid and remain untouched
+ok 43 - malformed journal copies are classified invalid and remain untouched
+  ---
+  duration_ms: 29.2592
+  ...
+# Subtest: unreadable journal copies fail closed
+ok 44 - unreadable journal copies fail closed
+  ---
+  duration_ms: 22.1981
+  ...
+# Subtest: missing Windows filesystem identity fails closed when an alternate state exists
+ok 45 - missing Windows filesystem identity fails closed when an alternate state exists
+  ---
+  duration_ms: 29.0027
+  ...
+# Subtest: interrupted recovery uses the one canonical recorded journal without a lock
+ok 46 - interrupted recovery uses the one canonical recorded journal without a lock
+  ---
+  duration_ms: 24.3245
+  ...
+# Subtest: a journal with the wrong marker is not accepted for recovery
+ok 47 - a journal with the wrong marker is not accepted for recovery
+  ---
+  duration_ms: 20.166
+  ...
+# Subtest: a stale canonical lock blocks and remains in place
+ok 48 - a stale canonical lock blocks and remains in place
+  ---
+  duration_ms: 21.9734
+  ...
+# Subtest: canonical path does not follow a distinct TMP/TEMP directory containing state
+ok 49 - canonical path does not follow a distinct TMP/TEMP directory containing state
+  ---
+  duration_ms: 16.1525
+  ...
+# Subtest: exact private repair installs with restricted ACLs, original functions and real assessment behavior
+ok 50 - exact private repair installs with restricted ACLs, original functions and real assessment behavior
+  ---
+  duration_ms: 3168.0381
+  ...
+# Subtest: staging target gate rejects production and unknown references before any request
+ok 51 - staging target gate rejects production and unknown references before any request
+  ---
+  duration_ms: 2.7669
+  ...
+# Subtest: network guard rejects production, arbitrary hosts and alternate protocols before fetch
+ok 52 - network guard rejects production, arbitrary hosts and alternate protocols before fetch
+  ---
+  duration_ms: 0.8523
+  ...
+# Subtest: sanitized errors never retain request bodies, API keys or bearer URLs
+ok 53 - sanitized errors never retain request bodies, API keys or bearer URLs
+  ---
+  duration_ms: 1.3414
+  ...
+# Subtest: synthetic PDF is small, labeled, internally offset-consistent and reproducible
+ok 54 - synthetic PDF is small, labeled, internally offset-consistent and reproducible
+  ---
+  duration_ms: 1.5217
+  ...
+1..54
+# tests 54
+# suites 0
+# pass 54
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3510.7798

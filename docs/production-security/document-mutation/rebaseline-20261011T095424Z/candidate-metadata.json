@@ -1,0 +1,69 @@
+{
+  "path": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/document_mutation_lifecycle_guard_production_rebaselined.sql",
+  "productionProject": "mqqaykksadotbrghbexz",
+  "installed": false,
+  "historicalPath": "docs/production-security/document-mutation/document_mutation_lifecycle_guard_production.sql",
+  "historicalSha256": "86aec2c915f622bf343f2d4437c2e3f5e1cc8a8df9bdaf052719505dec95a785",
+  "sha256": "bd06efbc326146cabf00ef005401a5bb7aa4a060927d7bffb63eafcf0f35f567",
+  "bytes": 170636,
+  "baselineCapturedAt": "2026-10-11T09:54:24.052471+00:00",
+  "migrationHistory": {
+    "count": 164,
+    "latest": "20261011230000",
+    "fingerprint": "2d1ea52795f2d3c97c71e229819d9a7c"
+  },
+  "completeMigrationHistoryMd5": "1f5eca911f6e2057ae070a955eaca3dc",
+  "unchangedBodySha256": "4f952c2d98d3f0d54fed6b60ddc00287d48faa0ec3389176502451cad6af25dc",
+  "bodyByteIdentical": true,
+  "changedScope": [
+    "Header comments",
+    "Preflight compatibility gate only"
+  ],
+  "containmentMarkerTriggers": [
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.budget_requests",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.budget_requests FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.document_submission_files",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.document_submissions",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    },
+    {
+      "name": "a_production_fixture_markers_guard",
+      "table": "public.liquidation_reports",
+      "enabled": "O",
+      "function": "ytrace_production_containment.freeze_fixture_markers()",
+      "internal": false,
+      "definition": "CREATE TRIGGER a_production_fixture_markers_guard BEFORE INSERT OR UPDATE ON public.liquidation_reports FOR EACH ROW EXECUTE FUNCTION ytrace_production_containment.freeze_fixture_markers()",
+      "function_md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "function_owner": "postgres"
+    }
+  ],
+  "newMigrationReceipt": null,
+  "expectedPostInstallMigrationCount": 164,
+  "lockTimeout": "5s",
+  "statementTimeout": "30s",
+  "outsideMigrationReplay": true
+}

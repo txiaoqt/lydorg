@@ -1,0 +1,23 @@
+{
+  "capturedAt": "2026-10-12T09:31:40.802Z",
+  "status": "PASS",
+  "dirtyTrackedStatusUnchanged": true,
+  "trackedDirtyPaths": 64,
+  "applicationCodeChanges": 0,
+  "archives": {
+    "source": "a6ba0e4e9dc4684a45dc8c86bdaf448311db571bc7156ea73dbf3cf62d36d465",
+    "staticBuild": "56a44b576db1b7db0e47e6131e15770943be2ff9e0cf55b200709a14f91e2abe"
+  },
+  "historicalReportFilesPreserved": 38,
+  "ownOperationLocksReleased": true,
+  "durableAttemptMarkerRetained": true,
+  "gatewayMetadataUnchanged": true,
+  "organizationPreserved": true,
+  "newDeploymentCreated": false,
+  "automaticRetries": 0,
+  "automaticRollback": false,
+  "gitPushPerformed": false,
+  "supabaseWrites": 0,
+  "privateFileRequests": 0,
+  "externalSyncPostRequests": 0
+}

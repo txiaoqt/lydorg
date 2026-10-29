@@ -1,0 +1,58 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "scope": "Read-only final Storage cutover readiness",
+  "liveMutations": 0,
+  "applicationChanges": 0,
+  "sqlCandidateChanges": 0,
+  "findings": [
+    {
+      "id": "BUDGET-DELETE-AUTHORIZATION",
+      "status": "FAIL",
+      "basis": "Production function, validator, grants and relevant trigger inspection; no mutation executed",
+      "finding": "A valid active custom Admin session is required, but the destructive budget RPC does not require budget role/resource permission.",
+      "introducedByStorageCutover": false,
+      "recommendation": "Separately authorize a server-enforced pause of this destructive RPC pending an explicit deletion authorization contract."
+    },
+    {
+      "id": "BUDGET-CLEANUP-CONTRACT",
+      "status": "FAIL",
+      "basis": "Actual production RPC response and promoted Admin source",
+      "finding": "RPC returns no file paths; UI promises Storage deletion. The dormant browser cleanup branch also treats empty successful DELETE as cleanup success.",
+      "recommendation": "Pause deletion, or separately implement authorized metadata deletion with explicit physical retention and accurate reporting. No broad Storage DELETE."
+    },
+    {
+      "id": "CURRENT-OWNER-UNLINKED-FILES",
+      "status": "BLOCKED",
+      "basis": "Two unchanged objects with owner-consistent historical parent audits but no surviving parent/file metadata",
+      "finding": "Ordinary access is denied by the proposed rules. Historical parent activity is not an authoritative current file relationship.",
+      "recommendation": "Approve retain-and-deny, or commission separate evidence-based metadata remediation if current access is required."
+    },
+    {
+      "id": "PRESERVATION-BASELINE-AGE",
+      "status": "BLOCKED",
+      "basis": "21 focused current inventory comparisons; 20 unchanged",
+      "finding": "Organization profiles changed from 92 to 93 since foundation installation. No historical baseline was replaced.",
+      "recommendation": "Review that delta and establish a freshly reviewed immediate preservation snapshot before any separately authorized cutover."
+    },
+    {
+      "id": "RETAINED-SQL-COMPATIBILITY",
+      "status": "PASS",
+      "basis": "Exact artifact, current catalog, all foundation definitions/ACLs, triggers, and 15-policy prerequisite comparison",
+      "finding": "The unchanged cutover candidate matches the current catalog. No gate correction is necessary now."
+    },
+    {
+      "id": "RELEASE-IDENTITIES",
+      "status": "PASS",
+      "basis": "Authenticated read-only provider metadata and Supabase control plane",
+      "finding": "Both approved deployments remain READY and live; the reviewed gateway remains ACTIVE v1."
+    },
+    {
+      "id": "NEW-LIVE-POLICY-AUTHORIZATION",
+      "status": "NOT TESTED",
+      "basis": "No cutover or production mutation is authorized",
+      "finding": "Current access results are metadata projections plus retained historical staging evidence, not new live restrictive-production-policy tests."
+    }
+  ],
+  "preparationDecision": "CONDITIONAL GO",
+  "executionDecision": "NO-GO pending decisions, scoped mitigation, fresh preservation review and separate authorization"
+}

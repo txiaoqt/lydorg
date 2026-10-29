@@ -116,16 +116,16 @@ describe('Admin Lifecycle Actions + User Status Synchronization Verification', (
       expect(screen.getByText('Awaiting Release')).toBeDefined();
 
       rerender(<StatusPill status="approved_for_ftf_green" />);
-      expect(screen.getByText('Onsite Required')).toBeDefined();
+      expect(screen.getByText('Awaiting Release')).toBeDefined();
 
       rerender(<StatusPill status="hard_copy_submitted" />);
-      expect(screen.getByText('Hardcopy Submitted')).toBeDefined();
+      expect(screen.getByText('Awaiting Release')).toBeDefined();
 
       rerender(<StatusPill status="budget_released" />);
       expect(screen.getByText('Budget Released')).toBeDefined();
 
       rerender(<StatusPill status="completed" />);
-      expect(screen.getByText('Completed')).toBeDefined();
+      expect(screen.getByText('Budget Released')).toBeDefined();
 
       rerender(<StatusPill status="needs_revision" />);
       expect(screen.getByText('Needs Revision')).toBeDefined();

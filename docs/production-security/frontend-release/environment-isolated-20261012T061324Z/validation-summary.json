@@ -1,0 +1,132 @@
+{
+  "capturedAt": "2026-10-12T06:27:39.344Z",
+  "status": "PASS",
+  "sourceRevision": "sha256:0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
+  "frontend": {
+    "passed": 91,
+    "failed": 0,
+    "files": [
+      {
+        "path": "src/test/production-supabase-network-guard.test.ts",
+        "assertions": 4,
+        "status": "passed"
+      },
+      {
+        "path": "src/lib/admin-storage-access.test.ts",
+        "assertions": 19,
+        "status": "passed"
+      },
+      {
+        "path": "src/lib/admin-storage-resolver.integration.test.ts",
+        "assertions": 37,
+        "status": "passed"
+      },
+      {
+        "path": "src/lib/private-query-cache.test.ts",
+        "assertions": 2,
+        "status": "passed"
+      },
+      {
+        "path": "src/lib/query-client.test.ts",
+        "assertions": 3,
+        "status": "passed"
+      },
+      {
+        "path": "src/lib/signed-storage-url-cache.test.ts",
+        "assertions": 15,
+        "status": "passed"
+      },
+      {
+        "path": "src/lib/signed-storage-url.integration.test.ts",
+        "assertions": 9,
+        "status": "passed"
+      },
+      {
+        "path": "src/admin/components/AdminRenewalDocumentPreview.test.tsx",
+        "assertions": 2,
+        "status": "passed"
+      }
+    ]
+  },
+  "packaging": {
+    "passed": 39,
+    "failed": 0,
+    "additionalTests": 13,
+    "realChildEnvironmentIsolation": "PASS"
+  },
+  "python": {
+    "passed": 7,
+    "failed": 0,
+    "networkCalls": 0,
+    "actualRuntime": "Windows Python 3.14.3",
+    "python312Grammar": "PASS",
+    "actualPython312Execution": "NOT TESTED"
+  },
+  "totalPassed": 137,
+  "totalFailed": 0,
+  "typescript": "PASS",
+  "diffCheck": "PASS",
+  "installs": [
+    {
+      "log": "npm-ci.log",
+      "packages": 671,
+      "reportedDuration": "42s",
+      "postinstallObserved": true
+    },
+    {
+      "log": "reproduction-npm-ci.log",
+      "packages": 671,
+      "reportedDuration": "32s",
+      "postinstallObserved": true
+    }
+  ],
+  "builds": [
+    {
+      "log": "admin-build.log",
+      "status": "PASS",
+      "surface": "admin",
+      "fixedVersion": "1.0.0-admin-storage-rc+20261012035933.vercel24",
+      "node": "v24.21.0",
+      "platform": "win32",
+      "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+      "privateEnvironmentPassed": false
+    },
+    {
+      "log": "reproduction-build.log",
+      "status": "PASS",
+      "surface": "admin",
+      "fixedVersion": "1.0.0-admin-storage-rc+20261012035933.vercel24",
+      "node": "v24.21.0",
+      "platform": "win32",
+      "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+      "privateEnvironmentPassed": false
+    }
+  ],
+  "assets": {
+    "total": 53,
+    "freshBuildsByteIdentical": true,
+    "previousBuildByteIdentical": true,
+    "artifactInventorySha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d"
+  },
+  "canaryScan": {
+    "status": "PASS",
+    "filesChecked": 106,
+    "distinctSyntheticCanaries": 11,
+    "findings": 0,
+    "scope": "literal scan of every byte in both 53-file outputs; separate bounded secret-pattern scan also passed"
+  },
+  "rootTrackedStatusUnchanged": true,
+  "historicalEvidenceEntriesPreserved": 43,
+  "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+  "node": "v24.21.0",
+  "npm": "11.19.0",
+  "platform": "Windows x64",
+  "linuxOrHostedBuild": "NOT TESTED",
+  "deploymentsSubmitted": 0,
+  "domainPromotions": 0,
+  "projectSettingChanges": 0,
+  "supabaseOperations": 0,
+  "gitPushes": 0,
+  "deploymentDecision": "CONDITIONAL GO for separately authorized candidate-only deployment",
+  "promotionDecision": "NO-GO until hosted acceptance and recovery prerequisites pass"
+}

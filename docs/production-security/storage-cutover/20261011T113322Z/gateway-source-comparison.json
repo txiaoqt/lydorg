@@ -1,0 +1,17 @@
+{
+  "deployedStagingVersion": 1,
+  "bundleSha256": "564d0b5ceab9a63e8b81a824382fe565f045f1f794d3d9120b2fb5e9dc67fc8e",
+  "verifyJwt": false,
+  "comparison": [
+    {
+      "file": "index.ts",
+      "normalizedSourceMatches": true,
+      "localSha256": "97fba3f9c7a271860080b89f3f1c8710bdda3dccbe76961175d19d1154346248"
+    },
+    {
+      "file": "control.ts",
+      "normalizedSourceMatches": true,
+      "localSha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21"
+    }
+  ]
+}

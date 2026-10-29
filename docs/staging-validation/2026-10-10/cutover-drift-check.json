@@ -1,0 +1,47 @@
+{
+  "scope": "Production read-only pg_policies capture vs cutover drift guard expectation; no policy changed",
+  "capturedAt": "2026-10-09T17:15:11.068Z",
+  "capturedLivePolicies": 15,
+  "expectedPolicies": 15,
+  "exactMatch": true,
+  "droppedCount": 12,
+  "droppedAllExist": true,
+  "keptUnchanged": [
+    "transparency_attachments_admin_manage",
+    "transparency_attachments_read_public",
+    "yorp_sample_seed_assets_read"
+  ],
+  "created": [
+    {
+      "name": "ytrace_private_organization_read",
+      "cmd": "SELECT",
+      "roles": "authenticated"
+    },
+    {
+      "name": "ytrace_published_profile_avatar_read",
+      "cmd": "SELECT",
+      "roles": "anon,authenticated"
+    },
+    {
+      "name": "ytrace_private_organization_insert",
+      "cmd": "INSERT",
+      "roles": "authenticated"
+    },
+    {
+      "name": "ytrace_private_organization_delete",
+      "cmd": "DELETE",
+      "roles": "authenticated"
+    },
+    {
+      "name": "ytrace_active_templates_read",
+      "cmd": "SELECT",
+      "roles": "anon,authenticated"
+    },
+    {
+      "name": "ytrace_news_images_read",
+      "cmd": "SELECT",
+      "roles": "anon,authenticated"
+    }
+  ],
+  "newPolicyNameCollisions": []
+}

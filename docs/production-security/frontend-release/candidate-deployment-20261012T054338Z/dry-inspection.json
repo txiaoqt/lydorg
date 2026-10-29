@@ -1,0 +1,3376 @@
+{
+  "keys": [
+    "framework",
+    "basePath",
+    "fileCount",
+    "totalSize",
+    "ignoredCount",
+    "ignored",
+    "directories",
+    "largestFiles",
+    "files"
+  ],
+  "fileCount": 560,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "sha": "c0bad5a918bd30e6c92aa8b36ff19db731cab3e7",
+      "size": 29,
+      "mode": 33206
+    },
+    {
+      "path": "api/sync-run-once.py",
+      "sha": "0fa03dc450ffb0cc0968180d35f3ecad178589da",
+      "size": 2199,
+      "mode": 33206
+    },
+    {
+      "path": "components.json",
+      "sha": "71d812dd5af2d81f024da5aee3c2a35765754675",
+      "size": 434,
+      "mode": 33206
+    },
+    {
+      "path": "eslint.config.js",
+      "sha": "d3dcccaaa4e49a19e9a913c9e28c1c6e307b53aa",
+      "size": 801,
+      "mode": 33206
+    },
+    {
+      "path": "index.html",
+      "sha": "e9e00a026b0165d143cd106a84b16253e9d18270",
+      "size": 1825,
+      "mode": 33206
+    },
+    {
+      "path": "package-lock.json",
+      "sha": "2d3900f2ba736eea090289810a87aa6cd6c3c25b",
+      "size": 374412,
+      "mode": 33206
+    },
+    {
+      "path": "package.json",
+      "sha": "0edb2d567f1a15bc7d5049ef1a16c16d6d3ee611",
+      "size": 3591,
+      "mode": 33206
+    },
+    {
+      "path": "postcss.config.js",
+      "sha": "dd173fb8dfdadba2ffcd23bf5a70bff7ad846e3a",
+      "size": 87,
+      "mode": 33206
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "sha": "e8de3d8a519c6b7623db3494d1e0ceb4a1719e1d",
+      "size": 11211,
+      "mode": 33206
+    },
+    {
+      "path": "public/data/pasig-barangay-boundaries.geojson",
+      "sha": "d497712f565ba4920b10694a211a413ef8be0be0",
+      "size": 113197,
+      "mode": 33206
+    },
+    {
+      "path": "public/favicon.ico",
+      "sha": "d0f386c69c1ed0dba9b8cd63ea1a54bf477e07e7",
+      "size": 7719,
+      "mode": 33206
+    },
+    {
+      "path": "public/fonts/segoeui.ttf",
+      "sha": "fe94066e642c842be5cc47c39a6f79756a1e86a0",
+      "size": 959752,
+      "mode": 33206
+    },
+    {
+      "path": "public/fonts/segoeuib.ttf",
+      "sha": "af143bd7f606a3d1a1b688309d8d702373935ae2",
+      "size": 947092,
+      "mode": 33206
+    },
+    {
+      "path": "public/FullFooter.svg",
+      "sha": "cd1887c6e915ac807f3e81dec72b4b9ac6d9d81f",
+      "size": 4073,
+      "mode": 33206
+    },
+    {
+      "path": "public/FullNavbar.svg",
+      "sha": "5e7d72f98a8809fce0dfe80e24f35dfcc1358687",
+      "size": 8944,
+      "mode": 33206
+    },
+    {
+      "path": "public/icons/icon-192.png",
+      "sha": "c11bcff44d5ea66485f85f5c6ccba6851fa21a17",
+      "size": 12203,
+      "mode": 33206
+    },
+    {
+      "path": "public/icons/icon-512.png",
+      "sha": "9715a7784ef4fbbd03b90855da3279c6d6dcb397",
+      "size": 35387,
+      "mode": 33206
+    },
+    {
+      "path": "public/icons/icon-maskable-512.png",
+      "sha": "e60fb377e2bfd05270c6853d4472fa37ca6253be",
+      "size": 24947,
+      "mode": 33206
+    },
+    {
+      "path": "public/loginPageImages/image1.jpg",
+      "sha": "0d0ac74b738193e7ad24a56f8bb114d803f60409",
+      "size": 478514,
+      "mode": 33206
+    },
+    {
+      "path": "public/loginPageImages/image2.jpg",
+      "sha": "652411f0b836ee4c557cf1543631d175f989ab4e",
+      "size": 181237,
+      "mode": 33206
+    },
+    {
+      "path": "public/loginPageImages/image3.jpg",
+      "sha": "a852cbf41545afe962f2406228197b4bcefd3338",
+      "size": 383215,
+      "mode": 33206
+    },
+    {
+      "path": "public/loginPageImages/image4.jpg",
+      "sha": "0ed822bef9bfed87ee8c9edf2423f6ec1a668cda",
+      "size": 378638,
+      "mode": 33206
+    },
+    {
+      "path": "public/logo.png",
+      "sha": "ff3e66fed9a26437e8b587ffb570b7a230ec6a56",
+      "size": 720105,
+      "mode": 33206
+    },
+    {
+      "path": "public/lydo-connect-logo.svg",
+      "sha": "a8c6a60895a5ebdf2f4f2d33916d0cb47ef5a3f9",
+      "size": 991,
+      "mode": 33206
+    },
+    {
+      "path": "public/lydo-letterhead-footer.jpg",
+      "sha": "39f891d352e382092c7719ed0167ef219a009a48",
+      "size": 53620,
+      "mode": 33206
+    },
+    {
+      "path": "public/lydo-letterhead-header.jpg",
+      "sha": "ad9059fdb90a703145e4990c779d0a4785c19771",
+      "size": 54632,
+      "mode": 33206
+    },
+    {
+      "path": "public/manifest-admin.webmanifest",
+      "sha": "b111cbb7959f320bcf668ddd66455fd7a5c127fa",
+      "size": 831,
+      "mode": 33206
+    },
+    {
+      "path": "public/manifest.webmanifest",
+      "sha": "c014388b6caaa02bc1b3de783dc523aa45352766",
+      "size": 852,
+      "mode": 33206
+    },
+    {
+      "path": "public/pwa-theme-init.js",
+      "sha": "da4c82268f9e5b7565582f4cd9bdc1acb4276cc8",
+      "size": 1257,
+      "mode": 33206
+    },
+    {
+      "path": "public/robots.txt",
+      "sha": "c87003668ea52a5fa648d3d4f74f7c122ab33c21",
+      "size": 25,
+      "mode": 33206
+    },
+    {
+      "path": "public/sw.js",
+      "sha": "52564940ffdf5699f7fa5ccd19db7fc8dcbcd429",
+      "size": 2560,
+      "mode": 33206
+    },
+    {
+      "path": "public/templates/pcydo-move-application-form.pdf",
+      "sha": "23bd300ea247e8de30f8a99d82947eb440439d51",
+      "size": 188008,
+      "mode": 33206
+    },
+    {
+      "path": "public/y-trace-logo-blue.png",
+      "sha": "d47c8ee907e55c51d19fa2c7edb967afce691764",
+      "size": 29873,
+      "mode": 33206
+    },
+    {
+      "path": "public/y-trace-logo.png",
+      "sha": "95fd861e4350384543db5c36791c12c2e6f76b5c",
+      "size": 7815,
+      "mode": 33206
+    },
+    {
+      "path": "public/y-trace-logo.svg",
+      "sha": "7fc38d2ac98edc1d5563d9f9fa80325c0faaafed",
+      "size": 17823,
+      "mode": 33206
+    },
+    {
+      "path": "requirements.txt",
+      "sha": "8a51aefa26e8b29676a0cc520115e2d881a0c277",
+      "size": 185,
+      "mode": 33206
+    },
+    {
+      "path": "scripts/admin-release-config.json",
+      "sha": "99e3f2779fe2325fcb08a0369d8f56b0f1445447",
+      "size": 1929,
+      "mode": 33206
+    },
+    {
+      "path": "scripts/build-admin-release.mjs",
+      "sha": "74c46dad3cf378fe26cbc05f1c47fa213e27d318",
+      "size": 5250,
+      "mode": 33206
+    },
+    {
+      "path": "scripts/build-admin-release.test.mjs",
+      "sha": "e34dcd11d4ab082f593b559b0bab7e2590e5c9d4",
+      "size": 8067,
+      "mode": 33206
+    },
+    {
+      "path": "scripts/patch-radix-select.cjs",
+      "sha": "415f00201ea09c3ad19cd0f7a8af3b5deab83015",
+      "size": 675,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-budget-monitoring.css",
+      "sha": "15488b81093fa1fb7be3c5c8b84c26c771739d0d",
+      "size": 30471,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-desktop-gating.test.tsx",
+      "sha": "10b4100fa9d449c4bc2580ceeecc7d80681f47cd",
+      "size": 14341,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-group3-security.test.tsx",
+      "sha": "d4912d81da4ae184683d14a621cac47e60cb4f59",
+      "size": 12582,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-inquiries-reviewed-workflow.test.tsx",
+      "sha": "d5153df49a45b2cab1508081c50f880230914d24",
+      "size": 13065,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-inquiries.css",
+      "sha": "b602dbbea7287fbb061379f8c91a3d7444ac70db",
+      "size": 3774,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-notification-popover.test.tsx",
+      "sha": "fc01eb438e7bec69c43bfb824ef25710054f7676",
+      "size": 7139,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-portal-snapshot-contract.test.ts",
+      "sha": "7b56ba052719ca27d12f291e52e94bbdcae1c4b3",
+      "size": 12068,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-registration-review-summary-visibility.test.tsx",
+      "sha": "d7da0e0fe8a3ea37b7a43768f59ad3495dba2816",
+      "size": 14842,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-registration-suspended-review.test.tsx",
+      "sha": "90ae62a91ef5c5b8ecaf0b06931ac25d20be1423",
+      "size": 6144,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-review-decision-help.test.tsx",
+      "sha": "a528191e6233a880653587c8ac648fec4b8b8b12",
+      "size": 1533,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-review-lifecycle-decision.test.tsx",
+      "sha": "680246ee3423d16218372c26117efefd8676b9dd",
+      "size": 66516,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-review-status-and-approval-marker.test.tsx",
+      "sha": "c21af15beba88878b3c149bbd0351d51d30b3b04",
+      "size": 3618,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-security-guards.test.tsx",
+      "sha": "72ed5fc3d0dbd19c377df538bf565147555f9076",
+      "size": 5926,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-settings.test.tsx",
+      "sha": "e2f64c8c4233de647a14bda6398994de6e9ab024",
+      "size": 25628,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-workflow-settings.test.tsx",
+      "sha": "a057ea0e29f67c842661dedf209d321a1d554d35",
+      "size": 11182,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-ypop-request-revision-decision.test.tsx",
+      "sha": "7e355c878c7c1c2414013a1f284765d145de2fe5",
+      "size": 31065,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-ypop-validation-materialization.test.tsx",
+      "sha": "61e88717e800caf7f85e9e03af885be9ded09412",
+      "size": 8665,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/admin-ypop-validation-review.css",
+      "sha": "d8b67cbdf1b3f499a466a3a49964542da0dd94d5",
+      "size": 20590,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/AdminPortal.tsx",
+      "sha": "dc1036398f8075a0e20defcbdc1cf7021562ca34",
+      "size": 909180,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/budget-request-restored-lifecycle.test.tsx",
+      "sha": "3a03dcf3b2b5ba11f926f40f6c444f8f6224e49e",
+      "size": 11472,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/ActivityLogsExportDialog.tsx",
+      "sha": "91070d29e6e69571cade1441516435c94187c1b6",
+      "size": 809,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/ActivityLogsTable.tsx",
+      "sha": "f436f7239e3544287081123aeaf7abb92d84a049",
+      "size": 12211,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminDependentFilters.test.tsx",
+      "sha": "afa4664dbe831345855d1ba46b19795c7ade8801",
+      "size": 16151,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminExportDialog.tsx",
+      "sha": "33e262c54a7c1dbaf9f7231c1ec6656bb86876e1",
+      "size": 16163,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminFilterLayoutStability.test.tsx",
+      "sha": "72869c7d1d5564a9d303a9f8034e1bf10e80972f",
+      "size": 14296,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdministratorFormDialog.tsx",
+      "sha": "63bc9d8f03c0931de00fe570455ce2235f8a7de8",
+      "size": 19659,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdministratorsTable.tsx",
+      "sha": "3a3fec04463aef6cf614d2f1a2c5bf315d0f6e3f",
+      "size": 21345,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminRegistrationsSuspendedFilter.test.tsx",
+      "sha": "34e0ece9130fa9cd67eab66bc5d4d56afa605ec9",
+      "size": 13586,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminRenewalDocumentPreview.test.tsx",
+      "sha": "ac3ac9218860313a7dff74b87cbf3d1dbcf27817",
+      "size": 3222,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminRenewalDocumentPreview.tsx",
+      "sha": "9ae3f73e4b1348ea5bd113cf8a91fb50d3b09d24",
+      "size": 2424,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminReportingPeriodSelector.test.tsx",
+      "sha": "9a7a369a44ee4064bc37ad4521e9d35d94a0cb3a",
+      "size": 6358,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminReportingPeriodSelector.tsx",
+      "sha": "f3773483b822d6245433ecb26f21173e298b1b5b",
+      "size": 5361,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminSettingsPage.tsx",
+      "sha": "6706a04a72f139fd6000431b0a0b4364dcee585a",
+      "size": 71397,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/AdminTemplatesArchiveLifecycle.test.tsx",
+      "sha": "6102fefce5addf12f31cb34c090ca70887402784",
+      "size": 22194,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BackupRecoveryPage.test.tsx",
+      "sha": "68c304f5b8f02bebc87a8968e0212f264174d88f",
+      "size": 9773,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BackupRecoveryPage.tsx",
+      "sha": "fd06a34ed397b66d4d4310fdf0239c9cdb6d6568",
+      "size": 12325,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/budget-donut-layout.test.ts",
+      "sha": "a0c6a3bb9b85d09cd7d3ce80922189a1eb509e17",
+      "size": 6892,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/budget-donut-layout.ts",
+      "sha": "efe1d4ea85d762c098d66de39da547be238d1e09",
+      "size": 11600,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringFilterPopover.tsx",
+      "sha": "5d0ae7550c072a52d267091e9322cb7f9b2c2fd3",
+      "size": 10552,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringFilterSummary.tsx",
+      "sha": "66b55622579fe788baa7bb78ef3006e7630e4e61",
+      "size": 4634,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringOverview.test.tsx",
+      "sha": "911e54ec5b08c1d62c027924793cdad19569955d",
+      "size": 18246,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringOverview.tsx",
+      "sha": "ea222c5b6e7ced91c04a9833580a06ca28496076",
+      "size": 33470,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringPageControls.tsx",
+      "sha": "72bb4b4bdf18c9779857aae2eaba5dd6d26e6a7f",
+      "size": 4072,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringSummaryCard.test.tsx",
+      "sha": "fc6ae8d221d49860aec2f56199b5927512478de4",
+      "size": 1463,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetMonitoringSummaryCard.tsx",
+      "sha": "a4239751e7e55f66c1220bece38c0ee5031a025d",
+      "size": 5721,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetRequestsTable.tsx",
+      "sha": "3e4ff1a8ea72b994603f9b803e36a758b8ccb161",
+      "size": 28724,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BudgetRequestsTableSelection.test.tsx",
+      "sha": "e0e438b133d07fb29cc68a4ef5aec046f914af3d",
+      "size": 9155,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/BulkOrganizationDeleteDialog.tsx",
+      "sha": "4947c7a4c6454dcdbf84d42cba2dd189ac927d23",
+      "size": 19064,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/CityActivityAnnouncementDialog.tsx",
+      "sha": "b90ab21a177f5e84a1f0e3c89e2620c12a24f22f",
+      "size": 14901,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/ConfigureAnnualBudgetModal.tsx",
+      "sha": "d88035679fb9579e2fd66a9e7a2acc4442d0b233",
+      "size": 9470,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/DownloadDocumentsDialog.tsx",
+      "sha": "891f52b38b3a96d9d6f29e75c9648294ad6d726d",
+      "size": 8207,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/InquiriesTable.tsx",
+      "sha": "5b8d769ab6c11881590d28bfe9cea4ba45abb52a",
+      "size": 14954,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/InquiryDetailDrawer.tsx",
+      "sha": "6de85964bb005e54ebb92de56836bf327350829c",
+      "size": 10548,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/LiquidationReportsTable.tsx",
+      "sha": "14ec143e43c9b0ab266032ee2173a7cbf5320efe",
+      "size": 23207,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/NeedsAttentionList.tsx",
+      "sha": "56690ce40c780ed93673fa3d627ba44818cea948",
+      "size": 3088,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/NewsPreviewDialog.tsx",
+      "sha": "0d568f475d19ca45e53e743b4496f9e5922977ad",
+      "size": 4747,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/NewsReleaseFormDialog.test.tsx",
+      "sha": "556a2143c61957f51fbccbe3064349f44ad12e70",
+      "size": 17135,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/NewsReleaseFormDialog.tsx",
+      "sha": "a67136f74d6fb0db4eaf613598fb28708d307215",
+      "size": 51775,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/NewsReleasesTable.tsx",
+      "sha": "f91928dce09668cebd40f09c872b263fa20058e9",
+      "size": 23228,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/OrganizationBudgetDrawer.tsx",
+      "sha": "d495637cccbc377de591725a6ddf6046a8ab71ec",
+      "size": 9029,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/OrganizationFundingTable.tsx",
+      "sha": "214c0c8fed7ce2163b07bcb9a2d343a66bde4548",
+      "size": 8084,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/OrganizationIdentityReviewPanel.test.tsx",
+      "sha": "a1f11997eaec241a1ffbd25855112a9f556e6214",
+      "size": 4836,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/OrganizationIdentityReviewPanel.tsx",
+      "sha": "e3bf09835e98f95f63fff6ba5dc1a85c56151835",
+      "size": 9929,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/PasigBudgetMap.test.tsx",
+      "sha": "15193a9c9f867d3444a27f46bd18910ae5ef0e36",
+      "size": 5508,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/PasigBudgetMap.tsx",
+      "sha": "efa07012be29e022b575a4f090f7a5be028f3238",
+      "size": 25428,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/PublicBudgetSnapshotConfigPage.tsx",
+      "sha": "f3f1daf0200efcd5b6a84740c49ca77f1a11eee7",
+      "size": 17040,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/RecentActivityLogCard.tsx",
+      "sha": "35cc95ac0016894daf121636d8a5150edad380b2",
+      "size": 3400,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/RegistrationsTable.tsx",
+      "sha": "f81e872756e27dddf91317fff98f9245f9738299",
+      "size": 26550,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/RenewalsTable.tsx",
+      "sha": "bb567b7769ef419958f151696741e5900fa01aa6",
+      "size": 20537,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/RenewalTestEnvironmentPanel.tsx",
+      "sha": "5fb30a97c98994f48e647cf959f6765caaf6f1ed",
+      "size": 24846,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/ReplyEmailDialog.tsx",
+      "sha": "72c5c6894c765f9462a04fcc5158b387d178be55",
+      "size": 11131,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/RolesPermissionsPanel.tsx",
+      "sha": "1d2d6cee61364f1ed33da7185269ebbb2759a4eb",
+      "size": 24071,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/StatsCard.tsx",
+      "sha": "4d006a0229ab2624e5d8c7d34e0fe35b87e6e8da",
+      "size": 2595,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/TemplateCategoryLifecycle.test.tsx",
+      "sha": "0398d7352f28e4293a98bb565ec109522c6d56c1",
+      "size": 17301,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/TemplateFilePreviewDialog.tsx",
+      "sha": "3e5a58bbdb050062608916555a9e559f99765b54",
+      "size": 6401,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/TemplateFormDialog.tsx",
+      "sha": "9ac5d4f88855a4846df18de962bbe9043f3e20dc",
+      "size": 22026,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/TemplatesTable.test.tsx",
+      "sha": "6a46ce9e174cabe4529ad3eee6d82b0db520470c",
+      "size": 3311,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/TemplatesTable.tsx",
+      "sha": "345c286a28b55b839abd37be95c2e488e404de54",
+      "size": 18441,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/UnverifiedAdminAccessScreen.tsx",
+      "sha": "95dcbcb0c2e73e77bf1e7f55e5ffb467003ee246",
+      "size": 7331,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/UrnReviewPanel.tsx",
+      "sha": "c5e9ca3f99048e4bb8210ff92d9de99438c4025f",
+      "size": 8215,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YorpRegistryDetailDrawer.export.test.tsx",
+      "sha": "a561e11bc36cc03b9a360aa6f0f3e779306f333a",
+      "size": 5867,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YorpRegistryDetailDrawer.test.tsx",
+      "sha": "5504b254bfc1572ab19f478739c55a2cdcec726c",
+      "size": 7576,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YorpRegistryDetailDrawer.tsx",
+      "sha": "e6e20b907f60255e20d8979525e05ed5b2351980",
+      "size": 62421,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YorpRegistryExportDialog.test.tsx",
+      "sha": "bf4f0469ead600b585a4694289f6146598041a40",
+      "size": 13341,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YorpRegistryExportDialog.tsx",
+      "sha": "419d89cf75b5c5e5c5afa4d1c29f5f8e5f210634",
+      "size": 32070,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YorpRegistryTable.tsx",
+      "sha": "e90a6c0169dcf80f587e6b06701bab305b164294",
+      "size": 24244,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YorpSampleDataSeedingPanel.tsx",
+      "sha": "01f66c2e46eac86908130bedc73712a9d4c3fe2d",
+      "size": 30843,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YpopPeriodsTable.tsx",
+      "sha": "101f42768789c816f646db9a75ede86a33c76027",
+      "size": 10164,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YpopRecentActivity.test.tsx",
+      "sha": "683e3b2023544722e8b8a98bc8951c3556fadc38",
+      "size": 25090,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YpopSubmissionsTable.test.tsx",
+      "sha": "715f9229aee33ac555cceaa4bb481fd7db4a224c",
+      "size": 2299,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YpopSubmissionsTable.tsx",
+      "sha": "9a5f4653824447f89c9bb429a8766663fdd6da03",
+      "size": 16499,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YpopValidationComputationPopover.tsx",
+      "sha": "78733158afb82c8da0bde9a37c4a26d0e2db9c79",
+      "size": 10190,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/components/YpopValidationSummaryAndFilter.test.tsx",
+      "sha": "df2fd7028c9b5bdf2121198e41057652e34a81f1",
+      "size": 22260,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/context/AdminThemeContext.test.tsx",
+      "sha": "b2ad8e572cc71af86eabd0808bdbe8ac16fc4e65",
+      "size": 1163,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/context/AdminThemeContext.tsx",
+      "sha": "1554ee5da70229573b43f56692221a5984db5955",
+      "size": 4009,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/liquidation-unified-lifecycle.test.tsx",
+      "sha": "636406ee41c3deffefa17ce66eb9e652cf914ab7",
+      "size": 23623,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/pages/yorp-registry.css",
+      "sha": "56c6baf4e21ed3e03928f5539acb656ae980c460",
+      "size": 20933,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.accreditation.test.tsx",
+      "sha": "c3a0422530985b161285601dadf49f007b5db870",
+      "size": 3038,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.quarterly.test.tsx",
+      "sha": "9c5f0a26c2ffae0c9444f87dfe128096b4e98fad",
+      "size": 3727,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.test.tsx",
+      "sha": "c12c35229dd2e724edbd20429fcdf2344dea94c3",
+      "size": 4544,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/pages/YorpRegistry.tsx",
+      "sha": "5d88abf65b2a44975df3592e80742834ffd4097b",
+      "size": 23748,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/renewal-test-environment.test.tsx",
+      "sha": "5c69795b6efe07313ceb2a142de6b143ebbd21cb",
+      "size": 6900,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/yorp-sample-data-seeding-panel.test.tsx",
+      "sha": "c0315f3d1f452b01657a3dfdd29ca1738edc36f9",
+      "size": 12278,
+      "mode": 33206
+    },
+    {
+      "path": "src/admin/ypop-qualification-status.test.tsx",
+      "sha": "14b657bc16e8e0c80920a60818e868c8e5b062ba",
+      "size": 26363,
+      "mode": 33206
+    },
+    {
+      "path": "src/App.tsx",
+      "sha": "2b388ff0fd4d05e3f3f82b83688a3d760a5e5ac5",
+      "size": 23872,
+      "mode": 33206
+    },
+    {
+      "path": "src/assets/about-hero.webp",
+      "sha": "c34c6f8e23031481f15eba1e03255da8a3e2b72b",
+      "size": 15042,
+      "mode": 33206
+    },
+    {
+      "path": "src/assets/hero-image-upscaled.jpeg",
+      "sha": "0a9fe97e2a21e47bad1ae55a5d673f0651d7148b",
+      "size": 3367084,
+      "mode": 33206
+    },
+    {
+      "path": "src/assets/hero-image.webp",
+      "sha": "71123b22cd060231523b467284546c2bdbb4b508",
+      "size": 85132,
+      "mode": 33206
+    },
+    {
+      "path": "src/assets/lydo-pasig-city-seal-transparent.png",
+      "sha": "50a01c73ffb88d541435505fc66fb8bb9544bb54",
+      "size": 1509572,
+      "mode": 33206
+    },
+    {
+      "path": "src/assets/overview-preview.jpg",
+      "sha": "51942bfa904266eeb2253413ee593909c6ffb0df",
+      "size": 173392,
+      "mode": 33206
+    },
+    {
+      "path": "src/assets/ytrace-community-workshop.png",
+      "sha": "d07740129cef90a90e96da49cff38a75b3965711",
+      "size": 2058811,
+      "mode": 33206
+    },
+    {
+      "path": "src/assets/ytrace-overview-upscaled.jpeg",
+      "sha": "cb1d3d96cd0c6e1775a002e75de0bcc3e5ef6e3a",
+      "size": 2415626,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/activity/RecentActivityPreview.tsx",
+      "sha": "1fe53db228f06eafaa3e824f75b14d281a611577",
+      "size": 18334,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/activity/RecentActivityScopingAndWording.test.tsx",
+      "sha": "2360b0ca439c0883d4de2bbc29fe7ac5bc14fb20",
+      "size": 7398,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/AdminPageLoader.tsx",
+      "sha": "a92a6a0ed2202b97960d8689f84e7d317d25e4fa",
+      "size": 426,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/AnnouncementBar.tsx",
+      "sha": "7be8464e153840affcc8925b446bd3d688d85b14",
+      "size": 2527,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/auth/AuthImageSlideshow.tsx",
+      "sha": "37804fd0cd0bc6bdd1b574deb32303fde4bf391f",
+      "size": 9159,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/BrandLogo.tsx",
+      "sha": "783cf0ce5f43194b8958515f0e05439b3260e067",
+      "size": 1039,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ConfirmActionDialog.tsx",
+      "sha": "19532382ca48a86d82bc2f6563ebd1f095ef6ddf",
+      "size": 2341,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/Footer.tsx",
+      "sha": "1df52300662a18db1112d424dc548fba4ccef6c5",
+      "size": 9276,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/GoogleIcon.tsx",
+      "sha": "c9589dd25613c7362cc2455a1867c57ba075a397",
+      "size": 1079,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/LegalPolicyView.tsx",
+      "sha": "bc8098a18fcfda49745b5b71976ec535d6d77b42",
+      "size": 7387,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/Navbar.test.tsx",
+      "sha": "4b63b94ec484909a1bb4d8dfa34b374da3c4e5b4",
+      "size": 5011,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/Navbar.tsx",
+      "sha": "de1d08eac64a6a674e8dc4074982b9043388054c",
+      "size": 9944,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/PolicyContent.tsx",
+      "sha": "7403893c324275f6a71e40debb361698f59e7e2d",
+      "size": 3285,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AccountSuspendedScreen.tsx",
+      "sha": "688ac43d938e119a77b25f049724d19e849ef121",
+      "size": 9612,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AdminBreadcrumb.tsx",
+      "sha": "9a95894bf5da7fb0d4a40f2a54e67c9338914031",
+      "size": 1063,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AdminDesktopGate.test.tsx",
+      "sha": "ab3e11580af16bd4b318b1a0eed395df4280ccc1",
+      "size": 6801,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AdminDesktopGate.tsx",
+      "sha": "584ec0dadf663c1b92936e6e22a6f869653b583a",
+      "size": 929,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AdminDesktopWarningScreen.tsx",
+      "sha": "4e609b24b8f8e419d7d67fd4cba2a59d4af20526",
+      "size": 2998,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AdminPageHeader.tsx",
+      "sha": "36a1c9b494c8bcf4b17ed24050e18b12329f0922",
+      "size": 854,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AdminProfileMenu.tsx",
+      "sha": "b782fa21049f18927f0f7c80c22ce7b73cfcce8f",
+      "size": 5881,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/AdminSearchPalette.tsx",
+      "sha": "8bb4f6850e8df26229bebfa8ec7984cba755d126",
+      "size": 4615,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/BudgetExecutionPipeline.tsx",
+      "sha": "9a7788313d8269b0b9de3668507d1bab073c973f",
+      "size": 2849,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/DangerConfirmDialog.tsx",
+      "sha": "92e470fd192803692bd017012396d6fd4d6bdc37",
+      "size": 8943,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/EndorsementGuidelinesModal.test.tsx",
+      "sha": "ce991108fd3766da960973b2b33b148b4fd22f38",
+      "size": 5342,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/EndorsementGuidelinesModal.tsx",
+      "sha": "b076b0b37000a3fac858472671fa0ae4c0c805d0",
+      "size": 5603,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/FeatureGate.tsx",
+      "sha": "77fd212e9e3e275eba545553919c79494e112f2e",
+      "size": 1107,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/OrganizationActivityHistoryModal.test.tsx",
+      "sha": "3675335c86f1243102bef6bbde69b7e4e4010c02",
+      "size": 12329,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/OrganizationActivityHistoryModal.tsx",
+      "sha": "8a4d878d73acb4c94f2db5c539d79dae54fdcd50",
+      "size": 13367,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/OrganizationHistoryPagination.tsx",
+      "sha": "cef1d738fcd33d55a0c8a3961b01149697a4ac5e",
+      "size": 1377,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/OrganizationIdentityNotice.tsx",
+      "sha": "326242d2a08ef2f15ec12e36e0e17294d6e13c0e",
+      "size": 534,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/portal-ui.tsx",
+      "sha": "e280e481e7fa4f9dcb029d9c8a614d6b2c69b1e2",
+      "size": 5152,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalAttachedDocumentDrawer.tsx",
+      "sha": "b7d3874872adeda03d1e147c74f75234b3715902",
+      "size": 411,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalAttachedFileRow.tsx",
+      "sha": "b136024a94f17c7b5a51623cbff4e2b0a347014c",
+      "size": 4917,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalDocumentDrawer.tsx",
+      "sha": "ca7184dc6220629e87c3d7d9da8b3b5626b1f73d",
+      "size": 51004,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalDocumentDrawerRevisionNotice.test.tsx",
+      "sha": "63ea9415b71415c696dff37278cedcf10fb63978",
+      "size": 12670,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalDocumentPreviewModal.tsx",
+      "sha": "57622f6b6e7c7b4e0a8cadda07817da407fc7e3a",
+      "size": 32364,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalDrawerDocumentSection.tsx",
+      "sha": "598916392fb1df3efdb005aaa8774b16a0d883ce",
+      "size": 11981,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalPublicProfilePreviewDialog.test.tsx",
+      "sha": "a2d4a532820a095b6a8181ef394f2a15ba68ce02",
+      "size": 8805,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalPublicProfilePreviewDialog.tsx",
+      "sha": "8cb6838e10710fc0bdad15350bd33efcc38847b6",
+      "size": 19287,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalShell.tsx",
+      "sha": "f00f767909c809c00138b2421f9aee1534c231c1",
+      "size": 21190,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/PortalWorkflowStatusHelper.tsx",
+      "sha": "f5fed5448f382eef52f30c09868f7dd72f06b16d",
+      "size": 2207,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/StatusBadge.tsx",
+      "sha": "5202f44ff91bf3e67313b2185372741dcd8d8ea5",
+      "size": 5137,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/StatusStandardization.test.tsx",
+      "sha": "4b7f87f804d56bec8572cc8a6d8a9ba81b646bd8",
+      "size": 9504,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/SubmitInquiryModal.test.tsx",
+      "sha": "15f6397c0b4fd65515cbbd65b40fec358180dbf3",
+      "size": 9606,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/SubmitInquiryModal.tsx",
+      "sha": "07d73a752408d78939c6e7670867b04894ece5bd",
+      "size": 10760,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserFeatureIcon.tsx",
+      "sha": "14da00810da83c3fcba3c850e14d50ddf52042f9",
+      "size": 812,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalBudgetRevisionAndApproval.test.tsx",
+      "sha": "dd5d3d5b9f6dd23ce2269c5315261421006e4083",
+      "size": 18305,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalBudgetUpload.test.tsx",
+      "sha": "3c1bea4261a88f0bcc3587c901dab067c4c052a9",
+      "size": 10786,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalBudgetWorkspaceView.tsx",
+      "sha": "8830ddd62e804b02e7e040dd53f44049c7142a53",
+      "size": 131659,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalCreateBudgetSubmitInteraction.test.tsx",
+      "sha": "20be2d6cf9e379b53aa803463467932641c33c78",
+      "size": 13141,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalDocumentWorkspaceView.tsx",
+      "sha": "13b5b549901c16ade9bb439c2546f3c943200c65",
+      "size": 46596,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalLiquidationWorkflow.test.tsx",
+      "sha": "81447e3ffa0153bec33f18514c1908b39b83770e",
+      "size": 14645,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalLiquidationWorkspaceView.tsx",
+      "sha": "7155b0f1928469e77b0cb7fd3bf44b5241c8ebf0",
+      "size": 102730,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalNewsWorkspaceView.tsx",
+      "sha": "478c98035deb28e8a6f389f18725a27d6e8bbb71",
+      "size": 23935,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalNotificationsWorkspaceView.tsx",
+      "sha": "c90cb07bc92b27f3aa3ad145335e9422175fee5f",
+      "size": 23221,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalOrganizationProfileHeader.test.ts",
+      "sha": "cdff1c92fdda2ead90d94f860c6e6bfd728bfe2b",
+      "size": 1007,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalOrganizationProfileWorkspaceView.tsx",
+      "sha": "11718bf84ac80f319c273ff57bb90b21d649043e",
+      "size": 76601,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalRedesignView.test.tsx",
+      "sha": "e5fdaca49f05b8ecc04d229e7ba19d6292ffdc5a",
+      "size": 18649,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalRedesignView.tsx",
+      "sha": "27db98a00f2d681137ba8598233cf041dcf40af7",
+      "size": 44334,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalRenewalCountdownChip.tsx",
+      "sha": "cdf294e22bf1ee983e47d73c30ec403e3509710f",
+      "size": 3896,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalRenewalWorkspaceView.test.tsx",
+      "sha": "f4da8f4bf91907d776e9ad519e1aa517ea34b02f",
+      "size": 9183,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalRenewalWorkspaceView.tsx",
+      "sha": "a79e6637db4da9a8b410fc01dded50c920e7c14e",
+      "size": 95803,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalResponsiveWorkspace.test.tsx",
+      "sha": "09163264a01bc94061da0cf2d3e517582e78640f",
+      "size": 74228,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalShell.tsx",
+      "sha": "30f882a2e8fac1e88258c5220b90f850042668e2",
+      "size": 25420,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalTemplatesConsistency.test.tsx",
+      "sha": "9797eefd6e0b27213e06a857b236c962d1d73fc1",
+      "size": 17279,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalTemplatesWorkspaceView.tsx",
+      "sha": "ca0ae76db6ca0e9918eb90e5dc1a493b14ae96f6",
+      "size": 44865,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/UserPortalYPOPWorkspaceView.tsx",
+      "sha": "f28e2f1339cfdfd79afd8425d1c793d5c98c02ad",
+      "size": 18355,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/WebsiteWorkflowNotice.tsx",
+      "sha": "35c7eae5a259d40c8150e1fa851e0de0f37c1a35",
+      "size": 2716,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/UserPortalYpopIntegration.test.tsx",
+      "sha": "8e7e2668d6134287c650cae3e7264b2bccb63012",
+      "size": 35627,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopBudgetRequestEntryPoint.test.tsx",
+      "sha": "3acbe47fa58967ede8dc0b3115b693d15e3a3f6b",
+      "size": 37882,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopCityLedStagedUpload.test.tsx",
+      "sha": "9b316d01434166bbbec96cb9afc93e5d80827df6",
+      "size": 16766,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopCityLedTab.tsx",
+      "sha": "38dc79dc43694afac2b94600803143290d732696",
+      "size": 20952,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopDraftIsolationAndSync.test.tsx",
+      "sha": "aaf1d50e60de2a3faefc06bc22980787ebe3ddeb",
+      "size": 20579,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopNeedsRevisionFileReplacement.test.tsx",
+      "sha": "1aed2358bd1bc35e85d84c9f74c864d37ab92f82",
+      "size": 16084,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopOrgLedTab.tsx",
+      "sha": "7a08eac72d3a858ed5dc53982a945e1e24a9f677",
+      "size": 26002,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopPendingEvaluationQualification.test.tsx",
+      "sha": "95498406362252c44c60134eb6013a2a0e31f91e",
+      "size": 22012,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopPpaModal.tsx",
+      "sha": "57c768f6fa70a3d82b114a8df58712db11b8e843",
+      "size": 74035,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx",
+      "sha": "345a9478a3c6d933db39f8ff23846344d4d91216",
+      "size": 36562,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopProofDrawer.tsx",
+      "sha": "80b6e46c7e571a2ea8aa3537fa825775283a0864",
+      "size": 50663,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopProofDrawerRedesign.test.tsx",
+      "sha": "3f7d93a4621695b4fcf77b88904184218bd3680c",
+      "size": 59855,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "sha": "bebd4c6e94f3791c22b25e03a637d4fc6b65bc90",
+      "size": 49947,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopSemesterList.tsx",
+      "sha": "ee8d390322be83c7a189eb5b1ddd55af3c4e2353",
+      "size": 26033,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopSemesterWorkspace.tsx",
+      "sha": "1b39a5545a4cc124bc3b1b0fc212c8010a6dc9a8",
+      "size": 17199,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/portal/ypop/YpopTransientDuplicateDraftPrevention.test.tsx",
+      "sha": "5c54cbc7ee1e081f56ff67a6a68fffd0da45fd1f",
+      "size": 14849,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/public/PublicBudgetOverview.tsx",
+      "sha": "8e92bbdffe0135c8a5bfbd7d82ea02ea4b4cbfb3",
+      "size": 29847,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/public/PublicBudgetTransparencyMap.tsx",
+      "sha": "f93ed5f19c92ee9686881115a113e1430e38267a",
+      "size": 6533,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/public/PublicNewsReleaseCard.tsx",
+      "sha": "24f4b710a5dab9d84e030de0222d5bd362d78603",
+      "size": 4227,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/public/PublicTemplatesCatalog.tsx",
+      "sha": "69f8c679a6eef1b24145409626da39b0d6134e04",
+      "size": 7644,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/PublicPageLoader.tsx",
+      "sha": "bb149260a91596da71f26fa98812f391b924d3cb",
+      "size": 406,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/reports/ExportReportDialog.tsx",
+      "sha": "eacfb75339c3e37d8bed9a846934255f703ed159",
+      "size": 791,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/reports/YorpQuarterlyReportDialog.regression.test.tsx",
+      "sha": "3baf632a323c6748be443cfd7bff450137813e1d",
+      "size": 1929,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/reports/YorpQuarterlyReportDialog.tsx",
+      "sha": "c89417bba7e0b91aa70fe90e665a203e83b6b038",
+      "size": 22006,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/SourcePostEmbed.tsx",
+      "sha": "b2323805bbf4fcaa4df0789559891803de23a061",
+      "size": 5244,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/TermsPrivacyAgreementModal.test.tsx",
+      "sha": "27048e8905b75eaa2f28c2447af256ee65ee6ef5",
+      "size": 3518,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/TermsPrivacyAgreementModal.tsx",
+      "sha": "b9271528f91d49e48dee69fb5dfb2d0d2aae08ac",
+      "size": 7207,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/accordion.tsx",
+      "sha": "fe12d7de2bee0f1281d27fb9eb847469fd502a9b",
+      "size": 2028,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/alert-dialog.tsx",
+      "sha": "643777694678a6834383f8d703355e7bdc4fcbe0",
+      "size": 4509,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/alert.tsx",
+      "sha": "9a3a75c8b3c003e9b1096a801df421beb638bd68",
+      "size": 1589,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/aspect-ratio.tsx",
+      "sha": "d8365cbb0b70c70414c13a999b41d895564bc19a",
+      "size": 148,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/avatar.tsx",
+      "sha": "8c6a0b88b286c0aaf5e3716ed488654b67c2625f",
+      "size": 1403,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/badge.tsx",
+      "sha": "e93bf052ff591e4887c2ef918b5f95973ca4517c",
+      "size": 1118,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/breadcrumb.tsx",
+      "sha": "85c7f5de9ddfa176b829ccf8e07ced355eee6f20",
+      "size": 2777,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/button.tsx",
+      "sha": "cdd2167ed07ad439ba34acc950bd60dc6ce8a19a",
+      "size": 2343,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/calendar.tsx",
+      "sha": "b31361c9e0350fb44b679734e17953d195cc92b3",
+      "size": 2617,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/card.tsx",
+      "sha": "970e3b433acd29c67049a9862400b9bdce021b59",
+      "size": 1844,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/carousel.tsx",
+      "sha": "0b36c606dce8d18e000a1e06b777ed3475f71a27",
+      "size": 6473,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/chart.tsx",
+      "sha": "6b64a49b0adf0767519e58285282289fe1c6c928",
+      "size": 10290,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/checkbox.tsx",
+      "sha": "b513d00d90e1b03baaf338e5bd776c067e33ec85",
+      "size": 1079,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/collapsible.tsx",
+      "sha": "7bb0c60e2884f5c8b93b5cda6cc188b27c5587b4",
+      "size": 329,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/command.tsx",
+      "sha": "86a5a2f5999d614bfba915e8b5aaf7e9d7d5ac20",
+      "size": 4940,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/context-menu.tsx",
+      "sha": "7393df6ec8135aeef1915f8da168d18d436e60df",
+      "size": 7369,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/dialog.tsx",
+      "sha": "432ca660ec610d5d499f1d68798919d2b21c9c88",
+      "size": 4414,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/drawer.tsx",
+      "sha": "409799c0e6d2d2f63393232c473baf360789d0a0",
+      "size": 3030,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/dropdown-menu.tsx",
+      "sha": "23ba4fbd2570219c96f08f8674f5e65e738a1705",
+      "size": 7692,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/form.tsx",
+      "sha": "6c2db44ebe022f8cc9427544c103d61458783e6a",
+      "size": 4143,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/hover-card.tsx",
+      "sha": "bbaff08839db5dd0e4a4393ffb86a0e408892358",
+      "size": 1220,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/input-otp.tsx",
+      "sha": "1face74548d04c972f01e4feddb843fe0bb7b7d2",
+      "size": 2236,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/input.tsx",
+      "sha": "ed4ae3d62bacd6c021cd68557ad4b4bdbbfc9ba9",
+      "size": 865,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/label.tsx",
+      "sha": "5828ccbee93e40503d5e75ee65379eb92f43232d",
+      "size": 713,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/menubar.tsx",
+      "sha": "e113cdb975cb0c9b74fc4f2ae678d12b99b17dc4",
+      "size": 8070,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/navigation-menu.tsx",
+      "sha": "8dabfdff80eb9fea523b4005050600114bbf2f2c",
+      "size": 5150,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/pagination.tsx",
+      "sha": "12f826405de40fa5da1b1f613e96fdd687f34109",
+      "size": 2764,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/popover.tsx",
+      "sha": "378bb9420734375c79fb7864950f44fd51cf2c66",
+      "size": 1441,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/progress.tsx",
+      "sha": "a6d86f98aa9bee93aa9af1d06812d1447be1cfdf",
+      "size": 803,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/radio-group.tsx",
+      "sha": "21808156a77651e2876d8096917b18f9ed7dc406",
+      "size": 1483,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/resizable.tsx",
+      "sha": "46b9bf1f5908fbff106a841bde83fa1324b5f7ac",
+      "size": 1733,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/scroll-area.tsx",
+      "sha": "d3df19d77d8714d66f53c5d304745232147e5fe7",
+      "size": 1646,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/select.tsx",
+      "sha": "1b8dc84c68df3e80073145c66997de12036942dc",
+      "size": 5990,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/separator.tsx",
+      "sha": "f3786d0fd5f9a8e194a759cdbae0f575d3b5c71e",
+      "size": 718,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/sheet.tsx",
+      "sha": "88f069456845f254f1c434efbb4d9f47bb9e6ccc",
+      "size": 4699,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/sidebar.tsx",
+      "sha": "83be6cef9f75cafda15b5d19199352c87e017d99",
+      "size": 23474,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/skeleton.tsx",
+      "sha": "ef23806fe13127b182f8adef147faf80b3d8b2cc",
+      "size": 241,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/slider.tsx",
+      "sha": "672f624db79d5351283d709279af2483a00696d9",
+      "size": 1084,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/sonner.tsx",
+      "sha": "fe0c0c75181f1cf8d28c446b318f57702f37b891",
+      "size": 985,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/switch.tsx",
+      "sha": "7aae6a65ec4ff31ddcdef2fa7b61fd251c870b65",
+      "size": 1174,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/table.tsx",
+      "sha": "21e309552d1f76e2277de5be11070f56b23dacaf",
+      "size": 2787,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/tabs.tsx",
+      "sha": "5661f87c4e3c2ccd347d3ce83618cf0394affb4e",
+      "size": 1950,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/textarea.tsx",
+      "sha": "cb8a3563b5d03b8b27a33047580f4fe2ab50fd81",
+      "size": 816,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/toast.tsx",
+      "sha": "47888b9d70ee06ec4f3d2ecabc41653ff853f3c2",
+      "size": 5626,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/toaster.tsx",
+      "sha": "c3aeaeb6cf9b6b4f58fc241bd397f0b763d4f437",
+      "size": 918,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/toggle-group.tsx",
+      "sha": "1dee88875a6082d6d47466a8712d29b0de582fcd",
+      "size": 1763,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/toggle.tsx",
+      "sha": "6f938083dc5d8c8c350b67b79cbeecce944ba63d",
+      "size": 1453,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/tooltip.tsx",
+      "sha": "4ecc8b1518f852a3b0815b3ae984da5f9f5dc1ba",
+      "size": 1183,
+      "mode": 33206
+    },
+    {
+      "path": "src/components/ui/use-toast.ts",
+      "sha": "40f18ccf54766039dd8a4639777854a10380a6ab",
+      "size": 85,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-admin-desktop-viewport.test.ts",
+      "sha": "4e17ccd297ff9e8411257ca5b58e0854511d2849",
+      "size": 3607,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-admin-desktop-viewport.ts",
+      "sha": "5e838c638d92f406e1d0d0a59d8eb3ad73e64347",
+      "size": 2504,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-admin-system-settings.ts",
+      "sha": "7a1af4585bf8b2947909e93d47aedb6c29b00fdd",
+      "size": 7830,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-auth.tsx",
+      "sha": "2ebfc02d161165f347bd1be00eaf2d4af13eb924",
+      "size": 31794,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-mobile.tsx",
+      "sha": "730c11c65e33b27f0e9d838a979d7e146353dac7",
+      "size": 595,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-organization-identity-check.test.tsx",
+      "sha": "899d6367a9d1bd9b19a6fd15f16253427957454f",
+      "size": 1981,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-organization-identity-check.ts",
+      "sha": "ce9711bf00f4228ddf7c3a7ff62aea21443e60ab",
+      "size": 1154,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-policy-agreement.ts",
+      "sha": "f0ed2d0870663cfebac244193a6df2f776dc081f",
+      "size": 3649,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-renewal-clock.test.ts",
+      "sha": "e2623ab1da4152f9f18730852230469a3069fdd9",
+      "size": 752,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-renewal-clock.ts",
+      "sha": "927279c8a3e301e50ad69e0cab17353a0ead584f",
+      "size": 933,
+      "mode": 33206
+    },
+    {
+      "path": "src/hooks/use-toast.ts",
+      "sha": "8dd7265cc312b2407c498f452fbb636829af72e8",
+      "size": 4117,
+      "mode": 33206
+    },
+    {
+      "path": "src/index.css",
+      "sha": "a13437c53d0a2f4133862e671ed0a97ca3125af5",
+      "size": 48598,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/account-switching-isolation.test.tsx",
+      "sha": "33747a4865589346ad212ac3c209c9c27b03db57",
+      "size": 20160,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/activity-log-export.test.ts",
+      "sha": "d1c352467ddf7325817f4dbffc857af8fdc6e2ac",
+      "size": 2196,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/activity-log-export.ts",
+      "sha": "bf2ad7810052abe8416f4e83eb145e3cfddd570a",
+      "size": 4346,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-auth.ts",
+      "sha": "b8e54cbbd58d8959c8e2f3c7a7e92958387c0a07",
+      "size": 7272,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-backup-control.test.ts",
+      "sha": "c583d46924db76772e0ae7278aa0fe8634fa3968",
+      "size": 10164,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-backup-recovery.test.ts",
+      "sha": "9d0131e9a30a38a76bc3758841dfdc22fc1a240e",
+      "size": 2727,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-backup-recovery.ts",
+      "sha": "48544b4efe160f73b4c53b8168b4b448665cb067",
+      "size": 6306,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-budget-request-deletion.test.ts",
+      "sha": "f5a0b454feaf92c391d34d3cd2b9f1123c597828",
+      "size": 16003,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-email-notification-pipeline.test.ts",
+      "sha": "466bf3b9551266078950a5c4392a543b72e9ae1d",
+      "size": 24527,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-inactivity.test.ts",
+      "sha": "d05c954589788bbf457206654c8481d525756bb5",
+      "size": 7375,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-invite.test.ts",
+      "sha": "94808f3a8dd7458ea18ac5753664371a6a4bf375",
+      "size": 17260,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-lifecycle-user-sync.test.tsx",
+      "sha": "1dca58becec0bdcb15be577b6a238b180311f53f",
+      "size": 26205,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-organization-deletion.test.ts",
+      "sha": "a2a69a0393a784860882d664802b060588a44aad",
+      "size": 8615,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-organization-deletion.ts",
+      "sha": "cbf7e39cf61dad8f34886d7c4bfe1d379fb414ff",
+      "size": 6921,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-pdf-sample-generation.test.ts",
+      "sha": "7d1b8fbc2261d8dda8458034f28914675ab3cf1e",
+      "size": 9284,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-permissions.test.ts",
+      "sha": "6cc2dc16fd28ba72e51c78d8f559e7e64eb891bc",
+      "size": 2174,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-permissions.ts",
+      "sha": "154263359fa36f32f8c499f7ebaa6b8657ae39e3",
+      "size": 6064,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-quarterly-export-contract.test.ts",
+      "sha": "c5863f0aef2869e9efc38e858551f5f8b1e36a27",
+      "size": 4867,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-quarterly-export-rpc.test.ts",
+      "sha": "cc5a4e997a52cb2f47dc25682f3f04f2578820d7",
+      "size": 6243,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-registration-review-fk.test.ts",
+      "sha": "825f55224a5396c2792cd7039df726377bbe98f1",
+      "size": 15238,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-report-period.test.ts",
+      "sha": "878a53a89853a3beb0e34d17569195b0b44c1737",
+      "size": 4703,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-report-period.ts",
+      "sha": "d97100e40b619ab8f556404c9271b9689f2c470b",
+      "size": 7350,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-storage-access.test.ts",
+      "sha": "64f5511c09fde786b91fb3bbbaafabbbcb710433",
+      "size": 5252,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-storage-access.ts",
+      "sha": "84bee9f22ef0359ee816ebc57975e0e88da046ce",
+      "size": 2008,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-storage-resolver.integration.test.ts",
+      "sha": "44ed6aef75d239327a1e2a095edd11dc4216a6fd",
+      "size": 15343,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/admin-system-settings.ts",
+      "sha": "c4198d117301aee4f92305afbe2173a6c855b345",
+      "size": 53351,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/audit-records-hardening.test.ts",
+      "sha": "848bcf516ebd0ee721f24a276239ec1239738074",
+      "size": 7797,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/auth-redirect.ts",
+      "sha": "62a4a016c5223eaa77d3f8228f4f0161d56945d8",
+      "size": 3325,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/auth-session-recovery.test.ts",
+      "sha": "ca0d47460cd27504a34341c91d96f9af4ff7732c",
+      "size": 1071,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/auth-session-recovery.ts",
+      "sha": "d23c149750d0ec9d91138e3f564be4fe14136783",
+      "size": 901,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-category-colors.test.ts",
+      "sha": "e8c515ebf6e1fbc1478bdbbf9f64781954d51f73",
+      "size": 2737,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-category-colors.ts",
+      "sha": "adfcc67cef68f9d80e0389f66be8cf4caff88417",
+      "size": 2449,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-eligibility.test.ts",
+      "sha": "a0c8726804d6e86542af994be767f149d1a99265",
+      "size": 5434,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-eligibility.ts",
+      "sha": "b9f673d3be4e0d8333e2ad9cdd4a557d62f4d7f8",
+      "size": 6331,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-monitoring-authoritative.test.ts",
+      "sha": "4c2f549bb703a30d1a383e79363affabfac58626",
+      "size": 21496,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-monitoring-filters.test.ts",
+      "sha": "262d627c5092aa514e5c8c66933ee52f807a6b5c",
+      "size": 16030,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-monitoring-filters.ts",
+      "sha": "4a0dc38aebc786166d21cf1ee3da95f2c780cbbb",
+      "size": 16672,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-monitoring-presentation.test.ts",
+      "sha": "730e85e35a61cd5a92a82a5ec776b677c18d1cfc",
+      "size": 2272,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/budget-monitoring-presentation.ts",
+      "sha": "9b0a0be7c787b546a4685c468fa3d277f0af51d1",
+      "size": 3663,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/cross-tab-password-recovery.test.ts",
+      "sha": "568ade27d6cc732cbb8082c6a3c228e5ba1e21d3",
+      "size": 12377,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/deleted-admin-invitee-routing.test.tsx",
+      "sha": "786933993fe3ea28e7ba33e9a278ce49dfe3cc0f",
+      "size": 8392,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/deployment-surface.ts",
+      "sha": "4669824d75904e05fbb5c73d17c110f8dd12e6a0",
+      "size": 817,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/document-compression.ts",
+      "sha": "929b0ffce9ade0ac2dd0a231bfb7eb1b2986b2ad",
+      "size": 6188,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/document-file-access.test.ts",
+      "sha": "5bf0f5ac2e11354ac269a0b09a1b52033b42e19a",
+      "size": 1107,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/document-file-access.ts",
+      "sha": "76c1a4d0d7ee180e47efb5ba7fd530d1ae8c20c0",
+      "size": 1013,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/document-submission-performance.test.ts",
+      "sha": "9f8b0ffca558e64db965e7d85162d08d227c6004",
+      "size": 20151,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/dynamic-document-submission-workflow.test.tsx",
+      "sha": "4bccab8f5928a42a092df035dd27e3407c214701",
+      "size": 27120,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/email-validation.test.ts",
+      "sha": "3efd3460ae31c2377b60a92948eba535b5ef721b",
+      "size": 2883,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/email-validation.ts",
+      "sha": "ee91c9ea4f3c7591455a38ee13c9d72f37eca508",
+      "size": 3407,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/google-oauth-onboarding.test.tsx",
+      "sha": "0b38df7ae2b72e8d6b7f3fc6aafc04f727ebe3c1",
+      "size": 38259,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/inquiry-reply-email.test.ts",
+      "sha": "0e528657b90cb2ad88d5791cf364dbc16affc552",
+      "size": 5769,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/inquiry-reply-url.ts",
+      "sha": "07387bee74aae0e72f37b0fa00a52a57e8e42b96",
+      "size": 1898,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/lydo-connect-data.ts",
+      "sha": "917a4b3bb4a26e0e8880cfa480781c41ed16f64b",
+      "size": 109368,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/lydo-connect-store.tsx",
+      "sha": "111b3889c4d5b1b674cdfae52a6306abfde009ea",
+      "size": 73446,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "sha": "ec8b819bc824493e83802965746178fffc841a3e",
+      "size": 436172,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/notification-settings-wiring.test.tsx",
+      "sha": "ce5e9c98321bdb379de05e66079c2d75cb4a8f54",
+      "size": 23486,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/official-links.ts",
+      "sha": "be6722d68e17b5b53c4244cf7868e69da2dc5408",
+      "size": 98,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/org-transactional-email.test.ts",
+      "sha": "949aefcdaa775530d61fbe6339d6c006f6160bd1",
+      "size": 17117,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-identity-api.test.ts",
+      "sha": "781b0cb92374ede92c0131a274579373037e3e25",
+      "size": 2660,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-identity-api.ts",
+      "sha": "1e93c23797af6f4ded36c3dc96a0b1e06a9b266c",
+      "size": 3211,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-identity-profile-write.test.ts",
+      "sha": "2fa0146ee8584c1804a595ca535c8e9a9304d972",
+      "size": 2654,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-identity.test.ts",
+      "sha": "dc7d03cc53502eae4380dd681985eafe9518b2c5",
+      "size": 1148,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-identity.ts",
+      "sha": "42de9abf49a16c01e6a7fc8e4e8defd9685c2256",
+      "size": 1515,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-profile-domain.test.ts",
+      "sha": "3840c4ef2cce5d9920b28260a6351c3b9f0f8a08",
+      "size": 13349,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-profile-domain.ts",
+      "sha": "983caa76abe890271dc37622e7a02d09382a159a",
+      "size": 16766,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-rejection-suspension.test.tsx",
+      "sha": "f1814b7decb9410caefedae29e41e9439a8b4089",
+      "size": 22778,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase1.test.ts",
+      "sha": "52be554186a5e2ec063ca15830462b61d40cbc6c",
+      "size": 16907,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2-1.test.ts",
+      "sha": "5bd58dde6a95392a1e618b6df51f43e5ef676f47",
+      "size": 27149,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2-2.test.ts",
+      "sha": "2d404e610641584a65f26a2bbf9c53337f114f52",
+      "size": 16068,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2-3.test.ts",
+      "sha": "ba0b58d021b5f15a71ce2524478e1cfe88a81d1b",
+      "size": 18906,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase2.test.ts",
+      "sha": "5e1e2c7c529668ed4ea78208a1563dfab38b3bcb",
+      "size": 30935,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3.test.tsx",
+      "sha": "bb340923ec6dd05a30ad2d3dddb4f7a9d2b203d7",
+      "size": 23368,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3c-1.test.tsx",
+      "sha": "68984186b67e5a458c60b93af9606354066b14b4",
+      "size": 28507,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3c.test.tsx",
+      "sha": "e3a428314cb37fa861725d7aa117299018bf21cd",
+      "size": 69479,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3d.test.tsx",
+      "sha": "2c1aa338529b38e48f42cbde110d242bdbdf6ada",
+      "size": 32854,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal-phase3e.test.ts",
+      "sha": "5cf302ba90698e28fa577b2044091171b0861e1a",
+      "size": 36543,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal.test.ts",
+      "sha": "756209b6730beb7caa3d1e3cd484bab5b2bd8a9a",
+      "size": 1027,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-renewal.ts",
+      "sha": "a6f9ed8875f33799109181e91a8d1c6d8416f94c",
+      "size": 24044,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/organization-retention.test.ts",
+      "sha": "b2ed528503e4b9c2b7a5edc2d9b305092d1da1aa",
+      "size": 1825,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/pasig-districts.test.ts",
+      "sha": "9573231182c1181dd92ac922006218c700ebeefe",
+      "size": 6314,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/pasig-districts.ts",
+      "sha": "728e50e98e5aa11e147844a6816eeabe4cde5006",
+      "size": 6139,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/password-policy.test.ts",
+      "sha": "179a0d3e335c37f85744cbebae68007d793a13b8",
+      "size": 1818,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/password-policy.ts",
+      "sha": "375012db9b1da33b6546586dc5db982a8de03526",
+      "size": 642,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/password-recovery.test.ts",
+      "sha": "1577b5b89ca3ac741b2c693aaa2943bfbe5e4623",
+      "size": 10078,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/password-recovery.ts",
+      "sha": "983e01b681d10fc28d8a976b7728d25357fa28da",
+      "size": 10307,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/pending-registration-scoping.test.ts",
+      "sha": "0d3c49d5b5d5a17eb81286e044c2ca65de1b3fca",
+      "size": 4123,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/policy-content.ts",
+      "sha": "d8d2f7cc50e995bbd4f45eba728232da89ccdeac",
+      "size": 541,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/private-query-cache.test.ts",
+      "sha": "d3e12fd19c2411214323b0264f76929cb35e4b3e",
+      "size": 1403,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/public-budget-transparency.test.tsx",
+      "sha": "49cd0cbaa71bdfc8592c69267e525b14ed974530",
+      "size": 27756,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/public-contact-info.test.tsx",
+      "sha": "fdf5f748faf46dd59860734076fa91597fe7e5d3",
+      "size": 9493,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/pwa-document-preview.ts",
+      "sha": "d485249e9e26da45166cb6497a750a358958de5b",
+      "size": 428,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/pydo-deterministic-urn.test.ts",
+      "sha": "8907c2593f94b2fbfba77ccaf824fc837ad39f9d",
+      "size": 14005,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/query-client.test.ts",
+      "sha": "7827710809240b839e19ec0e12b87b089f479345",
+      "size": 1613,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "sha": "c0a63329aa9c674889c2a064da2c52e299da1971",
+      "size": 3571,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/registration-and-forgot-password-privacy.test.ts",
+      "sha": "62f5c8653606ae751be7be34007e5da47cbd3464",
+      "size": 9075,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/registration-bulk-reliability.test.ts",
+      "sha": "e8ad19c053ce95d434e461dec49c149faca020c5",
+      "size": 14540,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/registration-upload-transport.test.ts",
+      "sha": "486810f1f0ca3d1b07b3bb24d7c06093597303c6",
+      "size": 11113,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/registration-upload-transport.ts",
+      "sha": "57028e723477a3b436cc8f9bbfa2ab6a266c7479",
+      "size": 8256,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/registration-urn-lifecycle.test.ts",
+      "sha": "89d5625413ef2956cc0b4d02ae35efa463ab523e",
+      "size": 20047,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/renewal-realtime.test.ts",
+      "sha": "6a3c7c4db116c2e5c53db94bc18bb1f7d6514114",
+      "size": 15923,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/report-export-configs.ts",
+      "sha": "2a4bf0e6ac8cd2300590dbf4a812d617277af005",
+      "size": 32347,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/report-export.test.ts",
+      "sha": "8036fb953951824431e2bd50ffa472ffcbdcc194",
+      "size": 7916,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/report-export.ts",
+      "sha": "383be1f2cf016cc575fda9e1d1ffecc09750e544",
+      "size": 34194,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/report-letterhead-assets.ts",
+      "sha": "798c46e8f6170eaffc7f6cd57c80f16d4ed59ef3",
+      "size": 832556,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/report-section35-export.ts",
+      "sha": "52cc1f84f8be6d326ff18e463fffccd0d8418647",
+      "size": 40424,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/revision-deadline-workflow.test.ts",
+      "sha": "e3f16802fbcbeb7f6e18afd2224b53b090c11bfb",
+      "size": 19682,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/revision-deadline.ts",
+      "sha": "876b3fdb195a025b2b6a4783bc8fa310de9e13cf",
+      "size": 10507,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/revision-resubmission-lifecycle.test.ts",
+      "sha": "a18531dc969577d43c8a96b724d8627cd449caad",
+      "size": 11418,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/section35-artifact-generation.test.ts",
+      "sha": "6794d353ba688fa21242ce1abd3fafe377b07692",
+      "size": 15241,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/section35-reporting.test.ts",
+      "sha": "73e4aec886cec20d8b0d6058fa74b4fee027a311",
+      "size": 17050,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/section35-semantics.test.ts",
+      "sha": "262de0b50266fc91b0b5dd1e2b927cc3e67c6d1f",
+      "size": 31279,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.test.ts",
+      "sha": "005242a03bc260409a36296554029bf9d9e4f0d4",
+      "size": 6046,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.ts",
+      "sha": "710fd53cf8b89acf21c4071bc9c247997b19777f",
+      "size": 2935,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/signed-storage-url.integration.test.ts",
+      "sha": "0e128edf052559ed6a2f860a1f7062d1c1e044bb",
+      "size": 3866,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/source-post.ts",
+      "sha": "26e5c3d05aebd64c479e8303ebed0be720cff868",
+      "size": 5198,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/supabase.ts",
+      "sha": "043bbc95fde9e674022c625c1eea19735d23d47d",
+      "size": 2146,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/tc018-urn-uniqueness.test.ts",
+      "sha": "7265be939d3285df2fcab11074b40a8b07c3ed4e",
+      "size": 1907,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/tc039-verify-email-refresh.test.ts",
+      "sha": "4da34b6102ab7961135441f5451882f217f209b1",
+      "size": 2658,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/tc104-org-name-length.test.ts",
+      "sha": "93d9bba574b055046a73e695b23dff1993e09648",
+      "size": 2340,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/tc115-contact-number.test.ts",
+      "sha": "0e07831423d4b6e16234bc8d979379e06f39d21f",
+      "size": 1937,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/templates-file-resolution.test.ts",
+      "sha": "5c4f9676c181098437ead990d592bee2db388992",
+      "size": 3341,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/urn-registration.test.ts",
+      "sha": "a83b49d92e5c9a6898bd9611ba210ccc3d7785ed",
+      "size": 1806,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/urn-registration.ts",
+      "sha": "6276116d111bba38e622802ed7d32c182f657c8e",
+      "size": 2368,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/urn-validation.test.ts",
+      "sha": "ce716fa3d2d13feddc5dc68f0605a4d148c29a4e",
+      "size": 1323,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/urn-validation.ts",
+      "sha": "c44e645758d316f33cda68880000e29d5b1c84ec",
+      "size": 1109,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/user-portal-data-scope.test.ts",
+      "sha": "370f311c49a295236a264852bd74205456e0ddd3",
+      "size": 10215,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/user-workflow-eligibility.test.ts",
+      "sha": "4f17c63bfa6c4b9ea22ffc2ab9f3ed8dd03b82a1",
+      "size": 17534,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/user-workflow-eligibility.ts",
+      "sha": "21e5bd9627056f3b9a08c912a255c8125fbadfd9",
+      "size": 7994,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "sha": "d2516e14718ac155f4819ea4ec143a048b6f255a",
+      "size": 175,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/verification-cases-a-g.test.ts",
+      "sha": "c5542f1abf4f5a2a9585a5b4443f8a0b51e76da2",
+      "size": 7271,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/verification-error.test.ts",
+      "sha": "f651bf835687e3de9213f784da6b1a3d5437dd14",
+      "size": 4486,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/verification-error.ts",
+      "sha": "944b91fe59e4e2d8775b7c0808d0469797066b7b",
+      "size": 3398,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/workflow-metrics-aggregate.test.ts",
+      "sha": "aba7b35635600da3253aa960eafb6e8099be1044",
+      "size": 1392,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/workflow-metrics.ts",
+      "sha": "fe79b8b69deac38469758793be7e60e535b9764e",
+      "size": 8328,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-organization-report.fixtures.ts",
+      "sha": "8ccdfc3110ca1d654c5409bc0158aacb3f794d71",
+      "size": 2936,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-organization-report.test.ts",
+      "sha": "7752d25e0cca3f3ced6dcd12d752c325ac585d6a",
+      "size": 4022,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-organization-report.ts",
+      "sha": "dab90d2e64626a40562284e6752566edad4a5e75",
+      "size": 9885,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-registry-detail.ts",
+      "sha": "4c8c5f69c3c08fefa1efeefd05ee6506615fb995",
+      "size": 4078,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-sample-dataset-catalog.ts",
+      "sha": "8acb0711f30684c4f1df599e5c45f7187a0b1f81",
+      "size": 144027,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-sample-dataset.test.ts",
+      "sha": "c4bc7853383b301d4212fd7ec11551360d40d57c",
+      "size": 5669,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-semester.test.ts",
+      "sha": "12810c3227300808905295e3eb18cfcefdd04559",
+      "size": 6664,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/yorp-semester.ts",
+      "sha": "a3383c4d7ab446dea6c473e4e5ed3500e80902ed",
+      "size": 14906,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-admin-flicker-prevention.test.tsx",
+      "sha": "ecd20e9c1ec248eaebd664e1cf17ec6ce08b2012",
+      "size": 17898,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-admin-user-status-sync.test.ts",
+      "sha": "9486f3fbe5355a4fd83ecec5d9bf8a1ea374cdbb",
+      "size": 19922,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-category-tag-colors.test.ts",
+      "sha": "6ae37434a4064e4902cf09baa130aa4c2cdc0f97",
+      "size": 1327,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-event-eligibility.test.ts",
+      "sha": "34a6b3cf3ba8250fa34f68ea03416313fa95afdf",
+      "size": 3093,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-event-eligibility.ts",
+      "sha": "ca57489508a8c404b46872413b8cf12e696274fc",
+      "size": 4187,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-ppa-submission-sync.test.ts",
+      "sha": "61872972c5eb067209d7351028270bbc118585e9",
+      "size": 6725,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-reliability-persistence-sync.test.ts",
+      "sha": "5d3b4ad927f64a7eaf387feb8e74bee523b6194d",
+      "size": 9431,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-scoring.test.ts",
+      "sha": "0f25e8fbe90b883acebe24beae0d60d119f3924f",
+      "size": 1204,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-submission-deletion.ts",
+      "sha": "adec83348da2a08e91f896e923664735c04d87a2",
+      "size": 4617,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-user-admin-sync.test.ts",
+      "sha": "99b8278c6dfe1b1fe0d28e69ac0e1b5f45699282",
+      "size": 19061,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-user-and-admin-notifications.test.ts",
+      "sha": "da416c0f70d11d22c729e6b63f8cb86882669479",
+      "size": 5789,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ypop-workflow-authoritative.test.ts",
+      "sha": "bdc0f88d7a0af70d8c7c895084c103eabe896ed1",
+      "size": 10821,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ytrace-policy-content.generated.ts",
+      "sha": "d6a68251b64c947475cbdd00a55dd1d95c7944ec",
+      "size": 31425,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ytrace-policy.test.ts",
+      "sha": "c6298f105c5ca38f59b91addc0e79f6ee444562a",
+      "size": 1677,
+      "mode": 33206
+    },
+    {
+      "path": "src/lib/ytrace-policy.ts",
+      "sha": "de22ef21cd9fd4a54887266db1eb1a86953aaae6",
+      "size": 1946,
+      "mode": 33206
+    },
+    {
+      "path": "src/main.tsx",
+      "sha": "41874dbbd0115277925d6147dddaad39343cd020",
+      "size": 706,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/About.tsx",
+      "sha": "4507a556a157506328efd869f1c7459295338a00",
+      "size": 25766,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/AdminCreatePassword.tsx",
+      "sha": "7000a393bd7af7acc730431c9fa2399007a758ad",
+      "size": 16415,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/AuthCallback.tsx",
+      "sha": "3687275218064f57918ec12e77bc65ca0e8daf0a",
+      "size": 7099,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/Contacts.tsx",
+      "sha": "fb8ff10ab2bc235362c51f8775f4627fc04f9542",
+      "size": 9285,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/Faqs.tsx",
+      "sha": "c15217a70b8bb40b3b72f9bfd49af9ea0630ea77",
+      "size": 17684,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/GoogleOnboarding.tsx",
+      "sha": "7adb70b3dc9789795f878be3930474f611b54a47",
+      "size": 68186,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/Index.tsx",
+      "sha": "1b189cd3880dcf1acb4dee305b366de84dc4d5bb",
+      "size": 46157,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/LegalPolicy.tsx",
+      "sha": "969955681569ae92e9e24c101fd052c297b1739d",
+      "size": 4171,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/NewsReleaseRecord.tsx",
+      "sha": "ef5539988867104d415d25ada99813d7e5463706",
+      "size": 8491,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/NewsReleases.tsx",
+      "sha": "774389470fc7d73fc853f338790d2c6f500d8725",
+      "size": 12595,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/NotFound.tsx",
+      "sha": "7f1090a8cd21ac5822190cb143655b970e6ac9ab",
+      "size": 751,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/OrganizationIdentitySignup.test.tsx",
+      "sha": "38e17d30b1f2a0496b7646c2b535810a4496ebde",
+      "size": 4107,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/PublicBudgetTransparency.tsx",
+      "sha": "6c94773914a1a3fb9e724b77c433c0b65975a23a",
+      "size": 4670,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/PublicTemplates.tsx",
+      "sha": "9f6002b3258b9084cd27d6bc96927cb3673a7a32",
+      "size": 1594,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/ResetPassword.test.tsx",
+      "sha": "78a6f82f5c321f910bad8baea272d3b5087b8e24",
+      "size": 14461,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/ResetPassword.tsx",
+      "sha": "dee7bee54051d3a4316eb980229adff265acd4e7",
+      "size": 28035,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/SignIn.test.tsx",
+      "sha": "22682d99a48944a75db7c46434b06467d07fc8af",
+      "size": 22704,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/SignIn.tsx",
+      "sha": "271d82bf2cba85f3027e1b60d531f24f9de5399f",
+      "size": 25729,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/SignUp.test.tsx",
+      "sha": "b6b30591c4eb4d01289f8afd6b59f6156c2554bb",
+      "size": 7145,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/SignUp.tsx",
+      "sha": "9aad8bcc8943a120e0f8089573a56875b26cd077",
+      "size": 50786,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/SiteMap.tsx",
+      "sha": "abf1a1a00f8e33caf950e3582a448a2aed3823e8",
+      "size": 4917,
+      "mode": 33206
+    },
+    {
+      "path": "src/pages/VerifyEmail.tsx",
+      "sha": "63b0bd070e98056cb04429e1f578d3b50dfc15f2",
+      "size": 17821,
+      "mode": 33206
+    },
+    {
+      "path": "src/test/env/.env.test",
+      "sha": "c09cd8f0ace8516006021232a7848dc8b29f57cb",
+      "size": 93,
+      "mode": 33206
+    },
+    {
+      "path": "src/test/example.test.ts",
+      "sha": "72b7dd565100b4edf8462313b82e494815fe4f3f",
+      "size": 150,
+      "mode": 33206
+    },
+    {
+      "path": "src/test/production-supabase-network-guard.test.ts",
+      "sha": "f8c32f3d58d8718584ece20ff31b76f5e4bfcc5f",
+      "size": 1679,
+      "mode": 33206
+    },
+    {
+      "path": "src/test/production-supabase-network-guard.ts",
+      "sha": "921a51345bed56dd2d821178aa05c8ed6acf65fb",
+      "size": 781,
+      "mode": 33206
+    },
+    {
+      "path": "src/test/setup.ts",
+      "sha": "a34afa6906ee0c6c6b8e51c5d18c6abf5fccc50b",
+      "size": 1772,
+      "mode": 33206
+    },
+    {
+      "path": "src/test/user-button-color-standardization.test.ts",
+      "sha": "3629b651cf541e8d2d75eb9fd7a0c6cba12df2c9",
+      "size": 4531,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/budgets/PwaBudgetPages.tsx",
+      "sha": "8ab7a1ad30624a58c5abd92b16ccfccb31c41b60",
+      "size": 24471,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/dashboard/PwaDashboard.tsx",
+      "sha": "5689016e70416b91358820a6ca2f86479154a606",
+      "size": 10085,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/documents/documentFileValidation.ts",
+      "sha": "6f98d696475d4746c5953fa45fb1865da8ec19cf",
+      "size": 1791,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/documents/PwaDocumentManager.upload.test.tsx",
+      "sha": "6e70f848807074f9fccd1b1baaceff9ab6fdc8e5",
+      "size": 5129,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/documents/PwaDocumentPages.tsx",
+      "sha": "705d2bcbc6a85092df42bfda581c2efc979ef121",
+      "size": 46172,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/pwaPortalMetrics.test.ts",
+      "sha": "e9bb8f27e54cc93bb413a371bfb58c334128a30e",
+      "size": 2493,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/pwaPortalMetrics.ts",
+      "sha": "c8a38ed08a6498d50435287ca176500018128eee",
+      "size": 935,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/useInstalledUserPwa.test.ts",
+      "sha": "bcbf9b2ed068956a778fc9413f79d5a8f98dff78",
+      "size": 1878,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/useInstalledUserPwa.ts",
+      "sha": "f0fb4f8f0f4bbcbb7a55640b501db3ec322b32ab",
+      "size": 2248,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaNavigation.ts",
+      "sha": "f0844c91393413fa8a159b2be02b920e4b497641",
+      "size": 917,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaPortalData.ts",
+      "sha": "16fec55c821e5c04d17e043ad5b327090c237984",
+      "size": 30077,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaPreferences.test.ts",
+      "sha": "7358ebcaf955e6f7e1b2a259b37d4b1bd6282a08",
+      "size": 1768,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaPreferences.ts",
+      "sha": "228da5255fb4a329b4439c8475b00fc0c84d7ffd",
+      "size": 3755,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/usePwaRuntimeStatus.ts",
+      "sha": "9635191d6029a0e0969bddf10c3b36804a753222",
+      "size": 2684,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/hooks/useStandalonePwa.ts",
+      "sha": "1c952bf9479668819ee9b5560829ae38233365d3",
+      "size": 1086,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/liquidations/PwaLiquidationPages.test.tsx",
+      "sha": "9019f3a1d2be1ce406af58592d71d1f8889707d3",
+      "size": 4421,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/liquidations/PwaLiquidationPages.tsx",
+      "sha": "c2a0245e96bda14b2e06d7d96aac692ada799736",
+      "size": 22490,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/profile/PwaOrganizationDirectory.tsx",
+      "sha": "2908ac8a32fa42ee2bacbc71efcdb1d23691a925",
+      "size": 15284,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/profile/pwaProfileDraft.test.ts",
+      "sha": "d75ece908251c04870fd1b1383731758868fdd2a",
+      "size": 853,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/profile/pwaProfileDraft.ts",
+      "sha": "8be74118c33287caa4662d4f9c041ddcf2d1bae9",
+      "size": 2296,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/profile/PwaProfilePages.tsx",
+      "sha": "80a74b5fe0d51881d3bd26044ea5887939dfcda7",
+      "size": 53277,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/public/PwaPublicEntry.tsx",
+      "sha": "b0a0ebf45987273cf58fe066e0d969722b6831fc",
+      "size": 8092,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/pwaAccentThemes.ts",
+      "sha": "08f36d1a6762b71c9da9d629dcf513c993886780",
+      "size": 7289,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaAppShell.tsx",
+      "sha": "8a47cf9bc3cf173cb991816290a89792213a70a5",
+      "size": 5656,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/pwaAuthFlow.test.ts",
+      "sha": "55ec30e1cd241fb49373842976f67fbd7a1189f2",
+      "size": 994,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/pwaAuthFlow.ts",
+      "sha": "f55c926cc8ae0ce65b86612f04ba6f259320baa4",
+      "size": 1570,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaBackButton.tsx",
+      "sha": "cd360a71183729d030f7e8065e72ceafddec016f",
+      "size": 428,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaBottomNavigation.tsx",
+      "sha": "1aefbb7049af3f7bd5ee7f7a959bad37dcc957cf",
+      "size": 2402,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaDocumentPreview.tsx",
+      "sha": "7057c94f4790cf5b6a7a4a5058b3b71cbe243438",
+      "size": 2209,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaErrorBoundary.tsx",
+      "sha": "e4519be918ca58ee77e541c05343ce1c2b1d7377",
+      "size": 1262,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaHeader.tsx",
+      "sha": "904cf4c10e6a0c31ce184be7b5dad71814c0b577",
+      "size": 1897,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaInformationPages.tsx",
+      "sha": "eede43f0d1ea4fffb59540a362f3126630e2eab8",
+      "size": 5722,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaInitialLoadingScreen.tsx",
+      "sha": "c9337a610eea03f658c31414e642cec731503812",
+      "size": 678,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaMorePage.test.tsx",
+      "sha": "70eec1678b9f52aae88eb66dbc884dde00ccfddb",
+      "size": 1365,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaMorePage.tsx",
+      "sha": "6f6a865059532cbdaaccfbdead2b4b4c41978c79",
+      "size": 5095,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaOrganizationAvatar.tsx",
+      "sha": "d4cea7a8363b9e6adbc7e6ce58a57391b3c61189",
+      "size": 2555,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaResourcePages.tsx",
+      "sha": "8626e3088f5ab05d3a781717e2a191787a90aa5b",
+      "size": 16939,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/pwaRoutes.test.ts",
+      "sha": "e692f2cb0f9072452fee672936bfdf08c233962e",
+      "size": 3227,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/pwaRoutes.ts",
+      "sha": "49eff58c3f81ea69694a68b387336e6f42c45bbb",
+      "size": 8518,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/pwaUiConsistency.test.ts",
+      "sha": "b77dc593a336eeb92eabe1de3819fea8df744c9e",
+      "size": 2692,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/PwaUserPortal.tsx",
+      "sha": "b2d4cda0fcfd30001ef9b348b13ae0d2a24ffbbc",
+      "size": 8717,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/renewals/PwaRenewalPage.tsx",
+      "sha": "f259e879a19cc4cdd0723bdde9ef5f858dbaf3aa",
+      "size": 3172,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/settings/appVersion.test.ts",
+      "sha": "a493e3e15d84b070ffe0573170a6e1937e2722e9",
+      "size": 1514,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/settings/appVersion.ts",
+      "sha": "77117e69c706453996aba14cf7bab9e345be3edc",
+      "size": 2509,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/settings/PwaAppearanceSettings.test.tsx",
+      "sha": "9b37b58b4b10773a3731da5b5b253c9416c23600",
+      "size": 3328,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/settings/PwaSettingsPages.tsx",
+      "sha": "ffc141bbd4af1478c0bf0882da5b1daa0da5a064",
+      "size": 20205,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/styles/pwa-app.css",
+      "sha": "11fa0b91ee0f48e3a80f2b3c5c02aa824cd7f5b1",
+      "size": 167507,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/styles/pwaUiConsistency.test.ts",
+      "sha": "659ad05127ab0afe15c3dd463f12c82da7e4a44a",
+      "size": 1083,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/templates/PwaTemplatePages.tsx",
+      "sha": "4251b9eab6c0d7e3ae6d6cb9340d5d3f3c22ef96",
+      "size": 13935,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/ypop/PwaYpopAlignedPage.tsx",
+      "sha": "59c46519af9a7275d29d0e619c950b331875e79e",
+      "size": 3560,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/ypop/PwaYpopPage.tsx",
+      "sha": "780e0e85b19453bb5f4d3d4ebcada020f3fd9aa3",
+      "size": 9350,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/pwa/ypop/PwaYpopWorkspace.tsx",
+      "sha": "5db4d548f11cdaaa991f4f5654c4ec76e76fdd94",
+      "size": 61451,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/UserPortal.tsx",
+      "sha": "d9336b2b1ba3426d72aee85212ca7ffd76fa2b6b",
+      "size": 264556,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/UserPortalDashboardLiquidation.test.tsx",
+      "sha": "89951460bc12c85ddd059afef946c1a2bab45d40",
+      "size": 20768,
+      "mode": 33206
+    },
+    {
+      "path": "src/user/UserPortalEntry.tsx",
+      "sha": "f08c82d23773693c10bdbd35c9e8c9c5d7d04042",
+      "size": 1805,
+      "mode": 33206
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "sha": "abb318d0c5d436a429f5ab31929e8cc517bd5bef",
+      "size": 381,
+      "mode": 33206
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/control.ts",
+      "sha": "aae2d005b02dff6dcc11c7920b4cb17006d67af4",
+      "size": 4182,
+      "mode": 33206
+    },
+    {
+      "path": "tailwind.config.ts",
+      "sha": "318a1e0de660fc5b8954cada2fcc5a0d2fdc9e35",
+      "size": 11931,
+      "mode": 33206
+    },
+    {
+      "path": "tsconfig.app.json",
+      "sha": "c42171af7e7d98ebdc2e70d4518290b6dbd09d20",
+      "size": 682,
+      "mode": 33206
+    },
+    {
+      "path": "tsconfig.json",
+      "sha": "8aeb1c2d944257ee8e8784c204947ff7f1f762ed",
+      "size": 385,
+      "mode": 33206
+    },
+    {
+      "path": "tsconfig.node.json",
+      "sha": "72897858460f2ddfbf5d52b2330471f70fb437f1",
+      "size": 503,
+      "mode": 33206
+    },
+    {
+      "path": "vercel.json",
+      "sha": "689a2d409e182412c3c0891dd69c72812659fbeb",
+      "size": 1704,
+      "mode": 33206
+    },
+    {
+      "path": "vite.config.ts",
+      "sha": "4b2c753dea81c0002e118826acedefeefa1c664f",
+      "size": 1336,
+      "mode": 33206
+    },
+    {
+      "path": "vitest.config.ts",
+      "sha": "501f0b94114cf99b74193a2b64e1f8887dfddbc1",
+      "size": 855,
+      "mode": 33206
+    },
+    {
+      "path": "worker/__init__.py",
+      "sha": "67e4dd0ec8bfbbbe52f01c592eedd56bc6ba373e",
+      "size": 42,
+      "mode": 33206
+    },
+    {
+      "path": "worker/gform_sync_worker.py",
+      "sha": "d62d530410a2f94dfc06b84991546d389d6ed556",
+      "size": 19852,
+      "mode": 33206
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+[
+  {
+    "directory": "tmp/staging-validation-build",
+    "jsChunkCount": 40,
+    "initialStaticJs": [
+      {
+        "file": "assets/index-H-EYeGvh.js",
+        "bytes": 1244090,
+        "gzipBytes": 334632
+      }
+    ],
+    "initialBytes": 1244090,
+    "initialGzipBytes": 334632,
+    "largestChunks": [
+      {
+        "file": "assets/AdminPortal-9hTCYhDP.js",
+        "bytes": 2857628,
+        "gzipBytes": 940750
+      },
+      {
+        "file": "assets/index-H-EYeGvh.js",
+        "bytes": 1244090,
+        "gzipBytes": 334632
+      },
+      {
+        "file": "assets/exceljs.min-CoepvPQl.js",
+        "bytes": 938989,
+        "gzipBytes": 270956
+      },
+      {
+        "file": "assets/sheet-DjBrOnde.js",
+        "bytes": 550344,
+        "gzipBytes": 166312
+      },
+      {
+        "file": "assets/UserPortal-B66H-dBb.js",
+        "bytes": 406163,
+        "gzipBytes": 80411
+      },
+      {
+        "file": "assets/AccountSuspendedScreen-CzxPwgrZ.js",
+        "bytes": 217033,
+        "gzipBytes": 51177
+      },
+      {
+        "file": "assets/html2canvas.esm-CBrSDip1.js",
+        "bytes": 202301,
+        "gzipBytes": 48033
+      },
+      {
+        "file": "assets/PwaUserPortal-BZZWv5rw.js",
+        "bytes": 168021,
+        "gzipBytes": 42871
+      },
+      {
+        "file": "assets/leaflet-DIUBZu2V.js",
+        "bytes": 153651,
+        "gzipBytes": 44881
+      },
+      {
+        "file": "assets/index.es-Bc5_02fZ.js",
+        "bytes": 151464,
+        "gzipBytes": 51954
+      }
+    ]
+  }
+]

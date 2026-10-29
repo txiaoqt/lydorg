@@ -1,0 +1,31 @@
+TAP version 13
+# Subtest: candidate SQL preserves owner/reviewer access, history and lifecycle restrictions
+ok 1 - candidate SQL preserves owner/reviewer access, history and lifecycle restrictions
+  ---
+  duration_ms: 2612.647
+  ...
+# Subtest: read-only production metadata projection resolves supported references and denies unmatched files
+ok 2 - read-only production metadata projection resolves supported references and denies unmatched files
+  ---
+  duration_ms: 3380.4525
+  ...
+# Subtest: production foundation wrapper enforces drift and atomic rollback in an isolated catalog
+ok 3 - production foundation wrapper enforces drift and atomic rollback in an isolated catalog
+  ---
+  duration_ms: 4521.5109
+  ...
+# Subtest: production cutover wrapper rejects missing readiness and commits only its exact policy set
+ok 4 - production cutover wrapper rejects missing readiness and commits only its exact policy set
+  ---
+  duration_ms: 1548.3413
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 12268.3067
+

@@ -1,0 +1,482 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T10:47:05.361Z",
+  "results": [
+    {
+      "check": "A: owner-authenticated profile initialization after exact schema parity",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 222
+        },
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 201,
+          "durationMs": 389
+        },
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 147
+        },
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+          "status": 200,
+          "durationMs": 147
+        },
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "B: owner-authenticated profile initialization after exact schema parity",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 223
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 201,
+          "durationMs": 157
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 131
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+          "status": 200,
+          "durationMs": 138
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "check": "S: owner-authenticated profile initialization after exact schema parity",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 227
+        },
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 201,
+          "durationMs": 153
+        },
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 132
+        },
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+          "status": 200,
+          "durationMs": 138
+        },
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "A: cannot read B private profile",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 219
+        },
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 152
+        },
+        {
+          "actor": "A",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 159
+        }
+      ]
+    },
+    {
+      "check": "B: cannot read A private profile",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 212
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 161
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 150
+        }
+      ]
+    },
+    {
+      "check": "S: supported Admin suspension workflow",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "S: supported Admin suspension workflow",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_organization_profile_review",
+          "status": 200,
+          "durationMs": 156
+        }
+      ]
+    },
+    {
+      "check": "Revoke fixture-setup Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Revoke fixture-setup Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 163
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/settings",
+      "status": 200,
+      "durationMs": 955
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 429
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 363
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 149
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 162
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 428
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 222
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 201,
+      "durationMs": 389
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 147
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+      "status": 200,
+      "durationMs": 147
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 136
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 223
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 201,
+      "durationMs": 157
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 134
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 227
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 201,
+      "durationMs": 153
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 135
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 219
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 152
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 159
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 212
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 161
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 150
+    },
+    {
+      "actor": "Super Admin",
+      "step": "S: supported Admin suspension workflow",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_organization_profile_review",
+      "status": 200,
+      "durationMs": 156
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Revoke fixture-setup Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 163
+    }
+  ]
+}

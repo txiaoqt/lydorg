@@ -1,0 +1,2410 @@
+{
+  "enums": [
+    {
+      "name": "activity_action",
+      "labels": [
+        "created_profile",
+        "updated_profile",
+        "submitted_documents",
+        "reviewed_documents",
+        "submitted_budget_request",
+        "reviewed_budget_request",
+        "submitted_liquidation_report",
+        "reviewed_liquidation_report",
+        "published_news_release",
+        "published_transparency_post",
+        "added_remark",
+        "resolved_remark"
+      ]
+    },
+    {
+      "name": "app_role_code",
+      "labels": [
+        "admin",
+        "organization_user",
+        "youth",
+        "super_admin"
+      ]
+    },
+    {
+      "name": "budget_request_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved_for_ftf_green",
+        "rejected_red",
+        "hard_copy_submitted",
+        "budget_released",
+        "completed",
+        "awaiting_release"
+      ]
+    },
+    {
+      "name": "compliance_remark_status",
+      "labels": [
+        "open",
+        "resolved"
+      ]
+    },
+    {
+      "name": "document_file_validation_status",
+      "labels": [
+        "correct",
+        "needs_reupload",
+        "missing",
+        "mismatch"
+      ]
+    },
+    {
+      "name": "document_submission_status",
+      "labels": [
+        "not_started",
+        "draft",
+        "uploaded",
+        "ocr_processing",
+        "ready_for_review",
+        "submitted",
+        "under_admin_review",
+        "needs_revision",
+        "approved_green",
+        "rejected_red"
+      ]
+    },
+    {
+      "name": "inquiry_status",
+      "labels": [
+        "pending_review",
+        "reviewed",
+        "closed",
+        "in_review",
+        "responded",
+        "resolved"
+      ]
+    },
+    {
+      "name": "liquidation_report_status",
+      "labels": [
+        "pending_activity_completion",
+        "not_started",
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved_for_ftf_green",
+        "rejected_red",
+        "hard_copy_submitted",
+        "completed_liquidated",
+        "overdue"
+      ]
+    },
+    {
+      "name": "move_application_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved_for_ftf_green",
+        "rejected_red",
+        "completed"
+      ]
+    },
+    {
+      "name": "notification_type",
+      "labels": [
+        "document_revision",
+        "document_green",
+        "document_red",
+        "budget_go_signal",
+        "budget_revision",
+        "budget_released",
+        "liquidation_go_signal",
+        "liquidation_revision",
+        "overdue",
+        "completed",
+        "news_release",
+        "renewal_window_opened",
+        "renewal_window_urgent",
+        "accreditation_expired",
+        "rejected",
+        "inquiry_responded",
+        "inquiry_closed",
+        "ypop_verified",
+        "ypop_needs_revision",
+        "ypop_qualified",
+        "ypop_not_qualified"
+      ]
+    },
+    {
+      "name": "ocr_status",
+      "labels": [
+        "pending",
+        "processing",
+        "completed",
+        "failed"
+      ]
+    },
+    {
+      "name": "profile_status",
+      "labels": [
+        "incomplete",
+        "pending_review",
+        "verified",
+        "needs_update",
+        "suspended_inactive"
+      ]
+    },
+    {
+      "name": "registration_type",
+      "labels": [
+        "new_organization",
+        "existing_urn"
+      ]
+    },
+    {
+      "name": "renewal_application_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "resubmitted",
+        "approved",
+        "rejected"
+      ]
+    },
+    {
+      "name": "urn_review_status",
+      "labels": [
+        "not_applicable",
+        "pending",
+        "verified",
+        "needs_correction",
+        "rejected"
+      ]
+    },
+    {
+      "name": "verification_method",
+      "labels": [
+        "documents",
+        "urn"
+      ]
+    },
+    {
+      "name": "visibility_status",
+      "labels": [
+        "draft",
+        "published",
+        "hidden"
+      ]
+    },
+    {
+      "name": "ypop_entry_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "qualified",
+        "not_qualified",
+        "pending_evaluation"
+      ]
+    },
+    {
+      "name": "ypop_event_participation_status",
+      "labels": [
+        "pending_verification",
+        "verified",
+        "needs_revision",
+        "rejected",
+        "confirmed",
+        "draft",
+        "pending_evaluation"
+      ]
+    },
+    {
+      "name": "ypop_org_activity_status",
+      "labels": [
+        "draft",
+        "submitted",
+        "under_review",
+        "needs_revision",
+        "approved",
+        "rejected",
+        "pending_evaluation"
+      ]
+    },
+    {
+      "name": "ypop_period_status",
+      "labels": [
+        "draft",
+        "open",
+        "closed"
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "actor_user_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "action",
+      "type": "text",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_type",
+      "type": "text",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "activity_logs",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "activity_logs",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "metadata",
+      "type": "jsonb",
+      "table": "activity_logs",
+      "default": "'{}'::jsonb",
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "admin_accounts",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "username",
+      "type": "citext",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "password_hash",
+      "type": "text",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "email",
+      "type": "citext",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "display_name",
+      "type": "text",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "is_active",
+      "type": "boolean",
+      "table": "admin_accounts",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "role_id",
+      "type": "smallint",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "unit_id",
+      "type": "smallint",
+      "table": "admin_accounts",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_password_set",
+      "type": "boolean",
+      "table": "admin_accounts",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "admin_sessions",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "admin_id",
+      "type": "uuid",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "token_hash",
+      "type": "text",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "last_used_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "revoked_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "admin_sessions",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "admin_system_settings",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "setting_key",
+      "type": "text",
+      "table": "admin_system_settings",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "category",
+      "type": "text",
+      "table": "admin_system_settings",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "value_json",
+      "type": "jsonb",
+      "table": "admin_system_settings",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "data_type",
+      "type": "text",
+      "table": "admin_system_settings",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "admin_system_settings",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_sensitive",
+      "type": "boolean",
+      "table": "admin_system_settings",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "is_editable",
+      "type": "boolean",
+      "table": "admin_system_settings",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "updated_by",
+      "type": "uuid",
+      "table": "admin_system_settings",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "admin_system_settings",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "admin_system_settings",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "activity_title",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "activity_description",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "activity_date",
+      "type": "date",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "venue",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "requested_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "approved_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "released_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "release_date",
+      "type": "date",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "purpose_category",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "status",
+      "type": "budget_request_status",
+      "table": "budget_requests",
+      "default": "'draft'::budget_request_status",
+      "not_null": true
+    },
+    {
+      "name": "remarks",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "go_signal_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "hard_copy_submitted_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "user_note",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "revision_history",
+      "type": "jsonb",
+      "table": "budget_requests",
+      "default": "'[]'::jsonb",
+      "not_null": true
+    },
+    {
+      "name": "budget_request_type",
+      "type": "text",
+      "table": "budget_requests",
+      "default": "'regular'::text",
+      "not_null": true
+    },
+    {
+      "name": "ypop_entry_id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "fiscal_year",
+      "type": "integer",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "budget_requests",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "budget_requests",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "budget_requests",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "document_submission_files",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "submission_id",
+      "type": "uuid",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "document_type_id",
+      "type": "uuid",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "file_url",
+      "type": "text",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_name",
+      "type": "text",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_type",
+      "type": "text",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "file_size",
+      "type": "bigint",
+      "table": "document_submission_files",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "validation_status",
+      "type": "document_file_validation_status",
+      "table": "document_submission_files",
+      "default": "'missing'::document_file_validation_status",
+      "not_null": true
+    },
+    {
+      "name": "admin_status",
+      "type": "document_submission_status",
+      "table": "document_submission_files",
+      "default": "'draft'::document_submission_status",
+      "not_null": true
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "uploaded_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "revision_history",
+      "type": "jsonb",
+      "table": "document_submission_files",
+      "default": "'[]'::jsonb",
+      "not_null": true
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "document_submission_files",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "document_submission_files",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "document_submission_files",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "document_submissions",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "status",
+      "type": "document_submission_status",
+      "table": "document_submissions",
+      "default": "'not_started'::document_submission_status",
+      "not_null": true
+    },
+    {
+      "name": "user_confirmed",
+      "type": "boolean",
+      "table": "document_submissions",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "submitted_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "reviewed_by",
+      "type": "uuid",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "overall_remarks",
+      "type": "text",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "submission_scope",
+      "type": "text",
+      "table": "document_submissions",
+      "default": "'registration'::text",
+      "not_null": true
+    },
+    {
+      "name": "renewal_id",
+      "type": "uuid",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "document_submissions",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "document_submissions",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "document_submissions",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "budget_request_id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "status",
+      "type": "liquidation_report_status",
+      "table": "liquidation_reports",
+      "default": "'pending_activity_completion'::liquidation_report_status",
+      "not_null": true
+    },
+    {
+      "name": "remarks",
+      "type": "text",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "go_signal_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "deadline_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "hard_copy_submitted_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "liquidation_reports",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "liquidation_reports",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "liquidation_reports",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "user_id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "message",
+      "type": "text",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "type",
+      "type": "notification_type",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_type",
+      "type": "text",
+      "table": "notifications",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "related_id",
+      "type": "uuid",
+      "table": "notifications",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_read",
+      "type": "boolean",
+      "table": "notifications",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "notifications",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_accreditations",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "organization_accreditations",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "term_number",
+      "type": "integer",
+      "table": "organization_accreditations",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "start_date",
+      "type": "date",
+      "table": "organization_accreditations",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "end_date",
+      "type": "date",
+      "table": "organization_accreditations",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "certificate_urn",
+      "type": "text",
+      "table": "organization_accreditations",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "table": "organization_accreditations",
+      "default": "'active'::text",
+      "not_null": true
+    },
+    {
+      "name": "is_legacy_inferred",
+      "type": "boolean",
+      "table": "organization_accreditations",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "approved_by",
+      "type": "uuid",
+      "table": "organization_accreditations",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "approved_at",
+      "type": "timestamp with time zone",
+      "table": "organization_accreditations",
+      "default": "clock_timestamp()",
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "organization_accreditations",
+      "default": "clock_timestamp()",
+      "not_null": true
+    },
+    {
+      "name": "revoked_at",
+      "type": "timestamp with time zone",
+      "table": "organization_accreditations",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revocation_reason",
+      "type": "text",
+      "table": "organization_accreditations",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "user_id",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "organization_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "organization_email",
+      "type": "citext",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "contact_number",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "barangay",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "organization_type",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "adviser_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "representative_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "address",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "facebook_page_url",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "profile_status",
+      "type": "profile_status",
+      "table": "organization_profiles",
+      "default": "'incomplete'::profile_status",
+      "not_null": true
+    },
+    {
+      "name": "internal_notes",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "major_classification",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "sub_classification",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "advocacies",
+      "type": "text[]",
+      "table": "organization_profiles",
+      "default": "'{}'::text[]",
+      "not_null": true
+    },
+    {
+      "name": "verified_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "district",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "yorp_registered_year",
+      "type": "smallint",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "yorp_renewed_year",
+      "type": "smallint",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_existing_organization",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "organization_identifier_number",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "profile_image_url",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "directory_visibility",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "directory_show_representative",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "directory_show_adviser",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "directory_visibility_initialized",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "registration_type",
+      "type": "registration_type",
+      "table": "organization_profiles",
+      "default": "'new_organization'::registration_type",
+      "not_null": true
+    },
+    {
+      "name": "urn",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "urn_normalized",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "urn_review_status",
+      "type": "urn_review_status",
+      "table": "organization_profiles",
+      "default": "'not_applicable'::urn_review_status",
+      "not_null": true
+    },
+    {
+      "name": "urn_admin_remarks",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "urn_reviewed_by",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "urn_reviewed_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "verification_method",
+      "type": "verification_method",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "reference_id",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "current_accreditation_id",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "accreditation_start_date",
+      "type": "date",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "accreditation_expires_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_renewal_test_account",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "representative_first_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "representative_middle_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "representative_last_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "representative_suffix",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "adviser_first_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "adviser_middle_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "adviser_last_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "adviser_suffix",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "address_unit_building",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "address_street",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "address_subdivision",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "address_barangay",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "address_city",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "'Pasig City'::text",
+      "not_null": false
+    },
+    {
+      "name": "address_province",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "'Metro Manila'::text",
+      "not_null": false
+    },
+    {
+      "name": "address_zip_code",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "additional_emails",
+      "type": "text[]",
+      "table": "organization_profiles",
+      "default": "'{}'::text[]",
+      "not_null": true
+    },
+    {
+      "name": "additional_contact_numbers",
+      "type": "text[]",
+      "table": "organization_profiles",
+      "default": "'{}'::text[]",
+      "not_null": true
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "seed_source_year",
+      "type": "integer",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "seed_source_record_number",
+      "type": "integer",
+      "table": "organization_profiles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "identity_name_key",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "normalize_organization_identity_name(organization_name)",
+      "not_null": false
+    },
+    {
+      "name": "identity_name_anchor",
+      "type": "text",
+      "table": "organization_profiles",
+      "default": "organization_identity_name_anchor(organization_name)",
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "cycle_number",
+      "type": "integer",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "current_accreditation_id",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "table": "organization_renewals",
+      "default": "'draft'::text",
+      "not_null": true
+    },
+    {
+      "name": "submitted_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "reviewed_by",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": "clock_timestamp()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": "clock_timestamp()",
+      "not_null": true
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "organization_renewals",
+      "default": "false",
+      "not_null": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "certificate_urn",
+      "type": "text",
+      "table": "organization_renewals",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "required_document_types",
+      "default": "gen_random_uuid()",
+      "not_null": true
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "table": "required_document_types",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "required_document_types",
+      "default": "''::text",
+      "not_null": true
+    },
+    {
+      "name": "required_year",
+      "type": "integer",
+      "table": "required_document_types",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "is_required",
+      "type": "boolean",
+      "table": "required_document_types",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "template_url",
+      "type": "text",
+      "table": "required_document_types",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "template_description",
+      "type": "text",
+      "table": "required_document_types",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "sort_order",
+      "type": "integer",
+      "table": "required_document_types",
+      "default": "0",
+      "not_null": true
+    },
+    {
+      "name": "is_active",
+      "type": "boolean",
+      "table": "required_document_types",
+      "default": "true",
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "required_document_types",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "required_document_types",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "template_scope",
+      "type": "text",
+      "table": "required_document_types",
+      "default": "'document_submission'::text",
+      "not_null": true
+    },
+    {
+      "name": "template_category",
+      "type": "text[]",
+      "table": "required_document_types",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "template_file_size",
+      "type": "bigint",
+      "table": "required_document_types",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "scope",
+      "type": "text",
+      "table": "required_document_types",
+      "default": "'both'::text",
+      "not_null": true
+    },
+    {
+      "name": "id",
+      "type": "smallint",
+      "table": "roles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "code",
+      "type": "app_role_code",
+      "table": "roles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "label",
+      "type": "text",
+      "table": "roles",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "roles",
+      "default": null,
+      "not_null": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "roles",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "permission_codes",
+      "type": "text[]",
+      "table": "roles",
+      "default": "'{}'::text[]",
+      "not_null": true
+    },
+    {
+      "name": "document_type_id",
+      "type": "uuid",
+      "table": "yorp_sample_document_assets",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "bucket_id",
+      "type": "text",
+      "table": "yorp_sample_document_assets",
+      "default": "'registration-seed-file'::text",
+      "not_null": true
+    },
+    {
+      "name": "object_name",
+      "type": "text",
+      "table": "yorp_sample_document_assets",
+      "default": null,
+      "not_null": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "yorp_sample_document_assets",
+      "default": "now()",
+      "not_null": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "yorp_sample_document_assets",
+      "default": "now()",
+      "not_null": true
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "33ba7c606820f771e4ed79709bcd188b",
+      "name": "admin_approve_renewal",
+      "owner": "postgres",
+      "signature": "admin_approve_renewal(text,uuid,text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_approve_renewal(p_session_token text, p_renewal_id uuid, p_certificate_urn text DEFAULT NULL::text, p_admin_remarks text DEFAULT NULL::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _admin_id uuid;\n  _now timestamptz := clock_timestamp();\n  _today date := current_date;\n  _renewal record;\n  _curr_acc record;\n  _target_org record;\n  _submission record;\n  _owner_id uuid;\n  _old_urn text;\n  _official_urn text;\n  _anchor_cutoff date;\n  _start_date date;\n  _end_date date;\n  _new_accreditation_id uuid;\nBEGIN\n  -- Authenticate admin session\n  SELECT vat.admin_id INTO _admin_id\n  FROM public.validate_admin_session_token(p_session_token) vat\n  LIMIT 1;\n\n  IF _admin_id IS NULL THEN\n    RAISE EXCEPTION 'Admin account is not authorized.';\n  END IF;\n\n  -- Lock Renewal Record\n  SELECT * INTO _renewal\n  FROM public.organization_renewals\n  WHERE id = p_renewal_id\n  FOR UPDATE;\n\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'Renewal record not found: %', p_renewal_id;\n  END IF;\n\n  IF _renewal.status NOT IN ('submitted', 'under_review', 'resubmitted') THEN\n    RAISE EXCEPTION 'Renewal is not in a reviewable status: %', _renewal.status;\n  END IF;\n\n  -- Lock Organization Profile\n  SELECT * INTO _target_org\n  FROM public.organization_profiles\n  WHERE id = _renewal.organization_id\n  FOR UPDATE;\n\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'Organization profile not found.';\n  END IF;\n\n  _old_urn := coalesce(_target_org.urn, _target_org.organization_identifier_number, '');\n\n  -- Lock Current Accreditation Record if present\n  IF _renewal.current_accreditation_id IS NOT NULL THEN\n    SELECT * INTO _curr_acc\n    FROM public.organization_accreditations\n    WHERE id = _renewal.current_accreditation_id\n    FOR UPDATE;\n  ELSE\n    SELECT * INTO _curr_acc\n    FROM public.organization_accreditations\n    WHERE organization_id = _renewal.organization_id\n      AND status = 'active'\n    ORDER BY term_number DESC\n    LIMIT 1\n    FOR UPDATE;\n  END IF;\n\n  -- Compute Term Dates (Standard Continuous Protection Anchor: 3-Year Terms)\n  IF _curr_acc.id IS NOT NULL AND _curr_acc.end_date IS NOT NULL THEN\n    _anchor_cutoff := (_curr_acc.end_date + 30);\n    IF _today <= _anchor_cutoff THEN\n      _start_date := _curr_acc.end_date;\n      _end_date := (_curr_acc.end_date + interval '3 years')::date;\n    ELSE\n      _start_date := _today;\n      _end_date := (_today + interval '3 years')::date;\n    END IF;\n  ELSE\n    _start_date := _today;\n    _end_date := (_today + interval '3 years')::date;\n  END IF;\n\n  -- Generate or use URN\n  IF p_certificate_urn IS NOT NULL AND trim(p_certificate_urn) <> '' THEN\n    _official_urn := trim(p_certificate_urn);\n  ELSE\n    _official_urn := public.generate_unique_urn(_target_org.barangay, _now);\n  END IF;\n\n  IF _official_urn IS NULL OR trim(_official_urn) = '' THEN\n    RAISE EXCEPTION 'Failed to generate authoritative URN for renewal approval.';\n  END IF;\n\n  -- Supersede previous active accreditation term(s)\n  UPDATE public.organization_accreditations\n  SET status = 'superseded'\n  WHERE organization_id = _renewal.organization_id\n    AND status = 'active';\n\n  -- Insert New Authoritative Accreditation Term into the Ledger\n  INSERT INTO public.organization_accreditations (\n    organization_id,\n    term_number,\n    start_date,\n    end_date,\n    certificate_urn,\n    status,\n    is_legacy_inferred,\n    approved_by,\n    approved_at,\n    created_at\n  ) VALUES (\n    _renewal.organization_id,\n    _renewal.cycle_number,\n    _start_date,\n    _end_date,\n    _official_urn,\n    'active',\n    false,\n    _admin_id,\n    _now,\n    _now\n  ) RETURNING id INTO _new_accreditation_id;\n\n  -- Update Renewal Record\n  UPDATE public.organization_renewals\n  SET\n    status = 'approved',\n    reviewed_at = _now,\n    reviewed_by = _admin_id,\n    admin_remarks = p_admin_remarks,\n    certificate_urn = _official_urn,\n    updated_at = _now\n  WHERE id = p_renewal_id;\n\n  -- Update Document Submission if present\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE renewal_id = p_renewal_id\n  ORDER BY created_at DESC\n  LIMIT 1;\n\n  IF _submission.id IS NOT NULL THEN\n    UPDATE public.document_submissions\n    SET\n      status = 'approved_green'::public.document_submission_status,\n      reviewed_at = _now,\n      reviewed_by = _admin_id,\n      overall_remarks = p_admin_remarks,\n      updated_at = _now\n    WHERE id = _submission.id;\n  END IF;\n\n  -- Update Organization Profile to newly assigned URN and validity period\n  UPDATE public.organization_profiles\n  SET\n    profile_status = 'verified',\n    urn = _official_urn,\n    urn_normalized = public.normalize_urn(_official_urn),\n    organization_identifier_number = _official_urn,\n    urn_review_status = 'verified',\n    current_accreditation_id = _new_accreditation_id,\n    accreditation_start_date = _start_date,\n    accreditation_expires_at = (_end_date::text || 'T23:59:59+08:00')::timestamptz,\n    verified_at = _now,\n    updated_at = _now\n  WHERE id = _renewal.organization_id;\n\n  _owner_id := _target_org.user_id;\n\n  -- Write Activity Log with actor_user_id = _admin_id\n  INSERT INTO public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description,\n    metadata,\n    created_at\n  ) VALUES (\n    _admin_id,\n    _renewal.organization_id,\n    'approved_renewal',\n    'organization_renewal',\n    p_renewal_id,\n    format('Accreditation Renewal Cycle %s approved for %s. New URN: %s, Term: %s to %s',\n      _renewal.cycle_number, _target_org.organization_name, _official_urn, _start_date, _end_date),\n    jsonb_build_object(\n      'renewal_id', p_renewal_id,\n      'term_number', _renewal.cycle_number,\n      'previous_urn', _old_urn,\n      'new_urn', _official_urn,\n      'start_date', _start_date,\n      'end_date', _end_date\n    ),\n    _now\n  );\n\n  -- Notify Organization Owner\n  IF _owner_id IS NOT NULL THEN\n    INSERT INTO public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) VALUES (\n      _owner_id,\n      _renewal.organization_id,\n      'Accreditation Renewal Approved',\n      format('Congratulations! Your accreditation renewal has been approved with URN %s, valid until %s.', _official_urn, to_char(_end_date, 'Mon DD, YYYY')),\n      'completed',\n      'organization_renewal',\n      p_renewal_id,\n      _now\n    );\n  END IF;\n\n  RETURN jsonb_build_object(\n    'success', true,\n    'renewal_id', p_renewal_id,\n    'accreditation_id', _new_accreditation_id,\n    'term_number', _renewal.cycle_number,\n    'start_date', _start_date,\n    'end_date', _end_date,\n    'certificate_urn', _official_urn,\n    'approved_at', _now\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "804caabb51c48bde392768971a9b6c91",
+      "name": "admin_cleanup_yorp_sample_dataset",
+      "owner": "postgres",
+      "signature": "admin_cleanup_yorp_sample_dataset(text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_cleanup_yorp_sample_dataset(_session_token text, _batch_name text DEFAULT 'PCYDO-YORP-2024-2026'::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "e08abef51274c58a5202440fd5242eb1",
+      "name": "admin_ensure_renewal_test_account_profile",
+      "owner": "postgres",
+      "signature": "admin_ensure_renewal_test_account_profile(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_ensure_renewal_test_account_profile(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "1fe788c8e9983ecc49a925e76f1cd6c9",
+      "name": "admin_get_or_create_renewal_test_account",
+      "owner": "postgres",
+      "signature": "admin_get_or_create_renewal_test_account(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_get_or_create_renewal_test_account(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres,anon=X/postgres}",
+      "md5": "4b274df3cba7af260c503260e9fc92f2",
+      "name": "admin_get_yorp_sample_dataset_status",
+      "owner": "postgres",
+      "signature": "admin_get_yorp_sample_dataset_status(text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_get_yorp_sample_dataset_status(_session_token text, _batch_name text DEFAULT 'PCYDO-YORP-2024-2026'::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'storage', 'extensions'\nAS $function$\nDECLARE\n  _admin_id uuid;\n  _test_environment boolean;\n  _organizations integer := 0;\n  _year_2024 integer := 0;\n  _year_2025 integer := 0;\n  _year_2026 integer := 0;\n  _awaiting integer := 0;\n  _released integer := 0;\n  _completed integer := 0;\n  _liquidated integer := 0;\n  _packets integer := 0;\n  _documents integer := 0;\n  _complete integer := 0;\n  _missing integer := 0;\n  _duplicates integer := 0;\n  _required integer := 0;\n  _mapped integer := 0;\n  _last_seeded timestamptz;\nBEGIN\n  SELECT vat.admin_id INTO _admin_id\n  FROM public.validate_admin_session_token(_session_token) vat\n  JOIN public.admin_accounts aa ON aa.id = vat.admin_id AND aa.is_active\n  JOIN public.roles r ON r.id = aa.role_id\n  WHERE r.code::text = 'super_admin'\n  LIMIT 1;\n  IF _admin_id IS NULL THEN\n    RAISE EXCEPTION 'A valid Super Admin session is required.' USING ERRCODE = '42501';\n  END IF;\n  IF _batch_name IS DISTINCT FROM 'PCYDO-YORP-2024-2026' THEN\n    RAISE EXCEPTION 'Status is restricted to batch PCYDO-YORP-2024-2026.';\n  END IF;\n  _test_environment := public.is_development_or_test_environment();\n\n  SELECT count(*), count(*) FILTER (WHERE seed_source_year = 2024),\n         count(*) FILTER (WHERE seed_source_year = 2025), count(*) FILTER (WHERE seed_source_year = 2026),\n         max(updated_at)\n  INTO _organizations, _year_2024, _year_2025, _year_2026, _last_seeded\n  FROM public.organization_profiles\n  WHERE is_seeded_sample_data IS TRUE AND seed_batch = _batch_name\n    AND id <> '8170959f-2bb8-40ea-8ce8-31deb514de17'::uuid\n    AND coalesce(is_renewal_test_account, false) IS FALSE;\n\n  SELECT count(*) FILTER (WHERE br.status = 'awaiting_release'),\n         count(*) FILTER (WHERE br.status = 'budget_released'),\n         count(*) FILTER (WHERE br.status = 'completed')\n  INTO _awaiting, _released, _completed\n  FROM public.budget_requests br\n  JOIN public.organization_profiles op ON op.id = br.organization_id\n  WHERE br.is_seeded_sample_data IS TRUE AND br.seed_batch = _batch_name\n    AND op.is_seeded_sample_data IS TRUE AND op.seed_batch = _batch_name\n    AND coalesce(op.is_renewal_test_account, false) IS FALSE;\n\n  SELECT count(*) INTO _liquidated\n  FROM public.liquidation_reports lr\n  JOIN public.organization_profiles op ON op.id = lr.organization_id\n  WHERE lr.is_seeded_sample_data IS TRUE AND lr.seed_batch = _batch_name\n    AND lr.status = 'completed_liquidated'\n    AND op.is_seeded_sample_data IS TRUE AND op.seed_batch = _batch_name\n    AND coalesce(op.is_renewal_test_account, false) IS FALSE;\n\n  SELECT count(*) INTO _required\n  FROM public.required_document_types rdt\n  WHERE rdt.is_active IS TRUE AND coalesce(rdt.is_required, true) IS TRUE\n    AND coalesce(rdt.template_scope, 'document_submission') = 'document_submission'\n    AND (rdt.scope IS NULL OR rdt.scope IN ('registration', 'both'))\n    AND (rdt.template_category IS NULL OR rdt.template_category = '{}' OR 'yorp' = ANY(rdt.template_category));\n\n  SELECT count(*) INTO _mapped\n  FROM public.required_document_types rdt\n  JOIN public.yorp_sample_document_assets asset ON asset.document_type_id = rdt.id\n  JOIN storage.objects object_row ON object_row.bucket_id = asset.bucket_id AND object_row.name = asset.object_name\n  WHERE rdt.is_active IS TRUE AND coalesce(rdt.is_required, true) IS TRUE\n    AND coalesce(rdt.template_scope, 'document_submission') = 'document_submission'\n    AND (rdt.scope IS NULL OR rdt.scope IN ('registration', 'both'))\n    AND (rdt.template_category IS NULL OR rdt.template_category = '{}' OR 'yorp' = ANY(rdt.template_category));\n\n  WITH seeded AS (\n    SELECT id organization_id FROM public.organization_profiles\n    WHERE is_seeded_sample_data IS TRUE AND seed_batch = _batch_name\n      AND id <> '8170959f-2bb8-40ea-8ce8-31deb514de17'::uuid\n      AND coalesce(is_renewal_test_account, false) IS FALSE\n  ), required AS (\n    SELECT id FROM public.required_document_types rdt\n    WHERE rdt.is_active IS TRUE AND coalesce(rdt.is_required, true) IS TRUE\n      AND coalesce(rdt.template_scope, 'document_submission') = 'document_submission'\n      AND (rdt.scope IS NULL OR rdt.scope IN ('registration', 'both'))\n      AND (rdt.template_category IS NULL OR rdt.template_category = '{}' OR 'yorp' = ANY(rdt.template_category))\n  ), packets AS (\n    SELECT s.organization_id, ds.id submission_id\n    FROM seeded s JOIN public.document_submissions ds ON ds.organization_id = s.organization_id\n    WHERE ds.renewal_id IS NULL AND (ds.submission_scope IS NULL OR ds.submission_scope = 'registration')\n  ), counts AS (\n    SELECT p.organization_id, r.id document_type_id, count(dsf.id) file_count\n    FROM packets p CROSS JOIN required r\n    LEFT JOIN public.document_submission_files dsf\n      ON dsf.submission_id = p.submission_id AND dsf.document_type_id = r.id\n    GROUP BY p.organization_id, r.id\n  ), per_org AS (\n    SELECT organization_id,\n      count(*) FILTER (WHERE file_count = 0) missing_count,\n      sum(greatest(file_count - 1, 0)) duplicate_count,\n      count(*) FILTER (WHERE file_count = 1) complete_count\n    FROM counts GROUP BY organization_id\n  )\n  SELECT count(*) FILTER (WHERE missing_count = 0 AND duplicate_count = 0 AND complete_count = _required),\n         coalesce(sum(missing_count), 0), coalesce(sum(duplicate_count), 0)\n  INTO _complete, _missing, _duplicates FROM per_org;\n\n  SELECT count(DISTINCT ds.id), count(dsf.id)\n  INTO _packets, _documents\n  FROM public.document_submissions ds\n  JOIN public.organization_profiles op ON op.id = ds.organization_id\n  LEFT JOIN public.document_submission_files dsf ON dsf.submission_id = ds.id\n  WHERE op.is_seeded_sample_data IS TRUE AND op.seed_batch = _batch_name\n    AND op.id <> '8170959f-2bb8-40ea-8ce8-31deb514de17'::uuid\n    AND coalesce(op.is_renewal_test_account, false) IS FALSE\n    AND ds.renewal_id IS NULL AND (ds.submission_scope IS NULL OR ds.submission_scope = 'registration');\n\n  RETURN jsonb_build_object(\n    'is_development_or_test_environment', _test_environment,\n    'seed_batch', _batch_name,\n    'total_seeded_organizations', _organizations,\n    'expected_total', 84,\n    'year_breakdown', jsonb_build_object('2024', _year_2024, '2025', _year_2025, '2026', _year_2026),\n    'budget_breakdown', jsonb_build_object('awaiting_release', _awaiting, 'budget_released', _released,\n      'completed', _completed, 'liquidated_reports', _liquidated),\n    'registration_breakdown', jsonb_build_object(\n      'packets', _packets, 'document_records', _documents,\n      'required_documents_per_organization', _required,\n      'organizations_complete', _complete, 'missing_requirements', _missing,\n      'duplicate_requirements', _duplicates,\n      'mapped_seed_assets', _mapped,\n      'asset_mapping_complete', _required > 0 AND _mapped = _required,\n      'renewal_test_organization_excluded', true\n    ),\n    'last_seeded_at', _last_seeded\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "037a3b0b0844a38619f6ce768cb3372b",
+      "name": "admin_prepare_renewal_test_scenario",
+      "owner": "postgres",
+      "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_prepare_renewal_test_scenario(p_session_token text, p_expiration_days_ahead integer DEFAULT 30, p_custom_expiration_date date DEFAULT NULL::date)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "8ce7c63826f845120f0616bf3faa2324",
+      "name": "admin_reset_renewal_test_scenario",
+      "owner": "postgres",
+      "signature": "admin_reset_renewal_test_scenario(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_reset_renewal_test_scenario(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "d83a26a06867d1b2d1f21027d3e4c6f0",
+      "name": "admin_restore_renewal_test_scenario",
+      "owner": "postgres",
+      "signature": "admin_restore_renewal_test_scenario(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_restore_renewal_test_scenario(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "a3e4de38869718a570b7e6b8b2e22d1f",
+      "name": "admin_seed_renewal_test_registration_documents",
+      "owner": "postgres",
+      "signature": "admin_seed_renewal_test_registration_documents(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_seed_renewal_test_registration_documents(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "33ccae7f636011a5e2a3310035fdc0a0",
+      "name": "admin_seed_yorp_sample_dataset_core",
+      "owner": "postgres",
+      "signature": "admin_seed_yorp_sample_dataset_core(text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_seed_yorp_sample_dataset_core(_session_token text, _batch_name text DEFAULT 'PCYDO-YORP-2024-2026'::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "b6e376ab185fbe42cc4cd2da3b14c874",
+      "name": "admin_seed_yorp_sample_dataset",
+      "owner": "postgres",
+      "signature": "admin_seed_yorp_sample_dataset(text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_seed_yorp_sample_dataset(_session_token text, _batch_name text DEFAULT 'PCYDO-YORP-2024-2026'::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "6c46228859ad6e8163988ecbf2db6877",
+      "name": "calculate_organization_renewal_eligibility",
+      "owner": "postgres",
+      "signature": "calculate_organization_renewal_eligibility(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.calculate_organization_renewal_eligibility(_org_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nDECLARE\n  _today date := current_date;\n  _org record;\n  _acc record;\n  _end_date date;\n  _days_diff integer;\n  _window_status text;\n  _can_draft boolean;\n  _can_submit boolean;\n  _days_until_open integer := NULL;\n  _days_past_expiry integer := NULL;\n  _reason text;\nBEGIN\n  SELECT * INTO _org\n  FROM public.organization_profiles\n  WHERE id = _org_id;\n\n  IF _org.id IS NULL THEN\n    RETURN jsonb_build_object(\n      'canDraft', false,\n      'canSubmit', false,\n      'windowStatus', 'too_early',\n      'reason', 'Organization profile not found.',\n      'daysRemaining', NULL,\n      'daysUntilOpen', NULL,\n      'daysPastExpiry', NULL,\n      'expiresAt', NULL\n    );\n  END IF;\n\n  -- Resolve authoritative active accreditation term\n  SELECT * INTO _acc\n  FROM public.organization_accreditations\n  WHERE organization_id = _org_id\n    AND status = 'active'\n  ORDER BY term_number DESC\n  LIMIT 1;\n\n  IF _acc.id IS NULL THEN\n    IF _org.accreditation_expires_at IS NOT NULL THEN\n      _end_date := _org.accreditation_expires_at::date;\n    ELSE\n      RETURN jsonb_build_object(\n        'canDraft', false,\n        'canSubmit', false,\n        'windowStatus', 'too_early',\n        'reason', 'No authoritative accreditation expiration date found.',\n        'daysRemaining', NULL,\n        'daysUntilOpen', NULL,\n        'daysPastExpiry', NULL,\n        'expiresAt', NULL\n      );\n    END IF;\n  ELSE\n    _end_date := _acc.end_date;\n  END IF;\n\n  _days_diff := _end_date - _today;\n\n  -- Authoritative Window Rules:\n  -- 1. Window opens: 90 calendar days before expiry\n  -- 2. Active Window: [end_date - 90, end_date]\n  -- 3. Late Renewal (Grace Period): (end_date, end_date + 180]\n  -- 4. Cutoff exceeded (Lapsed): > 180 days past expiry\n  IF _days_diff > 90 THEN\n    _window_status := 'too_early';\n    _can_draft := false;\n    _can_submit := false;\n    _days_until_open := _days_diff - 90;\n    _reason := format('Renewal window opens 90 days before expiry (in %s days).', _days_until_open);\n  ELSIF _days_diff >= 0 THEN\n    _window_status := 'open';\n    _can_draft := true;\n    _can_submit := true;\n    _reason := 'Renewal window is open.';\n  ELSIF ABS(_days_diff) <= 180 THEN\n    _window_status := 'expired';\n    _can_draft := true;\n    _can_submit := true;\n    _days_past_expiry := ABS(_days_diff);\n    _reason := format('Late renewal allowed within 180 days of expiry (%s days expired).', _days_past_expiry);\n  ELSE\n    _window_status := 'lapsed';\n    _can_draft := false;\n    _can_submit := false;\n    _days_past_expiry := ABS(_days_diff);\n    _reason := 'Late renewal window expired (180 days past expiry). Full re-registration is required.';\n  END IF;\n\n  RETURN jsonb_build_object(\n    'canDraft', _can_draft,\n    'canSubmit', _can_submit,\n    'windowStatus', _window_status,\n    'daysRemaining', GREATEST(0, _days_diff),\n    'daysUntilOpen', _days_until_open,\n    'daysPastExpiry', _days_past_expiry,\n    'expiresAt', _end_date,\n    'reason', _reason\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "5c1f0179b9f279eb7a99ff9ee8627c3f",
+      "name": "delete_organization_account_canonical",
+      "owner": "postgres",
+      "signature": "delete_organization_account_canonical(text,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.delete_organization_account_canonical(_session_token text, _organization_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'extensions'\nAS $function$\r\ndeclare\r\n  _admin_id uuid;\r\n  _org public.organization_profiles%rowtype;\r\n  _user_id uuid;\r\nbegin\r\n  -- 1. Authorize admin caller\r\n  select vat.admin_id into _admin_id\r\n  from public.validate_admin_session_token(_session_token) vat\r\n  limit 1;\r\n\r\n  if _admin_id is null then\r\n    return jsonb_build_object(\r\n      'success', false,\r\n      'stage', 'authorization',\r\n      'error', 'You are not authorized to delete organization accounts.'\r\n    );\r\n  end if;\r\n\r\n  -- 2. Lock and load target organization profile\r\n  select * into _org\r\n  from public.organization_profiles\r\n  where id = _organization_id\r\n  for update;\r\n\r\n  if not found then\r\n    return jsonb_build_object(\r\n      'success', false,\r\n      'already_deleted', true,\r\n      'stage', 'validation',\r\n      'error', 'Organization profile not found or already deleted.'\r\n    );\r\n  end if;\r\n\r\n  _user_id := _org.user_id;\r\n\r\n  -- 3. Protection checks: verify target is not an administrator or super admin\r\n  if exists (\r\n    select 1 from public.admin_accounts where lower(trim(email)) = lower(trim(_org.organization_email))\r\n  ) or (_user_id is not null and exists (\r\n    select 1 from public.admin_accounts where id = _user_id\r\n  )) or (_user_id is not null and exists (\r\n    select 1 from public.user_roles ur\r\n    join public.roles r on r.id = ur.role_id\r\n    where ur.user_id = _user_id and r.code::text in ('admin', 'super_admin')\r\n  )) then\r\n    return jsonb_build_object(\r\n      'success', false,\r\n      'is_protected', true,\r\n      'stage', 'protection_check',\r\n      'error', 'Administrator accounts cannot be deleted from the YORP Registry.'\r\n    );\r\n  end if;\r\n\r\n  perform ytrace_identity.authorize_reviewer(_session_token);\n  if ytrace_identity.has_retained_history(_organization_id) then\n    raise exception 'Official organization history is retained. Request an authorized archival/retention review before permanent deletion.';\n  end if;\n\n  -- 4. Activate transaction-local bypass for immutability triggers\r\n  perform set_config('app.allow_org_deletion', 'true', true);\r\n\r\n  -- 5. Disassociate and clean direct Auth dependencies\r\n  if _user_id is not null then\r\n    -- Nullify submitted_by on YPOP to preserve organization historical context without blocking FK\r\n    update public.ypop_entries\r\n    set submitted_by = null\r\n    where submitted_by = _user_id;\r\n\r\n    update public.ypop_event_participations\r\n    set submitted_by = null\r\n    where submitted_by = _user_id;\r\n\r\n    update public.ypop_org_activities\r\n    set submitted_by = null\r\n    where submitted_by = _user_id;\r\n\r\n    -- Clean user specific auxiliary records\r\n    delete from public.user_policy_acceptance where user_id = _user_id;\r\n    delete from public.user_roles where user_id = _user_id;\r\n    delete from public.user_profiles where user_id = _user_id;\r\n  end if;\r\n\r\n  -- 6. Clean accreditation and renewal hierarchies safely\r\n  update public.organization_renewals\r\n  set current_accreditation_id = null\r\n  where organization_id = _organization_id;\r\n\r\n  delete from public.organization_renewals\r\n  where organization_id = _organization_id;\r\n\r\n  delete from public.organization_accreditations\r\n  where organization_id = _organization_id;\r\n\r\n  -- 7. Clean document submissions, budget requests, and liquidations\r\n  delete from public.document_submission_files\r\n  where submission_id in (select id from public.document_submissions where organization_id = _organization_id);\r\n\r\n  delete from public.document_submissions\r\n  where organization_id = _organization_id;\r\n\r\n  delete from public.budget_request_files\r\n  where budget_request_id in (select id from public.budget_requests where organization_id = _organization_id);\r\n\r\n  delete from public.budget_requests\r\n  where organization_id = _organization_id;\r\n\r\n  delete from public.liquidation_report_files\r\n  where liquidation_report_id in (select id from public.liquidation_reports where organization_id = _organization_id);\r\n\r\n  delete from public.liquidation_reports\r\n  where organization_id = _organization_id;\r\n\r\n  -- 8. Clean move applications, URN history, and YPOP organization activities\r\n  delete from public.move_files where organization_id = _organization_id;\r\n  delete from public.move_applications where organization_id = _organization_id;\r\n  delete from public.urn_review_history where organization_id = _organization_id;\r\n\r\n  delete from public.ypop_files where organization_id = _organization_id;\r\n  delete from public.ypop_event_files where organization_id = _organization_id;\r\n  delete from public.ypop_org_activity_files where organization_id = _organization_id;\r\n  delete from public.ypop_org_activities where organization_id = _organization_id;\r\n  delete from public.ypop_event_participations where organization_id = _organization_id;\r\n  delete from public.ypop_entries where organization_id = _organization_id;\r\n\r\n  -- 9. Clean notifications, compliance remarks, inquiries\r\n  delete from public.notifications where organization_id = _organization_id;\r\n  delete from public.compliance_remarks where organization_id = _organization_id;\r\n  delete from public.inquiries where organization_id = _organization_id;\r\n\r\n  -- 10. Disassociate historical activity logs without deleting audit trail\r\n  update public.activity_logs\r\n  set organization_id = null\r\n  where organization_id = _organization_id;\r\n\r\n  -- 11. Delete organization profile\r\n  delete from public.organization_profiles\r\n  where id = _organization_id;\r\n\r\n  -- 12. Verify organization profile is removed\r\n  if exists (select 1 from public.organization_profiles where id = _organization_id) then\r\n    raise exception 'Database deletion failed: organization_profiles row could not be removed.';\r\n  end if;\r\n\r\n  return jsonb_build_object(\r\n    'success', true,\r\n    'organization_id', _org.id,\r\n    'organization_name', _org.organization_name,\r\n    'organization_email', _org.organization_email,\r\n    'user_id', _user_id,\r\n    'urn', _org.urn\r\n  );\r\nend;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "8e784def2e544f558c0a87cd718204cb",
+      "name": "diversify_yorp_seed_projects_and_budgets",
+      "owner": "postgres",
+      "signature": "diversify_yorp_seed_projects_and_budgets()",
+      "definition": "CREATE OR REPLACE FUNCTION public.diversify_yorp_seed_projects_and_budgets()\n RETURNS void\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "5ea02f1e637d463c4df2e3c7e333aa4b",
+      "name": "enforce_accreditation_immutability",
+      "owner": "postgres",
+      "signature": "enforce_accreditation_immutability()",
+      "definition": "CREATE OR REPLACE FUNCTION public.enforce_accreditation_immutability()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF tg_op = 'UPDATE' THEN\n    IF old.term_number IS DISTINCT FROM new.term_number\n       OR old.start_date IS DISTINCT FROM new.start_date\n       OR old.end_date IS DISTINCT FROM new.end_date\n       OR old.certificate_urn IS DISTINCT FROM new.certificate_urn\n       OR old.approved_by IS DISTINCT FROM new.approved_by\n       OR old.approved_at IS DISTINCT FROM new.approved_at\n       OR old.created_at IS DISTINCT FROM new.created_at\n       OR old.is_legacy_inferred IS DISTINCT FROM new.is_legacy_inferred THEN\n\n      RAISE EXCEPTION 'Historical accreditation term fields are immutable.';\n    END IF;\n\n    -- Revocation immutability rules:\n    IF old.revoked_at IS NOT NULL AND new.revoked_at IS DISTINCT FROM old.revoked_at THEN\n      RAISE EXCEPTION 'Accreditation revocation timestamp is immutable once set.';\n    END IF;\n\n    IF old.revocation_reason IS NOT NULL AND new.revocation_reason IS DISTINCT FROM old.revocation_reason THEN\n      RAISE EXCEPTION 'Accreditation revocation reason is immutable once set.';\n    END IF;\n\n    IF new.status <> 'revoked' AND new.revoked_at IS NOT NULL THEN\n      RAISE EXCEPTION 'Non-revoked accreditation terms cannot have a revocation timestamp.';\n    END IF;\n\n    -- Valid status transitions only:\n    IF old.status = 'superseded' AND new.status <> 'superseded' THEN\n      RAISE EXCEPTION 'A superseded accreditation term cannot be reactivated or altered.';\n    END IF;\n\n    IF old.status = 'revoked' AND new.status <> 'revoked' THEN\n      RAISE EXCEPTION 'A revoked accreditation term cannot be reactivated.';\n    END IF;\n\n    IF old.status <> 'revoked' AND new.status = 'revoked' THEN\n      IF new.revoked_at IS NULL THEN\n        new.revoked_at := clock_timestamp();\n      END IF;\n    END IF;\n\n    RETURN new;\n  END IF;\n\n  IF tg_op = 'DELETE' THEN\n    IF current_setting('app.allow_org_deletion', true) = 'true' THEN\n      RETURN old;\n    END IF;\n    RAISE EXCEPTION 'Accreditation terms in the authoritative ledger cannot be deleted.';\n  END IF;\n\n  RETURN new;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "bdafdef3fded73e5816c199a5ede36c7",
+      "name": "enforce_renewal_terminal_immutability",
+      "owner": "postgres",
+      "signature": "enforce_renewal_terminal_immutability()",
+      "definition": "CREATE OR REPLACE FUNCTION public.enforce_renewal_terminal_immutability()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF tg_op = 'UPDATE' THEN\n    IF old.status IN ('approved', 'rejected') THEN\n      RAISE EXCEPTION 'Terminal renewal records cannot be modified.';\n    END IF;\n    RETURN new;\n  END IF;\n\n  IF tg_op = 'DELETE' THEN\n    IF current_setting('app.allow_org_deletion', true) = 'true' THEN\n      RETURN old;\n    END IF;\n    IF old.status IN ('approved', 'rejected') THEN\n      RAISE EXCEPTION 'Terminal renewal records cannot be deleted.';\n    END IF;\n    RETURN old;\n  END IF;\n\n  RETURN new;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "f45c470966f52bbb18132666ce3e17ae",
+      "name": "evaluate_and_apply_automatic_registration_verification",
+      "owner": "postgres",
+      "signature": "evaluate_and_apply_automatic_registration_verification(uuid,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.evaluate_and_apply_automatic_registration_verification(_organization_id uuid, _admin_id uuid DEFAULT NULL::uuid)\n RETURNS TABLE(verified boolean, urn text, already_verified boolean, reason text)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  _target_org public.organization_profiles%rowtype;\n  _reg_submission_id uuid;\n  _required_type_ids uuid[];\n  _required_count int;\n  _approved_count int;\n  _official_urn text;\n  _effective_verified_at timestamptz := clock_timestamp();\n  _start_date date;\n  _end_date date;\n  _notify_approved boolean;\nbegin\n  -- 1. Fetch target organization profile\n  select *\n  into _target_org\n  from public.organization_profiles\n  where id = _organization_id;\n\n  if _target_org.id is null then\n    return query select false, null::text, false, 'Organization profile not found.';\n    return;\n  end if;\n\n  -- 2. If already verified or suspended, do not re-verify\n  if _target_org.profile_status = 'verified' then\n    return query select true, _target_org.urn, true, 'Organization is already verified.';\n    return;\n  end if;\n\n  if _target_org.profile_status = 'suspended_inactive' then\n    return query select false, null::text, false, 'Organization is suspended and cannot be verified.';\n    return;\n  end if;\n\n  -- 3. Resolve parent initial registration document submission (renewal_id is null)\n  select id\n  into _reg_submission_id\n  from public.document_submissions\n  where organization_id = _organization_id\n    and renewal_id is null\n  order by created_at desc\n  limit 1;\n\n  if _reg_submission_id is null then\n    return query select false, null::text, false, 'No initial registration document submission found.';\n    return;\n  end if;\n\n  -- 4. Dynamic required document types\n  select coalesce(array_agg(rdt.id), '{}'::uuid[])\n  into _required_type_ids\n  from public.required_document_types rdt\n  where rdt.is_active = true\n    and coalesce(rdt.is_required, true) = true\n    and coalesce(rdt.template_scope, 'document_submission') = 'document_submission'\n    and (rdt.scope is null or rdt.scope in ('registration', 'both'))\n    and (\n      rdt.template_category is null\n      or rdt.template_category = '{}'\n      or 'yorp' = any(rdt.template_category)\n    );\n\n  -- Fallback if no specific registration tags are set\n  if array_length(_required_type_ids, 1) is null or array_length(_required_type_ids, 1) = 0 then\n    select coalesce(array_agg(rdt.id), '{}'::uuid[])\n    into _required_type_ids\n    from public.required_document_types rdt\n    where rdt.is_active = true;\n  end if;\n\n  _required_count := coalesce(array_length(_required_type_ids, 1), 0);\n\n  if _required_count = 0 then\n    return query select false, null::text, false, 'No active required document types configured in system.';\n    return;\n  end if;\n\n  -- 5. Count approved files for required document types\n  select count(distinct dsf.document_type_id)\n  into _approved_count\n  from public.document_submission_files dsf\n  where dsf.submission_id = _reg_submission_id\n    and dsf.document_type_id = any(_required_type_ids)\n    and dsf.admin_status = 'approved_green';\n\n  -- If any required document type is not approved, block verification\n  if _approved_count < _required_count then\n    return query select false, null::text, false,\n      format('Incomplete: %s of %s required registration documents approved.', _approved_count, _required_count);\n    return;\n  end if;\n\n  -- 6. ALL REQUIRED REGISTRATION DOCUMENTS ARE APPROVED -> PROCEED WITH AUTOMATIC VERIFICATION\n  _start_date := date(_effective_verified_at);\n  _end_date := (_start_date + interval '3 years')::date;\n\n  -- Preserve existing URN if already present, otherwise generate deterministic official URN (BB-YY-NNN)\n  if _target_org.urn is not null and trim(_target_org.urn) <> '' then\n    _official_urn := trim(_target_org.urn);\n  elsif _target_org.is_existing_organization and _target_org.organization_identifier_number is not null and trim(_target_org.organization_identifier_number) <> '' then\n    _official_urn := trim(_target_org.organization_identifier_number);\n  else\n    _official_urn := public.generate_unique_urn(_target_org.barangay, _effective_verified_at);\n  end if;\n\n  -- 7. Update organization profile with official verified status and assigned URN (using actual schema)\n  update public.organization_profiles\n  set\n    profile_status = 'verified'::public.profile_status,\n    verified_at = _effective_verified_at,\n    urn = _official_urn,\n    urn_normalized = public.normalize_urn(_official_urn),\n    organization_identifier_number = _official_urn,\n    urn_review_status = 'verified'::public.urn_review_status,\n    verification_method = coalesce(_target_org.verification_method, 'documents'::public.verification_method),\n    updated_at = _effective_verified_at\n  where id = _organization_id;\n\n  -- 8. Create Term 1 accreditation record if not already present\n  if not exists (\n    select 1 from public.organization_accreditations\n    where organization_id = _organization_id and term_number = 1\n  ) then\n    insert into public.organization_accreditations (\n      organization_id,\n      term_number,\n      start_date,\n      end_date,\n      certificate_urn,\n      status,\n      is_legacy_inferred,\n      approved_by,\n      approved_at,\n      created_at\n    ) values (\n      _organization_id,\n      1,\n      _start_date,\n      _end_date,\n      _official_urn,\n      'active',\n      false,\n      _admin_id,\n      _effective_verified_at,\n      _effective_verified_at\n    );\n  end if;\n\n  -- 9. Canonical Activity Log\n  insert into public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description,\n    created_at\n  ) values (\n    _admin_id,\n    _organization_id,\n    'Verified organization registration',\n    'organization_profile',\n    _organization_id,\n    format('Organization registration verified automatically upon approval of all required documents. Assigned URN: %s (Valid until %s).', _official_urn, _end_date),\n    _effective_verified_at\n  );\n\n  -- 10. Gated In-App Notification based on workflow.notify_org_on_approved\n  _notify_approved := public.get_system_setting_bool('workflow.notify_org_on_approved', true);\n  if _target_org.user_id is not null and _notify_approved then\n    insert into public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) values (\n      _target_org.user_id,\n      _organization_id,\n      'Registration Approved & Verified',\n      format('Congratulations! Your organization registration has been approved and verified. Your official URN is %s.', _official_urn),\n      'completed',\n      'organization_profile',\n      _organization_id,\n      _effective_verified_at\n    );\n  end if;\n\n  return query select true, _official_urn, false, 'Registration successfully verified.';\nend;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "9568bb785b8d832a58e1acc894d74610",
+      "name": "guard_historical_organization_owner",
+      "owner": "postgres",
+      "signature": "guard_historical_organization_owner()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_historical_organization_owner()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nbegin\n if new.organization_id is distinct from old.organization_id then raise exception 'Historical organization ownership cannot be reassigned.'; end if;\n return new;\nend $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "3a0fa47c620efc033eec091090bbee1c",
+      "name": "guard_organization_identity_privileges",
+      "owner": "postgres",
+      "signature": "guard_organization_identity_privileges()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_organization_identity_privileges()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nbegin\n\n -- Fixture markers are frozen in production, including through SECURITY DEFINER callers.\n -- No editable profile field, custom GUC, JWT claim, or Admin token bypasses this check.\n if tg_op='INSERT' then\n   if coalesce(new.is_renewal_test_account,false) or coalesce(new.is_seeded_sample_data,false)\n     or new.seed_batch is not null or new.seed_source_year is not null\n     or new.seed_source_record_number is not null then\n     raise exception 'Production fixture markers cannot be created.' using errcode='42501';\n   end if;\n elsif row(new.is_renewal_test_account,new.is_seeded_sample_data,new.seed_batch,new.seed_source_year,new.seed_source_record_number)\n   is distinct from row(old.is_renewal_test_account,old.is_seeded_sample_data,old.seed_batch,old.seed_source_year,old.seed_source_record_number) then\n   raise exception 'Production fixture markers are immutable.' using errcode='42501';\n end if;\n if current_user not in ('postgres','supabase_admin','service_role') then\n   if tg_op='INSERT' then\n     new.created_at:=clock_timestamp();\n     if new.profile_status::text in ('verified','suspended_inactive') or new.verified_at is not null\n       or new.urn_review_status::text not in ('pending','not_applicable') or new.verification_method is not null\n       or new.urn_reviewed_by is not null or new.urn_reviewed_at is not null\n       or nullif(trim(new.urn_admin_remarks),'') is not null\n       or nullif(trim(new.internal_notes),'') is not null then\r\n       raise exception 'Organization verification requires an authorized server review.';\r\n     end if;\r\n   elsif new.user_id is distinct from old.user_id\n     or new.created_at is distinct from old.created_at\n     or (new.profile_status is distinct from old.profile_status and new.profile_status::text in ('verified','suspended_inactive'))\r\n     or new.verified_at is distinct from old.verified_at\r\n     or new.urn_review_status is distinct from old.urn_review_status\r\n     or new.verification_method is distinct from old.verification_method\r\n     or new.urn_reviewed_by is distinct from old.urn_reviewed_by\r\n     or new.urn_reviewed_at is distinct from old.urn_reviewed_at\r\n     or new.urn_admin_remarks is distinct from old.urn_admin_remarks\r\n     or new.internal_notes is distinct from old.internal_notes\r\n     or ((old.urn_review_status::text='verified' or old.profile_status::text='verified' or old.verified_at is not null) and (new.urn is distinct from old.urn\n       or new.urn_normalized is distinct from old.urn_normalized\r\n       or new.organization_identifier_number is distinct from old.organization_identifier_number\r\n       or new.registration_type is distinct from old.registration_type))\r\n     or (old.profile_status::text='verified' and new.profile_status is distinct from old.profile_status) then\r\n       raise exception 'Organization verification fields require an authorized server review.';\r\n   end if;\r\n end if;\r\n return new;\r\nend $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "82fe24048d3d32b9c3643409873441ea",
+      "name": "guard_renewal_test_registration_packet_immutable",
+      "owner": "postgres",
+      "signature": "guard_renewal_test_registration_packet_immutable()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_renewal_test_registration_packet_immutable()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _submission_id uuid;\n  _is_seeded_registration boolean := false;\nBEGIN\n  IF TG_TABLE_NAME = 'document_submission_files'\n     AND TG_OP = 'INSERT'\n     AND current_setting('app.seed_renewal_test_registration_documents', true) = 'true' THEN\n    RETURN NEW;\n  END IF;\n\n  IF TG_TABLE_NAME = 'document_submissions' THEN\n    _submission_id := OLD.id;\n    _is_seeded_registration :=\n      OLD.is_seeded_sample_data IS TRUE\n      AND OLD.seed_batch = 'RENEWAL-TEST-REGISTRATION'\n      AND OLD.submission_scope = 'registration'\n      AND OLD.renewal_id IS NULL;\n  ELSE\n    IF TG_OP = 'INSERT' THEN\n      _submission_id := NEW.submission_id;\n    ELSE\n      _submission_id := OLD.submission_id;\n    END IF;\n    SELECT EXISTS (\n      SELECT 1\n      FROM public.document_submissions submission\n      WHERE (submission.id = _submission_id\n         OR (TG_OP = 'UPDATE' AND submission.id = NEW.submission_id))\n        AND submission.is_seeded_sample_data IS TRUE\n        AND submission.seed_batch = 'RENEWAL-TEST-REGISTRATION'\n        AND submission.submission_scope = 'registration'\n        AND submission.renewal_id IS NULL\n    ) INTO _is_seeded_registration;\n  END IF;\n\n  IF _is_seeded_registration THEN\n    RAISE EXCEPTION 'The Renewal Test Organization registration packet is an immutable Cycle 1 record.';\n  END IF;\n\n  IF TG_OP = 'DELETE' THEN\n    RETURN OLD;\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "4dd28db38030a73ee633b024e78db340",
+      "name": "guard_retained_organization_deletion",
+      "owner": "postgres",
+      "signature": "guard_retained_organization_deletion()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_retained_organization_deletion()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public', 'ytrace_identity'\nAS $function$\nbegin\n if ytrace_identity.has_retained_history(old.id) then\n   raise exception 'Official organization history is retained. Request an authorized archival/retention review before permanent deletion.';\n end if;\n return old;\nend $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "c6265ae36e8db8678de7a4e69691008e",
+      "name": "guard_submitted_registration_document_edits",
+      "owner": "postgres",
+      "signature": "guard_submitted_registration_document_edits()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_submitted_registration_document_edits()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\ndeclare\n  _submission_status text;\n  _registration_submission boolean;\nbegin\n  -- Admin and correction RPCs run with their validated definer privileges.\n  if current_user not in ('authenticated', 'anon')\n     or public.current_user_is_admin() then\n    if tg_op = 'DELETE' then return old; end if;\n    return new;\n  end if;\n\n  select ds.status,\n         ds.submission_scope = 'registration' and ds.renewal_id is null\n    into _submission_status, _registration_submission\n  from public.document_submissions ds\n  where ds.id = old.submission_id\n  for update;\n\n  if old.admin_status is distinct from 'draft'\n     or _submission_status is null\n     or not (\n       _submission_status in ('draft', 'needs_revision')\n       or (\n         _registration_submission is true\n         and _submission_status in ('under_admin_review', 'submitted', 'ready_for_review')\n       )\n     ) then\n    raise exception 'Submitted documents are locked. Only draft documents can be edited or removed; requested revisions must use the replacement flow.';\n  end if;\n\n  if tg_op = 'DELETE' then return old; end if;\n  return new;\nend;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "36de9fc3fb6c5ad090579f3261f77bbf",
+      "name": "hard_delete_admin_template_document",
+      "owner": "postgres",
+      "signature": "hard_delete_admin_template_document(text,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.hard_delete_admin_template_document(_session_token text, _template_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE\r\n  _admin_id uuid;\r\nBEGIN\r\n  -- Authenticate admin session\r\n  SELECT vat.admin_id\r\n  INTO _admin_id\r\n  FROM public.validate_admin_session_token(_session_token) vat\r\n  LIMIT 1;\r\n\r\n  IF _admin_id IS NULL THEN\r\n    RAISE EXCEPTION 'Admin account is not authorized.';\r\n  END IF;\r\n\r\n  -- Ensure any referencing submitted files are safely disassociated (document_type_id set to NULL)\r\n  -- while preserving original file names, file URLs, review statuses, and remarks\r\n  UPDATE public.document_submission_files\r\n  SET document_type_id = NULL\r\n  WHERE document_submission_files.document_type_id = _template_id;\r\n\r\n  -- Permanently delete the required document type record\r\n  DELETE FROM public.required_document_types\r\n  WHERE required_document_types.id = _template_id;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "683db5c6c05d3012f8b9bb36398f61b9",
+      "name": "is_development_or_test_environment",
+      "owner": "postgres",
+      "signature": "is_development_or_test_environment()",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_development_or_test_environment()\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  SELECT false;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+      "name": "promote_renewal_submission_files_for_review",
+      "owner": "postgres",
+      "signature": "promote_renewal_submission_files_for_review()",
+      "definition": "CREATE OR REPLACE FUNCTION public.promote_renewal_submission_files_for_review()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF NEW.submission_scope = 'renewal'\n    AND NEW.status::text IN ('submitted', 'resubmitted')\n    AND OLD.status IS DISTINCT FROM NEW.status THEN\n    UPDATE public.document_submission_files\n    SET\n      admin_status = 'under_admin_review',\n      reviewed_at = NULL,\n      updated_at = clock_timestamp()\n    WHERE submission_id = NEW.id\n      AND admin_status = 'draft'\n      AND NULLIF(trim(file_url), '') IS NOT NULL;\n  END IF;\n\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "e486017358c8e1f9264752f8ef5cdbe9",
+      "name": "rebalance_yorp_seed_reporting_quarters",
+      "owner": "postgres",
+      "signature": "rebalance_yorp_seed_reporting_quarters()",
+      "definition": "CREATE OR REPLACE FUNCTION public.rebalance_yorp_seed_reporting_quarters()\n RETURNS void\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "7121da46bd1bf383ab352d49eda2235a",
+      "name": "repair_yorp_seeded_fixture_relationships",
+      "owner": "postgres",
+      "signature": "repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.repair_yorp_seeded_fixture_relationships(_organization_id uuid, _user_id uuid, _admin_id uuid, _record jsonb, _batch_name text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Test-only mutation is disabled in production.' USING ERRCODE = '42501';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "name": "replace_organization_document_file",
+      "owner": "postgres",
+      "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+      "definition": "CREATE OR REPLACE FUNCTION public.replace_organization_document_file(_file_id uuid, _document_type_id uuid, _expected_updated_at timestamp with time zone, _file_url text, _file_name text, _file_type text, _file_size bigint)\n RETURNS SETOF document_submission_files\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  _user_id uuid := auth.uid();\n  _file public.document_submission_files%rowtype;\n  _submission public.document_submissions%rowtype;\n  _organization public.organization_profiles%rowtype;\n  _document_name text;\n  _submitted_at timestamptz := clock_timestamp();\n  _overall_status public.document_submission_status;\n  _notify_resubmitted boolean;\nbegin\n  if _user_id is null then\n    raise exception 'Please sign in with your organization account first.';\n  end if;\n\n  select * into _file\n  from public.document_submission_files\n  where id = _file_id\n  for update;\n  if _file.id is null then raise exception 'Document file not found.'; end if;\n\n  select * into _submission from public.document_submissions where id = _file.submission_id for update;\n  select * into _organization from public.organization_profiles where id = _submission.organization_id;\n\n  if _organization.user_id is distinct from _user_id then\n    raise exception 'You are not authorized to replace this document.';\n  end if;\n\n  -- PERMANENT SUSPENSION GUARD\n  if _organization.profile_status = 'suspended_inactive' then\n    raise exception 'This organization account is permanently suspended. Document replacement is not permitted.';\n  end if;\n\n  if _file.document_type_id is distinct from _document_type_id then\n    raise exception 'The selected file does not match this document requirement.';\n  end if;\n\n  -- TERMINAL REJECTION GUARD\n  if _file.admin_status = 'rejected_red' or _submission.status = 'rejected_red' then\n    raise exception 'This rejected document cannot be replaced. The organization account is permanently suspended.';\n  end if;\n\n  if _file.admin_status <> 'needs_revision' then\n    raise exception 'This document is no longer open for correction. Refresh the page to see its current status.';\n  end if;\n\n  -- AUTHORITATIVE SERVER-SIDE DEADLINE AND LOCK ENFORCEMENT\n  if (_submission.revision_locked = true or (_submission.revision_due_at is not null and _submitted_at >= _submission.revision_due_at and _submission.revision_unlocked_at is null)) then\n    update public.document_submissions\n    set revision_locked = true,\n        revision_locked_at = coalesce(revision_locked_at, _submitted_at)\n    where id = _submission.id;\n\n    raise exception 'Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.';\n  end if;\n\n  if (_file.revision_locked = true or (_file.revision_due_at is not null and _submitted_at >= _file.revision_due_at and _file.revision_unlocked_at is null)) then\n    raise exception 'Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.';\n  end if;\n\n  if _file.updated_at is distinct from _expected_updated_at then\n    raise exception 'This document changed after the page was opened. Refresh before uploading again.';\n  end if;\n  if _file_size <= 0 or _file_size > 10485760 then\n    raise exception 'The replacement file must be between 1 byte and 10 MB.';\n  end if;\n  if nullif(trim(_file_name), '') is null or length(_file_name) > 180\n     or _file_name ~ '[\\\\/[:cntrl:]]' then\n    raise exception 'The replacement file name is not allowed.';\n  end if;\n  if _file_url not like\n    'storage://organization-documents/' || _organization.id::text || '/' ||\n    _document_type_id::text || '/revisions/%'\n     and _file_url not like\n    'https://' || '%' || '/storage/v1/object/public/organization-documents/' ||\n    _organization.id::text || '/' || _document_type_id::text || '/revisions/%'\n     and _file_url not like\n    'http://' || '%' || '/storage/v1/object/public/organization-documents/' ||\n    _organization.id::text || '/' || _document_type_id::text || '/revisions/%'\n  then\n    raise exception 'The uploaded file path is invalid.';\n  end if;\n\n  select coalesce(required_document_types.name, _file.file_name)\n  into _document_name\n  from public.required_document_types\n  where id = _document_type_id;\n\n  update public.document_submission_files\n  set\n    file_url = _file_url,\n    file_name = _file_name,\n    file_type = _file_type,\n    file_size = _file_size,\n    validation_status = 'correct',\n    admin_status = 'under_admin_review',\n    admin_remarks = null,\n    uploaded_at = _submitted_at,\n    reviewed_at = null,\n    revision_history = coalesce(revision_history, '[]'::jsonb) || jsonb_build_array(\n      jsonb_build_object(\n        'action', 'replaced',\n        'file_name', _file_name,\n        'replaced_at', _submitted_at,\n        'previous_file_url', _file.file_url,\n        'previous_admin_remarks', _file.admin_remarks\n      )\n    ),\n    revision_requested_at = null,\n    revision_due_at = null,\n    revision_locked = false,\n    revision_locked_at = null,\n    revision_unlocked_at = null,\n    revision_unlocked_by = null,\n    updated_at = _submitted_at\n  where id = _file.id;\n\n  select\n    case\n      when exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n          and admin_status = 'rejected_red'\n      ) then 'rejected_red'::public.document_submission_status\n      when exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n          and admin_status = 'needs_revision'\n      ) then 'needs_revision'::public.document_submission_status\n      when exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n      ) and not exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n          and admin_status <> 'approved_green'\n      ) then 'approved_green'::public.document_submission_status\n      else 'under_admin_review'::public.document_submission_status\n    end\n  into _overall_status;\n\n  update public.document_submissions\n  set\n    status = _overall_status,\n    updated_at = _submitted_at,\n    revision_requested_at = case when _overall_status = 'needs_revision' then revision_requested_at else null end,\n    revision_due_at = case when _overall_status = 'needs_revision' then revision_due_at else null end,\n    revision_locked = false,\n    revision_locked_at = null,\n    revision_unlocked_at = null,\n    revision_unlocked_by = null\n  where id = _submission.id;\n\n  insert into public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description,\n    created_at,\n    metadata\n  ) values (\n    null,\n    _organization.id,\n    'Replaced document',\n    'document_submission_file',\n    _file.id,\n    format('Uploaded a corrected version of %s.', coalesce(_document_name, _file_name)),\n    _submitted_at,\n    jsonb_build_object('actor_auth_user_id', _user_id, 'actor_type', 'organization')\n  );\n\n  -- Gated resubmission acknowledgement notification based on workflow.notify_org_on_resubmitted\n  _notify_resubmitted := public.get_system_setting_bool('workflow.notify_org_on_resubmitted', true);\n  if _notify_resubmitted then\n    insert into public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) values (\n      _user_id,\n      _organization.id,\n      'Document Resubmitted',\n      format('You have successfully uploaded a corrected version of ''%s''. It is now under review.', coalesce(_document_name, _file_name)),\n      'completed',\n      'document_submission',\n      _submission.id,\n      _submitted_at\n    );\n  end if;\n\n  return query\n  select *\n  from public.document_submission_files\n  where id = _file_id;\nend;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "8de7ae383447503e8949149bfb3f0efb",
+      "name": "set_updated_at",
+      "owner": "postgres",
+      "signature": "set_updated_at()",
+      "definition": "CREATE OR REPLACE FUNCTION public.set_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  new.updated_at = now();\r\n  return new;\r\nend;\r\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "d9d4d85fbc26cee78618d591073393b7",
+      "name": "sync_organization_accreditation_projection",
+      "owner": "postgres",
+      "signature": "sync_organization_accreditation_projection()",
+      "definition": "CREATE OR REPLACE FUNCTION public.sync_organization_accreditation_projection()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nbegin\r\n  if tg_op = 'INSERT' or tg_op = 'UPDATE' then\r\n    if new.status = 'active' then\r\n      update public.organization_profiles\r\n      set\r\n        current_accreditation_id = new.id,\r\n        accreditation_start_date = new.start_date,\r\n        accreditation_expires_at = (new.end_date::text || 'T23:59:59+08:00')::timestamptz\r\n      where id = new.organization_id;\r\n    elsif (tg_op = 'UPDATE' and old.status = 'active' and new.status in ('superseded', 'revoked')) then\r\n      -- If active was superseded or revoked, update projection to latest active or keep latest term\r\n      update public.organization_profiles op\r\n      set\r\n        current_accreditation_id = new.id,\r\n        accreditation_start_date = new.start_date,\r\n        accreditation_expires_at = (new.end_date::text || 'T23:59:59+08:00')::timestamptz\r\n      where op.id = new.organization_id\r\n        and op.current_accreditation_id = old.id;\r\n    end if;\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "252754fd75505948c26afe27f6b0b760",
+      "name": "update_admin_document_submission_file_review",
+      "owner": "postgres",
+      "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.update_admin_document_submission_file_review(_session_token text, _file_id uuid, _status document_submission_status, _admin_remarks text DEFAULT NULL::text)\n RETURNS SETOF document_submission_files\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _admin_id uuid;\n  _submission_id uuid;\n  _org_id uuid;\n  _org_user_id uuid;\n  _renewal_id uuid;\n  _document_name text;\n  _current_admin_status public.document_submission_status;\n  _current_revision_requested_at timestamptz;\n  _current_uploaded_at timestamptz;\n  _reviewed_at timestamptz := clock_timestamp();\n  _revision_due timestamptz := _reviewed_at + interval '5 days';\n  _overall_status public.document_submission_status;\n  _overall_remarks text;\n  _notify_approved boolean;\n  _notify_revision boolean;\n  _notify_rejected boolean;\nBEGIN\n  -- Validate admin session\n  SELECT vat.admin_id\n  INTO _admin_id\n  FROM public.validate_admin_session_token(_session_token) vat\n  LIMIT 1;\n\n  IF _admin_id IS NULL THEN\n    RAISE EXCEPTION 'Admin account is not authorized.';\n  END IF;\n\n  -- Resolve file, current status, timestamps, submission, organization, and document type name\n  SELECT\n    document_submission_files.submission_id,\n    document_submission_files.admin_status,\n    document_submission_files.revision_requested_at,\n    document_submission_files.uploaded_at,\n    COALESCE(required_document_types.name, document_submission_files.file_name)\n  INTO\n    _submission_id,\n    _current_admin_status,\n    _current_revision_requested_at,\n    _current_uploaded_at,\n    _document_name\n  FROM public.document_submission_files\n  LEFT JOIN public.required_document_types\n    ON required_document_types.id = document_submission_files.document_type_id\n  WHERE document_submission_files.id = _file_id\n  LIMIT 1;\n\n  IF _submission_id IS NULL THEN\n    RAISE EXCEPTION 'Document submission file was not found.';\n  END IF;\n\n  -- Resolve parent submission details and organization owner\n  SELECT ds.organization_id, ds.renewal_id\n  INTO _org_id, _renewal_id\n  FROM public.document_submissions ds\n  WHERE ds.id = _submission_id;\n\n  IF _org_id IS NOT NULL THEN\n    SELECT op.user_id\n    INTO _org_user_id\n    FROM public.organization_profiles op\n    WHERE op.id = _org_id;\n  END IF;\n\n  -- Guard 1: Permanently suspended organizations cannot have registration review decisions modified\n  IF _renewal_id IS NULL AND _org_id IS NOT NULL AND EXISTS (\n    SELECT 1\n    FROM public.organization_profiles op\n    WHERE op.id = _org_id\n      AND op.profile_status = 'suspended_inactive'\n  ) THEN\n    RAISE EXCEPTION 'This organization account is permanently suspended. Review actions cannot be performed.';\n  END IF;\n\n  -- Guard 2: Once marked needs_revision, cannot be approved without a genuine new replacement upload\n  IF _status = 'approved_green' AND _current_admin_status = 'needs_revision' THEN\n    IF _current_uploaded_at IS NULL OR (_current_revision_requested_at IS NOT NULL AND _current_uploaded_at <= _current_revision_requested_at) THEN\n      RAISE EXCEPTION 'Cannot approve document file that is awaiting revision without a new upload.';\n    END IF;\n  END IF;\n\n  -- Fetch workflow notification settings\n  _notify_approved := public.get_system_setting_bool('workflow.notify_org_on_approved', true);\n  _notify_revision := public.get_system_setting_bool('workflow.notify_org_on_needs_revision', true);\n  _notify_rejected := public.get_system_setting_bool('workflow.notify_org_on_rejected', true);\n\n  -- Update the individual document file review record\n  UPDATE public.document_submission_files\n  SET\n    admin_status = _status,\n    admin_remarks = COALESCE(_admin_remarks, document_submission_files.admin_remarks),\n    reviewed_at = _reviewed_at,\n    revision_requested_at = CASE WHEN _status = 'needs_revision' THEN _reviewed_at ELSE document_submission_files.revision_requested_at END,\n    revision_due_at = CASE WHEN _status = 'needs_revision' THEN _revision_due ELSE NULL END,\n    revision_locked = CASE WHEN _status = 'rejected_red' THEN true ELSE false END,\n    revision_unlocked_at = NULL,\n    revision_unlocked_by = NULL,\n    updated_at = _reviewed_at\n  WHERE document_submission_files.id = _file_id;\n\n  -- If parent submission is tied to a renewal packet, handle renewal state transition\n  IF _renewal_id IS NOT NULL THEN\n    UPDATE public.organization_renewals\n    SET\n      status = CASE\n        WHEN _status = 'rejected_red' THEN 'rejected'\n        WHEN _status = 'needs_revision' THEN 'needs_revision'\n        ELSE 'under_review'\n      END,\n      admin_remarks = CASE WHEN _status IN ('needs_revision', 'rejected_red') THEN COALESCE(_admin_remarks, organization_renewals.admin_remarks) ELSE organization_renewals.admin_remarks END,\n      reviewed_by = _admin_id,\n      reviewed_at = _reviewed_at,\n      revision_requested_at = CASE WHEN _status = 'needs_revision' THEN _reviewed_at ELSE organization_renewals.revision_requested_at END,\n      revision_due_at = CASE WHEN _status = 'needs_revision' THEN _revision_due ELSE organization_renewals.revision_due_at END,\n      revision_locked = CASE WHEN _status = 'rejected_red' THEN true ELSE false END,\n      revision_locked_at = CASE WHEN _status = 'rejected_red' THEN _reviewed_at ELSE NULL END,\n      revision_unlocked_at = NULL,\n      revision_unlocked_by = NULL,\n      updated_at = _reviewed_at\n    WHERE id = _renewal_id;\n  END IF;\n\n  -- Recompute overall parent submission status\n  SELECT\n    CASE\n      WHEN EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n          AND admin_status = 'rejected_red'\n      ) THEN 'rejected_red'::public.document_submission_status\n      WHEN EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n          AND admin_status = 'needs_revision'\n      ) THEN 'needs_revision'::public.document_submission_status\n      WHEN EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n      ) AND NOT EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n          AND admin_status <> 'approved_green'\n      ) THEN 'approved_green'::public.document_submission_status\n      ELSE 'under_admin_review'::public.document_submission_status\n    END\n  INTO _overall_status;\n\n  _overall_remarks :=\n    CASE\n      WHEN _status = 'approved_green' THEN format('Admin approved %s.', _document_name)\n      WHEN _status = 'needs_revision' THEN format('Admin requested revisions for %s.', _document_name)\n      ELSE format('Admin rejected %s.', _document_name)\n    END;\n\n  UPDATE public.document_submissions\n  SET\n    status = _overall_status,\n    reviewed_by = _admin_id,\n    reviewed_at = _reviewed_at,\n    overall_remarks = _overall_remarks,\n    revision_requested_at = CASE WHEN _overall_status = 'needs_revision' THEN _reviewed_at ELSE document_submissions.revision_requested_at END,\n    revision_due_at = CASE WHEN _overall_status = 'needs_revision' THEN _revision_due ELSE NULL END,\n    revision_locked = CASE WHEN _overall_status = 'rejected_red' THEN true ELSE false END,\n    revision_locked_at = CASE WHEN _overall_status = 'rejected_red' THEN _reviewed_at ELSE NULL END,\n    revision_unlocked_at = NULL,\n    revision_unlocked_by = NULL,\n    updated_at = _reviewed_at\n  WHERE document_submissions.id = _submission_id;\n\n  -- 1. REGISTRATION REVISION NOTIFICATION:\n  IF _renewal_id IS NULL AND _status = 'needs_revision' AND _org_id IS NOT NULL AND _org_user_id IS NOT NULL AND _notify_revision THEN\n    INSERT INTO public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) VALUES (\n      _org_user_id,\n      _org_id,\n      'Registration Revision Requested',\n      format('The admin requested revisions for %s.%s', _document_name, CASE WHEN _admin_remarks IS NOT NULL AND trim(_admin_remarks) <> '' THEN ' Remarks: ' || trim(_admin_remarks) ELSE '' END),\n      'document_revision',\n      'document_submission',\n      _submission_id,\n      _reviewed_at\n    );\n  END IF;\n\n  -- 2. REGISTRATION SINGLE FILE APPROVED NOTIFICATION (when not yet fully verified):\n  IF _renewal_id IS NULL AND _status = 'approved_green' AND _overall_status <> 'approved_green' AND _org_id IS NOT NULL AND _org_user_id IS NOT NULL AND _notify_approved THEN\n    INSERT INTO public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) VALUES (\n      _org_user_id,\n      _org_id,\n      'Registration Document Approved',\n      format('Your registration document ''%s'' has been approved by the admin.', _document_name),\n      'completed',\n      'document_submission',\n      _submission_id,\n      _reviewed_at\n    );\n  END IF;\n\n  -- 3. ATOMIC REJECTION RULE (Permanent Suspension):\n  IF _renewal_id IS NULL AND _status = 'rejected_red' AND _org_id IS NOT NULL THEN\n    UPDATE public.organization_profiles\n    SET\n      profile_status = 'suspended_inactive'::public.profile_status,\n      updated_at = _reviewed_at\n    WHERE id = _org_id;\n\n    INSERT INTO public.activity_logs (\n      actor_user_id,\n      organization_id,\n      action,\n      related_type,\n      related_id,\n      description,\n      created_at\n    ) VALUES (\n      _admin_id,\n      _org_id,\n      'Suspended organization',\n      'organization_profile',\n      _org_id,\n      format('Organization account permanently suspended due to rejected registration document: %s.', _document_name),\n      _reviewed_at\n    );\n\n    IF _org_user_id IS NOT NULL AND _notify_rejected THEN\n      INSERT INTO public.notifications (\n        user_id,\n        organization_id,\n        title,\n        message,\n        type,\n        related_type,\n        related_id,\n        created_at\n      ) VALUES (\n        _org_user_id,\n        _org_id,\n        'Registration Document Rejected',\n        format('Your registration document ''%s'' was rejected.%s Your organization account has been permanently suspended.', _document_name, CASE WHEN _admin_remarks IS NOT NULL AND trim(_admin_remarks) <> '' THEN ' Remarks: ' || trim(_admin_remarks) ELSE '' END),\n        'document_red',\n        'document_submission',\n        _submission_id,\n        _reviewed_at\n      );\n    END IF;\n  END IF;\n\n  -- 4. AUTOMATIC REGISTRATION VERIFICATION:\n  -- Only evaluate when not suspended, not renewal, and overall submission status reached approved_green\n  IF _renewal_id IS NULL AND _org_id IS NOT NULL AND _overall_status = 'approved_green' THEN\n    PERFORM public.evaluate_and_apply_automatic_registration_verification(_org_id, _admin_id);\n  END IF;\n\n  RETURN QUERY\n  SELECT *\n  FROM public.document_submission_files\n  WHERE id = _file_id;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "59370b100efed37d5975dc16983d786a",
+      "name": "user_replace_document_submission_file",
+      "owner": "postgres",
+      "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+      "definition": "CREATE OR REPLACE FUNCTION public.user_replace_document_submission_file(_file_id uuid, _new_file_url text, _new_file_name text, _new_file_type text, _new_file_size numeric DEFAULT NULL::numeric, _submit_for_review boolean DEFAULT true)\n RETURNS document_submission_files\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _old_file record;\n  _submission record;\n  _owner_id uuid;\n  _history jsonb;\n  _history_entry jsonb;\n  _updated_row public.document_submission_files;\nBEGIN\n  SELECT * INTO _old_file\n  FROM public.document_submission_files\n  WHERE id = _file_id;\n\n  IF _old_file.id IS NULL THEN\n    RAISE EXCEPTION 'Document file not found.';\n  END IF;\n\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE id = _old_file.submission_id;\n\n  IF _submission.id IS NULL THEN\n    RAISE EXCEPTION 'Parent document submission not found.';\n  END IF;\n\n  SELECT user_id INTO _owner_id\n  FROM public.organization_profiles\n  WHERE id = _submission.organization_id;\n\n  IF _owner_id <> auth.uid() THEN\n    RAISE EXCEPTION 'Unauthorized: Caller does not own this submission.';\n  END IF;\n\n  _history_entry := jsonb_build_object(\n    'action', 'replaced',\n    'previousFileName', _old_file.file_name,\n    'previousFileUrl', _old_file.file_url,\n    'previousFileType', _old_file.file_type,\n    'previousFileSize', _old_file.file_size,\n    'previousStatus', _old_file.admin_status,\n    'adminRemarks', _old_file.admin_remarks,\n    'reviewedAt', _old_file.reviewed_at,\n    'replacedAt', clock_timestamp()\n  );\n\n  _history := coalesce(_old_file.revision_history, '[]'::jsonb) || jsonb_build_array(_history_entry);\n\n  UPDATE public.document_submission_files\n  SET\n    file_url = _new_file_url,\n    file_name = _new_file_name,\n    file_type = _new_file_type,\n    file_size = coalesce(_new_file_size, _old_file.file_size),\n    admin_status = CASE\n      WHEN _submit_for_review THEN 'submitted'::public.document_submission_status\n      ELSE 'draft'::public.document_submission_status\n    END,\n    admin_remarks = NULL,\n    reviewed_at = NULL,\n    uploaded_at = clock_timestamp(),\n    updated_at = clock_timestamp(),\n    revision_history = _history\n  WHERE id = _file_id\n  RETURNING * INTO _updated_row;\n\n  RETURN _updated_row;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "d19a1d0415f3eb900bab7dea241f0b21",
+      "name": "user_resubmit_renewal",
+      "owner": "postgres",
+      "signature": "user_resubmit_renewal(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.user_resubmit_renewal(p_renewal_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _renewal record;\n  _submission record;\n  _owner_id uuid;\n  _end_date date;\n  _now timestamptz := clock_timestamp();\nBEGIN\n  SELECT * INTO _renewal\n  FROM public.organization_renewals\n  WHERE id = p_renewal_id\n  FOR UPDATE;\n\n  IF _renewal.id IS NULL THEN\n    RAISE EXCEPTION 'Renewal application not found.';\n  END IF;\n\n  SELECT op.user_id INTO _owner_id\n  FROM public.organization_profiles op\n  WHERE op.id = _renewal.organization_id;\n\n  IF _owner_id <> auth.uid() THEN\n    RAISE EXCEPTION 'Unauthorized: Caller does not own this organization.';\n  END IF;\n\n  IF _renewal.status <> 'needs_revision' THEN\n    RAISE EXCEPTION 'Renewal cannot be resubmitted from status \"%\". Expected \"needs_revision\".', _renewal.status;\n  END IF;\n\n  -- Verify within 180-day window\n  SELECT oa.end_date INTO _end_date\n  FROM public.organization_accreditations oa\n  WHERE oa.id = _renewal.current_accreditation_id;\n\n  IF current_date > (_end_date + 180) THEN\n    RAISE EXCEPTION 'Late renewal cutoff has passed (180 days past expiration). Resubmission is no longer allowed.';\n  END IF;\n\n  -- Verify all flagged documents have been replaced\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE renewal_id = p_renewal_id\n  FOR UPDATE;\n\n  IF _submission.id IS NULL THEN\n    RAISE EXCEPTION 'No document submission packet found for this renewal.';\n  END IF;\n\n  IF EXISTS (\n    SELECT 1\n    FROM public.document_submission_files dsf\n    WHERE dsf.submission_id = _submission.id\n      AND dsf.admin_status IN ('needs_revision', 'rejected_red')\n  ) THEN\n    RAISE EXCEPTION 'All documents marked for revision or rejection must be replaced before resubmission.';\n  END IF;\n\n  -- Update renewal state to resubmitted\n  UPDATE public.organization_renewals\n  SET\n    status = 'resubmitted',\n    updated_at = _now\n  WHERE id = p_renewal_id;\n\n  -- Update document submission state\n  UPDATE public.document_submissions\n  SET\n    status = 'submitted',\n    updated_at = _now\n  WHERE id = _submission.id;\n\n  -- Insert activity log with NULL actor_user_id (org user action)\n  INSERT INTO public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description\n  ) VALUES (\n    NULL,\n    _renewal.organization_id,\n    'renewal_resubmitted',\n    'renewal',\n    p_renewal_id,\n    format('Organization resubmitted renewal application for Cycle %s after revisions.', _renewal.cycle_number)\n  );\n\n  RETURN jsonb_build_object(\n    'success', true,\n    'renewal_id', p_renewal_id,\n    'resubmitted_at', _now\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "52bbac2146c7a9473898fb1b6b8908c8",
+      "name": "user_start_or_get_renewal_draft",
+      "owner": "postgres",
+      "signature": "user_start_or_get_renewal_draft(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.user_start_or_get_renewal_draft(p_organization_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _caller_id uuid;\n  _profile record;\n  _curr_acc record;\n  _existing_renewal record;\n  _submission record;\n  _today date := current_date;\n  _end_date date;\n  _target_cycle integer;\n  _new_renewal record;\n  _new_submission record;\nBEGIN\n  _caller_id := auth.uid();\n  IF _caller_id IS NULL THEN\n    RAISE EXCEPTION 'Unauthorized: Authentication required.';\n  END IF;\n\n  -- Lock organization profile to serialize draft creation\n  SELECT op.id, op.user_id, op.profile_status, op.current_accreditation_id, op.accreditation_expires_at\n  INTO _profile\n  FROM public.organization_profiles op\n  WHERE op.id = p_organization_id\n  FOR UPDATE;\n\n  IF _profile.id IS NULL THEN\n    RAISE EXCEPTION 'Organization profile not found.';\n  END IF;\n\n  IF _profile.user_id <> _caller_id THEN\n    RAISE EXCEPTION 'Unauthorized: Caller does not own this organization.';\n  END IF;\n\n  IF _profile.profile_status <> 'verified' THEN\n    RAISE EXCEPTION 'Organization must have verified profile status to initiate renewal.';\n  END IF;\n\n  -- Resolve authoritative accreditation term\n  SELECT oa.*\n  INTO _curr_acc\n  FROM public.organization_accreditations oa\n  WHERE oa.id = _profile.current_accreditation_id\n    AND oa.organization_id = p_organization_id\n  LIMIT 1;\n\n  IF _curr_acc.id IS NULL THEN\n    SELECT oa.*\n    INTO _curr_acc\n    FROM public.organization_accreditations oa\n    WHERE oa.organization_id = p_organization_id\n      AND oa.status = 'active'\n    ORDER BY oa.term_number DESC\n    LIMIT 1;\n  END IF;\n\n  IF _curr_acc.id IS NULL THEN\n    RAISE EXCEPTION 'No authoritative accreditation term found for this organization.';\n  END IF;\n\n  IF _curr_acc.status = 'revoked' THEN\n    RAISE EXCEPTION 'Accreditation has been revoked. Organization cannot renew and must contact LYDO.';\n  END IF;\n\n  _end_date := _curr_acc.end_date;\n\n  -- Verify renewal window: [end_date - 90 days, end_date + 180 days]\n  IF _today < (_end_date - 90) THEN\n    RAISE EXCEPTION 'Renewal window is not yet open. Renewals open 90 days prior to expiration (on %).', (_end_date - 90);\n  END IF;\n\n  IF _today > (_end_date + 180) THEN\n    RAISE EXCEPTION 'Late renewal window has expired (180 days past expiration). Full re-registration is required.';\n  END IF;\n\n  -- Check if a non-terminal renewal is already in progress\n  SELECT *\n  INTO _existing_renewal\n  FROM public.organization_renewals\n  WHERE organization_id = p_organization_id\n    AND status IN ('draft', 'submitted', 'under_review', 'needs_revision', 'resubmitted')\n  ORDER BY cycle_number DESC\n  LIMIT 1;\n\n  IF _existing_renewal.id IS NOT NULL THEN\n    SELECT * INTO _submission\n    FROM public.document_submissions\n    WHERE renewal_id = _existing_renewal.id\n    LIMIT 1;\n\n    RETURN jsonb_build_object(\n      'renewal', row_to_json(_existing_renewal),\n      'submission', row_to_json(_submission),\n      'is_existing', true\n    );\n  END IF;\n\n  -- Calculate target cycle number (strictly current_term.term_number + 1)\n  _target_cycle := _curr_acc.term_number + 1;\n\n  -- Verify no terminal rejected renewal exists for this cycle\n  IF EXISTS (\n    SELECT 1 FROM public.organization_renewals\n    WHERE organization_id = p_organization_id\n      AND cycle_number = _target_cycle\n      AND status = 'rejected'\n  ) THEN\n    RAISE EXCEPTION 'Renewal application for Cycle % was rejected. Organization must contact LYDO directly.', _target_cycle;\n  END IF;\n\n  IF EXISTS (\n    SELECT 1 FROM public.organization_renewals\n    WHERE organization_id = p_organization_id\n      AND cycle_number = _target_cycle\n      AND status = 'approved'\n  ) THEN\n    RAISE EXCEPTION 'Cycle % is already approved.', _target_cycle;\n  END IF;\n\n  -- Create single draft renewal application\n  INSERT INTO public.organization_renewals (\n    organization_id,\n    cycle_number,\n    current_accreditation_id,\n    status\n  ) VALUES (\n    p_organization_id,\n    _target_cycle,\n    _curr_acc.id,\n    'draft'\n  ) RETURNING * INTO _new_renewal;\n\n  -- Create single linked document submission packet\n  INSERT INTO public.document_submissions (\n    organization_id,\n    submitted_by,\n    status,\n    user_confirmed,\n    submission_scope,\n    renewal_id\n  ) VALUES (\n    p_organization_id,\n    _caller_id,\n    'draft',\n    false,\n    'renewal',\n    _new_renewal.id\n  ) RETURNING * INTO _new_submission;\n\n  RETURN jsonb_build_object(\n    'renewal', row_to_json(_new_renewal),\n    'submission', row_to_json(_new_submission),\n    'is_existing', false\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "d41b680681db2323aba2c62693f59131",
+      "name": "user_submit_renewal",
+      "owner": "postgres",
+      "signature": "user_submit_renewal(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.user_submit_renewal(p_renewal_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _renewal record;\n  _submission record;\n  _owner_id uuid;\n  _end_date date;\n  _now timestamptz := clock_timestamp();\nBEGIN\n  SELECT * INTO _renewal\n  FROM public.organization_renewals\n  WHERE id = p_renewal_id\n  FOR UPDATE;\n\n  IF _renewal.id IS NULL THEN\n    RAISE EXCEPTION 'Renewal application not found.';\n  END IF;\n\n  SELECT op.user_id INTO _owner_id\n  FROM public.organization_profiles op\n  WHERE op.id = _renewal.organization_id;\n\n  IF _owner_id IS DISTINCT FROM auth.uid() THEN\n    RAISE EXCEPTION 'Unauthorized: Caller does not own this organization.';\n  END IF;\n\n  IF _renewal.status <> 'draft' THEN\n    RAISE EXCEPTION 'Renewal cannot be submitted from status \"%\". Expected \"draft\".', _renewal.status;\n  END IF;\n\n  SELECT oa.end_date INTO _end_date\n  FROM public.organization_accreditations oa\n  WHERE oa.id = _renewal.current_accreditation_id;\n\n  IF current_date > (_end_date + 180) THEN\n    RAISE EXCEPTION 'Late renewal cutoff has passed (180 days past expiration). Application can no longer be submitted.';\n  END IF;\n\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE renewal_id = p_renewal_id\n  FOR UPDATE;\n\n  IF _submission.id IS NULL THEN\n    RAISE EXCEPTION 'No renewal document submission found.';\n  END IF;\n\n  -- Each selected document may be sent as it is ready. The admin approval RPC\n  -- continues to enforce completeness and approval of every required type.\n  IF NOT EXISTS (\n    SELECT 1\n    FROM public.document_submission_files dsf\n    JOIN public.required_document_types rdt ON rdt.id = dsf.document_type_id\n    WHERE dsf.submission_id = _submission.id\n      AND rdt.is_active = true\n      AND coalesce(rdt.is_required, true) = true\n      AND rdt.scope IN ('renewal', 'both')\n      AND rdt.template_scope = 'document_submission'\n      AND nullif(trim(dsf.file_url), '') IS NOT NULL\n  ) THEN\n    RAISE EXCEPTION 'Upload at least one required renewal document before submitting.';\n  END IF;\n\n  UPDATE public.organization_renewals\n  SET status = 'submitted', submitted_at = _now, updated_at = _now\n  WHERE id = p_renewal_id;\n\n  UPDATE public.document_submissions\n  SET status = 'submitted', submitted_at = _now, updated_at = _now\n  WHERE id = _submission.id;\n\n  INSERT INTO public.activity_logs (\n    actor_user_id, organization_id, action, related_type, related_id, description\n  ) VALUES (\n    NULL,\n    _renewal.organization_id,\n    'renewal_submitted',\n    'renewal',\n    p_renewal_id,\n    format('Organization submitted renewal documents for Cycle %s.', _renewal.cycle_number)\n  );\n\n  RETURN jsonb_build_object(\n    'success', true,\n    'renewal_id', p_renewal_id,\n    'submitted_at', _now\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "50d5dcf06885fa593fe5355fc8892d69",
+      "name": "validate_admin_session_token",
+      "owner": "postgres",
+      "signature": "validate_admin_session_token(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.validate_admin_session_token(_session_token text)\n RETURNS TABLE(admin_id uuid, username citext, email citext, display_name text, expires_at timestamp with time zone)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nbegin\r\n  update public.admin_sessions\r\n  set last_used_at = now()\r\n  where token_hash = encode(extensions.digest(_session_token, 'sha256'), 'hex')\r\n    and revoked_at is null\r\n    and public.admin_sessions.expires_at > now();\r\n\r\n  return query\r\n  select\r\n    aa.id,\r\n    aa.username,\r\n    aa.email,\r\n    aa.display_name,\r\n    s.expires_at\r\n  from public.admin_sessions s\r\n  join public.admin_accounts aa on aa.id = s.admin_id\r\n  where s.token_hash = encode(extensions.digest(_session_token, 'sha256'), 'hex')\r\n    and s.revoked_at is null\r\n    and s.expires_at > now()\r\n    and aa.is_active = true\r\n  limit 1;\r\nend;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "md5": "3a551ad03eaa7d24ca136cf1cbecaba9",
+      "name": "freeze_fixture_markers",
+      "owner": "postgres",
+      "signature": "ytrace_production_containment.freeze_fixture_markers()",
+      "definition": "CREATE OR REPLACE FUNCTION ytrace_production_containment.freeze_fixture_markers()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nBEGIN\n  IF TG_OP = 'INSERT' THEN\n    IF coalesce(NEW.is_seeded_sample_data,false) OR NEW.seed_batch IS NOT NULL THEN\n      RAISE EXCEPTION 'Production fixture markers cannot be created.' USING ERRCODE='42501';\n    END IF;\n  ELSIF ROW(NEW.is_seeded_sample_data,NEW.seed_batch) IS DISTINCT FROM ROW(OLD.is_seeded_sample_data,OLD.seed_batch) THEN\n    RAISE EXCEPTION 'Production fixture markers are immutable.' USING ERRCODE='42501';\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    }
+  ]
+}

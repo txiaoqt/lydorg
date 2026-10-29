@@ -1,0 +1,155 @@
+{
+  "status": "PASS_LOCAL_OFFLINE",
+  "recordedAt": "2026-10-13T15:26:40.729Z",
+  "candidate": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z",
+  "bundleSha256": "5667c2cf30ce651aa47f55a9703f9b801b5688c6676e4b743a68b4b8be24ed5b",
+  "manifestSha256": "cc7345fabf63262c082bc332ec7ee526d8cb9c9f2d9c6a8a0abd841c7fc16b11",
+  "code": [
+    {
+      "file": "budget-runner-core.mjs",
+      "bytes": 51801,
+      "sha256": "4740e13bb9593c5135260f873fc7e9483d6a6135f97b0e37369b0df93d47a14a"
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "bytes": 29651,
+      "sha256": "c3f58a8cb349cb89f52ae8a275114b9b7b92d849092f5c8c3fbd136d4cada8e9"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "bytes": 35726,
+      "sha256": "784e29decd2e692436a6a980fa31182b3523ac39188bc0510332ea29b655171a"
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "bytes": 6811,
+      "sha256": "234accc900f5e39f51b298994411be63a6efd833735ab5bc3d513ff652927aed"
+    },
+    {
+      "file": "operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    }
+  ],
+  "nodeVersion": "v24.21.0",
+  "focusedTests": {
+    "tests": 77,
+    "pass": 77,
+    "fail": 0,
+    "skipped": 0,
+    "exitStatus": 0,
+    "startedAt": "2026-10-13T15:21:26.242Z",
+    "finishedAt": "2026-10-13T15:21:27.314Z",
+    "tapSha256": "dc10a967e13a7ac0bd8bba3f9e4ecf823f04d58d9c206734a7c75201e04d3905",
+    "stderr": "(node:54084) [PERM0002] SecurityWarning: The flag --allow-child-process must be used with extreme caution. It could invalidate the permission model.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+  },
+  "command": {
+    "executable": ".agent/admin-storage-vercel-20261012T035933Z/toolchain/extracted/node-v24.21.0-win-x64/node.exe",
+    "cwd": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z",
+    "arguments": [
+      "--permission",
+      "--allow-child-process",
+      "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs",
+      "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\scripts",
+      "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\node_modules",
+      "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\package.json",
+      "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\package-lock.json",
+      "--test",
+      "--test-reporter=tap",
+      "budget-safety-controls.test.mjs"
+    ],
+    "environment": "OS essentials only; USERPROFILE/HOME point to a nonexistent workspace dummy; no YTRACE/PG/NODE_OPTIONS/private values forwarded",
+    "filesystem": "No child write permissions; reads allow only docs/scripts/node_modules and package manifests; real protected state and secret env files excluded",
+    "childProcessLimitation": "Allow-child-process is necessary for two inspected literal harmless Node programs; this is not a sandbox for untrusted arbitrary children."
+  },
+  "javascriptSyntax": [
+    {
+      "file": "budget-runner-core.mjs",
+      "status": 0,
+      "stderr": ""
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "status": 0,
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "status": 0,
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "status": 0,
+      "stderr": ""
+    }
+  ],
+  "aclHelper": {
+    "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258",
+    "unchanged": true,
+    "powerShellParserErrors": 0,
+    "aclActionsExecuted": false
+  },
+  "diffChecks": [
+    {
+      "file": "budget-runner-core.mjs",
+      "diffStatus": 1,
+      "checkStatus": 1,
+      "checkOutput": "",
+      "checkStderr": ""
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "diffStatus": 1,
+      "checkStatus": 1,
+      "checkOutput": "",
+      "checkStderr": ""
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "diffStatus": 1,
+      "checkStatus": 1,
+      "checkOutput": "",
+      "checkStderr": ""
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "diffStatus": 1,
+      "checkStatus": 1,
+      "checkOutput": "",
+      "checkStderr": ""
+    },
+    {
+      "file": "operation-acl.ps1",
+      "diffStatus": 0,
+      "checkStatus": 0,
+      "checkOutput": "",
+      "checkStderr": ""
+    }
+  ],
+  "diffNote": "git diff --no-index --check returns 1 for changed files; check output and stderr are empty (no whitespace findings).",
+  "unchangedInputs": 11,
+  "dependencyClosure": {
+    "files": 138,
+    "sha256": "08b98ef8f7b3bba88c947bebededda974e18940645a9f2b61f2de7a050dfd736",
+    "unchanged": true
+  },
+  "historicalTestsRerun": false,
+  "productionConnectionAttempted": false,
+  "protectedStateAccessed": false,
+  "authorizationLockOrAttemptFilesCreated": false,
+  "installationActivated": false,
+  "previousLocalRun": {
+    "candidate": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z",
+    "bundleSha256": "ce386a8b04500ec983bb7d1a154d552df828d3c55150c514a3d1784657128b92",
+    "manifestSha256": "24983dbdf52ca036dd648df0c0b88f962057384be07e00df8b4aa4c16f07c33b",
+    "status": 1,
+    "tests": 77,
+    "pass": 76,
+    "fail": 1,
+    "reason": "Node permission child-process setup mutated the shared environment object; subsequent safety check rejected NODE_OPTIONS",
+    "startedAt": "2026-10-13T15:18:51.377Z",
+    "finishedAt": "2026-10-13T15:18:52.365Z",
+    "preserved": true
+  }
+}

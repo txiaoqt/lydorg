@@ -1,0 +1,19 @@
+{
+  "capturedAt": "2026-10-12T12:54:30.020Z",
+  "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "readOnly": true,
+  "python312Detected": true,
+  "dependencyInstallationInvoked": true,
+  "requirementsMentioned": true,
+  "packageVersions": {
+    "requests": [],
+    "python-dotenv": [],
+    "urllib3": []
+  },
+  "pythonFunctionOutputPresent": true,
+  "packagedModulePathEvidence": [
+    "out/api/sync-run-once"
+  ],
+  "actualRuntimeImports": "BLOCKED by Vercel Authentication; no sync POST or private API called",
+  "rawLogsPersisted": false
+}

@@ -1,0 +1,83 @@
+{
+  "focused": [
+    {
+      "file": "budget-runner-core.mjs",
+      "exitCode": 1,
+      "status": "FAIL",
+      "output": [
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\budget-runner-core.mjs', LF will be replaced by CRLF the next time Git touches it",
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\budget-runner-core.mjs', LF will be replaced by CRLF the next time Git touches it"
+      ]
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "exitCode": 1,
+      "status": "FAIL",
+      "output": [
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\native-budget-pause-runner.mjs', LF will be replaced by CRLF the next time Git touches it",
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause-runner.mjs', LF will be replaced by CRLF the next time Git touches it"
+      ]
+    },
+    {
+      "file": "native-budget-pause.test.mjs",
+      "exitCode": 1,
+      "status": "FAIL",
+      "output": [
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\native-budget-pause.test.mjs', LF will be replaced by CRLF the next time Git touches it",
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause.test.mjs', LF will be replaced by CRLF the next time Git touches it"
+      ]
+    },
+    {
+      "file": "operation-acl.ps1",
+      "exitCode": 0,
+      "status": "FAIL",
+      "output": [
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\operation-acl.ps1', LF will be replaced by CRLF the next time Git touches it",
+        "warning: in the working copy of 'docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\operation-acl.ps1', LF will be replaced by CRLF the next time Git touches it"
+      ]
+    }
+  ],
+  "trackedWorktree": {
+    "exitCode": 0,
+    "status": "PASS",
+    "output": [
+      "warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'build/assets/html2canvas.esm-CBrSDip1.js', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'build/assets/pdf.worker.min-D39lNQBd.mjs', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'build/assets/purify.es-CPrKKeqe.js', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'build/index.html', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'build/manifest-admin.webmanifest', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'build/manifest.webmanifest', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'build/sw.js', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'index.html', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'playwright.config.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'public/manifest-admin.webmanifest', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'public/manifest.webmanifest', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'public/sw.js', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/App.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/admin/components/AdminSettingsPage.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/admin/components/BudgetRequestsTableSelection.test.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/admin/components/RenewalTestEnvironmentPanel.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/admin/renewal-test-environment.test.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/components/portal/UserPortalRenewalWorkspaceView.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/components/portal/UserPortalResponsiveWorkspace.test.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/components/public/PublicTemplatesCatalog.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/admin-budget-request-deletion.test.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/admin-lifecycle-user-sync.test.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/admin-system-settings.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/audit-records-hardening.test.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/lydo-connect-store.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/query-client.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/renewal-realtime.test.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/report-export.test.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/lib/section35-reporting.test.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/test/setup.ts', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/user/UserPortalEntry.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/user/pwa/PwaAppShell.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'src/user/pwa/renewals/PwaRenewalPage.tsx', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'supabase/config.toml', LF will be replaced by CRLF the next time Git touches it",
+      "warning: in the working copy of 'vitest.config.ts', LF will be replaced by CRLF the next time Git touches it"
+    ]
+  }
+}

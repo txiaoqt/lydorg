@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "mode": "OFFLINE_REVIEW",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "sqlBytes": 47407,
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "runnerBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+  "connectionAttempted": false,
+  "installationActivated": false
+}

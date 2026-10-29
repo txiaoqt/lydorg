@@ -1,0 +1,41 @@
+{
+  "captured_at": "2026-10-11T11:55:22.439532+00:00",
+  "read_only": "on",
+  "objects": {
+    "before": 378,
+    "after": 378,
+    "changed": 0,
+    "missing": 0
+  },
+  "files": {
+    "before": 579,
+    "after": 579,
+    "changed": 0,
+    "missing": 0
+  },
+  "parents": {
+    "before": 266,
+    "after": 266,
+    "changed": 0,
+    "missing": 0
+  },
+  "organizations": {
+    "before": 92,
+    "after": 92,
+    "changed": 0,
+    "missing": 0
+  },
+  "templates": {
+    "before": 13,
+    "after": 13,
+    "changed": 0,
+    "missing": 0
+  },
+  "news": {
+    "before": 3,
+    "after": 3,
+    "changed": 0,
+    "missing": 0
+  },
+  "catalogFingerprintUnchanged": true
+}

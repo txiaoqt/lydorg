@@ -1,0 +1,90 @@
+{
+  "status": "GO_TO_REQUEST_SUPERVISED_INSTALLATION_AUTHORIZATION",
+  "executionCurrentlyAuthorized": false,
+  "unattendedOrchestration": "NO_GO",
+  "reviewedSqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "reviewedSqlBytes": 11945,
+  "reviewedBundleSha256": "58aed13a1099907460f74e9730afa8c8f22a1a0f0ee07fd6e77d609ac80a0e25",
+  "reviewedManifestSha256": "562f0b078c3ee29f17050e465ff3c1a87f9be71fac05642cd3e9e3863f19a3bb",
+  "historicalPreflightEvidenceSha256": "6e5869fcde18f45edfef0ba0a9709d4d0530204d89c6dfd548f55dc719dece81",
+  "historicalPreflightStateFingerprint": "8d8a45ca4a229d17b8cd79c33b914791e8b435774e5f615cae364b3d319c80fc",
+  "requiredControls": [
+    "New exclusive drained window",
+    "Fresh immutable proof and fresh same-state approval bindings",
+    "UTC-safe outer parsing",
+    "JSON/receipt success whitelist",
+    "Raw catalog/function reconciliation for stopped outcomes"
+  ],
+  "files": [
+    {
+      "file": "authorization-proposal.md",
+      "bytes": 7248,
+      "sha256": "619b1b360383860c8d35b7374923587a21de2b6a0b757d954cca8ca7f541d542"
+    },
+    {
+      "file": "capture-state-metadata.ps1",
+      "bytes": 2178,
+      "sha256": "b3c6f97571f1d4271df3e20c84119f4fc1c540b5d4ed2b8f219fd9122e8b811c"
+    },
+    {
+      "file": "final-review.md",
+      "bytes": 14420,
+      "sha256": "020fc6cdaf1538b3a6b0279ddcb99a1803e4478116c9ca3392a710d2558646fa"
+    },
+    {
+      "file": "finalize-review.mjs",
+      "bytes": 5795,
+      "sha256": "7f4a77009be23c79466aafeda2f78b9010519915d60b16a77de8a4dcc1532869"
+    },
+    {
+      "file": "git-status-after.txt",
+      "bytes": 7255,
+      "sha256": "390f314f3cbf13c94df53926716ded9b8cadc3c3070b9a949b36065fe4830668"
+    },
+    {
+      "file": "git-status-before.txt",
+      "bytes": 7255,
+      "sha256": "390f314f3cbf13c94df53926716ded9b8cadc3c3070b9a949b36065fe4830668"
+    },
+    {
+      "file": "independent-artifact-review.json",
+      "bytes": 6094,
+      "sha256": "20d02236d5b0314875866600e8106cfaa79a8b1f90abf009eb2d10a7d46f8e93"
+    },
+    {
+      "file": "operator-checklist.md",
+      "bytes": 12736,
+      "sha256": "7364150635f8de11c5df2560cd8fdcf2920b3ef435fa57146ce6fe615ca896b0"
+    },
+    {
+      "file": "operator-state-after.json",
+      "bytes": 2614,
+      "sha256": "06fe4e1ba67c7825b5c85c12dde9faaf7b05f881918e019d28ec2d39cacc4050"
+    },
+    {
+      "file": "operator-state-before.json",
+      "bytes": 2614,
+      "sha256": "736da10460017107226ed3907c5039eca3dd6a65bbe7aa6b5677a04cf8f2886f"
+    },
+    {
+      "file": "preservation-verification.json",
+      "bytes": 1748,
+      "sha256": "52dca963626bb283ccf262f235e3244b06df9e23edeae6e4d341efd9ee3b8efe"
+    },
+    {
+      "file": "reconciliation-label-review.json",
+      "bytes": 948,
+      "sha256": "03eec330cdb404e97bd15f2bcebc0ed48783a4d6e42be956a79bfe7166921b27"
+    },
+    {
+      "file": "reproduce-reconciliation-label.mjs",
+      "bytes": 2243,
+      "sha256": "f500bfc6978a36dda6c6d933bb5dcaed61cdebf0d506486b2a1099721c0ed1c1"
+    },
+    {
+      "file": "verify-reviewed-evidence.mjs",
+      "bytes": 6692,
+      "sha256": "328d4bcadd7d17ebe5f92cb374e4b0ff0802717ff868077b6220b55759be20ec"
+    }
+  ]
+}

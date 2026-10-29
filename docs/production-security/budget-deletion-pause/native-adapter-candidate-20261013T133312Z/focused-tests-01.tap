@@ -1,0 +1,310 @@
+TAP version 13
+# Subtest: complete receipt proves terminal COMMIT, one attempt and all preservation bindings
+ok 1 - complete receipt proves terminal COMMIT, one attempt and all preservation bindings
+  ---
+  duration_ms: 13.939
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit UNRESOLVED cannot be accepted as installation success
+ok 2 - stopped zero-exit UNRESOLVED cannot be accepted as installation success
+  ---
+  duration_ms: 1.7215
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit COMMITTED_POSTFLIGHT_FAILED cannot be accepted as installation success
+ok 3 - stopped zero-exit COMMITTED_POSTFLIGHT_FAILED cannot be accepted as installation success
+  ---
+  duration_ms: 0.1737
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit COMMITTED_WITH_DRIFT cannot be accepted as installation success
+ok 4 - stopped zero-exit COMMITTED_WITH_DRIFT cannot be accepted as installation success
+  ---
+  duration_ms: 0.1319
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit NOT_INSTALLED_VERIFIED cannot be accepted as installation success
+ok 5 - stopped zero-exit NOT_INSTALLED_VERIFIED cannot be accepted as installation success
+  ---
+  duration_ms: 0.1712
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit INSTALLED_AND_PRESERVED cannot be accepted as installation success
+ok 6 - stopped zero-exit INSTALLED_AND_PRESERVED cannot be accepted as installation success
+  ---
+  duration_ms: 0.1565
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit INSTALLED_WITH_DRIFT cannot be accepted as installation success
+ok 7 - stopped zero-exit INSTALLED_WITH_DRIFT cannot be accepted as installation success
+  ---
+  duration_ms: 0.1772
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit PASS cannot be accepted as installation success
+ok 8 - stopped zero-exit PASS cannot be accepted as installation success
+  ---
+  duration_ms: 0.1251
+  type: 'test'
+  ...
+# Subtest: a real harmless child exiting zero with UNRESOLVED remains stopped
+ok 9 - a real harmless child exiting zero with UNRESOLVED remains stopped
+  ---
+  duration_ms: 101.2507
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent commitAcknowledged=false
+ok 10 - success rejects inconsistent commitAcknowledged=false
+  ---
+  duration_ms: 1.7366
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent submissionCount=0
+ok 11 - success rejects inconsistent submissionCount=0
+  ---
+  duration_ms: 0.9768
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent submissionCount=2
+ok 12 - success rejects inconsistent submissionCount=2
+  ---
+  duration_ms: 2.0511
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent automaticRetries=1
+ok 13 - success rejects inconsistent automaticRetries=1
+  ---
+  duration_ms: 0.9677
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent rollbackStatementsSent=1
+ok 14 - success rejects inconsistent rollbackStatementsSent=1
+  ---
+  duration_ms: 1.1597
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent retainLock=true
+ok 15 - success rejects inconsistent retainLock=true
+  ---
+  duration_ms: 0.9452
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent retainAttemptMarker=false
+ok 16 - success rejects inconsistent retainAttemptMarker=false
+  ---
+  duration_ms: 0.8697
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent stopForHumanReview=true
+ok 17 - success rejects inconsistent stopForHumanReview=true
+  ---
+  duration_ms: 0.9653
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for missing event
+ok 18 - receipt fails closed for missing event
+  ---
+  duration_ms: 2.0315
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for duplicate event
+ok 19 - receipt fails closed for duplicate event
+  ---
+  duration_ms: 0.9266
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for wrong terminal tag
+ok 20 - receipt fails closed for wrong terminal tag
+  ---
+  duration_ms: 0.976
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for wrong function fingerprint
+ok 21 - receipt fails closed for wrong function fingerprint
+  ---
+  duration_ms: 8.3245
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for wrong function owner
+ok 22 - receipt fails closed for wrong function owner
+  ---
+  duration_ms: 2.7569
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed inventories
+ok 23 - receipt fails closed for changed inventories
+  ---
+  duration_ms: 4.2244
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed foundation
+ok 24 - receipt fails closed for changed foundation
+  ---
+  duration_ms: 3.0529
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed migrations
+ok 25 - receipt fails closed for changed migrations
+  ---
+  duration_ms: 6.3623
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed Storage count
+ok 26 - receipt fails closed for changed Storage count
+  ---
+  duration_ms: 3.8401
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed backend
+ok 27 - receipt fails closed for changed backend
+  ---
+  duration_ms: 2.8953
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for mismatched marker hash
+ok 28 - receipt fails closed for mismatched marker hash
+  ---
+  duration_ms: 2.0938
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for mismatched nonce
+ok 29 - receipt fails closed for mismatched nonce
+  ---
+  duration_ms: 1.4122
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for different candidate bundle
+ok 30 - receipt fails closed for different candidate bundle
+  ---
+  duration_ms: 1.3636
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for secret-shaped evidence
+ok 31 - receipt fails closed for secret-shaped evidence
+  ---
+  duration_ms: 2.3759
+  type: 'test'
+  ...
+# Subtest: partial journal and timezone-free event timestamps fail closed
+ok 32 - partial journal and timezone-free event timestamps fail closed
+  ---
+  duration_ms: 2.5289
+  type: 'test'
+  ...
+# Subtest: supervisor independently verifies bytes and matching child receipt hashes
+ok 33 - supervisor independently verifies bytes and matching child receipt hashes
+  ---
+  duration_ms: 6.4155
+  type: 'test'
+  ...
+# Subtest: forged receipt PASS or changed durable bytes cannot pass supervisor
+ok 34 - forged receipt PASS or changed durable bytes cannot pass supervisor
+  ---
+  duration_ms: 4.8818
+  type: 'test'
+  ...
+# Subtest: ambiguous child exception has one launch and zero automatic retries
+ok 35 - ambiguous child exception has one launch and zero automatic retries
+  ---
+  duration_ms: 0.3261
+  type: 'test'
+  ...
+# Subtest: nonzero exit, signal and malformed output are unresolved
+ok 36 - nonzero exit, signal and malformed output are unresolved
+  ---
+  duration_ms: 1.3862
+  type: 'test'
+  ...
+# Subtest: raw original fingerprints with preservation false determine presence independently
+ok 37 - raw original fingerprints with preservation false determine presence independently
+  ---
+  duration_ms: 0.885
+  type: 'test'
+  ...
+# Subtest: raw original fingerprints with preservation true determine presence independently
+ok 38 - raw original fingerprints with preservation true determine presence independently
+  ---
+  duration_ms: 0.3252
+  type: 'test'
+  ...
+# Subtest: raw new fingerprints with preservation false determine presence independently
+ok 39 - raw new fingerprints with preservation false determine presence independently
+  ---
+  duration_ms: 0.1635
+  type: 'test'
+  ...
+# Subtest: raw new fingerprints with preservation true determine presence independently
+ok 40 - raw new fingerprints with preservation true determine presence independently
+  ---
+  duration_ms: 0.2195
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for unknown catalog
+ok 41 - reconciliation remains unresolved for unknown catalog
+  ---
+  duration_ms: 0.3378
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for unknown function
+ok 42 - reconciliation remains unresolved for unknown function
+  ---
+  duration_ms: 0.2965
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for inconsistent views
+ok 43 - reconciliation remains unresolved for inconsistent views
+  ---
+  duration_ms: 0.2378
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for wrong owner
+ok 44 - reconciliation remains unresolved for wrong owner
+  ---
+  duration_ms: 0.2012
+  type: 'test'
+  ...
+# Subtest: active backend, unknown preservation and missing raw views cannot infer installation
+ok 45 - active backend, unknown preservation and missing raw views cannot infer installation
+  ---
+  duration_ms: 0.716
+  type: 'test'
+  ...
+# Subtest: UTC freshness parses original ISO JSON equally for explicit offsets
+ok 46 - UTC freshness parses original ISO JSON equally for explicit offsets
+  ---
+  duration_ms: 0.8647
+  type: 'test'
+  ...
+# Subtest: five-minute freshness cannot be removed or extended and future proofs fail
+ok 47 - five-minute freshness cannot be removed or extended and future proofs fail
+  ---
+  duration_ms: 1.3419
+  type: 'test'
+  ...
+# Subtest: forced native driver is denied even when the variable is an empty string
+ok 48 - forced native driver is denied even when the variable is an empty string
+  ---
+  duration_ms: 0.6623
+  type: 'test'
+  ...
+# Subtest: candidate pins unchanged SQL, eleven inputs and the same 138 dependency files
+ok 49 - candidate pins unchanged SQL, eleven inputs and the same 138 dependency files
+  ---
+  duration_ms: 325.9699
+  type: 'test'
+  ...
+# Subtest: receipt validation is wired before success lock release and stopped results are nonzero
+ok 50 - receipt validation is wired before success lock release and stopped results are nonzero
+  ---
+  duration_ms: 1.4486
+  type: 'test'
+  ...
+1..50
+# tests 50
+# suites 0
+# pass 50
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 709.4223

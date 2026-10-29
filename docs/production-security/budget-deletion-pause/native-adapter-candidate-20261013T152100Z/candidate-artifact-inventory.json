@@ -1,0 +1,62 @@
+{
+  "candidateBundleSha256": "5667c2cf30ce651aa47f55a9703f9b801b5688c6676e4b743a68b4b8be24ed5b",
+  "candidateManifestSha256": "cc7345fabf63262c082bc332ec7ee526d8cb9c9f2d9c6a8a0abd841c7fc16b11",
+  "excludesSelf": true,
+  "files": [
+    {
+      "file": "budget-runner-core.mjs",
+      "bytes": 51801,
+      "sha256": "4740e13bb9593c5135260f873fc7e9483d6a6135f97b0e37369b0df93d47a14a"
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "bytes": 29651,
+      "sha256": "c3f58a8cb349cb89f52ae8a275114b9b7b92d849092f5c8c3fbd136d4cada8e9"
+    },
+    {
+      "file": "focused-tests-01.tap",
+      "bytes": 15460,
+      "sha256": "dc10a967e13a7ac0bd8bba3f9e4ecf823f04d58d9c206734a7c75201e04d3905"
+    },
+    {
+      "file": "local-check-results.json",
+      "bytes": 5708,
+      "sha256": "ddc52ef327cd00dde1fccb00ca92d1eaf524b2a2ff821960fc245b3b78dbdd2a"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "bytes": 35726,
+      "sha256": "784e29decd2e692436a6a980fa31182b3523ac39188bc0510332ea29b655171a"
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "bytes": 6811,
+      "sha256": "234accc900f5e39f51b298994411be63a6efd833735ab5bc3d513ff652927aed"
+    },
+    {
+      "file": "operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "preservation-verification.json",
+      "bytes": 74522,
+      "sha256": "9b7bb8b5d6f8aef263d4e93403396f3d71f5e59b9029248e4f76dac60955f8ca"
+    },
+    {
+      "file": "remediation-review.md",
+      "bytes": 8352,
+      "sha256": "2e55440cd35341a91baec555a24f9ed77075ef6b4b44e3e34be9a4ee1c41f58b"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "cc7345fabf63262c082bc332ec7ee526d8cb9c9f2d9c6a8a0abd841c7fc16b11"
+    },
+    {
+      "file": "security-correction.patch",
+      "bytes": 63132,
+      "sha256": "81cf0c1e6187739c8e54a3bab507d821e30832af0733970ec484738557bfe7d5"
+    }
+  ]
+}

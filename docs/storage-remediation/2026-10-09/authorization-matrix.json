@@ -1,0 +1,380 @@
+{
+  "scope": "Isolated PostgreSQL policies/functions, synthetic tables/records, auth.uid setting and noncryptographic digest fixture. No actual Storage API or binary preview/download certification.",
+  "additionalChecks": [
+    "cutover approval gate",
+    "all five private buckets custom Admin signing",
+    "draft-parent cleanup receipt expiration",
+    "reviewed requirement lock",
+    "revision replacement without deleting reviewed document",
+    "revision expiry and explicit unlock",
+    "published avatar consent and MIME restriction",
+    "modern owner_id and deprecated owner compatibility",
+    "reused parent UUID isolation",
+    "unattached asset cleanup reservation; arbitrary delete denied"
+  ],
+  "results": [
+    {
+      "identity": "Anonymous",
+      "visiblePrivateObjects": 0,
+      "operations": [
+        {
+          "bucket": "organization-documents",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "budget-request-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "liquidation-report-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "ypop-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "move-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        }
+      ],
+      "publicAssets": "read only"
+    },
+    {
+      "identity": "Organization A",
+      "visiblePrivateObjects": 5,
+      "operations": [
+        {
+          "bucket": "organization-documents",
+          "insert": {
+            "rows": 1
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "budget-request-files",
+          "insert": {
+            "rows": 1
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "liquidation-report-files",
+          "insert": {
+            "rows": 1
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "ypop-files",
+          "insert": {
+            "rows": 1
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "move-files",
+          "insert": {
+            "rows": 1
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        }
+      ],
+      "publicAssets": "read only"
+    },
+    {
+      "identity": "Organization B",
+      "visiblePrivateObjects": 5,
+      "operations": [
+        {
+          "bucket": "organization-documents",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "budget-request-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "liquidation-report-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "ypop-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        },
+        {
+          "bucket": "move-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 1
+          }
+        }
+      ],
+      "publicAssets": "read only"
+    },
+    {
+      "identity": "Suspended organization",
+      "visiblePrivateObjects": 0,
+      "operations": [
+        {
+          "bucket": "organization-documents",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "budget-request-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "liquidation-report-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "ypop-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "move-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        }
+      ],
+      "publicAssets": "read only"
+    },
+    {
+      "identity": "Unauthorized Admin JWT",
+      "visiblePrivateObjects": 0,
+      "operations": [
+        {
+          "bucket": "organization-documents",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "budget-request-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "liquidation-report-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "ypop-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        },
+        {
+          "bucket": "move-files",
+          "insert": {
+            "denied": "42501"
+          },
+          "update": {
+            "rows": 0
+          },
+          "delete": {
+            "rows": 0
+          }
+        }
+      ],
+      "publicAssets": "read only"
+    },
+    {
+      "identity": "Authorized Admin",
+      "signAllowed": true
+    },
+    {
+      "identity": "Correct limited Admin",
+      "signAllowed": true
+    },
+    {
+      "identity": "Wrong permission",
+      "signAllowed": false
+    },
+    {
+      "identity": "Expired",
+      "signAllowed": false
+    },
+    {
+      "identity": "Revoked",
+      "signAllowed": false
+    },
+    {
+      "identity": "Inactive",
+      "signAllowed": false
+    },
+    {
+      "identity": "Invalid",
+      "signAllowed": false
+    }
+  ]
+}

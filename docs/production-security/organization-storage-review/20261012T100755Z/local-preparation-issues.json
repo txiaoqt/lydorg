@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-10-12T10:43:27.874Z",
+  "finalFocusedTests": "PASS 73/73",
+  "preservedIntermediateIssues": [
+    {
+      "issue": "First draft omitted generic insert-only helper",
+      "resolution": "Caught in final source review; helper included and six focused tests added",
+      "evidence": "source-manifest.json; source-manifest-release.json"
+    },
+    {
+      "issue": "New parent-upload test initially contained a syntax error",
+      "resolution": "Fixed new fixture syntax and expected existing filename sanitization; assertions remain strict",
+      "evidence": "focused-vitest-final.json; typescript-comparison-final.json; focused-vitest-release.json"
+    },
+    {
+      "issue": "Local sealing helper forced core.autocrlf=false and exceeded captured diff output bound",
+      "resolution": "Retained repository line-ending configuration; normal git diff --check PASS",
+      "productionEffect": "None; local packaging/inspection only"
+    },
+    {
+      "issue": "Vercel source-tree GET returned 404",
+      "resolution": "BLOCKED for complete remote tree digest; provider Git identity and public asset identity verified",
+      "evidence": "provider-stop.json; provider-metadata.json"
+    }
+  ],
+  "noLiveWritesOrDeployment": true
+}

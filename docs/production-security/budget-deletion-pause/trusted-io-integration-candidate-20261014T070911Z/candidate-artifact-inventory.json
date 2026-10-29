@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "classification": "PRESERVED_INTERMEDIATE_NOT_AUTHORIZED",
+  "algorithm": "sha256",
+  "selfExcluded": true,
+  "files": [
+    {
+      "file": "focused-tests-asia-manila.tap",
+      "bytes": 10496,
+      "sha256": "8b1710c2b585176264b9836726a097c0a4c7665fbce2f259e4fa71fd2ae499f6"
+    },
+    {
+      "file": "focused-tests-utc.tap",
+      "bytes": 10498,
+      "sha256": "1709811ef467191f8ebee2d3b5d59391c095cf1c4464c1d48c6b23e8ae89d9c4"
+    },
+    {
+      "file": "integration-engine.mjs",
+      "bytes": 15547,
+      "sha256": "e45335da01b2e41d77d130abd5b2b5b28463f6210e2866c2cf402a3810b5e1ab"
+    },
+    {
+      "file": "intermediate-note.md",
+      "bytes": 828,
+      "sha256": "ffef18468da74e7b5b3c0daeef430cade891d77fd2f7e3322a9a4f3aed8a81be"
+    },
+    {
+      "file": "trusted-io-integration.mjs",
+      "bytes": 1004,
+      "sha256": "3cf14f82c5e393b340758abc090c8e74db10869253696fa73126d72f08b3f19c"
+    },
+    {
+      "file": "trusted-io-integration.test.mjs",
+      "bytes": 20971,
+      "sha256": "16de42977a1cb579d84b597dd045c6c0f86097b7eb5a320c0cfea6d355b75b2d"
+    }
+  ]
+}

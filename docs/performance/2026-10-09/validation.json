@@ -1,0 +1,62 @@
+{
+  "regression": {
+    "before": {
+      "total": 218,
+      "passed": 209,
+      "failed": 9
+    },
+    "after": {
+      "total": 225,
+      "passed": 216,
+      "failed": 9
+    },
+    "baselineFailures": [
+      "Admin Lifecycle Actions + User Status Synchronization Verification 1. BUDGET REQUEST FULL LIFECYCLE & USER SYNCHRONIZATION renders admin StatusPill correctly across all budget lifecycle stages",
+      "scoped renewal Realtime subscriptions filters budget status to the organization and refreshes only the open file detail for file events",
+      "scoped renewal Realtime subscriptions coalesces a parent and child-file event into one scoped refresh",
+      "scoped renewal Realtime subscriptions refreshes only liquidation detail metadata for an open file event",
+      "scoped renewal Realtime subscriptions refreshes only the selected YPOP semester when a city-led status changes",
+      "scoped renewal Realtime subscriptions refreshes only the selected Org-led semester for its organization",
+      "A4 Portrait orientation and width geometry across all configs configures all report configs for portrait with width <= 535.28 pt",
+      "Section 35 Reporting & YORP Registry Export System B. Master YORP Registry Export (13 Columns) contains all 13 official master columns",
+      "Section 35 Reporting & YORP Registry Export System B. Master YORP Registry Export (13 Columns) satisfies A4 portrait total width <= 535.28 pt constraint"
+    ],
+    "newFailures": [],
+    "resolvedFailures": []
+  },
+  "workflows": {
+    "before": {
+      "total": 313,
+      "passed": 312,
+      "failed": 1
+    },
+    "after": {
+      "total": 313,
+      "passed": 313,
+      "failed": 0
+    },
+    "baselineFailures": [
+      "YPOP Reliability Fixes: Persistence, Synchronization, and State Integrity 5. RPC Overload Ambiguity Resolution Contract verifies the corrective migration defines exact DROP and canonical CREATE signatures"
+    ],
+    "newFailures": [],
+    "resolvedFailures": [],
+    "archiveArtifact": {
+      "cause": "HEAD archive migration SQL CRLF versus working checkout LF; literal newline source assertion",
+      "rerun": {
+        "passed": 7,
+        "failed": 0
+      },
+      "normalization": "Only temporary HEAD snapshot SQL line endings; applied migration file unchanged"
+    },
+    "comparableBaseline": {
+      "total": 313,
+      "passed": 313,
+      "failed": 0
+    }
+  },
+  "publicSettingsAndRouting": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0
+  }
+}

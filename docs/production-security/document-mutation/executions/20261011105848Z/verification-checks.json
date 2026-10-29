@@ -1,0 +1,28 @@
+{
+  "projectAndConnection": true,
+  "exactAuthorizedArtifact": true,
+  "immediatePreflight": true,
+  "successfulSingleTransaction": true,
+  "ninePatchFunctionHashes": true,
+  "nineFunctionPrivileges": true,
+  "threeNewTriggers": true,
+  "fourContainmentTriggers": true,
+  "unchangedContainmentFunctions": true,
+  "disabledTestRpcs": true,
+  "environmentFalse": true,
+  "twentySixUnchangedEntries": true,
+  "allUnrelatedFunctions": true,
+  "allRlsPolicies": true,
+  "storagePolicyHash": true,
+  "existingTriggers": true,
+  "tableStructuresAndPermissions": true,
+  "defaultPrivileges": true,
+  "existingSchemaGrants": true,
+  "adminReviewAclUnchanged": true,
+  "ownerRpcPrivileges": true,
+  "privateSchemaApiAccessDenied": true,
+  "newGuardApiExecuteDenied": true,
+  "migrationHistoryUnchanged": true,
+  "protectedDataPreserved": true
+}
+

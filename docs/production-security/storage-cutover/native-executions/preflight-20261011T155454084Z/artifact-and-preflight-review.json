@@ -1,0 +1,14 @@
+{
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "sqlBytes": 47407,
+  "runnerBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+  "baselineSha256": "60a25f959aa2e45ab384cb41702f5eb13b93bdfe9ef71049b99eeceb5bde5d9a",
+  "all57ProtectedInventoriesMatched": true,
+  "controlPlaneVerified": true,
+  "caOfficialSourceMatched": true,
+  "secretEnvironmentGitIgnoredAndUntracked": true,
+  "secretEnvironmentAclRestricted": true,
+  "operationStateDirectoryAclHardened": true,
+  "installationAttempted": false,
+  "windowConfirmationPending": true
+}

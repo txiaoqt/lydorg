@@ -1,0 +1,29 @@
+{
+  "capturedAt": "2026-10-12T06:00:44.651Z",
+  "deploymentId": "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS",
+  "status": "ERROR",
+  "eventsRead": 37,
+  "eventsLimit": 1000,
+  "rawLogsPersisted": false,
+  "eventsSha256": "14dfcf9341e00f413499274bc2c44b386072a228c64313bca1afc14afc364d33",
+  "npmCiInvoked": true,
+  "npmInstallCompleted": true,
+  "installedPackageCount": 675,
+  "installDurationReported": "21s",
+  "wrapperInvoked": true,
+  "wrapperPassObserved": false,
+  "failureCodes": [
+    "UNREVIEWED_PUBLIC_VARIABLE"
+  ],
+  "nodeMajor24Selected": true,
+  "nodeMajorEvidence": "Provider projectSettings nodeVersion=24.x; reviewed wrapper checks major 24 before the observed unknown-public-variable guard",
+  "actualNodePatchVersion": null,
+  "actualNpmVersion": null,
+  "viteCompletionObserved": false,
+  "pythonRuntimeEvidenceObserved": false,
+  "hostedAssetsVerification": "BLOCKED",
+  "apiGetOptions": "BLOCKED; not requested",
+  "externalSyncPostRequests": 0,
+  "privateFileRequests": 0,
+  "automaticRetries": 0
+}

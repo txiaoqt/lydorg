@@ -1,0 +1,146 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "startedAt": "2026-10-10T20:13:37.604Z",
+  "steps": [
+    {
+      "name": "Stopped without retry or cleanup",
+      "status": "BLOCKED",
+      "reason": "Sanitized operation failure"
+    }
+  ],
+  "http": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 865
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 151
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 414
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 406
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 404
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 414
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 137
+    }
+  ],
+  "stopReason": {
+    "reason": "Sanitized operation failure"
+  },
+  "incompleteOrStopped": true,
+  "finishedAt": "2026-10-10T20:13:41.665Z"
+}

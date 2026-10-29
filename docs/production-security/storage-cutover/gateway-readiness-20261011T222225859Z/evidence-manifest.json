@@ -1,0 +1,57 @@
+{
+  "preparedAt": "2026-10-11T22:36:57.074Z",
+  "scope": "Read-only production/staging gateway deployment preparation",
+  "deploymentPerformed": false,
+  "artifacts": [
+    {
+      "file": "control-plane-before.json",
+      "bytes": 6241,
+      "sha256": "fbb7fe95988a1fa941a3715ae7ecef7a868f1993967cdfb531dc2efc378709b0"
+    },
+    {
+      "file": "deployment-authorization-template.md",
+      "bytes": 3883,
+      "sha256": "17f7811c177af2e21759cdf92ea27fa93a764bb855addc85569983ade811d254"
+    },
+    {
+      "file": "final-control-plane-preservation.json",
+      "bytes": 5442,
+      "sha256": "7d178570ffb2ad744070d294e1c8bd6a9bcafe81ed64d10ac53d36600403bece"
+    },
+    {
+      "file": "gateway-dependencies-readonly.sql",
+      "bytes": 1294,
+      "sha256": "dd395255b71e8579b86d8c0d0b94f6898dde5408e2e77ef37c72c1dffcbf115c"
+    },
+    {
+      "file": "local-quality-checks.json",
+      "bytes": 6698,
+      "sha256": "f2dd2ef7426e58b4dcc88d2f2bddcc08327b621713d2d5b5b12943bc9ca7ee36"
+    },
+    {
+      "file": "production-foundation-compatibility.json",
+      "bytes": 29668,
+      "sha256": "f6756030ffe9810ce9a860780c9d48ce7bf56d716aabda165a700472d337ddc7"
+    },
+    {
+      "file": "readiness-report.md",
+      "bytes": 14792,
+      "sha256": "67e71b860c13676a40a55c19a9981042fb1cecfca729b08321ea320ffdf2b468"
+    },
+    {
+      "file": "reviewed-deployment-payload.json",
+      "bytes": 6048,
+      "sha256": "3fe07c6f768703c23a4ad2fe36884fb9832c23826ae6712b159f189ffcb129b0"
+    },
+    {
+      "file": "source-comparison.json",
+      "bytes": 2364,
+      "sha256": "92f3a65d4f7b31864d34a75623ec6d7b6cefd033ee90f34c0c9f5c3ffe23785b"
+    },
+    {
+      "file": "staging-deployed-source.json",
+      "bytes": 6463,
+      "sha256": "4a073f1bb348db5665a7c1148a64f280f4305cf95b318ef1da7e881b2ffada6b"
+    }
+  ]
+}

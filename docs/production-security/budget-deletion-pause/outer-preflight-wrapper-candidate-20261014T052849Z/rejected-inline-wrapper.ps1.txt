@@ -1,0 +1,15 @@
+$ErrorActionPreference='Stop'
+$daPinnedNode='C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\.agent\admin-storage-vercel-20261012T035933Z\toolchain\extracted\node-v24.21.0-win-x64\node.exe'
+$daAgeCheck=@'
+import {readFile} from 'node:fs/promises';import {createHash} from 'node:crypto';
+try{const now=Date.now();if(now<Date.parse('2026-10-14T05:00:00Z')||now>Date.parse('2026-10-14T06:00:00Z'))throw Error('APPROVAL_EXPIRED');const b=await readFile('C:/Users/Christopher x Angel/.ytrace-production-budget-deletion-pause/control-plane-proof.json');if(createHash('sha256').update(b).digest('hex')!=='51ca11fbf4b38e4f6b42b30c02d29789a0365601976ce681502ed47c4d788f30')throw Error('FRESH_PROOF_HASH_MISMATCH');const p=JSON.parse(b.toString('utf8'));const age=now-Date.parse(p.verifiedAt);if(age<0||age>300000)throw Error('CONTROL_PLANE_PROOF_EXPIRED');console.log(JSON.stringify({stage:'PRELAUNCH_FRESHNESS',status:'PASS',proofAgeSeconds:age/1000,checkedAt:new Date(now).toISOString()}));b.fill(0)}catch(e){console.log(JSON.stringify({status:'BLOCKED',code:/^[A-Z0-9_]+$/.test(e.message)?e.message:'PRELAUNCH_CHECK_FAILED'}));process.exitCode=2}
+'@
+& $daPinnedNode --input-type=module -e $daAgeCheck
+if($LASTEXITCODE -ne 0){exit 2}
+& $daPinnedNode --env-file=.env.foundation.local 'docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T161403Z/native-budget-pause-runner.mjs' --preflight
+$daPreflightExit=$LASTEXITCODE
+$daCompletion=@'
+const now=Date.now();const age=now-Date.parse('2026-10-14T05:13:09.541Z');console.log(JSON.stringify({stage:'COMPLETION_FRESHNESS',completedAt:new Date(now).toISOString(),proofAgeSeconds:age/1000,withinFiveMinutes:age>=0&&age<=300000,withinApproval:now>=Date.parse('2026-10-14T05:00:00Z')&&now<=Date.parse('2026-10-14T06:00:00Z')}));
+'@
+& $daPinnedNode --input-type=module -e $daCompletion
+exit $daPreflightExit

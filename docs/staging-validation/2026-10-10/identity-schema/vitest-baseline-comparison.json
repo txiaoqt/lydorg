@@ -1,0 +1,1080 @@
+{
+  "current": {
+    "total": 2361,
+    "passed": 2211,
+    "failed": 150,
+    "files": 205,
+    "collectionErrors": 0
+  },
+  "previous": {
+    "total": 2361,
+    "passed": 2211,
+    "failed": 150,
+    "files": 205,
+    "collectionErrors": 0
+  },
+  "savedHead": {
+    "total": 2290,
+    "passed": 2126,
+    "failed": 164,
+    "files": 194,
+    "collectionErrors": 0
+  },
+  "baselineCommit": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "baselineNote": "Saved baseline evidence; HEAD was not rerun in this task. Matching assertion identity establishes previous occurrence, not harmlessness.",
+  "matchedPreviousFailures": 150,
+  "matchedHeadFailures": 150,
+  "newlyFailingAssertions": [],
+  "failures": [
+    {
+      "file": "admin/admin-review-decision-help.test.tsx",
+      "name": "Review Decision Help & Status Label UI Tests LiquidationStatusLabel renders 'Approved — Onsite Required' with whitespace-nowrap",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 — BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 1: Submitted + unreviewed files renders document review controls and no retired duplicate buttons",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 — BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 2: Submitted status provides unified document review decision surface",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 — BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 3: approved_for_ftf_green shows Onsite Required, post-approval lifecycle dropdown and confirm button",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 — BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 4: hard_copy_submitted shows Hardcopy Submitted, lifecycle dropdown and confirm button",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 — BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 5: budget_released renders clean terminal banner with no dropdowns or confirm buttons",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 — BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 6: completed legacy records render terminal state only",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 — BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 7: Single action surface — Exactly one Review Decision heading and no duplicate buttons",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 8: pending_activity_completion renders informational state and Review Decision is NOT blank",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 9: pending_activity_completion with goSignalAt must NOT display false Approved banner",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 10: not_started renders informational state and Review Decision header is omitted when 0 files",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 11: draft renders informational state and Review Decision header is omitted when 0 files",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 12: submitted renders unified Review Decision panel with Confirm Document Decision",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 13: approved_for_ftf_green renders unified Review Decision with Approved — Onsite Required and Liquidated button",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 14: hard_copy_submitted renders unified Review Decision with Liquidated button",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 15: completed_liquidated renders terminal state and no invalid actions",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 — LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 16: overdue renders Review Decision panel with zero manual overdue action buttons",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 — REGRESSION TEST SUITE (TESTS A - I) TEST A & B: Child + Parent Persistence & Refresh Persistence",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 — REGRESSION TEST SUITE (TESTS A - I) TEST C: Failed Parent Mutation — No false approval, surfaces meaningful error, restores actual DB state",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 — REGRESSION TEST SUITE (TESTS A - I) TEST E: Liquidation Trigger Safety — Liquidation update succeeds and persists without actor FK violation",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 — REGRESSION TEST SUITE (TESTS A - I) TEST F: Multi-File Approval — Approving 1 of 2 files keeps parent pending; approving all advances parent",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 21: Mouse wheel event on focused Approved Amount blurs and does not modify numeric value",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 22: Background refresh does NOT overwrite dirty Approved Amount, Decision, or Remarks",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 23: Submission sends the exact locally edited Approved Amount 122130.99",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 24: Opening Budget Review does NOT schedule review-specific periodic refresh timers",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 25: Selection Gating — Zero documents selected displays 'No documents selected', disables Decision and Confirm button",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 26: Selection Gating — Selecting document updates count, enables Decision and Confirm button, deselecting disables them again",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 — WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 27: Selection Gating — Needs Revision requires document selection and remarks before enabling confirmation",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-settings.test.tsx",
+      "name": "Admin System Settings - Complete Authoritative Inventory (66 Settings) contains exactly 66 registered system setting definitions",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-settings.test.tsx",
+      "name": "Admin System Settings - Complete Authoritative Inventory (66 Settings) verifies all categories have expected counts",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-ypop-request-revision-decision.test.tsx",
+      "name": "YPOP Admin Review Decision — Single-Item Request Revision & Authoritative Remark Invariant TEST 1 & 7: Single Request Revision with valid remark shows actual remark in confirmation and submits successfully",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-ypop-request-revision-decision.test.tsx",
+      "name": "YPOP Admin Review Decision — Single-Item Request Revision & Authoritative Remark Invariant TEST 2 & 3: Missing or whitespace remark keeps Confirm disabled",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-ypop-request-revision-decision.test.tsx",
+      "name": "YPOP Admin Review Decision — Single-Item Request Revision & Authoritative Remark Invariant TEST 4 & 5: When multiple items are selected, Request Revision is disabled in dropdown",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-ypop-request-revision-decision.test.tsx",
+      "name": "YPOP Admin Review Decision — Single-Item Request Revision & Authoritative Remark Invariant TEST 6: Select All and other checkboxes are disabled when Request Revision is the active decision",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-ypop-request-revision-decision.test.tsx",
+      "name": "YPOP Admin Review Decision — Single-Item Request Revision & Authoritative Remark Invariant TEST 13: Approve decision continues to support multi-select",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/admin-ypop-request-revision-decision.test.tsx",
+      "name": "YPOP Admin Review Decision — Single-Item Request Revision & Authoritative Remark Invariant TEST 14: YPOP Review Decision help icon opens Review Rules popover and closes on toggle",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/liquidation-unified-lifecycle.test.tsx",
+      "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 1. pending_activity_completion with 0 files renders ONLY informational state (NO Review Decision header, NO dropdown, NO buttons)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/liquidation-unified-lifecycle.test.tsx",
+      "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 2. Organization file submission renders single Review Decision panel with Confirm Document Decision and NO legacy buttons",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/liquidation-unified-lifecycle.test.tsx",
+      "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 3. Multi-file safety: Approving 1 of 2 files keeps parent pending; approving both advances parent to approved_for_ftf_green (Onsite Required)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/liquidation-unified-lifecycle.test.tsx",
+      "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 4. approved_for_ftf_green renders dedicated Approved — Onsite Required panel and button Liquidated",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/liquidation-unified-lifecycle.test.tsx",
+      "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 5. completed_liquidated renders clean terminal state with zero buttons or dropdowns",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/yorp-sample-data-seeding-panel.test.tsx",
+      "name": "YorpSampleDataSeedingPanel toggles the dataset preview table with search and filters",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "pages/SignIn.test.tsx",
+      "name": "SignIn Component Organization Sign In (Modern SaaS UI) renders organization sign-in form elements, Google button, and slideshow",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "pages/SignIn.test.tsx",
+      "name": "SignIn Component Organization Sign In (Modern SaaS UI) handles organization sign-in submission with valid credentials",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "pages/SignIn.test.tsx",
+      "name": "SignIn Component Combined /signin Route Access Type Switching and Live Viewport Adaptation renders Admin sign-in when switching to Administrator mode at 1280px",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/admin-inactivity.test.ts",
+      "name": "Admin Session Inactivity Timeout Mechanics records user activity, throttles rapid writes, and extends session expiration",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/admin-inactivity.test.ts",
+      "name": "Admin Session Inactivity Timeout Mechanics detects continuous inactivity and expires session when timeout threshold is exceeded",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/admin-pdf-sample-generation.test.ts",
+      "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for YORP Registry with official letterhead",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/admin-pdf-sample-generation.test.ts",
+      "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Budget Requests with official letterhead",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/admin-pdf-sample-generation.test.ts",
+      "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Budget Monitoring with official letterhead",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/admin-pdf-sample-generation.test.ts",
+      "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Allocation by Barangay with official letterhead",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/admin-pdf-sample-generation.test.ts",
+      "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Activity Logs with official letterhead",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 1. Default view: filters to Current Fiscal Year (FY 2026)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 5. Purpose / Category filter: Dynamic and narrows results exclusively to matching category",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 6. Budget Status filter: Awaiting Release vs Budget Released distinct behavior",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 7. Major Classification filter: filters by organization classification",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 8. Location filters: District and Barangay filtering",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 9. Release Status filter: Not Released and Fully Released",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 10. Liquidation Status filter: Fully Liquidated vs Not Liquidated",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 11. Sorting options: Amount Highest to Lowest and Lowest to Highest",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 12. Organization funding table synchronization",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/dynamic-document-submission-workflow.test.tsx",
+      "name": "Dynamic Document Submission & Admin Template Workflow (19 Requirements) 15. Existing renewal workflow still works and returns renewal required document types",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3.test.tsx",
+      "name": "Phase 3A & Phase 3B User Portal Renewal State Integration Tests Requirement 17: desktop layout renders UserPortalRedesignView and UserPortalRenewalWorkspaceView",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3.test.tsx",
+      "name": "Phase 3A & Phase 3B User Portal Renewal State Integration Tests Requirement 20: existing dashboard functionality remains intact",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 3. draft replacement calls standard draft upload/update path, NOT revision replacement RPC",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 4. needs_revision flagged file → Replace Document uses authoritative replacement RPC",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 5. approved file → replacement blocked, displays 'Locked • Document Approved'",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 7. under_review file → replacement blocked during admin review",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 8. renewal-level rejected → all file mutations blocked (terminal)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 11. expired workspace displays accreditation expired warning",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 12. expired workspace communicates privileges requiring active accreditation are paused",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 13. expired workspace explicitly communicates pending budget releases are paused",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 14. expired workspace explicitly communicates already-released funds remain valid and subject to liquidation/accounting",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 15. expired workspace communicates renewal remains available through Day 180 cutoff date",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 16. expired workspace does not claim already-released disbursements are paused",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests WORKSPACE: Renewal Packet Loading & Requirements Display 1. renewal draft loads correctly with cycle, organization name, and status badge",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests WORKSPACE: Renewal Packet Loading & Requirements Display 3. document completion count is correct (e.g. 0 of 6 uploaded)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests DRAFT: Upload Actions & Validation 7. successful upload refreshes packet state and updates completion count",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests DRAFT: Upload Actions & Validation 8. upload errors are handled gracefully without crashing",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests DRAFT: Upload Actions & Validation 9. duplicate upload action is prevented while an upload is in progress",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests PREVIEW: Reusing Canonical PDF Viewer 10. existing PDF viewer is reused: calls openPreview with fileUrl and title",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 12. submit disabled when required documents are missing (< 6 uploaded)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 13. submit enabled when packet is complete (all 6 uploaded)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 14. confirmation modal appears upon clicking submit",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 15. successful submit transitions to submitted via userSubmitRenewalInSupabase",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 16. submitted state becomes read-only with review banner",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 17. submitted is read-only",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 18. under_review is read-only with active admin review banner",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 19. needs_revision surfaces admin remarks in alert banner and on flagged cards",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 20. flagged documents show 'Replace Document' action",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 21. replacement works for needs_revision file: triggers replaceRenewalDocumentFileInSupabase",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 22. replacement works for rejected file where backend permits (rejected_red)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 23. approved file cannot be replaced: displays 'Locked • Document Approved'",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 24. replacement refreshes current file in the view",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESUBMISSION: Resubmission Flow After Correction 26. resubmit unavailable while unresolved flagged files remain",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESUBMISSION: Resubmission Flow After Correction 27. resubmit calls authoritative RPC userResubmitRenewalInSupabase when all flagged files resolved",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESUBMISSION: Resubmission Flow After Correction 28. successful resubmit becomes read-only with 'Resubmitted Renewal Under Review' banner",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REJECTED: Terminal Rejection Guard 29. rejected renewal has no resubmit action",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REJECTED: Terminal Rejection Guard 31. rejected renewal displays office-contact guidance",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests EXPIRY: Term Expiration & Late Window Handling 33. expired organization remains visually expired",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests EXPIRY: Term Expiration & Late Window Handling 34. pending renewal does not restore accreditation: informs user privileges are paused",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 36. stale renewal state is handled safely: RPC error caught without state corruption",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 37. RPC errors do not fake state transitions: resubmit error keeps revision status",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 38. failed network fetch does not falsely mark accreditation expired",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 39. duplicate submission clicks are prevented while request is in flight",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESPONSIVE: Desktop, Tablet & Phone Structural Usability 40. desktop workspace remains stable with max-w-[1440px] container and header hierarchy",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESPONSIVE: Desktop, Tablet & Phone Structural Usability 41. tablet layout remains usable with responsive flex and grid structures",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESPONSIVE: Desktop, Tablet & Phone Structural Usability 42. phone layout has no horizontal overflow: includes break-words and responsive padding",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REGRESSION: Document Submission, PDF Viewer & User Portal Integrity 45. existing User Portal navigation and route map integrity preserved",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3d.test.tsx",
+      "name": "Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests 2. RENEWALS QUEUE TABLE (Tests 9-18) 13. RenewalStatusPill displays correct status color",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3d.test.tsx",
+      "name": "Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests 2. RENEWALS QUEUE TABLE (Tests 9-18) 16. Status filter filters by renewal status",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3e.test.ts",
+      "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4. Exactly 6 renewal documents are required in the renewal packet",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/organization-renewal-phase3e.test.ts",
+      "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4b. Reconciles canonical document identifiers with prompt shorthand aliases",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/public-budget-transparency.test.tsx",
+      "name": "Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12) TEST PUB 7 — Public Route /budget-transparency renders successfully with civic header",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/section35-artifact-generation.test.ts",
+      "name": "Section 35 Artifact Generation & Verification generates Master YORP Registry Export (PDF & CSV) and saves to scratch",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/section35-artifact-generation.test.ts",
+      "name": "Section 35 Artifact Generation & Verification Template Visual Regression & Verification Checks ensures Master YORP Registry export uses the official A4 template layout",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/yorp-sample-dataset.test.ts",
+      "name": "YORP Sample Dataset Verification maintains realistic budget distribution without marking all liquidated",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "lib/ytrace-policy.test.ts",
+      "name": "Y-TRACE policy content does not treat the old placeholder row as publishable legal text",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/AdminFilterLayoutStability.test.tsx",
+      "name": "Admin Filter & Layout Stability Across All 5 Pages BudgetRequestsTable renders rows with status label without runtime error",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/AdminReportingPeriodSelector.test.tsx",
+      "name": "report period export controls keeps monitoring custom dates and All Year working",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/BudgetMonitoringOverview.test.tsx",
+      "name": "BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut Visibility Page controls keep the fiscal period separate from panel filters",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 1: History button renders with aria-label='Decision history'",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 2 & 3: Clicking History opens popover containing 'Recent Activity'",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 4 & 5: Correct organization activity displayed, other org activity excluded",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 6 & 7: YPOP event participation and organization activity appear",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 8: Activity is sorted newest first",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 9: Activities are grouped by day (Today, Yesterday, d MMM yyyy, fallback Recent)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 10: Empty organization shows 'No activity recorded yet.'",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 11 & 12: More than 4 entries show 'Load older activity' and clicking it expands by 4",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 13: Clicking outside closes the popover",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 14: Escape closes the popover",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 15 & 16: Changing selectedYpopId closes popover and resets visible count to 4",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "name": "YPOP Validation Recent Activity / Decision History Popover TEST 17: No duplicate activity entries appear when an action exists in both state.activityLogs and YPOP revisionHistory",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/components/YpopValidationSummaryAndFilter.test.tsx",
+      "name": "YPOP Validation — Summary Cards, Qualification Model & Filter Suite TEST 1: Admin YPOP Validation summary cards contain exactly Pending Evaluation, Qualified, and Not Qualified, and NOT Submitted",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/pages/YorpRegistry.accreditation.test.tsx",
+      "name": "YORP registry accreditation dates uses the seeded 2023 term and finds it under Expiring Soon despite 2026 verification",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/pages/YorpRegistry.quarterly.test.tsx",
+      "name": "raw YORP quarterly exports intersects quarter with semester and all registry filters using accreditation date",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/pages/YorpRegistry.test.tsx",
+      "name": "YorpRegistry Page Header Actions & Semester Filtering renders the Semester dropdown with default 'All Semesters' inline with Export and Reports",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "admin/pages/YorpRegistry.test.tsx",
+      "name": "YorpRegistry Page Header Actions & Semester Filtering allows opening semester dropdown and renders semester options",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/UserPortalRedesignView.test.tsx",
+      "name": "UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality renders 4 overview health metric cards with keyboard accessibility and navigation",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/UserPortalResponsiveWorkspace.test.tsx",
+      "name": "PortalAttachedDocumentDrawer Responsive Behavior renders revision remarks and revision actions when status is needs_revision",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/reports/YorpQuarterlyReportDialog.regression.test.tsx",
+      "name": "official Section 35 workflow stays separate retains default year and quarter, both report types, and official year/quarter RPC arguments",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "name": "YPOP Responsive Drawer/Modal Standardization C. Organization-Led PPA Details (Read-Only) renders Centered Modal Dialog on Tablet (768px)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "name": "YPOP Responsive Drawer/Modal Standardization C. Organization-Led PPA Details (Read-Only) renders Centered Modal Dialog on Phone (375px)",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 320px",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 375px",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 390px",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 430px",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopTransientDuplicateDraftPrevention.test.tsx",
+      "name": "Transient Duplicate Draft PPA Row Prevention Suite TEST B — Direct Submit: does NOT dispatch premature Draft to store, only dispatches submitted activity",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopTransientDuplicateDraftPrevention.test.tsx",
+      "name": "Transient Duplicate Draft PPA Row Prevention Suite TEST C — Existing Draft Submission: opens draft and submits, transitioning to Pending Review without duplicate",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    },
+    {
+      "file": "components/portal/ypop/YpopTransientDuplicateDraftPrevention.test.tsx",
+      "name": "Transient Duplicate Draft PPA Row Prevention Suite TEST F — Refresh / Sync: mergeRemoteState maintains single authoritative submitted activity",
+      "status": "failed",
+      "inPreviousFailures": true,
+      "inSavedHeadFailures": true
+    }
+  ]
+}

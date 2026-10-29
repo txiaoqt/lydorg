@@ -1,0 +1,17 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "startedAt": "2026-10-10T20:08:32.089Z",
+  "steps": [
+    {
+      "name": "Stopped without retry or cleanup",
+      "status": "BLOCKED",
+      "reason": "fetch failed"
+    }
+  ],
+  "http": [],
+  "stopReason": {
+    "reason": "fetch failed"
+  },
+  "incompleteOrStopped": true,
+  "finishedAt": "2026-10-10T20:08:32.190Z"
+}

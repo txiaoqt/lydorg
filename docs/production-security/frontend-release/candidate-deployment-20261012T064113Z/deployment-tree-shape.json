@@ -1,0 +1,100 @@
+{
+  "capturedAt": "2026-10-12T06:53:48.935Z",
+  "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+  "readOnly": true,
+  "earlierLocalInspection": "HOSTED_SOURCE_ROOT_UNRECOGNIZED; no deployment retry or application modification",
+  "shape": "array",
+  "keys": [],
+  "treeSha256": "5a4d5839600cfac35ccacd0c4652d4e6b714aff8a6dbb0b72b8b4639a4d4a65d",
+  "roots": [
+    {
+      "name": "src",
+      "type": "directory",
+      "children": 21,
+      "childMetadata": [
+        {
+          "name": ".gitattributes",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "api",
+          "type": "directory",
+          "children": 1
+        },
+        {
+          "name": "components.json",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "eslint.config.js",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "index.html",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "package-lock.json",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "package.json",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "postcss.config.js",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "public",
+          "type": "directory",
+          "children": 21
+        },
+        {
+          "name": "requirements.txt",
+          "type": "file",
+          "children": null
+        },
+        {
+          "name": "scripts",
+          "type": "directory",
+          "children": 4
+        },
+        {
+          "name": "src",
+          "type": "directory",
+          "children": 12
+        },
+        {
+          "name": "supabase",
+          "type": "directory",
+          "children": 1
+        },
+        {
+          "name": "tailwind.config.ts",
+          "type": "file",
+          "children": null
+        }
+      ]
+    },
+    {
+      "name": "out",
+      "type": "directory",
+      "children": 1,
+      "childMetadata": [
+        {
+          "name": "api",
+          "type": "directory",
+          "children": 1
+        }
+      ]
+    }
+  ]
+}

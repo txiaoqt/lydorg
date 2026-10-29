@@ -1,0 +1,10 @@
+BEGIN READ ONLY;
+SET LOCAL statement_timeout='20s';
+SELECT jsonb_build_object('captured_at',clock_timestamp(),'database',current_database(),'current_user',current_user,'session_user',session_user,'environment_guard',public.is_development_or_test_environment(),
+'foundation_namespace_count',(SELECT count(*) FROM pg_namespace WHERE nspname='ytrace_storage_private'),
+'foundation_rpc_count',(SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE (n.nspname='ytrace_storage_private') OR (n.nspname='public' AND p.proname='admin_authorize_storage_operation')),
+'foundation_trigger_count',(SELECT count(*) FROM pg_trigger WHERE tgname IN ('ytrace_remember_template_asset','ytrace_remember_news_asset','ytrace_budget_cleanup','ytrace_liquidation_cleanup','ytrace_ypop_cleanup','ytrace_event_cleanup','ytrace_activity_cleanup','ytrace_move_cleanup')),
+'other_foundation_transactions',(SELECT coalesce(jsonb_agg(jsonb_build_object('pid',pid,'state',state,'transaction_started',xact_start,'query_started',query_start,'wait_event_type',wait_event_type,'wait_event',wait_event)), '[]'::jsonb) FROM pg_stat_activity WHERE pid<>pg_backend_pid() AND datid=(SELECT oid FROM pg_database WHERE datname=current_database()) AND (state='active' OR state LIKE 'idle in transaction%') AND (position('Standalone foundation ONLY' in query)>0 OR position('DO $storage_preflight$' in query)>0 OR position('CREATE SCHEMA ytrace_storage_private' in query)>0)),
+'foundation_locks',(SELECT coalesce(jsonb_agg(jsonb_build_object('mode',l.mode,'granted',l.granted,'relation',c.relname)), '[]'::jsonb) FROM pg_locks l JOIN pg_class c ON c.oid=l.relation JOIN pg_namespace n ON n.oid=c.relnamespace WHERE l.pid<>pg_backend_pid() AND n.nspname='public' AND c.relname IN ('required_document_types','news_releases','budget_requests','liquidation_reports','ypop_entries','ypop_event_participations','ypop_org_activities','move_applications') AND l.mode IN ('ShareRowExclusiveLock','AccessExclusiveLock','ExclusiveLock'))
+) AS recovery_state;
+COMMIT;

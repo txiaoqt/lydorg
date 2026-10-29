@@ -1,0 +1,74 @@
+{
+  "format": "YTRACE_OFFLINE_F1_ARTIFACT_INVENTORY_V1",
+  "classification": "NON-RUNNABLE — NOT AUTHORIZED",
+  "bundleSha256": "3f29f3740e67de4bb0b8b407421fb12a8a80fcda083e96f79e6c54bdc37181c7",
+  "manifestSha256": "de9c9591433d6f687d0db6985061d98065fc164799a95b43b9c060d381c988be",
+  "selfExcluded": true,
+  "files": [
+    {
+      "file": "disposable-ledger.mjs",
+      "bytes": 5062,
+      "sha256": "2e1c0d442cc46ea026e12bfc29ac7dcc8ec1c0546fc9a5ff1bf70e08d8e0d63c"
+    },
+    {
+      "file": "fixture-harness.mjs",
+      "bytes": 4745,
+      "sha256": "1db68e1dd61b8eec26e65bed2b6fa4d68e3e10a040d62e1da40c1690409aa134"
+    },
+    {
+      "file": "focused-tests-asia-manila.tap",
+      "bytes": 9568,
+      "sha256": "1308e2ee0e2875e72aeb4ef79599932024387e22d201ceb82090b1d6a67cbbee"
+    },
+    {
+      "file": "focused-tests-initial-temp-blocked-asia-manila.tap",
+      "bytes": 54868,
+      "sha256": "129c98bf5b7db9f761d469fc50b1de0c568a341a3fca5500d8c09998cd972019"
+    },
+    {
+      "file": "focused-tests-initial-temp-blocked-utc.tap",
+      "bytes": 54868,
+      "sha256": "c318afe459c1c959e6b726cab330e8ad4aad9f74fc565e90fc96d1a1ed453b6a"
+    },
+    {
+      "file": "focused-tests-utc.tap",
+      "bytes": 9570,
+      "sha256": "78e69c51c6d53a3538803d91b0c26bdadc20493e331cc5f477eae9b44f9a7a37"
+    },
+    {
+      "file": "prototype-contract.md",
+      "bytes": 7095,
+      "sha256": "3bd010713be04c672562b4a65f94c37e306044d64812d3cf7f254b5966fd8dbd"
+    },
+    {
+      "file": "readme.md",
+      "bytes": 3541,
+      "sha256": "a82cf3c8ce4a941627024a60607a35c725cb3541d790b9343b905ded05cc01e5"
+    },
+    {
+      "file": "remediation-report.md",
+      "bytes": 13337,
+      "sha256": "ea11802996f61c4005ee1387bb8f6cc4b6e847bf9686f3bf8b1160feff7bbf1b"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 51359,
+      "sha256": "de9c9591433d6f687d0db6985061d98065fc164799a95b43b9c060d381c988be"
+    },
+    {
+      "file": "synthetic-child.mjs",
+      "bytes": 1410,
+      "sha256": "a098d179bb21c17a5d9b078f099ad4be3afabf9222b8820204f6d6ee0466cc03"
+    },
+    {
+      "file": "synthetic-f1-core.mjs",
+      "bytes": 3555,
+      "sha256": "e124bdc8a9774d5b2a2b0b87e25b8464a30907b743210c360fd844db1ca90f8e"
+    },
+    {
+      "file": "synthetic-f1.test.mjs",
+      "bytes": 12982,
+      "sha256": "8122cb542b5f127c3a69d576ea1b40a9548b30fbfd7d9aef374934f06d38f4c8"
+    }
+  ]
+}

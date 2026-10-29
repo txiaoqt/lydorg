@@ -1,0 +1,139 @@
+{
+  "verifiedAt": "2026-10-11T22:56:15.725Z",
+  "production": {
+    "id": "mqqaykksadotbrghbexz",
+    "ref": "mqqaykksadotbrghbexz",
+    "organization_id": "cpakjcbbswsvsyhuypei",
+    "organization_slug": "cpakjcbbswsvsyhuypei",
+    "name": "lydo-org-focused",
+    "region": "ap-southeast-2",
+    "status": "ACTIVE_HEALTHY",
+    "database": {
+      "host": "db.mqqaykksadotbrghbexz.supabase.co",
+      "version": "17.6.1.127",
+      "postgres_engine": "17",
+      "release_channel": "ga"
+    },
+    "created_at": "2026-06-04T16:41:02.244851Z"
+  },
+  "productionFunctions": [
+    {
+      "id": "dfcbb155-25d6-452b-a483-f9de5eea7218",
+      "slug": "delete-organization-account",
+      "name": "delete-organization-account",
+      "status": "ACTIVE",
+      "version": 19,
+      "created_at": 1782898756882,
+      "updated_at": 1789887081222,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_dfcbb155-25d6-452b-a483-f9de5eea7218_14/source/supabase/functions/delete-organization-account/index.ts",
+      "ezbr_sha256": "389ecf3b690703342d32db6873904dea3e6109489ec5db9588dfe7bde608022a"
+    },
+    {
+      "id": "23e34274-1f83-45f1-8cdf-d4358a6cd5b5",
+      "slug": "admin-invite",
+      "name": "admin-invite",
+      "status": "ACTIVE",
+      "version": 10,
+      "created_at": 1787589488334,
+      "updated_at": 1789924934746,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_23e34274-1f83-45f1-8cdf-d4358a6cd5b5_5/source/supabase/functions/admin-invite/index.ts",
+      "ezbr_sha256": "d3a11f555d8dd7a006715d8965634804c6181805b75d2233105b4dba7c60981f"
+    },
+    {
+      "id": "f2bde504-508e-4bc8-ba84-4e20e7b64e02",
+      "slug": "send-activity-announcement",
+      "name": "send-activity-announcement",
+      "status": "ACTIVE",
+      "version": 11,
+      "created_at": 1789836824488,
+      "updated_at": 1790749744599,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_f2bde504-508e-4bc8-ba84-4e20e7b64e02_6/source/supabase/functions/send-activity-announcement/index.ts",
+      "ezbr_sha256": "5d68e940587228d39141594f8c7837888a738b9f63172bb3fa57b69502abf579"
+    },
+    {
+      "id": "cc5f638d-970d-4669-a70d-74c80de8700e",
+      "slug": "send-admin-notification",
+      "name": "send-admin-notification",
+      "status": "ACTIVE",
+      "version": 19,
+      "created_at": 1790299595439,
+      "updated_at": 1790749761210,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_cc5f638d-970d-4669-a70d-74c80de8700e_14/source/supabase/functions/send-admin-notification/index.ts",
+      "ezbr_sha256": "0ef6689c2a2eeb7cfc400599439c5ba28b6d78968424b222d671489012639f09"
+    },
+    {
+      "id": "2038f234-e0a4-48f6-89bb-1552879318ba",
+      "slug": "send-org-transactional-email",
+      "name": "send-org-transactional-email",
+      "status": "ACTIVE",
+      "version": 8,
+      "created_at": 1790344371389,
+      "updated_at": 1790749728730,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_2038f234-e0a4-48f6-89bb-1552879318ba_3/source/supabase/functions/send-org-transactional-email/index.ts",
+      "ezbr_sha256": "ff4783f3205942ef93e8f1c44435a13094b67fc1901a05c9d2332863b739c519"
+    },
+    {
+      "id": "7ee96def-ea17-4d77-a795-d7058496eae1",
+      "slug": "admin-seed-yorp-sample-dataset",
+      "name": "admin-seed-yorp-sample-dataset",
+      "status": "ACTIVE",
+      "version": 7,
+      "created_at": 1790744351101,
+      "updated_at": 1790744795139,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_7ee96def-ea17-4d77-a795-d7058496eae1_2/source/supabase/functions/admin-seed-yorp-sample-dataset/index.ts",
+      "ezbr_sha256": "86a3a0526cb66ecb3899b5b5a90b2d216294b2e30b33ec8d0b11a80ac584f92a"
+    },
+    {
+      "id": "2538cfd8-1cf8-4f52-830d-769c413c5449",
+      "slug": "delete-ypop-submissions",
+      "name": "delete-ypop-submissions",
+      "status": "ACTIVE",
+      "version": 6,
+      "created_at": 1790972031573,
+      "updated_at": 1790972031573,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_2538cfd8-1cf8-4f52-830d-769c413c5449_1/source/supabase/functions/delete-ypop-submissions/index.ts",
+      "ezbr_sha256": "00b30c022c9218cd2c210ddceec29aa3050efbf8a5db3930ae50bcdea488e146"
+    },
+    {
+      "id": "2c503e50-489f-48f2-a85f-ffcb1cb3fef2",
+      "slug": "admin-backup-control",
+      "name": "admin-backup-control",
+      "status": "ACTIVE",
+      "version": 4,
+      "created_at": 1791191291358,
+      "updated_at": 1791191291358,
+      "verify_jwt": false,
+      "import_map": false,
+      "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_2c503e50-489f-48f2-a85f-ffcb1cb3fef2_1/source/index.ts",
+      "ezbr_sha256": "5c921795b3a87923a4cfc3616b45ebbafd72e124254cf8a34d37fd1f31b0812f"
+    }
+  ],
+  "stagingFunction": {
+    "id": "bbb90eb9-2a83-407b-b0fc-5b539f8dbd69",
+    "slug": "admin-storage-access",
+    "name": "admin-storage-access",
+    "status": "ACTIVE",
+    "version": 1,
+    "created_at": 1791573098349,
+    "updated_at": 1791573098349,
+    "verify_jwt": false,
+    "import_map": false,
+    "entrypoint_path": "file:///tmp/user_fn_zroudsvpswqsjlyttkjf_bbb90eb9-2a83-407b-b0fc-5b539f8dbd69_1/source/index.ts",
+    "ezbr_sha256": "564d0b5ceab9a63e8b81a824382fe565f045f1f794d3d9120b2fb5e9dc67fc8e"
+  },
+  "lockHolderAlive": true
+}

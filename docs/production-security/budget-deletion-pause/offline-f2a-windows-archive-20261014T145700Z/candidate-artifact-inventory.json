@@ -1,0 +1,330 @@
+{
+  "format": "YTRACE_OFFLINE_F2A_COMPLETE_FILE_INVENTORY_V1",
+  "classification": "NON-RUNNABLE FOR PRODUCTION - NOT AUTHORIZED",
+  "bundleSha256": "d9b524028241677f1d332406a5bb8268002653769e1efedcbbcb3ab9e995159d",
+  "manifestSha256": "a3a0fbb4c9bcb48adbb0afdc376907a06372c4ed1a1f68e21c30e37a74cb8c05",
+  "selfExcluded": true,
+  "fixturesRetained": true,
+  "files": [
+    {
+      "file": "actual-tests.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "actual-tests.stdout.tap",
+      "bytes": 3290,
+      "sha256": "a696737a5de0de4e6e4dd615b15bbd8ce650061ab185a4a67c2d94f263ce64ad"
+    },
+    {
+      "file": "fixtures/session-01/content-change/source.bin",
+      "bytes": 37,
+      "sha256": "1b800667930bd02f81504b9d79c4dbb40efdbefb32ecece032dfb90079e9613e"
+    },
+    {
+      "file": "fixtures/session-01/crash-after-kernel/archive.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/directory-destination/archive.bin/sentinel.bin",
+      "bytes": 28,
+      "sha256": "1afdf495252249e2ca7e77b3f10e6efb58022cfa9dae4ebf7613e11598b5a901"
+    },
+    {
+      "file": "fixtures/session-01/directory-destination/source.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/directory-substitution-retained/source.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/directory-substitution/source.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/held-handles/archive.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/late-destination/archive.bin",
+      "bytes": 26,
+      "sha256": "11ec32153aad82bba57509f963f6a1dd0065883e6e3403f5d6a2a594ea44be53"
+    },
+    {
+      "file": "fixtures/session-01/late-destination/source.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/normal/archive.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/one-submission/archive.bin",
+      "bytes": 18,
+      "sha256": "4465dbd8ac14fbd26173bb69ffbbfea8d042a6040c24096b3e65fc3db6a64e38"
+    },
+    {
+      "file": "fixtures/session-01/one-submission/source.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/preexisting/archive.bin",
+      "bytes": 30,
+      "sha256": "ae00c4401828a9af22b6c1f224b3186e540350ee5d7b63b0694dd3faec51673b"
+    },
+    {
+      "file": "fixtures/session-01/preexisting/source.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/process-race/archive.bin",
+      "bytes": 19,
+      "sha256": "30be0bc76e4487e513d4672d207e68ce573e566ec8585baf89321f5f32d05135"
+    },
+    {
+      "file": "fixtures/session-01/process-race/source-b.bin",
+      "bytes": 19,
+      "sha256": "79f57571c715dedd57f40f52f089db53acfcb6a6260f53b669812be10fde3d93"
+    },
+    {
+      "file": "fixtures/session-01/race-00/archive.bin",
+      "bytes": 23,
+      "sha256": "6227c554ddd398eebe10a0a34b06396807f7bc83cbf1cbc99d75ca45d90e8f07"
+    },
+    {
+      "file": "fixtures/session-01/race-00/source-a.bin",
+      "bytes": 23,
+      "sha256": "5293f0b56d1bff83bcafaca641773455c0f50a14f1dda307d919ddea62f677c4"
+    },
+    {
+      "file": "fixtures/session-01/race-01/archive.bin",
+      "bytes": 23,
+      "sha256": "991e14ab2cbdeb645f1727fa509531abbc5aa138cc0cbfea33ba1f6e503e45f4"
+    },
+    {
+      "file": "fixtures/session-01/race-01/source-b.bin",
+      "bytes": 23,
+      "sha256": "e868e5419bafb23a72a5833bf4945b54f84c6960d62e4be5e48ff1b0cc0ddeec"
+    },
+    {
+      "file": "fixtures/session-01/race-02/archive.bin",
+      "bytes": 23,
+      "sha256": "17564dabcb071a616ed20eacf8809dcef0e55bbd7716cb7f5b600dba5dfb55f2"
+    },
+    {
+      "file": "fixtures/session-01/race-02/source-b.bin",
+      "bytes": 23,
+      "sha256": "5ec0873f96e3bb1ad73e93725a254413c872b56dbcb22fbde1b6461e1a7f1b93"
+    },
+    {
+      "file": "fixtures/session-01/race-03/archive.bin",
+      "bytes": 23,
+      "sha256": "c4ead2dc767bfb74d882d1dbd95fc4379ce338aa5e933f9f60935255c8745500"
+    },
+    {
+      "file": "fixtures/session-01/race-03/source-b.bin",
+      "bytes": 23,
+      "sha256": "2d745fb75e44773c213ae62d1658315253022f72e8ac6c1e7c09a9c9700ae890"
+    },
+    {
+      "file": "fixtures/session-01/race-04/archive.bin",
+      "bytes": 23,
+      "sha256": "cda91026285c2098caad6438baf929b791dfaf784b94960195d28bead0052ab9"
+    },
+    {
+      "file": "fixtures/session-01/race-04/source-a.bin",
+      "bytes": 23,
+      "sha256": "e62b57a0bba9e1993c0a2742f4eebc93b9d1c727ab5c0c7cdf93c3fb8e682ee3"
+    },
+    {
+      "file": "fixtures/session-01/race-05/archive.bin",
+      "bytes": 23,
+      "sha256": "e4befccbdb853ededceef5c0f2199f25cab8d134f0bb9a5a5d63397d6cc61de6"
+    },
+    {
+      "file": "fixtures/session-01/race-05/source-a.bin",
+      "bytes": 23,
+      "sha256": "9fc293beaf2cfc450501b9c123f11c4d2e3b45c61afd4bf8212bffae2b6ff0c2"
+    },
+    {
+      "file": "fixtures/session-01/race-06/archive.bin",
+      "bytes": 23,
+      "sha256": "c589b517d9f1c735b3db1428fce6ac3faea220e4795c5db86cd11879c9802a0c"
+    },
+    {
+      "file": "fixtures/session-01/race-06/source-b.bin",
+      "bytes": 23,
+      "sha256": "4925a1e8bede33da3048209e3207297bc9e2d3f53cb82dd76c50e1e5cfcadcac"
+    },
+    {
+      "file": "fixtures/session-01/race-07/archive.bin",
+      "bytes": 23,
+      "sha256": "b77bd0a5e061e7383189d4c9f0b51da3c106e3871b4ea86a9eb14cfc8edb13aa"
+    },
+    {
+      "file": "fixtures/session-01/race-07/source-b.bin",
+      "bytes": 23,
+      "sha256": "6dd386f51219729e8cdfe0a4584164c2cc53ef81bfca467dd775712f777cba8d"
+    },
+    {
+      "file": "fixtures/session-01/race-08/archive.bin",
+      "bytes": 23,
+      "sha256": "b2b68d92dce9ef88f364a174e2e7ae1a0a6387d531441703735c7d2efbb67313"
+    },
+    {
+      "file": "fixtures/session-01/race-08/source-a.bin",
+      "bytes": 23,
+      "sha256": "0bf26bd8e1291ac9c9bfbe7e968b082c28c7ffc3dced9b75c5d77ff6d011ef61"
+    },
+    {
+      "file": "fixtures/session-01/race-09/archive.bin",
+      "bytes": 23,
+      "sha256": "f048c6c2cb9b29e95e0b79590d1a5258a89db68e03f4e6278947cee504e713c8"
+    },
+    {
+      "file": "fixtures/session-01/race-09/source-a.bin",
+      "bytes": 23,
+      "sha256": "12d99963357e9971ac91762dfd3ba2e42c0c0d62866ad3fbea479f672bd17144"
+    },
+    {
+      "file": "fixtures/session-01/race-10/archive.bin",
+      "bytes": 24,
+      "sha256": "d4a1430735f4cd6473d20596c2fdc029545ca5d63fe84c833cf2100905c5afdb"
+    },
+    {
+      "file": "fixtures/session-01/race-10/source-b.bin",
+      "bytes": 24,
+      "sha256": "4af1da6226b7e3cfbdc3dc0b012043254f91502265f4549957475efcf236e3b5"
+    },
+    {
+      "file": "fixtures/session-01/race-11/archive.bin",
+      "bytes": 24,
+      "sha256": "ec8432b39b402164e58661bd84fa805963d4ce83d17ff155213c3c6f153f8edd"
+    },
+    {
+      "file": "fixtures/session-01/race-11/source-b.bin",
+      "bytes": 24,
+      "sha256": "fff6558f70441a427d4bbd6ba4a0deabc0687266f6c5244de535bff2b2f006e0"
+    },
+    {
+      "file": "fixtures/session-01/race-12/archive.bin",
+      "bytes": 24,
+      "sha256": "667c4954595974817de1aff2aa50dc2f426c7647b624678ae10dabd095bb6bcc"
+    },
+    {
+      "file": "fixtures/session-01/race-12/source-a.bin",
+      "bytes": 24,
+      "sha256": "1d68512f9653f3d3b46ffb21c8fb30b1e2366857a61bad8b304b34df2f1d75b4"
+    },
+    {
+      "file": "fixtures/session-01/race-13/archive.bin",
+      "bytes": 24,
+      "sha256": "02127e4e2d7c5e98241b9395c812c3d1d215d601e64bdd85747c603eb25abef7"
+    },
+    {
+      "file": "fixtures/session-01/race-13/source-b.bin",
+      "bytes": 24,
+      "sha256": "c239e76ec9cb71d16b532e85882ef68c071316cc64e0ad4d4211d0ebd9b2ebf1"
+    },
+    {
+      "file": "fixtures/session-01/race-14/archive.bin",
+      "bytes": 24,
+      "sha256": "19eb448e73a912a3e73e94fd2493365e5f52b618f3a45f989c564de9091f5148"
+    },
+    {
+      "file": "fixtures/session-01/race-14/source-a.bin",
+      "bytes": 24,
+      "sha256": "d7e898c08307576db1a6ec2948f775fe3950f08888f84ed7e3f0a23bc23cacb7"
+    },
+    {
+      "file": "fixtures/session-01/race-15/archive.bin",
+      "bytes": 24,
+      "sha256": "594511197d2ddb6a8c5d6c1ab60afab6de6dc3c169816189f64c1c647af78100"
+    },
+    {
+      "file": "fixtures/session-01/race-15/source-a.bin",
+      "bytes": 24,
+      "sha256": "f6f5a2bb26b339ce381ddf86e4b18f561479d92f8b221b1ee4ce80650cc3bfde"
+    },
+    {
+      "file": "fixtures/session-01/source-substitution/original-retained.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/source-substitution/source.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "fixtures/session-01/unsafe-inputs/archive.bin",
+      "bytes": 27,
+      "sha256": "e79605e7f36422af67729ea5c166986352f75eecad9bfd3d0c3358c6206b3f7f"
+    },
+    {
+      "file": "invoke-fixture-tests.ps1",
+      "bytes": 4426,
+      "sha256": "6cc37401f6217562313fe223af46b1fa45658fbe01824161b9961004bb768799"
+    },
+    {
+      "file": "README.md",
+      "bytes": 6308,
+      "sha256": "2232fddb39d54f05d24c0024f6dd888d2c4c15e45c0b762b7d73399596338ea3"
+    },
+    {
+      "file": "review-report.md",
+      "bytes": 13286,
+      "sha256": "bc87491f583b500c54cee746b465c91a6c02d6463ade281c3133a460d43b3145"
+    },
+    {
+      "file": "reviewed-inputs-preservation.json",
+      "bytes": 84946,
+      "sha256": "cef446488b7b391d66ef3bda5fc44778467fcbfc03645462a7de137594b7c6a0"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 3411,
+      "sha256": "a3a0fbb4c9bcb48adbb0afdc376907a06372c4ed1a1f68e21c30e37a74cb8c05"
+    },
+    {
+      "file": "revision-01-to-02.patch",
+      "bytes": 17768,
+      "sha256": "2da0edd7b7ec9733690ec52f372a80573a9cf49fdaa79ebfeb73749599f11a3f"
+    },
+    {
+      "file": "revision-02-to-03.patch",
+      "bytes": 6851,
+      "sha256": "89ba923009af31d6f64ae97ff3bb41c3487ed5aa1cf14dceb2304a26c1db9e23"
+    },
+    {
+      "file": "source-additions.patch",
+      "bytes": 40889,
+      "sha256": "861a0cff2e643aad0a76789cdf9252b8c284186e3b110bc82d79f3db300a9587"
+    },
+    {
+      "file": "test-command-and-result.json",
+      "bytes": 935,
+      "sha256": "99da9f23d094046042fcefa1430486dbd4a810f813fa3e2db3c3430f12839ef3"
+    },
+    {
+      "file": "windows-archive-fixture.cs",
+      "bytes": 15437,
+      "sha256": "86f5ec628164a2497be37b83fc9bf1ab64fc99d80ebe559220709655e71b3753"
+    },
+    {
+      "file": "windows-archive-fixture.tests.cs",
+      "bytes": 19152,
+      "sha256": "4d6e48eb6f3eb98878cd4e85e936b0ec826640911af76de8c786931a69edabca"
+    }
+  ]
+}

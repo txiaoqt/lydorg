@@ -1,0 +1,47 @@
+{
+  "algorithm": "SHA-256; sorted object keys; LF strings; catalog SQL supplies sorted arrays",
+  "fingerprints": [
+    {
+      "section": "complete",
+      "production": "3a285cc3d1e4207a925e4942f459591e19df85b8e0abde69b859458ffd903497",
+      "staging": "3a285cc3d1e4207a925e4942f459591e19df85b8e0abde69b859458ffd903497",
+      "status": "PASS"
+    },
+    {
+      "section": "defaultPrivileges",
+      "production": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "staging": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "status": "PASS"
+    },
+    {
+      "section": "extensions",
+      "production": "1455182f0294ab4a422cdaa216303210f1074956a7d26fb095cb17c638e4d7df",
+      "staging": "1455182f0294ab4a422cdaa216303210f1074956a7d26fb095cb17c638e4d7df",
+      "status": "PASS"
+    },
+    {
+      "section": "functions",
+      "production": "8c47fd73c7530f6affda4bca08b91dcd587e737161d82a9a06af63c0c5935ad2",
+      "staging": "8c47fd73c7530f6affda4bca08b91dcd587e737161d82a9a06af63c0c5935ad2",
+      "status": "PASS"
+    },
+    {
+      "section": "publicDependencies",
+      "production": "f0f759bbbf7d3c2fab0d1090be1597392d9f7b43f4bd9a78b88636f4df03d335",
+      "staging": "f0f759bbbf7d3c2fab0d1090be1597392d9f7b43f4bd9a78b88636f4df03d335",
+      "status": "PASS"
+    },
+    {
+      "section": "schema",
+      "production": "76da9676641f61ebc828618d9bcf13dad06185cca15ea046506afee716fdf071",
+      "staging": "76da9676641f61ebc828618d9bcf13dad06185cca15ea046506afee716fdf071",
+      "status": "PASS"
+    },
+    {
+      "section": "tables",
+      "production": "e9c6946ded1c8a5689ee1c78e0465f9dd398b234a5d036932ed95de1585db792",
+      "staging": "e9c6946ded1c8a5689ee1c78e0465f9dd398b234a5d036932ed95de1585db792",
+      "status": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "focused": [
+    {
+      "file": "budget-runner-core.mjs",
+      "exitCode": 1,
+      "status": "PASS",
+      "diagnosticCount": 0
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "exitCode": 1,
+      "status": "PASS",
+      "diagnosticCount": 0
+    },
+    {
+      "file": "native-budget-pause.test.mjs",
+      "exitCode": 1,
+      "status": "PASS",
+      "diagnosticCount": 0
+    },
+    {
+      "file": "operation-acl.ps1",
+      "exitCode": 0,
+      "status": "PASS",
+      "diagnosticCount": 0
+    }
+  ],
+  "trackedWorktree": {
+    "exitCode": 2,
+    "status": "FAIL",
+    "diagnosticCount": 2
+  },
+  "windowsCrLfRecognized": true,
+  "gitConfigurationChanged": false,
+  "priorWrapperResultsPreserved": true
+}

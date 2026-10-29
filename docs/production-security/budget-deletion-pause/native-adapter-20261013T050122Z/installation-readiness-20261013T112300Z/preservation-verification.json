@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "operatorStateFiles": 4,
+  "operatorFileContentsRead": false,
+  "operatorRootFilesCreationWriteAttributesAclPreserved": true,
+  "ordinaryOsManagedAccessChanges": [
+    {
+      "artifact": ".ytrace-production-budget-deletion-pause",
+      "before": "2026-10-13T11:29:00.1910788Z",
+      "after": "2026-10-13T12:04:04.3855905Z"
+    }
+  ],
+  "pinnedCodeAndInputBytesUnchanged": true,
+  "historicalSuccessFilesPreserved": 26,
+  "historicalFailedFilesHashVerified": 11,
+  "dirtyPorcelainStatusUnchanged": true,
+  "qualification": "Porcelain status is not a byte-level snapshot of every unrelated dirty file; this review edited only its new review directory.",
+  "reusedTestEvidence": {
+    "disposableSql": {
+      "path": "docs/production-security/budget-deletion-pause/20261013T023224Z/sql-tests.tap",
+      "sha256": "430bac73f2b0bf85b389b8f4fafb494c665ee4460affa81c248b7f3b23980383",
+      "rerun": false
+    },
+    "uiClient": {
+      "path": "docs/production-security/budget-deletion-pause/20261013T023224Z/frontend-tests.log",
+      "sha256": "8d81fa82741f3727b71cdfb82da23a23b26bb9c524e1857c666e731fbbb273f0",
+      "rerun": false
+    },
+    "adapter": {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/focused-tests.tap",
+      "sha256": "5e60b1329e361cb626be67110489992bf80f954d2c346b1b6cb4bcb55c020f89",
+      "rerun": false
+    }
+  },
+  "completedTestSuitesRerun": 0,
+  "newPureDiscrepancyProbe": 1,
+  "productionConnectionAttempted": false,
+  "freshNativePreflightExecuted": false,
+  "proofArchivedOrRefreshed": false,
+  "installationExecuted": false,
+  "authorizationRecordCreated": false,
+  "operationLockCreated": false,
+  "installationAttemptMarkerCreated": false
+}

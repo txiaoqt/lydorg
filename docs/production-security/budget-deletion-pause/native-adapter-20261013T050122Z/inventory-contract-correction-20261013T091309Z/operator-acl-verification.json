@@ -1,0 +1,29 @@
+[
+  {
+    "artifact": ".",
+    "result": {
+      "status": "PASS",
+      "action": "Verify",
+      "effectiveAclVerified": true,
+      "secretValuesRead": false
+    }
+  },
+  {
+    "artifact": "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+    "result": {
+      "status": "PASS",
+      "action": "Verify",
+      "effectiveAclVerified": true,
+      "secretValuesRead": false
+    }
+  },
+  {
+    "artifact": "control-plane-proof.json",
+    "result": {
+      "status": "PASS",
+      "action": "Verify",
+      "effectiveAclVerified": true,
+      "secretValuesRead": false
+    }
+  }
+]

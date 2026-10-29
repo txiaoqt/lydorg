@@ -1,0 +1,295 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "startedAt": "2026-10-11T03:35:25.600Z",
+  "browserVersion": "155.0.8059.39",
+  "checks": [
+    {
+      "name": "Authenticated renewal preview remains available",
+      "status": "PASS",
+      "route": "/app/renewals"
+    }
+  ],
+  "http": [
+    {
+      "phase": "orgLogin",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "orgLogin",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "go",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "click",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "click",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "click",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "click",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204
+    },
+    {
+      "phase": "click",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    }
+  ],
+  "blocked": [
+    {
+      "phase": "setup",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "orgLogin",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "go",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    }
+  ],
+  "errors": [],
+  "console": {
+    "error": 3,
+    "warning": 1,
+    "sanitizedSamples": [
+      {
+        "phase": "setup",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "orgLogin",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "go",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "click",
+        "type": "warning",
+        "message": "Organization renewal file-status channel: CLOSED "
+      }
+    ]
+  },
+  "websockets": [
+    {
+      "phase": "setup",
+      "staging": false
+    },
+    {
+      "phase": "orgLogin",
+      "staging": false
+    },
+    {
+      "phase": "orgLogin",
+      "staging": true
+    },
+    {
+      "phase": "go",
+      "staging": false
+    },
+    {
+      "phase": "go",
+      "staging": true
+    }
+  ],
+  "runLabel": "pwa-renewal-console-audit-20261011",
+  "finishedAt": "2026-10-11T03:36:10.658Z"
+}

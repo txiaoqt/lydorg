@@ -1,0 +1,14 @@
+{
+  "stage": "local evidence capture",
+  "productionConnectionAttempted": false,
+  "installationAttempted": false,
+  "knownLocalCondition": "Native execution evidence parent directory was absent; created locally before fresh verification.",
+  "earlierSanitizedResult": {
+    "status": "FAIL",
+    "error": {
+      "code": "DATABASE_OR_LOCAL_OPERATION_FAILED",
+      "databaseCode": null
+    }
+  },
+  "causeConfirmed": false
+}

@@ -1,0 +1,128 @@
+{
+  "status": "PROPOSAL_ONLY_NOT_ADOPTED",
+  "originalBaseline": "docs/production-security/storage-cutover/native-executions/20261011T221428755Z/independent-postflight.json",
+  "readOnlySnapshot": "docs/production-security/budget-deletion-pause/20261012T165000Z/protected-data-readonly.json",
+  "inventories": 57,
+  "unchangedInventories": 49,
+  "differences": [
+    {
+      "relation": "auth.identities_inventory",
+      "original": {
+        "relation": "auth.identities_inventory",
+        "row_count": 96,
+        "content_fingerprint": "76c6dbf4f53a6b3f7df2038e41f3c4ac"
+      },
+      "current": {
+        "relation": "auth.identities_inventory",
+        "row_count": 96,
+        "content_fingerprint": "37c3cd33bff0f9332e30802bc54a0944"
+      }
+    },
+    {
+      "relation": "auth.users_inventory",
+      "original": {
+        "relation": "auth.users_inventory",
+        "row_count": 95,
+        "content_fingerprint": "6aa6c3d524eceb9dd7e3c9d3cd97c583"
+      },
+      "current": {
+        "relation": "auth.users_inventory",
+        "row_count": 95,
+        "content_fingerprint": "f566384e5cd74728d38e756e140262c8"
+      }
+    },
+    {
+      "relation": "public.activity_logs",
+      "original": {
+        "relation": "public.activity_logs",
+        "row_count": 3334,
+        "content_fingerprint": "b8ef438a867a4e17cfd988f5bfc6ab23"
+      },
+      "current": {
+        "relation": "public.activity_logs",
+        "row_count": 3338,
+        "content_fingerprint": "dd1d44ce3b67a75986b9718abe269164"
+      }
+    },
+    {
+      "relation": "public.admin_portal_change_versions",
+      "original": {
+        "relation": "public.admin_portal_change_versions",
+        "row_count": 6,
+        "content_fingerprint": "3adec7b30f5510c40a56289af100772b"
+      },
+      "current": {
+        "relation": "public.admin_portal_change_versions",
+        "row_count": 6,
+        "content_fingerprint": "d817aed6ac548009043a81c06f4f5431"
+      }
+    },
+    {
+      "relation": "public.admin_sessions",
+      "original": {
+        "relation": "public.admin_sessions",
+        "row_count": 484,
+        "content_fingerprint": "7016ab80b40dbe0a6f48785e8ba7b41e"
+      },
+      "current": {
+        "relation": "public.admin_sessions",
+        "row_count": 488,
+        "content_fingerprint": "d367e3c20ae321ac93cda1f36a9dd187"
+      }
+    },
+    {
+      "relation": "public.organization_contacts",
+      "original": {
+        "relation": "public.organization_contacts",
+        "row_count": 212,
+        "content_fingerprint": "44b6275d26e3b12bc73b78506cf891f3"
+      },
+      "current": {
+        "relation": "public.organization_contacts",
+        "row_count": 214,
+        "content_fingerprint": "c72b18c3edb2e72ccf11d50d0dbcefa2"
+      }
+    },
+    {
+      "relation": "public.organization_profiles",
+      "original": {
+        "relation": "public.organization_profiles",
+        "row_count": 92,
+        "content_fingerprint": "52f00b0d86d0c583a56143629fd7409a"
+      },
+      "current": {
+        "relation": "public.organization_profiles",
+        "row_count": 93,
+        "content_fingerprint": "a3d0cedda53960f18b94f97f59779489"
+      }
+    },
+    {
+      "relation": "public.organization_reference_counters",
+      "original": {
+        "relation": "public.organization_reference_counters",
+        "row_count": 3,
+        "content_fingerprint": "0982786fe42d4cc6e2931ce03c7620a3"
+      },
+      "current": {
+        "relation": "public.organization_reference_counters",
+        "row_count": 3,
+        "content_fingerprint": "2e0bb63f19674cb12db8a887bf9ea85e"
+      }
+    }
+  ],
+  "profileProposal": {
+    "oldRows": 92,
+    "newRows": 93,
+    "allOriginalRowsExact": true,
+    "newProfileAlias": "2c2732174d1111e4",
+    "ownerAlias": "dc239fb97d3966e4",
+    "createdUTC": "2026-10-12T14:25:31.999995+00:00",
+    "createdManila": "2026-10-12 22:25:31.999995+08:00",
+    "existingGoogleIdentity": true,
+    "normalYouthRole": true,
+    "noAdminLink": true,
+    "status": "pending_review",
+    "operatorAttribution": "Timing and workflow are consistent with the operator report; independent identity attribution is not established. No corresponding per-account audit row retained."
+  },
+  "gate": "Do not update any pinned installer baseline. Review remaining mutable inventories and confirm operator attribution before adopting a full cutover preservation baseline. For a separately authorized pause, capture and compare all 57 inventories in the exclusive window; no business rewrite is permitted."
+}

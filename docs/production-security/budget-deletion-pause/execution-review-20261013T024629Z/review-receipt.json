@@ -1,0 +1,89 @@
+{
+  "recordType": "FINAL_PRE_EXECUTION_REVIEW_ONLY",
+  "recordedAt": "2026-10-13T04:12:11.345Z",
+  "reportTimezone": "Asia/Manila",
+  "decision": "NO_GO_EXECUTION_ADAPTER_MISSING",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "sqlBytes": 11945,
+  "sqlModified": false,
+  "sqlInstalled": false,
+  "adapterPath": null,
+  "adapterBundleSha256": null,
+  "operatorConfirmedNoAdapter": true,
+  "productionWrites": 0,
+  "stagingWrites": 0,
+  "nativeConnectionAttempted": false,
+  "credentialEnvironmentLoaded": false,
+  "authorizationRecordCreated": false,
+  "operationLockCreated": false,
+  "attemptMarkerCreated": false,
+  "acceptedValidationRepeated": false,
+  "previousArtifactsPreserved": 58,
+  "protectedInventoriesCaptured": 57,
+  "all57MatchPriorReviewSnapshot": true,
+  "baselineAdopted": false,
+  "files": [
+    {
+      "path": "adapter-requirements.md",
+      "bytes": 7556,
+      "sha256": "48b2b98655eb3b2c686007242e8ee1f67ffcf022e3b927a50ac23a81ddc588e1"
+    },
+    {
+      "path": "artifact-and-mechanism-review.json",
+      "bytes": 3282,
+      "sha256": "47f290ae68b55fa25aa070db3e4e4c4e71d0bff212610edcd157cc043c7533c7"
+    },
+    {
+      "path": "authorization-draft.md",
+      "bytes": 2677,
+      "sha256": "31f1388d8b79df164c01d920a103125017697f830b00f12fc060dafdaae9e525"
+    },
+    {
+      "path": "control-plane-readonly.json",
+      "bytes": 276,
+      "sha256": "9ebb65fe257e790bf6bc9239c8934f010de13eca583f28599fded50898e09187"
+    },
+    {
+      "path": "execution-receipt.template.json",
+      "bytes": 2707,
+      "sha256": "0c3ed6921fc82c80afe946fcd220676b982b012a238ec0661eaee135546320ee"
+    },
+    {
+      "path": "final-review.md",
+      "bytes": 11691,
+      "sha256": "9218007bf9ad8d6eaf1106e28fe53774653c22578caa101f424934293f95ba01"
+    },
+    {
+      "path": "inspect-artifacts.mjs",
+      "bytes": 4532,
+      "sha256": "5f82c84b9342fba02ed315cc053ad37eb02e8158f6fe4f1ed8f56722a93e523d"
+    },
+    {
+      "path": "privilege-review.json",
+      "bytes": 547,
+      "sha256": "8cc579a1076479d49e822556402caf6fd05d90cbc5363aeb51cd1f139d1407a6"
+    },
+    {
+      "path": "production-readonly-preflight.json",
+      "bytes": 1378,
+      "sha256": "67dc3372e1e7a15f0df9fc46d441ac831c14204fc09ea4efb1ba0f7e089ca5f4"
+    },
+    {
+      "path": "protected-inventories-readonly.json",
+      "bytes": 8427,
+      "sha256": "734b624655597048b24d90771d7da0678b8b55bb6934acd402eab2682980efad"
+    },
+    {
+      "path": "readonly-query-provenance.json",
+      "bytes": 377,
+      "sha256": "246cb46f6435f72d8c645afea868cbbe7347a7ce894e58ac532063f71dee6b81"
+    },
+    {
+      "path": "write-review-receipt.mjs",
+      "bytes": 3057,
+      "sha256": "37e1ce8d5a7d71e43a8bfa1393f23daaa29d02ab7cf2e99831efee0629f183ae"
+    }
+  ]
+}

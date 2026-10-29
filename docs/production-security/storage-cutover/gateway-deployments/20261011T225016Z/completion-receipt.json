@@ -1,0 +1,47 @@
+{
+  "status": "DEPLOYED_AND_IDENTITY_VERIFIED_WITH_ACCEPTANCE_BLOCKERS",
+  "project": "mqqaykksadotbrghbexz",
+  "gateway": "admin-storage-access",
+  "deploymentAttempts": 1,
+  "automaticDeploymentRetries": 0,
+  "payloadBytes": 6048,
+  "payloadSha256": "3fe07c6f768703c23a4ad2fe36884fb9832c23826ae6712b159f189ffcb129b0",
+  "deploymentAcknowledged": true,
+  "installedVersion": 1,
+  "installedStatus": "ACTIVE",
+  "verifyJwt": false,
+  "importMap": false,
+  "entrypoint": "index.ts",
+  "compiledBundleSha256": "88e6e86352cdb3718e5687c1287b0bc73717a48f21b8c65aa97310744ab260e2",
+  "sourceIdentity": "PASS; normalized deployed source matches exact reviewed payload",
+  "previousEightFunctions": "PASS; unchanged",
+  "foundationAndProtectiveCatalog": "PASS; exact installed receipt",
+  "migrations": 164,
+  "storagePolicies": 15,
+  "storageObjects": 378,
+  "protectedInventories": {
+    "total": 57,
+    "changed": 0
+  },
+  "hostedConfiguration": "PASS; required secret metadata plus real invalid-session RPC denial context",
+  "httpBoundaryAcceptance": {
+    "passed": 13,
+    "failed": 0
+  },
+  "positiveSigningDownload": {
+    "status": "BLOCKED",
+    "reason": "No securely supplied existing genuine Admin session and operator-designated existing file"
+  },
+  "authenticatedResourcePermissionAcceptance": {
+    "status": "BLOCKED",
+    "reason": "No genuine designated Admin session"
+  },
+  "operationLock": "Released through verified owner's cleanup path",
+  "singleAttemptMarker": "Retained",
+  "frontendPhaseDecision": "CONDITIONAL GO for separately authorized preparation; deployment acceptance remains pending the positive gateway check",
+  "policyCutoverDecision": "NO-GO; separate prerequisites and authorization remain",
+  "completedAt": "2026-10-11T23:07:15.302Z",
+  "completedBusinessOrObjectMutations": false,
+  "frontendDeployed": false,
+  "otherFunctionsDeployed": false
+}

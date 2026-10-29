@@ -1,0 +1,43 @@
+{
+  "verification": {
+    "phase": "pre",
+    "database": "postgres",
+    "function": {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "oid": "32925",
+      "owner": "postgres",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "jsonb",
+      "strict": false,
+      "arguments": "_session_token text, _request_ids uuid[]",
+      "signature": "admin_bulk_delete_budget_requests(text,uuid[])",
+      "source_md5": "eb7b756964fd31efebfb39749f5c9e5b",
+      "volatility": "v",
+      "parallel_mode": "u",
+      "definition_md5": "f6c36316ba941c9e0f76674754ac44ba",
+      "security_definer": true
+    },
+    "read_only": "on",
+    "captured_at": "2026-10-13T03:41:17.967578+00:00",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "server_version": "17.6",
+    "catalog_matches": true,
+    "project_binding": [
+      "https://mqqaykksadotbrghbexz.supabase.co"
+    ],
+    "storage_objects": 378,
+    "function_matches": true,
+    "containment_guard": false,
+    "migration_history": {
+      "count": 164,
+      "latest": "20261011230000",
+      "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+    },
+    "compatibility_sha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "storage_policy_count": 15,
+    "organization_profiles": 93
+  }
+}

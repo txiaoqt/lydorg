@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "files": [
+    {
+      "path": "package.json",
+      "comparisonExitCode": 1,
+      "whitespaceDiagnostics": "",
+      "warning": "warning: in the working copy of 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-vercel-20261012T114439Z\\candidate\\package.json', LF will be replaced by CRLF the next time Git touches it\n",
+      "interpretation": "--no-index implies --exit-code: 1 with no check diagnostics means content differs. Existing autocrlf warnings are retained."
+    },
+    {
+      "path": "requirements.txt",
+      "comparisonExitCode": 1,
+      "whitespaceDiagnostics": "",
+      "warning": "warning: in the working copy of 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-vercel-20261012T114439Z\\candidate\\requirements.txt', LF will be replaced by CRLF the next time Git touches it\n",
+      "interpretation": "--no-index implies --exit-code: 1 with no check diagnostics means content differs. Existing autocrlf warnings are retained."
+    },
+    {
+      "path": "scripts/build-organization-release.mjs",
+      "comparisonExitCode": 1,
+      "whitespaceDiagnostics": "",
+      "warning": "warning: in the working copy of 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-vercel-20261012T114439Z\\candidate\\scripts\\build-organization-release.mjs', LF will be replaced by CRLF the next time Git touches it\n",
+      "interpretation": "--no-index implies --exit-code: 1 with no check diagnostics means content differs. Existing autocrlf warnings are retained."
+    },
+    {
+      "path": "scripts/build-organization-release.test.mjs",
+      "comparisonExitCode": 1,
+      "whitespaceDiagnostics": "",
+      "warning": "warning: in the working copy of 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-vercel-20261012T114439Z\\candidate\\scripts\\build-organization-release.test.mjs', LF will be replaced by CRLF the next time Git touches it\n",
+      "interpretation": "--no-index implies --exit-code: 1 with no check diagnostics means content differs. Existing autocrlf warnings are retained."
+    },
+    {
+      "path": "scripts/organization-release-config.json",
+      "comparisonExitCode": 1,
+      "whitespaceDiagnostics": "",
+      "warning": "warning: in the working copy of 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-vercel-20261012T114439Z\\candidate\\scripts\\organization-release-config.json', LF will be replaced by CRLF the next time Git touches it\n",
+      "interpretation": "--no-index implies --exit-code: 1 with no check diagnostics means content differs. Existing autocrlf warnings are retained."
+    },
+    {
+      "path": "vercel.json",
+      "comparisonExitCode": 1,
+      "whitespaceDiagnostics": "",
+      "warning": "warning: in the working copy of 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-vercel-20261012T114439Z\\candidate\\vercel.json', LF will be replaced by CRLF the next time Git touches it\n",
+      "interpretation": "--no-index implies --exit-code: 1 with no check diagnostics means content differs. Existing autocrlf warnings are retained."
+    }
+  ],
+  "rootDiffCheck": "PASS",
+  "rootOutputEmpty": true
+}

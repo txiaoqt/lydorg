@@ -1,0 +1,110 @@
+{
+  "scope": "Prepared local artifacts and existing frontend dependencies; not deployed",
+  "files": [
+    {
+      "path": "supabase/migrations/20261009145634_storage_authorization_remediation.sql",
+      "bytes": 31955,
+      "sha256": "0d19f0c27305f645abb9a990d507d9856b5ec2aa8232539bc95a577ca72a5b0e"
+    },
+    {
+      "path": "supabase/migrations/20261009150110_storage_authorization_cutover.sql",
+      "bytes": 10722,
+      "sha256": "6a172c11f670f5f7379a1eb732d6305119509630160bac741212ae0da40112fe"
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/index.ts",
+      "bytes": 1479,
+      "sha256": "97fba3f9c7a271860080b89f3f1c8710bdda3dccbe76961175d19d1154346248"
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/control.ts",
+      "bytes": 4182,
+      "sha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21"
+    },
+    {
+      "path": "src/lib/admin-storage-access.ts",
+      "bytes": 2008,
+      "sha256": "c7b5eee5076ad8a4095ed0afbeefc5f42c85ba462200dc14cae8b8c08e198fdb"
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "bytes": 435689,
+      "sha256": "5fb485bcbd0e587e8c45cc653631ac9bafbb99b428cc442e0a6d08f779ddd514"
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.ts",
+      "bytes": 2935,
+      "sha256": "961d9786467553ef0f7b14972db12523f6ac9609b07d610978f734d7d992f883"
+    },
+    {
+      "path": "src/lib/admin-auth.ts",
+      "bytes": 7243,
+      "sha256": "b7ce15684dff395663a9c8a431b04b352012d6e472eef55b88bca777be2d0d8c"
+    },
+    {
+      "path": "src/lib/supabase.ts",
+      "bytes": 2124,
+      "sha256": "6fcf16b40c4b378ec268798f77fd5743fd6750831d3c08941b73d6a03ab7e843"
+    },
+    {
+      "path": "scripts/security/storage-object-classification.mjs",
+      "bytes": 5838,
+      "sha256": "5e226e4238f97b40dc72acc97c1a26ce2787b8d085435d68e2679f023af05645"
+    },
+    {
+      "path": "scripts/security/storage-object-classification.test.mjs",
+      "bytes": 3450,
+      "sha256": "b5cbf45ef771f87f14d38603a81b6416b71ad8ebf5b973e0fd552410c7e35461"
+    },
+    {
+      "path": "scripts/security/verify-storage-session-validator.local.mjs",
+      "bytes": 1817,
+      "sha256": "f096fd3d6314b7f533070feaa6874cbaa489dd7192ae1b0b0780f93c6c3c973b"
+    },
+    {
+      "path": "supabase/tests/storage_cutover_compatibility.local.test.mjs",
+      "bytes": 21573,
+      "sha256": "897b3f67c6a473dd770f1bb8c1964ec4e7fdc74a98f2b30f1846722226343ac9"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/production_storage_foundation_review.sql",
+      "bytes": 47407,
+      "sha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/production_storage_policy_cutover_review.sql",
+      "bytes": 37926,
+      "sha256": "3f98f268be5a0815873802f6c4f284cd9acf381c65140fb904b9c0c0255a432c"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/production-catalog-final.json",
+      "bytes": 214671,
+      "sha256": "64db5fd6e2f93596a7ef2b051ffc61721b59c47cffed0ff247d863a56a2045e8"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/expected-foundation-functions.json",
+      "bytes": 4579,
+      "sha256": "f8544a5aadc468007768a92bacfe1f5dbc6e1833dd95a2e0fccd199a3eb7aeb2"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/historical-object-matrix.json",
+      "bytes": 537753,
+      "sha256": "94daefb99456d427b34a6f78c638a2f8370f707793917a2e85139d3beca78303"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/compatibility-fingerprint-readonly.sql",
+      "bytes": 4007,
+      "sha256": "e5d4cef474f18359e0df0acbd0e05320fca0ef1f661a57198c7e315175d4ea59"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/review.md",
+      "bytes": 19643,
+      "sha256": "b8308cc03808f972fdd4d56bd116abb142859aba2192ed9aac8427f920f47c88"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/operator-checklist.md",
+      "bytes": 11804,
+      "sha256": "f31af6c7692f6ece93ddaa0bb3aa331fbd37bde4d5d5720a546b8443c94908f6"
+    }
+  ]
+}

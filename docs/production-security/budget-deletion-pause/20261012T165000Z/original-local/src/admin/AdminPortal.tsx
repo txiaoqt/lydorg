@@ -1,0 +1,16845 @@
+import { OrganizationIdentityReviewPanel } from "@/admin/components/OrganizationIdentityReviewPanel";
+import { getCurrentAdminReportPeriod, getAdminReportRange, getAdminReportPeriodError, getAdminReportPeriodLabel, adminReportMetadata, withAdminReportPeriod, fromBudgetMonitoringPeriod, type AdminReportPeriod } from "@/lib/admin-report-period";
+import { AdminReportingPeriodSelector } from "@/admin/components/AdminReportingPeriodSelector";
+import { type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import "./admin-inquiries.css";
+import "./admin-ypop-validation-review.css";
+import "./admin-budget-monitoring.css";
+import "./pages/yorp-registry.css";
+import { useLocation, useNavigate } from "react-router-dom";
+import { QueryClientContext, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createQueryClient } from "@/lib/query-client";
+import { YorpRegistryPage } from "./pages/YorpRegistry";
+import { BackupRecoveryPage } from "./components/BackupRecoveryPage";
+import { DatabaseBackup } from "lucide-react";
+import {
+  preflightRegistrationDeletion,
+  permanentlyDeleteRegistrationAccount,
+  organizationDeletionConfirmationMatches,
+  ORGANIZATION_DELETION_CATEGORIES,
+  type OrganizationDeletionCounts,
+} from "@/lib/admin-organization-deletion";
+import { readAdminSession } from "@/lib/admin-auth";
+import { Activity, AlertCircle, AlertTriangle, Archive, Award, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Bell, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleDollarSign, CircleHelp, Clipboard, ClipboardList, Clock, Clock3, Copy, CornerDownLeft, Download, Eye, EyeOff, ExternalLink, FileText, FolderOpen, Globe, History, Inbox, Info, Loader, Loader2, Lock, LogOut, Mail, MapPin, Medal, Megaphone, MessageSquare, MoreHorizontal, Newspaper, Pencil, Phone, PieChart as PieChartIcon, Plus, RefreshCw, Save, Search, Send, Settings, Shield, Trash2, TrendingUp, Trophy, Upload, UserCheck, UserPlus, UserRound, UserX, Users, Wallet, X, XCircle, type LucideIcon } from "lucide-react";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { addYears, format, parse } from "date-fns";
+import { Button } from "@/components/ui/button";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { RecentActivityList, RecentActivityPreview } from "@/components/activity/RecentActivityPreview";
+import { useConfirmActionDialog } from "@/components/ConfirmActionDialog";
+import { PortalEmptyState, PortalMetricCard, PortalSection, PortalStatusBadge } from "@/components/portal/portal-ui";
+import { PortalShell } from "@/components/portal/PortalShell";
+import { DangerConfirmDialog } from "@/components/portal/DangerConfirmDialog";
+import { deleteAdminYpopSubmissions } from "@/lib/ypop-submission-deletion";
+import { AdminPageHeader } from "@/components/portal/AdminPageHeader";
+import { ExportReportDialog } from "@/components/reports/ExportReportDialog";
+import { ActivityLogsExportDialog } from "@/admin/components/ActivityLogsExportDialog";
+import { AdminExportDialog } from "@/admin/components/AdminExportDialog";
+import { DownloadDocumentsDialog } from "@/admin/components/DownloadDocumentsDialog";
+import { type DownloadableFile } from "@/lib/document-compression";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
+import { isLiquidationOverdue, statusLabelMap, formatAdvocacyLabel, type BudgetRequest, type AnnualBudgetAllocation, getRepresentativeDisplayName, getAdviserDisplayName } from "@/lib/lydo-connect-data";
+import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining, isAwaitingResubmission, hasGenuineResubmission } from "@/lib/revision-deadline";
+import { useLydoConnect } from "@/lib/lydo-connect-store";
+import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
+import { StatsCard } from "@/admin/components/StatsCard";
+import { NeedsAttentionList, type NeedsAttentionItem } from "@/admin/components/NeedsAttentionList";
+import { BudgetMonitoringSummaryCard } from "@/admin/components/BudgetMonitoringSummaryCard";
+import { RecentActivityLogCard, type RecentActivityLogItem } from "@/admin/components/RecentActivityLogCard";
+import { CategoryChip, InquiriesTable, ReferenceCodeChip } from "@/admin/components/InquiriesTable";
+import { YpopPeriodsTable, type YpopPeriodStatusFilter } from "@/admin/components/YpopPeriodsTable";
+import { NewsReleasesTable } from "@/admin/components/NewsReleasesTable";
+import { ActivityLogsTable, type ActivityDateFilter } from "@/admin/components/ActivityLogsTable";
+import { TemplatesTable, type TemplateCategoryFilter, type TemplateStatusFilter } from "@/admin/components/TemplatesTable";
+import { TemplateFilePreviewDialog } from "@/admin/components/TemplateFilePreviewDialog";
+import { TemplateFormDialog, type TemplateWorkflowScope } from "@/admin/components/TemplateFormDialog";
+import { CityActivityAnnouncementDialog } from "@/admin/components/CityActivityAnnouncementDialog";
+import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorStatusFilter, type AdministratorUnitFilter } from "@/admin/components/AdministratorsTable";
+import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
+import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
+import { AdminRenewalDocumentPreview, preserveOrSelectFirstRenewalReviewFile } from "@/admin/components/AdminRenewalDocumentPreview";
+import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
+import { YpopValidationComputationPopover } from "@/admin/components/YpopValidationComputationPopover";
+import { BudgetRequestsTable, StatusPill as BudgetStatusPill, type BudgetRequestsStatusFilter } from "@/admin/components/BudgetRequestsTable";
+import {
+  ALL_SEMESTERS_KEY,
+  buildBudgetSemesterOptions,
+  isBudgetRequestInSemester,
+} from "@/lib/yorp-semester";
+import { OrganizationFundingTable, type OrganizationFundingRow } from "@/admin/components/OrganizationFundingTable";
+import {
+  OrganizationBudgetDrawer,
+  type OrganizationBudgetDetail,
+  type OrganizationBudgetRequestRow,
+} from "@/admin/components/OrganizationBudgetDrawer";
+import { PublicBudgetSnapshotConfigPage } from "@/admin/components/PublicBudgetSnapshotConfigPage";
+import { BudgetMonitoringOverview } from "@/admin/components/BudgetMonitoringOverview";
+import { PasigBudgetMap } from "@/admin/components/PasigBudgetMap";
+import { BudgetMonitoringPageControls } from "@/admin/components/BudgetMonitoringPageControls";
+import { advocacyOptions } from "@/lib/lydo-connect-data";
+import PublicBudgetOverview from "@/components/public/PublicBudgetOverview";
+import {
+  type BudgetMonitoringFilters,
+  createDefaultBudgetMonitoringFilters,
+  filterBudgetRequests,
+  matchesFiscalPeriod,
+  aggregatePurposeCategories,
+  aggregateOrganizationFundingRows,
+  APPROVED_BUDGET_STATUSES,
+  RELEASED_BUDGET_STATUSES,
+} from "@/lib/budget-monitoring-filters";
+import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
+import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase, fetchRegistrationRequiredDocumentTypesInSupabase, fetchRenewalRequiredDocumentTypesInSupabase } from "@/lib/lydo-connect-supabase";
+import {
+  LiquidationReportsTable,
+  LiquidationStatusLabel,
+  matchesLiquidationStatusFilter,
+  STATUS_LABEL_CONFIG as LIQUIDATION_STATUS_LABEL_CONFIG,
+  type LiquidationReportsStatusFilter,
+} from "@/admin/components/LiquidationReportsTable";
+import { formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
+import { type PasigDistrict } from "@/lib/pasig-districts";
+import { AdministratorFormDialog } from "@/admin/components/AdministratorFormDialog";
+import { RolesPermissionsPanel } from "@/admin/components/RolesPermissionsPanel";
+import { AdminSettingsPage } from "@/admin/components/AdminSettingsPage";
+import { ADMIN_NAV_PERMISSION_MAP, hasAdminDashboardWidgetPermission, hasAdminNavPermission } from "@/lib/admin-permissions";
+import { getEffectiveSystemSetting, shouldLogActivityType, shouldNotifyOrganization, formatSystemCurrency, type AuditCategory } from "@/lib/admin-system-settings";
+import { NewsReleaseFormDialog, CalendarCaption } from "@/admin/components/NewsReleaseFormDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { InquiryDetailDrawer } from "@/admin/components/InquiryDetailDrawer";
+import { ReplyEmailDialog } from "@/admin/components/ReplyEmailDialog";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { getPasswordResetUrl } from "@/lib/auth-redirect";
+import { UnverifiedAdminAccessScreen } from "@/admin/components/UnverifiedAdminAccessScreen";
+import {
+  allocationByBarangayExportConfig,
+  budgetMonitoringExportConfig,
+  budgetRequestExportConfig,
+  buildAllocationPdfTotalsRow,
+  buildAllocationTotalsRow,
+  buildAllocationXlsxTotalsRow,
+  buildBudgetMonitoringPdfTotalsRow,
+  buildBudgetMonitoringTotalsRow,
+  buildBudgetMonitoringXlsxTotalsRow,
+  buildBudgetRequestPdfTotalsRow,
+  buildBudgetRequestTotalsRow,
+  buildBudgetRequestXlsxTotalsRow,
+  type AllocationByBarangayExportRow,
+  type BudgetMonitoringExportRow,
+  type BudgetRequestExportRow,
+} from "@/lib/report-export-configs";
+import { exportReport, formatCurrencyPdf, type ExportFormat, type PdfPageConfig } from "@/lib/report-export";
+import {
+  activityLogExportConfig,
+  getFriendlyAuditCategory,
+  mapAuditLogToExportRow,
+} from "@/lib/activity-log-export";
+import {
+  createAdminActivityLogInSupabase,
+  getAdminAccountsInSupabase,
+  createNewsReleaseInSupabase,
+  createTransparencyPostInSupabase,
+  createTemplateRecordInSupabase,
+  createAdminTemplateCategoryInSupabase,
+  deleteAdminTemplateCategoryInSupabase,
+  deleteNewsReleaseInSupabase,
+  deleteNewsReleasePreviewImageFromSupabase,
+  deleteTransparencyPostInSupabase,
+  updateBudgetRequestInSupabase,
+  deleteTemplateRecordInSupabase,
+  reactivateTemplateRecordInSupabase,
+  updateTemplateCategoryInSupabase,
+  permanentlyDeleteTemplateRecordInSupabase,
+  loadAdminPortalSectionState,
+  loadAdminBudgetMonitoringPeriod,
+  resolveSupabaseFileUrl,
+  submitDocumentReviewBatchToSupabase,
+  updateDocumentSubmissionFileReviewInSupabase,
+  updateTransparencyPostInSupabase,
+  updateLiquidationReportInSupabase,
+  updateNewsReleaseInSupabase,
+  updateOrganizationProfileReviewInSupabase,
+  updateTemplateRecordInSupabase,
+  uploadTemplateDocumentToSupabase,
+  uploadNewsReleasePreviewImageToSupabase,
+  adminCreateYpopPeriodInSupabase,
+  adminUpdateYpopPeriodInSupabase,
+  adminCloseYpopSemesterInSupabase,
+  adminDeleteYpopPeriodFromSupabase,
+  adminCreateYpopCityActivityInSupabase,
+  adminUpdateYpopCityActivityInSupabase,
+  adminDeleteYpopCityActivityFromSupabase,
+  adminGetActivityAnnouncementsFromSupabase,
+  adminCreateYpopEntryInSupabase,
+  adminUpdateYpopEntryInSupabase,
+  adminUpdateYpopEventParticipationInSupabase,
+  adminUpdateYpopOrgActivityInSupabase,
+  adminUpdateBudgetRequestFileStatusInSupabase,
+  adminUpdateLiquidationReportFileStatusInSupabase,
+  adminUpdateInquiryInSupabase,
+  getAdministratorsInSupabase,
+  getAdministratorRolesInSupabase,
+  getAdministratorUnitsInSupabase,
+  createAdministratorInSupabase,
+  updateAdministratorInSupabase,
+  setAdministratorActiveInSupabase,
+  deleteAdministratorInSupabase,
+  resendAdminInviteInSupabase,
+  updateRolePermissionsInSupabase,
+  DuplicateUsernameError,
+  adminApproveRenewalInSupabase,
+  adminRequestRenewalRevisionInSupabase,
+  adminRejectRenewalInSupabase,
+  dispatchOrgTransactionalEmailInSupabase,
+  fetchAdminPortalListPage,
+  fetchAdminDashboardSummary,
+  fetchAdminSidebarCounts,
+  subscribeToAdminSidebarChanges,
+  fetchAdminRegistrationDetail,
+  fetchAdminRecentNotifications,
+  markAdminNotificationsReadInSupabase,
+  fetchAllAdminActivityLogs,
+  fetchAllAdminReviewResourceRows,
+  fetchAdminReviewResourcePage,
+  fetchAdminBudgetRequestDetail,
+  fetchAdminLiquidationReportDetail,
+  fetchAdminPortalChangeVersions,
+  getChangedAdminPortalResources,
+  fetchAdminRenewalQueuePage,
+  fetchAdminRenewalReviewContext,
+  fetchAdminYpopValidationPeriods,
+  fetchAdminYpopPeriodCityActivities,
+  fetchAdminYpopPeriodSubmissionPage,
+  fetchAdminYpopEntryReviewDetail,
+  fetchAdminYpopReviewFiles,
+  type AdminBudgetReviewRow,
+  type AdminLiquidationReviewRow,
+  type AdminPortalChangeResource,
+  type AdminPortalChangeVersions,
+  type AdminYpopSubmissionRow,
+  type AdminPortalRegistrationListRow,
+  type OrgTransactionalEmailEventType,
+} from "@/lib/lydo-connect-supabase";
+import { validateUrn } from "@/lib/urn-registration";
+import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, OrganizationAccreditationRecord, OrganizationRenewalStatus, SubmissionFile, OrganizationProfile, LiquidationReport } from "@/lib/lydo-connect-data";
+
+const RegistrationInfoBox = ({ label, title, description }: { label: string; title: string; description?: string }) => (
+  <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+    <div className="flex flex-col gap-0.5">
+      <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{title}</p>
+      {description ? <p className="truncate font-segoe text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
+    </div>
+  </div>
+);
+
+const RegistrationContactBox = ({
+  icon: Icon,
+  label,
+  title,
+  description,
+  href,
+  showCopy,
+}: {
+  icon: LucideIcon;
+  label: string;
+  title: string;
+  description?: string;
+  href?: string;
+  showCopy?: boolean;
+}) => {
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(title);
+    toast({ title: "Copied", description: `${title} copied to clipboard.` });
+  };
+
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-brand-secondary-100 p-2">
+        <Icon className="h-5 w-5 text-border-brand-secondary" strokeWidth={2} />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+        <div className="flex min-w-0 items-center gap-1.5">
+          {href ? (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="truncate font-segoe text-sm font-semibold leading-none text-text-default underline-offset-4 hover:underline"
+            >
+              {title}
+            </a>
+          ) : (
+            <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{title}</p>
+          )}
+          {showCopy ? (
+            <button
+              type="button"
+              onClick={handleCopy}
+              aria-label={`Copy ${label.toLowerCase()}`}
+              className="shrink-0 text-slate-400 transition-colors hover:text-slate-600"
+            >
+              <Copy className="h-3.5 w-3.5" strokeWidth={1.6} />
+            </button>
+          ) : null}
+        </div>
+        {description ? <p className="truncate font-segoe text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
+      </div>
+    </div>
+  );
+};
+
+const DocumentQueueStatusPill = ({ status, isAwaiting }: { status: SubmissionFile["adminStatus"]; isAwaiting?: boolean }) => {
+  if (status === "approved_green") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+        Approved
+      </span>
+    );
+  }
+  if (status === "rejected_red") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+        Rejected
+      </span>
+    );
+  }
+  if (status === "needs_revision") {
+    if (isAwaiting) {
+      return (
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-700">
+          Awaiting Resubmission
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+        Needs Revision
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      Pending Review
+    </span>
+  );
+};
+
+const YpopDocumentStatusPill = ({ status, isAwaiting }: { status: YPOPEventParticipationStatus | YPOPOrgActivityStatus; isAwaiting?: boolean }) => {
+  if (status === "verified" || status === "approved") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+        {status === "verified" ? "Verified" : "Approved"}
+      </span>
+    );
+  }
+  if (status === "rejected") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+        Rejected
+      </span>
+    );
+  }
+  if (status === "needs_revision") {
+    if (isAwaiting) {
+      return (
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-700">
+          Awaiting Resubmission
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+        Needs Revision
+      </span>
+    );
+  }
+  if (status === "draft") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+        Draft
+      </span>
+    );
+  }
+  if (status === "pending_evaluation") {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+        Pending Evaluation
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      Pending Review
+    </span>
+  );
+};
+
+const routeMap: Record<string, string> = {
+  overview: "/admin",
+  registrations: "/admin/registrations",
+  renewals: "/admin/renewals",
+  "budget-utilization": "/admin/budget-utilization",
+  "liquidation-monitoring": "/admin/liquidation-monitoring",
+  inquiries: "/admin/inquiries",
+  "news-releases": "/admin/news-releases",
+  "budget-monitoring": "/admin/budget-monitoring",
+  templates: "/admin/templates",
+  notifications: "/admin/notifications",
+  "notifications-activity": "/admin/notifications",
+  "activity-logs": "/admin/activity-logs",
+  "ypop-validation": "/admin/ypop-validation",
+  "yorp-registry": "/admin/yorp-registry",
+  administrators: "/admin/administrators",
+  settings: "/admin/settings",
+  "backup-recovery": "/admin/backup-recovery",
+};
+
+const adminId = "admin-demo";
+const adminNavItemsById = new Map(
+  baseAdminNavigationGroups.flatMap((group) => group.items).map((item) => [item.id, item] as const),
+);
+
+function MobileInquiryCard({
+  inquiry,
+  submittedDate,
+  submittedTime,
+  onView,
+}: {
+  inquiry: InquiryRecord;
+  submittedDate: string;
+  submittedTime: string;
+  onView: () => void;
+}) {
+  const senderName = inquiry.organizationName || inquiry.submitterName || "Unnamed submitter";
+
+  return (
+    <article className="mobile-inquiry-card">
+      <div className="mobile-inquiry-header">
+        <h3 className="mobile-inquiry-subject">{inquiry.subject}</h3>
+        <div className="mobile-inquiry-status">
+          <PortalStatusBadge status={inquiry.status} />
+        </div>
+      </div>
+
+      {inquiry.description ? <p className="mobile-inquiry-description">{inquiry.description}</p> : null}
+
+      <div className="mobile-inquiry-metadata">
+        <p className="mobile-inquiry-sender">{senderName}</p>
+        <p className="mobile-inquiry-email">{inquiry.email}</p>
+        <p className="mobile-inquiry-submitted">
+          Submitted {submittedDate}
+          {submittedTime ? ` \u00b7 ${submittedTime}` : ""}
+        </p>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="mobile-inquiry-view-button"
+        aria-label={`View inquiry from ${inquiry.submitterName || inquiry.organizationName || inquiry.email}`}
+        onClick={onView}
+      >
+        <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+        View Inquiry
+      </Button>
+    </article>
+  );
+}
+
+const formatVerifiedDateLabel = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "Asia/Manila",
+  }).format(date).toUpperCase();
+};
+
+const getManilaNow = () => {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(now);
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  return { year: Number(year), month: Number(month), day: Number(day), isoDate: `${year}-${month}-${day}` };
+};
+
+const deriveSemesterLabelFromDate = (dateLike?: string) => {
+  const base = dateLike ? new Date(dateLike) : new Date();
+  const safeBase = Number.isNaN(base.getTime()) ? new Date() : base;
+  const manila = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(safeBase);
+  const year = Number(manila.find((part) => part.type === "year")?.value ?? new Date().getFullYear());
+  const month = Number(manila.find((part) => part.type === "month")?.value ?? 1);
+  return `${year} ${month <= 6 ? "First" : "Second"} Semester`;
+};
+
+const buildSemesterKeyFromNow = (existingPeriods: YPOPPeriod[]) => {
+  const { year, month, day } = getManilaNow();
+  const semesterNumber = month <= 6 ? 1 : 2;
+  const prefix = `S${semesterNumber}-${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const existingCount = existingPeriods.filter((period) => period.semesterKey.startsWith(prefix)).length;
+  return `${prefix}-${String(existingCount + 1).padStart(2, "0")}`;
+};
+
+const canInlinePreviewFile = (value: string) => /\.(pdf|png|jpe?g|gif|webp|svg)$/i.test(value);
+const isImagePreviewFile = (value: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(value);
+const withHiddenPdfToolbar = (url: string) => (url.includes("#") ? url : `${url}#toolbar=0`);
+
+const renderRegistrationDetailCard = (params: {
+  title: string;
+  value: string;
+  className?: string;
+  wrap?: boolean;
+  linkHref?: string;
+}) => (
+  <div className={`min-w-0 rounded-xl border border-border/70 bg-card p-4 shadow-sm ${params.className ?? ""}`.trim()}>
+    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/75">{params.title}</p>
+    {params.linkHref && params.value !== "N/A" ? (
+      <a
+        href={params.linkHref}
+        target="_blank"
+        rel="noreferrer"
+        className={`mt-2 block text-sm font-medium text-primary underline-offset-4 hover:underline ${params.wrap ? "break-all" : ""}`}
+      >
+        {params.value}
+      </a>
+    ) : (
+      <p className={`mt-2 text-sm font-medium text-foreground ${params.wrap ? "break-all" : ""}`}>
+        {params.value}
+      </p>
+    )}
+  </div>
+);
+
+const budgetReleaseStatuses = new Set<string>(["budget_released", "completed"]);
+const approvableBudgetStatuses = new Set<BudgetRequest["status"]>(["submitted", "under_review"]);
+const liquidationApprovableStatuses = new Set<LiquidationReport["status"]>(["submitted", "under_review", "needs_revision"]);
+const liquidationLockedStatuses = new Set<LiquidationReport["status"]>(["completed_liquidated"]);
+
+type PendingAdminConfirmation =
+  | {
+    kind: "document";
+    action: "approve" | "needs_revision" | "reject";
+    fileId: string;
+    submissionId: string;
+    organizationId: string;
+    organizationName: string;
+    fileName: string;
+    currentAdminRemarks: string;
+  }
+  | {
+    kind: "profile";
+    action: "needs_update";
+    organizationId: string;
+    organizationName: string;
+    userId: string;
+  }
+  | {
+    kind: "budget";
+    action: "approve" | "needs_revision" | "reject";
+    budgetRequestId: string;
+    organizationId: string;
+    organizationName: string;
+    activityTitle: string;
+    requestedAmount: number;
+    currentStatus: BudgetRequest["status"];
+  }
+  | {
+    kind: "liquidation";
+    action: "approve" | "submitted_hardcopy" | "complete" | "needs_revision" | "overdue";
+    liquidationReportId: string;
+    budgetRequestId: string;
+    organizationId: string;
+    organizationName: string;
+    activityTitle: string;
+    currentStatus: LiquidationReport["status"];
+  }
+  | {
+    kind: "transparency_post";
+    action: "publish" | "hide";
+    id: string;
+    title: string;
+  }
+  | {
+    kind: "ypop_event";
+    action: "verified" | "needs_revision";
+    participationId: string;
+    entryId: string;
+    activityId: string;
+    organizationId: string;
+    organizationName: string;
+    activityName: string;
+    currentAdminRemarks: string;
+  }
+  | {
+    kind: "ypop_org_activity";
+    action: "approved" | "needs_revision";
+    orgActivityId: string;
+    entryId: string;
+    organizationId: string;
+    organizationName: string;
+    activityName: string;
+    currentAdminRemarks: string;
+  };
+
+type RegistrationReviewDecision = "approve" | "needs_revision" | "reject";
+
+const registrationReviewDecisionLabel: Record<RegistrationReviewDecision, string> = {
+  approve: "Approve",
+  needs_revision: "Request Revision",
+  reject: "Reject",
+};
+
+const registrationDecisionRequiresRemark = (decision: RegistrationReviewDecision) =>
+  decision === "needs_revision" || decision === "reject";
+
+type BudgetReviewDecision = "approve" | "needs_revision";
+
+const budgetReviewDecisionLabel: Record<BudgetReviewDecision, string> = {
+  approve: "Approve",
+  needs_revision: "Needs Revision",
+};
+
+const budgetDecisionRequiresRemark = (decision: BudgetReviewDecision) =>
+  decision === "needs_revision";
+
+type PendingDeleteConfirmation =
+  | {
+    kind: "news_release";
+    id: string;
+    title: string;
+  }
+  | {
+    kind: "transparency_post";
+    id: string;
+    title: string;
+  }
+  | {
+    kind: "ypop_period";
+    id: string;
+    title: string;
+    activityCount: number;
+  }
+  | {
+    kind: "ypop_city_activity";
+    id: string;
+    title: string;
+  };
+
+type BudgetMonitoringEntry = {
+  budgetRequestId: string;
+  liquidationReportId: string | null;
+  title: string;
+  organizationName: string;
+  approvedAmount: number;
+  releasedAmount: number;
+  remainingAmount: number;
+  utilizationRate: number;
+  budgetStatus: string;
+  liquidationStatus: string;
+  releaseDate: string;
+  goSignalAt: string;
+  deadlineAt: string;
+  hardCopySubmittedAt: string;
+  completedAt: string;
+  remarks: string;
+  ageInDays: number;
+  riskLabel: "On Track" | "Needs Attention" | "Overdue" | "Completed";
+};
+
+type BudgetMonitoringChartRow = {
+  riskLabel: BudgetMonitoringEntry["riskLabel"];
+  count: number;
+  approvedAmount: number;
+  releasedAmount: number;
+  remainingAmount: number;
+};
+
+type BarangayAllocationEntry = {
+  district: string;
+  barangay: string;
+  organizationCount: number;
+  releasedBudgetCount: number;
+  approvedAmount: number;
+  requestedAmount: number;
+  releasedAmount: number;
+  remainingAmount: number;
+  utilizationRate: number;
+  liquidatedAmount: number;
+};
+
+type BarangayAllocationOrganizationDetail = {
+  organizationId: string;
+  organizationName: string;
+  district: string;
+  barangay: string;
+  budgetRequestCount: number;
+  releasedBudgetCount: number;
+  approvedAmount: number;
+  releasedAmount: number;
+  remainingAmount: number;
+  utilizationRate: number;
+  requests: Array<{
+    id: string;
+    createdAt: string;
+    activityTitle: string;
+    status: BudgetRequest["status"];
+    approvedAmount: number;
+    releasedAmount: number;
+    remainingAmount: number;
+    activityDate: string;
+    releaseDate: string;
+    goSignalAt: string;
+    hardCopySubmittedAt: string;
+  }>;
+};
+
+type ActiveReportExport = "budget-requests" | "budget-monitoring" | "allocation-by-barangay" | null;
+type RecentActivityEntry = {
+  key: string;
+  title: string;
+  timestamp?: string;
+  note?: string;
+  dotClassName: string;
+};
+
+const isAdminNotificationAuditEntry = (log: ActivityLog) => {
+  const action = log.action?.trim().toLowerCase() ?? "";
+  const description = log.description?.trim().toLowerCase() ?? "";
+  return action.includes("notification_dispatched") || description.startsWith("admin notification (");
+};
+
+export default function AdminPortal({ section }: { section: string }) {
+  const parentQueryClient = useContext(QueryClientContext);
+  const [isolatedQueryClient] = useState(createQueryClient);
+  const { signOut, user } = useAuth();
+  const requireVerifiedEmail = getEffectiveSystemSetting("security.require_verified_admin_email");
+  if (requireVerifiedEmail && user && user.isEmailVerified === false) {
+    return <UnverifiedAdminAccessScreen email={user.email} onSignOut={signOut} />;
+  }
+
+  return (
+    <QueryClientProvider client={parentQueryClient ?? isolatedQueryClient}>
+      <AdminPortalContent section={section} />
+    </QueryClientProvider>
+  );
+}
+
+function AdminPortalContent({ section }: { section: string }) {
+  const queryClient = useQueryClient();
+  const { confirmAction, confirmationDialog } = useConfirmActionDialog();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
+  const currentAdminRoleCode = user?.roleCode ?? readAdminSession()?.roleCode;
+  const isSuperAdmin = currentAdminRoleCode === "super_admin";
+
+  const { state: sharedState, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
+    useLydoConnect();
+  const mergeRemoteStateRef = useRef(mergeRemoteState);
+  useEffect(() => {
+    mergeRemoteStateRef.current = mergeRemoteState;
+  }, [mergeRemoteState]);
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
+  const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<Set<string>>(new Set());
+  const [registrationDeleteTarget, setRegistrationDeleteTarget] = useState<OrganizationProfile | null>(null);
+  const [registrationDeleteConfirmation, setRegistrationDeleteConfirmation] = useState("");
+  const [registrationDeleteLoading, setRegistrationDeleteLoading] = useState(false);
+  const [registrationDeletePreflightLoading, setRegistrationDeletePreflightLoading] = useState(false);
+  const [registrationDeleteCounts, setRegistrationDeleteCounts] = useState<OrganizationDeletionCounts | null>(null);
+  const [registrationDeleteError, setRegistrationDeleteError] = useState("");
+  const registrationDeleteInputRef = useRef<HTMLInputElement>(null);
+  const [selectedRenewalId, setSelectedRenewalId] = useState<string | null>(null);
+
+  const [adminRenewals, setAdminRenewals] = useState<OrganizationRenewalRecord[]>([]);
+  const [adminAccreditations, setAdminAccreditations] = useState<OrganizationAccreditationRecord[]>([]);
+
+  const renewalVerificationAttemptsRef = useRef(new Set<string>());
+  const [uploadingTemplateId, setUploadingTemplateId] = useState<string | null>(null);
+  const [templateModalMode, setTemplateModalMode] = useState<"create" | "edit" | "delete" | null>(null);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [templateNameDraft, setTemplateNameDraft] = useState("");
+  const [templateDescriptionDraft, setTemplateDescriptionDraft] = useState("");
+  const [templateScopeDraft, setTemplateScopeDraft] = useState<"document_submission" | "other">("document_submission");
+  const [templateWorkflowScopeDraft, setTemplateWorkflowScopeDraft] = useState<TemplateWorkflowScope>("both");
+  const [templateFileDraft, setTemplateFileDraft] = useState<File | null>(null);
+  const [templateCategoryDraft, setTemplateCategoryDraft] = useState("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState<TemplateCategoryFilter>("all");
+  const [templateStatusFilter, setTemplateStatusFilter] = useState<TemplateStatusFilter>("all");
+  const [pendingArchiveTemplate, setPendingArchiveTemplate] = useState<TemplateRecord | null>(null);
+  const [pendingDeleteTemplate, setPendingDeleteTemplate] = useState<TemplateRecord | null>(null);
+  const [pendingRestoreTemplate, setPendingRestoreTemplate] = useState<TemplateRecord | null>(null);
+  const [pendingCategoryDelete, setPendingCategoryDelete] = useState<{
+    category: string;
+    isSystem: boolean;
+    count: number;
+  } | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateRecord | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewTitle, setPreviewTitle] = useState("");
+  const [previewEmptyMessage, setPreviewEmptyMessage] = useState("");
+  const [previewCanInline, setPreviewCanInline] = useState(false);
+  const [newsModalMode, setNewsModalMode] = useState<"create" | "edit" | null>(null);
+  const [editingNewsReleaseId, setEditingNewsReleaseId] = useState<string | null>(null);
+  const [newsTitleDraft, setNewsTitleDraft] = useState("");
+  const [newsDescriptionDraft, setNewsDescriptionDraft] = useState("");
+  const [newsFacebookPostUrlDraft, setNewsFacebookPostUrlDraft] = useState("");
+  const [newsPreviewImageUrlDraft, setNewsPreviewImageUrlDraft] = useState("");
+  const [newsPreviewImageFileDraft, setNewsPreviewImageFileDraft] = useState<File | null>(null);
+  const [newsSearch, setNewsSearch] = useState("");
+  const [newsVisibilityFilter, setNewsVisibilityFilter] = useState<"all" | NewsRelease["visibilityStatus"]>("all");
+  const [newsCategoryFilter, setNewsCategoryFilter] = useState<"all" | string>("all");
+  const [newsViewMode, setNewsViewMode] = useState<"list" | "grid">("list");
+  const [activityLogFilter, setActivityLogFilter] = useState<string>("all");
+  const [activitySearch, setActivitySearch] = useState("");
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const [activityReportPeriod, setActivityReportPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
+  const [budgetReportPeriod, setBudgetReportPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
+  const [liquidationReportPeriod, setLiquidationReportPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
+  const reportYears = [2026, 2025, 2024];
+  const reportRange = (period: AdminReportPeriod) => getAdminReportPeriodError(period) ? { startDate: null, endDateExclusive: null } : getAdminReportRange(period);
+  const [activityDateFilter, setActivityDateFilter] = useState<ActivityDateFilter>("all");
+  const [activityExporting, setActivityExporting] = useState<ExportFormat | null>(null);
+  const [activityExportDialogOpen, setActivityExportDialogOpen] = useState(false);
+  const [adminAccountsById, setAdminAccountsById] = useState<
+    Record<string, { displayName: string; email: string; roleLabel: string | null }>
+  >({});
+  const [administrators, setAdministrators] = useState<AdministratorRecord[]>([]);
+  const [administratorRoles, setAdministratorRoles] = useState<AdminRoleRecord[]>([]);
+  const [administratorUnits, setAdministratorUnits] = useState<{ id: number; code: string; label: string }[]>([]);
+  const [administratorsLoading, setAdministratorsLoading] = useState(false);
+  const [administratorSearch, setAdministratorSearch] = useState("");
+  const [administratorRoleFilter, setAdministratorRoleFilter] = useState<AdministratorRoleFilter>("all");
+  const [administratorUnitFilter, setAdministratorUnitFilter] = useState<AdministratorUnitFilter>("all");
+  const [administratorStatusFilter, setAdministratorStatusFilter] = useState<AdministratorStatusFilter>("all");
+  const [administratorModalMode, setAdministratorModalMode] = useState<"create" | "edit" | null>(null);
+  const [editingAdministratorId, setEditingAdministratorId] = useState<string | null>(null);
+  const [administratorDisplayNameDraft, setAdministratorDisplayNameDraft] = useState("");
+  const [administratorEmailDraft, setAdministratorEmailDraft] = useState("");
+  const [administratorEmailError, setAdministratorEmailError] = useState<string | null>(null);
+  const [administratorUsernameDraft, setAdministratorUsernameDraft] = useState("");
+  const [administratorRoleIdDraft, setAdministratorRoleIdDraft] = useState<number | null>(null);
+  const [administratorUnitIdDraft, setAdministratorUnitIdDraft] = useState<number | null>(null);
+  const [savingAdministrator, setSavingAdministrator] = useState(false);
+  const [pendingToggleActiveAdministrator, setPendingToggleActiveAdministrator] = useState<AdministratorRecord | null>(null);
+  const [pendingDeleteAdministrator, setPendingDeleteAdministrator] = useState<AdministratorRecord | null>(null);
+  const [pendingPasswordResetAdmin, setPendingPasswordResetAdmin] = useState<AdministratorRecord | null>(null);
+  const [sendingPasswordResetId, setSendingPasswordResetId] = useState<string | null>(null);
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
+  const [administratorsExportDialogOpen, setAdministratorsExportDialogOpen] = useState(false);
+  const [administratorsViewTab, setAdministratorsViewTab] = useState<"accounts" | "roles-permissions">("accounts");
+  const [rolesPermissionsSubTab, setRolesPermissionsSubTab] = useState<"edit" | "compare">("edit");
+  const [configuringRoleCode, setConfiguringRoleCode] = useState<"super_admin" | "admin">("super_admin");
+  const [newsDatePostedDraft, setNewsDatePostedDraft] = useState("");
+  const [newsVisibilityDraft, setNewsVisibilityDraft] = useState<NewsRelease["visibilityStatus"]>("draft");
+  const [newsCategoryDraft, setNewsCategoryDraft] = useState("");
+  const [savingNewsRelease, setSavingNewsRelease] = useState(false);
+  const [transparencyModalMode, setTransparencyModalMode] = useState<"create" | "edit" | null>(null);
+  const [editingTransparencyPostId, setEditingTransparencyPostId] = useState<string | null>(null);
+  const [transparencyTitleDraft, setTransparencyTitleDraft] = useState("");
+  const [transparencyDescriptionDraft, setTransparencyDescriptionDraft] = useState("");
+  const [transparencyCategoryDraft, setTransparencyCategoryDraft] = useState("");
+  const [transparencyAttachmentUrlDraft, setTransparencyAttachmentUrlDraft] = useState("");
+  const [transparencyPostDateDraft, setTransparencyPostDateDraft] = useState("");
+  const [transparencyVisibilityDraft, setTransparencyVisibilityDraft] = useState<TransparencyPost["visibilityStatus"]>("draft");
+  const [savingTransparencyPost, setSavingTransparencyPost] = useState(false);
+  const [pendingAdminConfirmation, setPendingAdminConfirmation] = useState<PendingAdminConfirmation | null>(null);
+  const [pendingDeleteConfirmation, setPendingDeleteConfirmation] = useState<PendingDeleteConfirmation | null>(null);
+  const [pendingNewsVisibilityConfirmation, setPendingNewsVisibilityConfirmation] = useState<{
+    title: string;
+    nextStatus: "published" | "hidden";
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [approvalAcknowledged, setApprovalAcknowledged] = useState(false);
+  const [statusChangeRemarkDraft, setStatusChangeRemarkDraft] = useState("");
+  const [processingAdminConfirmation, setProcessingAdminConfirmation] = useState(false);
+  const [inquirySearch, setInquirySearch] = useState("");
+  const [inquiryStatusFilter, setInquiryStatusFilter] = useState<"all" | InquiryRecord["status"]>("all");
+  const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
+  const [replyDialogInquiry, setReplyDialogInquiry] = useState<InquiryRecord | null>(null);
+  const [inquiryStatusDraft, setInquiryStatusDraft] = useState<InquiryRecord["status"]>("pending_review");
+  const [inquiryAdminRemarksDraft, setInquiryAdminRemarksDraft] = useState("");
+  const [savingInquiryStatus, setSavingInquiryStatus] = useState(false);
+  const [expandedRegistrationIds, setExpandedRegistrationIds] = useState<string[]>([]);
+  const [expandedDocumentFileIds, setExpandedDocumentFileIds] = useState<string[]>([]);
+  const [documentReviewRemarksByFileId, setDocumentReviewRemarksByFileId] = useState<Record<string, string>>({});
+  const [selectedRegistrationReviewFileIds, setSelectedRegistrationReviewFileIds] = useState<string[]>([]);
+  const [activeRegistrationReviewFileId, setActiveRegistrationReviewFileId] = useState<string | null>(null);
+  const [registrationInfoCollapsed, setRegistrationInfoCollapsed] = useState(true);
+  const [registrationBulkDecision, setRegistrationBulkDecision] = useState<RegistrationReviewDecision>("approve");
+  const [registrationBulkRemark, setRegistrationBulkRemark] = useState("");
+  const [registrationActivityVisibleCount, setRegistrationActivityVisibleCount] = useState(4);
+  const [isRegistrationActivityPopoverOpen, setIsRegistrationActivityPopoverOpen] = useState(false);
+  const registrationActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const registrationActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRegistrationDecisionHelpOpen, setIsRegistrationDecisionHelpOpen] = useState(false);
+  const registrationDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const registrationDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRegistrationDecisionConfirmOpen, setIsRegistrationDecisionConfirmOpen] = useState(false);
+  const [registrationRejectAcknowledged, setRegistrationRejectAcknowledged] = useState(false);
+  const [registrationReviewSubmitting, setRegistrationReviewSubmitting] = useState(false);
+  const [selectedRenewalReviewFileIds, setSelectedRenewalReviewFileIds] = useState<string[]>([]);
+  const [activeRenewalReviewFileId, setActiveRenewalReviewFileId] = useState<string | null>(null);
+  const [renewalInfoCollapsed, setRenewalInfoCollapsed] = useState(true);
+  const [renewalBulkDecision, setRenewalBulkDecision] = useState<RegistrationReviewDecision>("approve");
+  const [renewalBulkRemark, setRenewalBulkRemark] = useState("");
+  const [renewalActivityVisibleCount, setRenewalActivityVisibleCount] = useState(4);
+  const [isRenewalActivityPopoverOpen, setIsRenewalActivityPopoverOpen] = useState(false);
+  const renewalActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const renewalActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRenewalDecisionHelpOpen, setIsRenewalDecisionHelpOpen] = useState(false);
+  const renewalDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const renewalDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isRenewalDecisionConfirmOpen, setIsRenewalDecisionConfirmOpen] = useState(false);
+  const [renewalReviewSubmitting, setRenewalReviewSubmitting] = useState(false);
+  const [isRenewalRevisionDialogOpen, setIsRenewalRevisionDialogOpen] = useState(false);
+  const [isRenewalRejectDialogOpen, setIsRenewalRejectDialogOpen] = useState(false);
+  const [renewalDecisionRemarksDraft, setRenewalDecisionRemarksDraft] = useState("");
+  const [renewalDecisionSubmitting, setRenewalDecisionSubmitting] = useState(false);
+  const [selectedBudgetRequestId, setSelectedBudgetRequestId] = useState<string | null>(null);
+  const [selectedBudgetRequestSnapshot, setSelectedBudgetRequestSnapshot] = useState<BudgetRequest | null>(null);
+  const [isBudgetApprovedAmountDirty, setIsBudgetApprovedAmountDirty] = useState(false);
+  const [isBudgetDecisionDirty, setIsBudgetDecisionDirty] = useState(false);
+  const [isBudgetRemarkDirty, setIsBudgetRemarkDirty] = useState(false);
+  const lastInitializedBudgetIdRef = useRef<string | null>(null);
+  const [budgetInfoCollapsed, setBudgetInfoCollapsed] = useState(true);
+  const [budgetActivityVisibleCount, setBudgetActivityVisibleCount] = useState(4);
+  const [isBudgetActivityPopoverOpen, setIsBudgetActivityPopoverOpen] = useState(false);
+  const budgetActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const budgetActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [selectedBudgetFileId, setSelectedBudgetFileId] = useState<string | null>(null);
+  const [budgetPreviewUrl, setBudgetPreviewUrl] = useState("");
+  const [budgetPreviewTitle, setBudgetPreviewTitle] = useState("");
+  const [budgetPreviewEmptyMessage, setBudgetPreviewEmptyMessage] = useState("");
+  const [budgetPreviewCanInline, setBudgetPreviewCanInline] = useState(false);
+  const [budgetPreviewLoading, setBudgetPreviewLoading] = useState(false);
+  const [selectedBudgetReviewFileIds, setSelectedBudgetReviewFileIds] = useState<string[]>([]);
+  const [budgetBulkDecision, setBudgetBulkDecision] = useState<BudgetReviewDecision>("approve");
+  const [budgetBulkRemark, setBudgetBulkRemark] = useState("");
+  const [budgetApprovedAmountDraft, setBudgetApprovedAmountDraft] = useState("");
+  const [isBudgetDecisionHelpOpen, setIsBudgetDecisionHelpOpen] = useState(false);
+  const budgetDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const budgetDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isBudgetDecisionConfirmOpen, setIsBudgetDecisionConfirmOpen] = useState(false);
+  const [budgetReviewSubmitting, setBudgetReviewSubmitting] = useState(false);
+  const [budgetLifecycleSubmitting, setBudgetLifecycleSubmitting] = useState(false);
+  const [liquidationInfoCollapsed, setLiquidationInfoCollapsed] = useState(true);
+  const [liquidationActivityVisibleCount, setLiquidationActivityVisibleCount] = useState(4);
+  const [isLiquidationActivityPopoverOpen, setIsLiquidationActivityPopoverOpen] = useState(false);
+  const liquidationActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const liquidationActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [selectedLiquidationReviewFileIds, setSelectedLiquidationReviewFileIds] = useState<string[]>([]);
+  const [liquidationBulkDecision, setLiquidationBulkDecision] = useState<BudgetReviewDecision>("approve");
+  const [liquidationBulkRemark, setLiquidationBulkRemark] = useState("");
+  const [isLiquidationDecisionHelpOpen, setIsLiquidationDecisionHelpOpen] = useState(false);
+  const liquidationDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const liquidationDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isLiquidationDecisionConfirmOpen, setIsLiquidationDecisionConfirmOpen] = useState(false);
+  const [liquidationReviewSubmitting, setLiquidationReviewSubmitting] = useState(false);
+  const [liquidationLifecycleStage, setLiquidationLifecycleStage] = useState<LiquidationReport["status"]>("approved_for_ftf_green");
+  const [liquidationLifecycleSubmitting, setLiquidationLifecycleSubmitting] = useState(false);
+  const [liquidationHardcopyDateReceived, setLiquidationHardcopyDateReceived] = useState(() => new Date().toISOString().slice(0, 10));
+  const [isMarkingLiquidationHardcopy, setIsMarkingLiquidationHardcopy] = useState(false);
+  const [isLiquidationHardcopyDateOpen, setIsLiquidationHardcopyDateOpen] = useState(false);
+  const [selectedBudgetAllocation, setSelectedBudgetAllocation] = useState<BarangayAllocationEntry | null>(null);
+  const [selectedLiquidationReportSnapshot, setSelectedLiquidationReportSnapshot] = useState<LiquidationReport | null>(null);
+  const [selectedLiquidationReportId, setSelectedLiquidationReportId] = useState<string | null>(null);
+  const [selectedLiquidationFileId, setSelectedLiquidationFileId] = useState<string | null>(null);
+  const [liquidationDetailsOpen, setLiquidationDetailsOpen] = useState(false);
+  const [liquidationPreviewUrl, setLiquidationPreviewUrl] = useState("");
+  const [liquidationPreviewTitle, setLiquidationPreviewTitle] = useState("");
+  const [liquidationPreviewEmptyMessage, setLiquidationPreviewEmptyMessage] = useState("");
+  const [liquidationPreviewCanInline, setLiquidationPreviewCanInline] = useState(false);
+  const [liquidationPreviewLoading, setLiquidationPreviewLoading] = useState(false);
+  const [budgetMonitoringTab, setBudgetMonitoringTab] = useState<"overview" | "barangay-allocation" | "map" | "public">("overview");
+  const [budgetMonitoringFilters, setBudgetMonitoringFilters] = useState<BudgetMonitoringFilters>(() =>
+    createDefaultBudgetMonitoringFilters(),
+  );
+  const monitoringPermissionKey = [...(user?.permissionCodes ?? [])].sort().join(",");
+  const monitoringQueryKey = useMemo(() => ["admin", "budget-monitoring-period", user?.id, currentAdminRoleCode,
+    monitoringPermissionKey, section === "budget-monitoring" ? budgetMonitoringFilters.fiscalPeriod : "inactive"],
+    [user?.id, currentAdminRoleCode, monitoringPermissionKey, section, budgetMonitoringFilters.fiscalPeriod]);
+  const monitoringQuery = useQuery({
+    queryKey: monitoringQueryKey,
+    queryFn: ({ signal }) => loadAdminBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod, signal),
+    enabled: Boolean(supabase && user && section === "budget-monitoring"),
+    staleTime: 30_000,
+    gcTime: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  useEffect(() => {
+    if (section !== "budget-monitoring") return;
+    return () => { void queryClient.cancelQueries({ queryKey: monitoringQueryKey, exact: true }); };
+  }, [section, monitoringQueryKey, queryClient]);
+  // Reporting rows stay in this page cache; they never hydrate shared collections.
+  const state = useMemo(() => section === "budget-monitoring" && supabase ? {
+    ...sharedState,
+    organizationProfiles: monitoringQuery.data?.organizationProfiles ?? [],
+    budgetRequests: monitoringQuery.data?.budgetRequests ?? [],
+    liquidationReports: monitoringQuery.data?.liquidationReports ?? [],
+    budgetRequestFiles: [],
+    liquidationReportFiles: [],
+  } : sharedState, [section, sharedState, monitoringQuery.data]);
+
+  const [budgetInsightsExpanded, setBudgetInsightsExpanded] = useState(false);
+  const [budgetRequestsSearch, setBudgetRequestsSearch] = useState("");
+  const [budgetReviewPage, setBudgetReviewPage] = useState(0);
+  const [debouncedBudgetReviewSearch, setDebouncedBudgetReviewSearch] = useState("");
+  const budgetRequestsSemesterFilter = ALL_SEMESTERS_KEY;
+  const [budgetRequestsStatusFilter, setBudgetRequestsStatusFilter] = useState<BudgetRequestsStatusFilter>("all");
+  const [budgetRequestsDistrictFilter, setBudgetRequestsDistrictFilter] = useState<"all" | PasigDistrict>("all");
+  const [budgetRequestsBarangayFilter, setBudgetRequestsBarangayFilter] = useState("all");
+  const [budgetRequestsClassificationFilter, setBudgetRequestsClassificationFilter] = useState("all");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && section === "budgets") {
+      const url = new URL(window.location.href);
+      if (budgetRequestsSemesterFilter && budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY) {
+        url.searchParams.set("semester", budgetRequestsSemesterFilter);
+      } else {
+        url.searchParams.delete("semester");
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [budgetRequestsSemesterFilter, section]);
+
+  const [selectedBudgetRequestIds, setSelectedBudgetRequestIds] = useState<Set<string>>(new Set());
+  const [isDeleteBudgetRequestsModalOpen, setIsDeleteBudgetRequestsModalOpen] = useState(false);
+  const [isDeletingBudgetRequests, setIsDeletingBudgetRequests] = useState(false);
+  const [liquidationReportsSearch, setLiquidationReportsSearch] = useState("");
+  const [liquidationReviewPage, setLiquidationReviewPage] = useState(0);
+  const [debouncedLiquidationReviewSearch, setDebouncedLiquidationReviewSearch] = useState("");
+  const [liquidationReportsStatusFilter, setLiquidationReportsStatusFilter] = useState<LiquidationReportsStatusFilter>("all");
+  const [liquidationReportsDistrictFilter, setLiquidationReportsDistrictFilter] = useState<"all" | PasigDistrict>("all");
+  const [liquidationReportsBarangayFilter, setLiquidationReportsBarangayFilter] = useState("all");
+  const [liquidationReportsClassificationFilter, setLiquidationReportsClassificationFilter] = useState("all");
+  const [liquidationExportDialogOpen, setLiquidationExportDialogOpen] = useState(false);
+  const [budgetMonitoringSearch, setBudgetMonitoringSearch] = useState("");
+  const [budgetMonitoringRiskFilter, setBudgetMonitoringRiskFilter] = useState("all");
+  const [organizationFundingSearch, setOrganizationFundingSearch] = useState("");
+  const [barangayDetailSearch, setBarangayDetailSearch] = useState("");
+  const [selectedOrganizationBudgetDetailId, setSelectedOrganizationBudgetDetailId] = useState<string | null>(null);
+  const [isConfiguringPublicSnapshot, setIsConfiguringPublicSnapshot] = useState(false);
+  const [registrationSearch, setRegistrationSearch] = useState("");
+  const [registrationStatusFilter, setRegistrationStatusFilter] = useState<RegistrationStatusFilter>("all");
+  const [registrationDistrictFilter, setRegistrationDistrictFilter] = useState<"all" | PasigDistrict>("all");
+  const [registrationBarangayFilter, setRegistrationBarangayFilter] = useState("all");
+  const [registrationClassificationFilter, setRegistrationClassificationFilter] = useState("all");
+  const [adminListPage, setAdminListPage] = useState(0);
+  const [adminListRefreshKey, setAdminListRefreshKey] = useState(0);
+  const [renewalSearch, setRenewalSearch] = useState("");
+  const [debouncedRenewalSearch, setDebouncedRenewalSearch] = useState("");
+  const [renewalReviewPage, setRenewalReviewPage] = useState(0);
+  const [renewalStatusFilter, setRenewalStatusFilter] = useState<RenewalStatusFilter>("all");
+  const [renewalDistrictFilter, setRenewalDistrictFilter] = useState<"all" | PasigDistrict>("all");
+  const [renewalBarangayFilter, setRenewalBarangayFilter] = useState("all");
+  const [renewalClassificationFilter, setRenewalClassificationFilter] = useState("all");
+  const [budgetAllocationMobilePage, setBudgetAllocationMobilePage] = useState(1);
+  const [budgetAllocationSearch, setBudgetAllocationSearch] = useState("");
+  const [collapsedAllocationDistricts, setCollapsedAllocationDistricts] = useState<string[]>([]);
+  const [activeReportExport, setActiveReportExport] = useState<ActiveReportExport>(null);
+  const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
+  const [downloadDialogCurrentFile, setDownloadDialogCurrentFile] = useState<DownloadableFile | null>(null);
+  const [downloadDialogAllFiles, setDownloadDialogAllFiles] = useState<DownloadableFile[]>([]);
+  const [downloadDialogZipName, setDownloadDialogZipName] = useState("Documents.zip");
+  const [downloadDialogResolving, setDownloadDialogResolving] = useState(false);
+  const [documentPreviewUrls, setDocumentPreviewUrls] = useState<Record<string, string>>({});
+  const documentPreviewSourceRef = useRef<Record<string, string>>({});
+  const [selectedYpopId, setSelectedYpopId] = useState<string | null>(null);
+  const [ypopAdminView, setYpopAdminView] = useState<"periods" | "create-period" | "period-detail" | "entry-review">("periods");
+  const [entryReviewTab, setEntryReviewTab] = useState<"city_led" | "org_led">("city_led");
+  const [collapsedEntryReviewGroups, setCollapsedEntryReviewGroups] = useState<string[]>([]);
+  const [selectedEntryReviewGroupIds, setSelectedEntryReviewGroupIds] = useState<string[]>([]);
+  const [activeEntryReviewGroupId, setActiveEntryReviewGroupId] = useState<string | null>(null);
+  const [activeEntryReviewFileId, setActiveEntryReviewFileId] = useState<string | null>(null);
+  const [entryReviewPreviewUrl, setEntryReviewPreviewUrl] = useState("");
+  const [entryReviewPreviewTitle, setEntryReviewPreviewTitle] = useState("");
+  const [entryReviewPreviewCanInline, setEntryReviewPreviewCanInline] = useState(false);
+  const [entryReviewPreviewLoading, setEntryReviewPreviewLoading] = useState(false);
+  const [entryReviewBulkDecision, setEntryReviewBulkDecision] = useState<"approve" | "needs_revision">("approve");
+  const [entryReviewBulkRemark, setEntryReviewBulkRemark] = useState("");
+  const [entryReviewConfirmOpen, setEntryReviewConfirmOpen] = useState(false);
+  const [entryReviewSubmitting, setEntryReviewSubmitting] = useState(false);
+  const [ypopActivityVisibleCount, setYpopActivityVisibleCount] = useState(4);
+  const adminPortalChangeVersionsRef = useRef<AdminPortalChangeVersions | null>(null);
+  const adminVersionMutationEpochRef = useRef(0);
+  const adminVersionRequestRef = useRef<Promise<AdminPortalChangeVersions> | null>(null);
+  const requestAdminVersionSnapshot = useCallback(() => {
+    if (adminVersionRequestRef.current) return adminVersionRequestRef.current;
+    const request = fetchAdminPortalChangeVersions();
+    adminVersionRequestRef.current = request;
+    void request.then(
+      () => { if (adminVersionRequestRef.current === request) adminVersionRequestRef.current = null; },
+      () => { if (adminVersionRequestRef.current === request) adminVersionRequestRef.current = null; },
+    );
+    return request;
+  }, []);
+  const [isYpopActivityPopoverOpen, setIsYpopActivityPopoverOpen] = useState(false);
+  const ypopActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const ypopActivityPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isYpopDecisionHelpOpen, setIsYpopDecisionHelpOpen] = useState(false);
+  const ypopDecisionHelpTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const ypopDecisionHelpPanelRef = useRef<HTMLDivElement | null>(null);
+
+  // Large admin queues are queried from PostgreSQL in bounded, filter-aware
+  // pages. Keep search debounced and cache each feature/page/filter tuple.
+  const adminListResource = section === "registrations"
+    ? "registrations"
+    : section === "inquiries"
+      ? "inquiries"
+      : section === "activity-logs"
+        ? "activity_logs"
+        : null;
+  const adminListSearch = adminListResource === "registrations"
+    ? registrationSearch
+    : adminListResource === "inquiries"
+      ? inquirySearch
+      : activitySearch;
+  const [debouncedAdminListSearch, setDebouncedAdminListSearch] = useState(adminListSearch);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedAdminListSearch(adminListSearch), 350);
+    return () => window.clearTimeout(timeout);
+  }, [adminListSearch]);
+  useEffect(() => {
+    setAdminListPage(0);
+  }, [
+    section,
+    registrationSearch,
+    registrationStatusFilter,
+    registrationDistrictFilter,
+    registrationBarangayFilter,
+    registrationClassificationFilter,
+    inquirySearch,
+    inquiryStatusFilter,
+    activitySearch,
+    activityLogFilter,
+    activityDateFilter,
+    activityReportPeriod,
+  ]);
+  const adminListQuery = useQuery({
+    queryKey: [
+      "admin",
+      adminListResource,
+      adminListPage,
+      debouncedAdminListSearch,
+      registrationStatusFilter,
+      registrationDistrictFilter,
+      registrationBarangayFilter,
+      registrationClassificationFilter,
+      inquiryStatusFilter,
+      activityLogFilter,
+      activityDateFilter,
+      activityReportPeriod,
+    ],
+    queryFn: () => fetchAdminPortalListPage({
+      resource: adminListResource!,
+      page: adminListPage,
+      pageSize: 10,
+      search: debouncedAdminListSearch,
+      status: adminListResource === "registrations"
+        ? registrationStatusFilter
+        : adminListResource === "inquiries"
+          ? inquiryStatusFilter
+          : activityLogFilter,
+      district: adminListResource === "registrations" ? registrationDistrictFilter : "all",
+      barangay: adminListResource === "registrations" ? registrationBarangayFilter : "all",
+      classification: adminListResource === "registrations" ? registrationClassificationFilter : "all",
+      dateRange: adminListResource === "activity_logs" ? activityDateFilter : "all",
+      ...(adminListResource === "activity_logs" ? reportRange(activityReportPeriod) : {}),
+    }),
+    enabled: (adminListResource !== "activity_logs" || !getAdminReportPeriodError(activityReportPeriod)) && Boolean(supabase && adminListResource) && adminListSearch === debouncedAdminListSearch,
+  });
+  const adminListResult = adminListQuery.data ?? null;
+  const adminListLoading = adminListQuery.isFetching;
+  const adminListError = adminListQuery.error instanceof Error ? adminListQuery.error.message : "";
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedBudgetReviewSearch(budgetRequestsSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [budgetRequestsSearch]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedLiquidationReviewSearch(liquidationReportsSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [liquidationReportsSearch]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedRenewalSearch(renewalSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [renewalSearch]);
+  useEffect(() => setRenewalReviewPage(0), [renewalSearch, renewalStatusFilter, renewalDistrictFilter, renewalBarangayFilter, renewalClassificationFilter]);
+  useEffect(() => setBudgetReviewPage(0), [budgetRequestsSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter, budgetReportPeriod]);
+  useEffect(() => setLiquidationReviewPage(0), [liquidationReportsSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter, liquidationReportPeriod]);
+  const adminBudgetReviewQuery = useQuery({
+    queryKey: ["admin", "review", "budgets", budgetReviewPage, debouncedBudgetReviewSearch, budgetRequestsStatusFilter, budgetRequestsSemesterFilter, budgetRequestsDistrictFilter, budgetRequestsBarangayFilter, budgetRequestsClassificationFilter, budgetReportPeriod],
+    queryFn: () => fetchAdminReviewResourcePage({
+      resource: "budgets", page: budgetReviewPage, pageSize: 20, search: debouncedBudgetReviewSearch,
+      status: budgetRequestsStatusFilter, semester: budgetRequestsSemesterFilter,
+      district: budgetRequestsDistrictFilter, barangay: budgetRequestsBarangayFilter,
+      classification: budgetRequestsClassificationFilter,
+      ...reportRange(budgetReportPeriod),
+    }),
+    enabled: !getAdminReportPeriodError(budgetReportPeriod) && Boolean(supabase && section === "budget-utilization") && debouncedBudgetReviewSearch === budgetRequestsSearch.trim(),
+  });
+  const adminBudgetReviewRows = (adminBudgetReviewQuery.data?.rows ?? []).filter((row): row is AdminBudgetReviewRow => "request" in row);
+  const adminLiquidationReviewQuery = useQuery({
+    queryKey: ["admin", "review", "liquidations", liquidationReviewPage, debouncedLiquidationReviewSearch, liquidationReportsStatusFilter, liquidationReportsDistrictFilter, liquidationReportsBarangayFilter, liquidationReportsClassificationFilter, liquidationReportPeriod],
+    queryFn: () => fetchAdminReviewResourcePage({
+      resource: "liquidations", page: liquidationReviewPage, pageSize: 20, search: debouncedLiquidationReviewSearch,
+      status: liquidationReportsStatusFilter, district: liquidationReportsDistrictFilter,
+      barangay: liquidationReportsBarangayFilter, classification: liquidationReportsClassificationFilter,
+      ...reportRange(liquidationReportPeriod),
+    }),
+    enabled: !getAdminReportPeriodError(liquidationReportPeriod) && Boolean(supabase && section === "liquidation-monitoring") && debouncedLiquidationReviewSearch === liquidationReportsSearch.trim(),
+    placeholderData: (previous) => previous,
+  });
+  const adminLiquidationReviewRows = (adminLiquidationReviewQuery.data?.rows ?? []).filter((row): row is AdminLiquidationReviewRow => "report" in row && row.report.status !== "draft");
+  const adminBudgetRequestDetailQuery = useQuery({
+    queryKey: ["admin", "budget-detail", selectedBudgetRequestId],
+    queryFn: () => fetchAdminBudgetRequestDetail(selectedBudgetRequestId!),
+    enabled: Boolean(supabase && section === "budget-utilization" && selectedBudgetRequestId),
+  });
+  const adminLiquidationDetailQuery = useQuery({
+    queryKey: ["admin", "liquidation-detail", selectedLiquidationReportId],
+    queryFn: () => fetchAdminLiquidationReportDetail(selectedLiquidationReportId!),
+    enabled: Boolean(supabase && section === "liquidation-monitoring" && selectedLiquidationReportId),
+  });
+  useEffect(() => {
+    if (adminBudgetRequestDetailQuery.data) mergeRemoteStateRef.current(adminBudgetRequestDetailQuery.data);
+  }, [adminBudgetRequestDetailQuery.data]);
+  useEffect(() => {
+    if (adminLiquidationDetailQuery.data) mergeRemoteStateRef.current(adminLiquidationDetailQuery.data);
+  }, [adminLiquidationDetailQuery.data]);
+  const adminNotificationsQuery = useQuery({
+    queryKey: ["admin", "notifications", "recent"],
+    queryFn: fetchAdminRecentNotifications,
+    enabled: Boolean(supabase && readAdminSession()?.sessionToken),
+  });
+  const adminYpopPeriodsQuery = useQuery({
+    queryKey: ["admin", "ypop", "periods"],
+    queryFn: fetchAdminYpopValidationPeriods,
+    enabled: Boolean(supabase && section === "ypop-validation"),
+  });
+  useEffect(() => {
+    if (adminYpopPeriodsQuery.data) {
+      mergeRemoteStateRef.current({ ypopPeriods: adminYpopPeriodsQuery.data.map(({ period }) => period) });
+    }
+  }, [adminYpopPeriodsQuery.data]);
+  useEffect(() => {
+    if (!adminListResource || adminListRefreshKey === 0) return;
+    void queryClient.invalidateQueries({ queryKey: ["admin", adminListResource] });
+  }, [adminListRefreshKey, adminListResource, queryClient]);
+  const registrationDetailQuery = useQuery({
+    queryKey: ["admin", "registration", selectedRegistrationId],
+    queryFn: () => fetchAdminRegistrationDetail(selectedRegistrationId!),
+    enabled: Boolean(supabase && section === "registrations" && selectedRegistrationId),
+  });
+  useEffect(() => {
+    if (registrationDetailQuery.data) {
+      mergeRemoteStateRef.current(registrationDetailQuery.data);
+    }
+  }, [registrationDetailQuery.data]);
+  const refreshScopedAdminQueries = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] });
+    if (section === "overview") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      return;
+    }
+    if (section === "notifications") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
+      return;
+    }
+    if (adminListResource) {
+      await queryClient.invalidateQueries({ queryKey: ["admin", adminListResource] });
+    }
+    if (section === "registrations" && selectedRegistrationId) {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "registration", selectedRegistrationId] });
+    }
+  };
+
+  useEffect(() => {
+    setEntryReviewTab("city_led");
+    setCollapsedEntryReviewGroups([]);
+    setSelectedEntryReviewGroupIds([]);
+    setActiveEntryReviewGroupId(null);
+    setActiveEntryReviewFileId(null);
+    setEntryReviewBulkDecision("approve");
+    setEntryReviewBulkRemark("");
+    setYpopActivityVisibleCount(4);
+    setIsYpopActivityPopoverOpen(false);
+    setIsYpopDecisionHelpOpen(false);
+  }, [selectedYpopId]);
+
+  // Activity Announcement Broadcast State
+  const [announcementTargetActivity, setAnnouncementTargetActivity] = useState<YPOPCityActivity | null>(null);
+  const [announcementDialogOpen, setAnnouncementDialogOpen] = useState(false);
+  const [sentAnnouncementsByActivityId, setSentAnnouncementsByActivityId] = useState<
+    Record<string, { status: string; recipientCount: number; sentAt?: string }>
+  >({});
+
+  useEffect(() => {
+    if (section !== "ypop-validation") return;
+    const params = new URLSearchParams(location.search);
+    const targetOrgId = params.get("orgId") || params.get("organizationId");
+    if (!targetOrgId) return;
+
+    const targetTab = params.get("tab");
+    const targetSemester = params.get("semester");
+
+    const period =
+      (targetSemester ? state.ypopPeriods.find((p) => p.semesterKey === targetSemester) : null) ||
+      state.ypopPeriods.find((p) => p.status === "open") ||
+      [...state.ypopPeriods].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ||
+      null;
+
+    if (period) {
+      setSelectedYpopPeriodId(period.id);
+    }
+
+    const existingEntry = state.ypopEntries.find(
+      (e) => e.organizationId === targetOrgId && (!period || e.semester === period.semesterKey),
+    );
+
+    if (existingEntry) {
+      setSelectedYpopId(existingEntry.id);
+      setYpopAdminView("entry-review");
+      if (targetTab === "org_led" || targetTab === "city_led") {
+        setEntryReviewTab(targetTab);
+      }
+    } else if (period) {
+      const targetOrg = state.organizationProfiles.find((o) => o.id === targetOrgId);
+      if (targetOrg) {
+        const virtualEntryId = `virtual-${targetOrgId}-${period.semesterKey}`;
+        const newEntryPayload: YPOPEntry = {
+          id: virtualEntryId,
+          organizationId: targetOrg.id,
+          submittedBy: targetOrg.userId || "",
+          semester: period.semesterKey,
+          semesterLabel: period.semesterLabel,
+          pointsEarned: 0,
+          pointsRequired: 70,
+          totalPoints: 100,
+          status: "under_review",
+          adminRemarks: "",
+          submissionNote: "",
+          validationDeadline: period.validationDeadline || "",
+          submittedAt: new Date().toISOString(),
+          validatedAt: "",
+          revisionHistory: [],
+          orgLedProjectCount: 0,
+          cityLedAttendance: [],
+        };
+        const inState = state.ypopEntries.find((e) => e.id === virtualEntryId);
+        if (!inState) {
+          createYPOPEntry(newEntryPayload);
+        }
+        setSelectedYpopId(virtualEntryId);
+        setYpopAdminView("entry-review");
+        if (targetTab === "org_led" || targetTab === "city_led") {
+          setEntryReviewTab(targetTab);
+        }
+      }
+    }
+  }, [section, location.search, state.ypopPeriods, state.ypopEntries, state.organizationProfiles, createYPOPEntry]);
+
+  useEffect(() => {
+    if (section === "ypop" && state.ypopCityActivities.length > 0) {
+      const activityIds = state.ypopCityActivities.map((a) => a.id);
+      adminGetActivityAnnouncementsFromSupabase(activityIds)
+        .then((records) => {
+          const map: Record<string, { status: string; recipientCount: number; sentAt?: string }> = {};
+          for (const r of records) {
+            if (r.status === "sent" || r.status === "partial_failure") {
+              map[r.activity_id] = {
+                status: r.status,
+                recipientCount: r.recipient_count,
+                sentAt: r.sent_at || r.created_at,
+              };
+            }
+          }
+          setSentAnnouncementsByActivityId(map);
+        })
+        .catch((err) => {
+          console.warn("Could not load activity announcements history:", err);
+        });
+    }
+  }, [section, state.ypopCityActivities]);
+
+  useEffect(() => {
+    let isActive = true;
+    const previewFile: YPOPEventFile | YPOPOrgActivityFile | undefined =
+      state.ypopEventFiles.find((f) => {
+        if (f.id !== activeEntryReviewFileId) return false;
+        const part = state.ypopEventParticipations.find((p) => p.id === f.participationId);
+        return Boolean(part && part.status !== "draft");
+      }) ??
+      state.ypopOrgActivityFiles.find((f) => f.id === activeEntryReviewFileId);
+
+    if (!previewFile) {
+      setEntryReviewPreviewUrl("");
+      setEntryReviewPreviewCanInline(false);
+      setEntryReviewPreviewLoading(false);
+      return;
+    }
+
+    setEntryReviewPreviewTitle(previewFile.fileName);
+
+    if (!previewFile.fileUrl.trim()) {
+      setEntryReviewPreviewUrl("");
+      setEntryReviewPreviewCanInline(false);
+      setEntryReviewPreviewLoading(false);
+      return;
+    }
+
+    setEntryReviewPreviewLoading(true);
+
+    void (async () => {
+      try {
+        const resolvedUrl = await resolveSupabaseFileUrl(previewFile.fileUrl);
+        if (!isActive) return;
+        const finalUrl = resolvedUrl ?? "";
+        setEntryReviewPreviewUrl(finalUrl);
+        setEntryReviewPreviewCanInline(canInlinePreviewFile(previewFile.fileName) || canInlinePreviewFile(finalUrl));
+      } catch {
+        if (!isActive) return;
+        setEntryReviewPreviewUrl("");
+        setEntryReviewPreviewCanInline(false);
+      } finally {
+        if (isActive) setEntryReviewPreviewLoading(false);
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeEntryReviewFileId, state.ypopEventFiles, state.ypopOrgActivityFiles]);
+  const [selectedYpopPeriodId, setSelectedYpopPeriodId] = useState<string | null>(null);
+  const [ypopPeriodSearch, setYpopPeriodSearch] = useState("");
+  const [ypopPeriodStatusFilter, setYpopPeriodStatusFilter] = useState<YpopPeriodStatusFilter>("all");
+  const [createPeriodForm, setCreatePeriodForm] = useState<{ semesterLabel: string; validationDeadline: string; status: YPOPPeriodStatus }>({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
+  const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
+  const adminYpopPeriodCityActivitiesQuery = useQuery({
+    queryKey: ["admin", "ypop", "period-city-activities", editingPeriodId],
+    queryFn: () => fetchAdminYpopPeriodCityActivities(editingPeriodId!),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "create-period" && editingPeriodId),
+  });
+  const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory }>>([]);
+  const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
+  const [createPeriodOrgLedTiers, setCreatePeriodOrgLedTiers] = useState<YPOPOrgLedTier[]>(DEFAULT_ORG_LED_TIERS);
+  const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | "pending_evaluation" | "qualified" | "not_qualified">("all");
+  const [ypopSubmissionSearch, setYpopSubmissionSearch] = useState("");
+  const [debouncedYpopSubmissionSearch, setDebouncedYpopSubmissionSearch] = useState("");
+  const [ypopSubmissionPage, setYpopSubmissionPage] = useState(0);
+  const [ypopSubmissionClassificationFilter, setYpopSubmissionClassificationFilter] = useState("all");
+  const [selectedYpopOrganizationIds, setSelectedYpopOrganizationIds] = useState<Set<string>>(new Set());
+  const [ypopDeletionTarget, setYpopDeletionTarget] = useState<{
+    periodId: string; semesterLabel: string; rows: YpopSubmissionRow[];
+  } | null>(null);
+  const [isDeletingYpopSubmissions, setIsDeletingYpopSubmissions] = useState(false);
+  const ypopDeletionOperationRef = useRef<string | null>(null);
+  const ypopDeletionBusyRef = useRef(false);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedYpopSubmissionSearch(ypopSubmissionSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [ypopSubmissionSearch]);
+  useEffect(() => setYpopSubmissionPage(0), [selectedYpopPeriodId, ypopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter]);
+  useEffect(() => {
+    setSelectedYpopOrganizationIds(new Set());
+    setYpopDeletionTarget(null);
+    ypopDeletionOperationRef.current = null;
+  }, [selectedYpopPeriodId, ypopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter, ypopSubmissionPage]);
+  const adminYpopSubmissionsQuery = useQuery({
+    queryKey: ["admin", "ypop", "period-submissions", selectedYpopPeriodId, ypopSubmissionPage, debouncedYpopSubmissionSearch, ypopSubmissionClassificationFilter, ypopSubmissionFilter],
+    queryFn: () => fetchAdminYpopPeriodSubmissionPage({
+      periodId: selectedYpopPeriodId!, page: ypopSubmissionPage, pageSize: 20,
+      search: debouncedYpopSubmissionSearch, classification: ypopSubmissionClassificationFilter, status: ypopSubmissionFilter,
+    }),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "period-detail" && selectedYpopPeriodId)
+      && debouncedYpopSubmissionSearch === ypopSubmissionSearch.trim(),
+    placeholderData: (previous) => previous,
+  });
+  const adminYpopEntryReviewQuery = useQuery({
+    queryKey: ["admin", "ypop", "entry-review", selectedYpopId],
+    queryFn: () => fetchAdminYpopEntryReviewDetail(selectedYpopId!),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "entry-review" && selectedYpopId && !selectedYpopId.startsWith("virtual-")),
+  });
+  const adminYpopReviewFilesQuery = useQuery({
+    queryKey: ["admin", "ypop", "review-files", entryReviewTab, activeEntryReviewGroupId],
+    queryFn: () => fetchAdminYpopReviewFiles(entryReviewTab, activeEntryReviewGroupId!),
+    enabled: Boolean(supabase && section === "ypop-validation" && ypopAdminView === "entry-review" && activeEntryReviewGroupId),
+  });
+  useEffect(() => {
+    if (adminYpopEntryReviewQuery.data) mergeRemoteStateRef.current(adminYpopEntryReviewQuery.data);
+  }, [adminYpopEntryReviewQuery.data]);
+  useEffect(() => {
+    const files = adminYpopReviewFilesQuery.data;
+    if (!files || !activeEntryReviewGroupId) return;
+    if (entryReviewTab === "city_led") mergeRemoteStateRef.current({ ypopEventFiles: files as YPOPEventFile[] });
+    else mergeRemoteStateRef.current({ ypopOrgActivityFiles: files as YPOPOrgActivityFile[] });
+  }, [adminYpopReviewFilesQuery.data, activeEntryReviewGroupId, entryReviewTab]);
+  const [newActivityForm, setNewActivityForm] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [editingDraftTempId, setEditingDraftTempId] = useState<string | null>(null);
+  const [editingActivityData, setEditingActivityData] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
+  const [submittingPeriodStatus, setSubmittingPeriodStatus] = useState<"draft" | "publish" | null>(null);
+  const [deadlineDateOpen, setDeadlineDateOpen] = useState(false);
+  const [activityStartDateOpen, setActivityStartDateOpen] = useState(false);
+  const [activityEndDateOpen, setActivityEndDateOpen] = useState(false);
+  const [recentActivityDialogOpen, setRecentActivityDialogOpen] = useState(false);
+  const [recentActivityDialogTitle, setRecentActivityDialogTitle] = useState("Recent Activity");
+  const [recentActivityDialogEntries, setRecentActivityDialogEntries] = useState<RecentActivityEntry[]>([]);
+  const [inquiryToDelete, setInquiryToDelete] = useState<InquiryRecord | null>(null);
+  const [isDeletingInquiry, setIsDeletingInquiry] = useState(false);
+  const [deleteInquiryError, setDeleteInquiryError] = useState<string | null>(null);
+
+  const profile = state.organizationProfiles[0] ?? null;
+  const currentAdminSession = readAdminSession();
+  const currentAdminId = currentAdminSession?.id || user?.id || adminId;
+  const adminNotifications = adminNotificationsQuery.data?.notifications ?? state.notifications.filter(
+    (item) => item.userId === currentAdminId || item.userId === adminId || item.userId === "admin",
+  );
+  const unread = adminNotificationsQuery.data?.unreadCount ?? adminNotifications.filter((item) => !item.isRead).length;
+  const [isMarkingAllNotificationsRead, setIsMarkingAllNotificationsRead] = useState(false);
+  const persistAdminNotificationRead = async (notificationId?: string) => {
+    if (supabase) await markAdminNotificationsReadInSupabase(notificationId);
+    await queryClient.cancelQueries({ queryKey: ["admin", "notifications"] });
+    if (notificationId) markNotificationRead(notificationId);
+    else markAllNotificationsRead();
+    queryClient.setQueriesData<import("@/lib/lydo-connect-supabase").AdminRecentNotifications>(
+      { queryKey: ["admin", "notifications"] },
+      (previous) => {
+        if (!previous) return previous;
+        const wasUnread = previous.notifications.some((item) => item.id === notificationId && !item.isRead);
+        return {
+          unreadCount: notificationId ? Math.max(0, previous.unreadCount - (wasUnread ? 1 : 0)) : 0,
+          notifications: previous.notifications.map((item) =>
+            !notificationId || item.id === notificationId ? { ...item, isRead: true } : item,
+          ),
+        };
+      },
+    );
+    await queryClient.invalidateQueries({ queryKey: ["admin", "notifications"] });
+  };
+  const markAdminNotificationRead = async (notificationId: string) => {
+    try {
+      await persistAdminNotificationRead(notificationId);
+    } catch (error) {
+      toast({ title: "Could not mark notification as read", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    }
+  };
+  const markAllAdminNotificationsRead = async () => {
+    if (isMarkingAllNotificationsRead) return;
+    setIsMarkingAllNotificationsRead(true);
+    try {
+      await persistAdminNotificationRead();
+    } catch (error) {
+      toast({ title: "Could not mark notifications as read", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally {
+      setIsMarkingAllNotificationsRead(false);
+    }
+  };
+  const activeTemplates = useMemo(
+    () =>
+      [...state.templates]
+        .filter((template) => template.templateActive && template.isActive)
+        .sort((left, right) => left.sortOrder - right.sortOrder),
+    [state.templates],
+  );
+  const templateDocuments = useMemo(
+    () =>
+      activeTemplates.filter((template) => {
+        if (template.templateScope !== "document_submission") return false;
+        const rawCategories =
+          Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+            ? template.templateCategories
+            : (template as any).template_category && Array.isArray((template as any).template_category)
+              ? (template as any).template_category
+              : [(template as any).category || deriveTemplateCategory(template.name)];
+        const categories = rawCategories.map((c: string) => c.toLowerCase().trim());
+        if (!categories.includes("yorp")) return false;
+        const scope = template.scope;
+        return !scope || scope === "registration" || scope === "both";
+      }),
+    [activeTemplates],
+  );
+  const registrationRequirementTypesQuery = useQuery({
+    queryKey: ["admin", "registration-required-document-types"],
+    queryFn: fetchRegistrationRequiredDocumentTypesInSupabase,
+    enabled: Boolean(supabase && section === "registrations"),
+    staleTime: 30 * 1000,
+  });
+  const invalidateRegistrationRequirementTypes = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "registration-required-document-types"] });
+  };
+  const adminRenewalRequiredTypesQuery = useQuery({
+    queryKey: ["admin", "renewal-required-document-types"],
+    queryFn: () => fetchRenewalRequiredDocumentTypesInSupabase({ requireServerChecklist: true }),
+    enabled: Boolean(supabase && section === "renewals"),
+    staleTime: 5 * 60 * 1000,
+  });
+  // One checklist for queue counts, packet rendering, and approval validation.
+  // In Supabase mode, await the configured requirements rather than seeded local IDs.
+  const renewalRequiredDocuments = useMemo(
+    () => supabase ? (adminRenewalRequiredTypesQuery.data ?? []) : templateDocuments,
+    [adminRenewalRequiredTypesQuery.data, templateDocuments],
+  );
+  const renewalQueueRequiredTypeIds = useMemo(() =>
+    [...new Set(renewalRequiredDocuments
+      .map((template) => template.databaseId)
+      .filter((id): id is string => Boolean(id)))],
+  [renewalRequiredDocuments]);
+  const adminRenewalQueueQuery = useQuery({
+    queryKey: ["admin", "renewal-queue", renewalReviewPage, debouncedRenewalSearch, renewalStatusFilter,
+      renewalDistrictFilter, renewalBarangayFilter, renewalClassificationFilter, renewalQueueRequiredTypeIds],
+    queryFn: () => fetchAdminRenewalQueuePage({
+      page: renewalReviewPage, pageSize: 20, search: debouncedRenewalSearch,
+      status: renewalStatusFilter, district: renewalDistrictFilter,
+      barangay: renewalBarangayFilter, classification: renewalClassificationFilter,
+      requiredDocumentTypeIds: renewalQueueRequiredTypeIds,
+    }),
+    enabled: Boolean(supabase && section === "renewals") && adminRenewalRequiredTypesQuery.isSuccess &&
+      debouncedRenewalSearch === renewalSearch.trim(),
+    placeholderData: (previous) => previous,
+  });
+  const adminRenewalReviewContextQuery = useQuery({
+    queryKey: ["admin", "renewal-context", selectedRenewalId],
+    queryFn: () => fetchAdminRenewalReviewContext(selectedRenewalId!),
+    enabled: Boolean(supabase && section === "renewals" && selectedRenewalId),
+  });
+  useEffect(() => {
+    if (!adminRenewalQueueQuery.data?.rows) return;
+    const rows = adminRenewalQueueQuery.data.rows;
+    setAdminRenewals(rows.map(({ renewal }) => renewal));
+    setAdminAccreditations(rows.flatMap(({ accreditation }) => accreditation ? [accreditation] : []));
+  }, [adminRenewalQueueQuery.data]);
+  useEffect(() => {
+    if (adminRenewalReviewContextQuery.data) mergeRemoteStateRef.current(adminRenewalReviewContextQuery.data);
+  }, [adminRenewalReviewContextQuery.data]);
+  const otherTemplates = useMemo(
+    () => activeTemplates.filter((template) => template.templateScope === "other"),
+    [activeTemplates],
+  );
+  const selectedRegistrationProfile = useMemo(
+    () =>
+      state.organizationProfiles.find((profile) => profile.id === selectedRegistrationId) ??
+      adminListResult?.rows.find(
+        (row): row is AdminPortalRegistrationListRow => "profile" in row && row.profile.id === selectedRegistrationId,
+      )?.profile ??
+      null,
+    [selectedRegistrationId, state.organizationProfiles, adminListResult],
+  );
+  const selectedRegistrationSubmission = useMemo(
+    () =>
+      selectedRegistrationProfile
+        ? state.documentSubmissions.find(
+          (submission) =>
+            submission.organizationId === selectedRegistrationProfile.id &&
+            (!submission.submissionScope || submission.submissionScope === "registration") &&
+            !submission.renewalId,
+        ) ?? null
+        : null,
+    [selectedRegistrationProfile, state.documentSubmissions],
+  );
+  const selectedRegistrationFiles = useMemo(
+    () =>
+      selectedRegistrationSubmission
+        ? state.documentSubmissionFiles
+          .filter((file) => file.submissionId === selectedRegistrationSubmission.id)
+          .sort((left, right) => left.documentTypeId.localeCompare(right.documentTypeId))
+        : [],
+    [selectedRegistrationSubmission, state.documentSubmissionFiles],
+  );
+  const selectedRenewal = useMemo(
+    () => adminRenewals.find((renewal) => renewal.id === selectedRenewalId) ??
+      adminRenewalQueueQuery.data?.rows.find(({ renewal }) => renewal.id === selectedRenewalId)?.renewal ?? null,
+    [adminRenewals, selectedRenewalId, adminRenewalQueueQuery.data],
+  );
+  const selectedRenewalProfile = useMemo(
+    () =>
+      selectedRenewal
+        ? state.organizationProfiles.find((profile) => profile.id === selectedRenewal.organizationId) ??
+          adminRenewalQueueQuery.data?.rows.find(({ renewal }) => renewal.id === selectedRenewal.id)?.organization ?? null
+        : null,
+    [selectedRenewal, state.organizationProfiles, adminRenewalQueueQuery.data],
+  );
+  const selectedRenewalAccreditation = useMemo(
+    () =>
+      selectedRenewal
+        ? adminAccreditations.find((accreditation) => accreditation.id === selectedRenewal.currentAccreditationId) ??
+          adminRenewalQueueQuery.data?.rows.find(({ renewal }) => renewal.id === selectedRenewal.id)?.accreditation ?? null
+        : null,
+    [selectedRenewal, adminAccreditations, adminRenewalQueueQuery.data],
+  );
+  const selectedRenewalSubmission = useMemo(
+    () => {
+      if (!selectedRenewal) return null;
+      if (adminRenewalReviewContextQuery.isSuccess) {
+        return adminRenewalReviewContextQuery.data?.documentSubmissions?.[0] ?? null;
+      }
+      return state.documentSubmissions.find((submission) => submission.renewalId === selectedRenewal.id) ?? null;
+    },
+    [selectedRenewal, adminRenewalReviewContextQuery.data, adminRenewalReviewContextQuery.isSuccess, state.documentSubmissions],
+  );
+  const effectiveRenewalFiles = useMemo<SubmissionFile[]>(() => {
+    if (!selectedRenewalSubmission) return [];
+    const submissionId = selectedRenewalSubmission?.id;
+    // The selected packet is authoritative, including removals/replacements.
+    // Never overlay an earlier admin decision on a freshly resubmitted file.
+    if (supabase && adminRenewalReviewContextQuery.isSuccess) {
+      return (adminRenewalReviewContextQuery.data?.documentSubmissionFiles ?? [])
+        .filter((file) => file.submissionId === submissionId);
+    }
+    const fromState = submissionId
+      ? state.documentSubmissionFiles.filter((file) => file.submissionId === submissionId)
+      : [];
+    return fromState;
+  }, [selectedRenewalSubmission, state.documentSubmissionFiles, adminRenewalReviewContextQuery.data, adminRenewalReviewContextQuery.isSuccess]);
+
+  const orderedRenewalPreviewFiles = useMemo(() => {
+    const documentTypes = renewalRequiredDocuments;
+    const ordered = documentTypes
+      .map((documentType) =>
+        effectiveRenewalFiles.find(
+          (file) =>
+            file.documentTypeId === documentType.id ||
+            (documentType.databaseId && file.documentTypeId === documentType.databaseId),
+        ),
+      )
+      .filter((file): file is SubmissionFile => Boolean(file));
+    const includedIds = new Set(ordered.map((file) => file.id));
+    return [...ordered, ...effectiveRenewalFiles.filter((file) => !includedIds.has(file.id))];
+  }, [effectiveRenewalFiles, renewalRequiredDocuments]);
+
+  const adminRenewalsQueue = useMemo<AdminRenewalQueueEntry[]>(() => {
+    const requiredCount = renewalRequiredDocuments.length;
+    return (adminRenewalQueueQuery.data?.rows ?? []).map(({ renewal, organization, accreditation, submittedDocumentCount, linkedDocumentSubmissionId }) => ({
+      renewalId: renewal.id,
+      organizationId: renewal.organizationId,
+      cycleNumber: renewal.cycleNumber,
+      organizationName: organization.organizationName || "Unknown Organization",
+      referenceIdentifier: organization.referenceId || organization.urn || "—",
+      district: organization.district || "—",
+      barangay: organization.barangay || "—",
+      majorClassification: organization.majorClassification || "—",
+      currentAccreditationExpiry: accreditation?.endDate ?? null,
+      documentCount: { submitted: submittedDocumentCount, required: requiredCount },
+      submittedDate: renewal.submittedAt ?? renewal.createdAt,
+      renewalStatus: renewal.status,
+      linkedDocumentSubmissionId,
+      currentAccreditationId: renewal.currentAccreditationId ?? accreditation?.id ?? null,
+      adminRemarks: renewal.adminRemarks ?? null,
+      revisionDueAt: renewal.revisionDueAt ?? null,
+      revisionLockedAt: renewal.revisionLockedAt ?? null,
+    }));
+  }, [adminRenewalQueueQuery.data, renewalRequiredDocuments]);
+  const newsReleases = useMemo(
+    () =>
+      [...state.newsReleases].sort((left, right) => {
+        const dateDelta = new Date(right.datePosted).getTime() - new Date(left.datePosted).getTime();
+        if (dateDelta !== 0) return dateDelta;
+        return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+      }),
+    [state.newsReleases],
+  );
+  const transparencyPosts = useMemo(
+    () =>
+      [...state.transparencyPosts].sort((left, right) => {
+        const dateDelta = new Date(right.postDate).getTime() - new Date(left.postDate).getTime();
+        if (dateDelta !== 0) return dateDelta;
+        return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+      }),
+    [state.transparencyPosts],
+  );
+  const selectedBudgetRequest = useMemo(
+    () =>
+      adminBudgetRequestDetailQuery.data?.budgetRequests?.find((item) => item.id === selectedBudgetRequestId) ??
+      selectedBudgetRequestSnapshot ??
+      state.budgetRequests.find((item) => item.id === selectedBudgetRequestId) ??
+      null,
+    [adminBudgetRequestDetailQuery.data, selectedBudgetRequestId, selectedBudgetRequestSnapshot, state.budgetRequests],
+  );
+  const selectedBudgetRequestFiles = useMemo(
+    () =>
+      selectedBudgetRequest
+        ? [...state.budgetRequestFiles]
+          .filter((file) => file.budgetRequestId === selectedBudgetRequest.id)
+          .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+        : [],
+    [selectedBudgetRequest, state.budgetRequestFiles],
+  );
+  const selectedBudgetRequestFile = useMemo(
+    () => selectedBudgetRequestFiles.find((file) => file.id === selectedBudgetFileId) ?? selectedBudgetRequestFiles[0] ?? null,
+    [selectedBudgetRequestFiles, selectedBudgetFileId],
+  );
+  const selectedBudgetOrganization = useMemo(
+    () => state.organizationProfiles.find((org) => org.id === selectedBudgetRequest?.organizationId)
+      ?? adminBudgetReviewRows.find((row) => row.request.id === selectedBudgetRequest?.id)?.organization
+      ?? null,
+    [selectedBudgetRequest?.organizationId, selectedBudgetRequest?.id, state.organizationProfiles, adminBudgetReviewRows],
+  );
+  const selectedLiquidationReport = useMemo(
+    () =>
+      adminLiquidationDetailQuery.data?.liquidationReports?.find((item) => item.id === selectedLiquidationReportId) ??
+      state.liquidationReports.find((item) => item.id === selectedLiquidationReportId) ??
+      selectedLiquidationReportSnapshot ??
+      null,
+    [adminLiquidationDetailQuery.data, selectedLiquidationReportId, selectedLiquidationReportSnapshot, state.liquidationReports],
+  );
+  useEffect(() => {
+    if (selectedLiquidationReport) {
+      setLiquidationLifecycleStage(selectedLiquidationReport.status);
+    }
+  }, [selectedLiquidationReport?.id, selectedLiquidationReport?.status]);
+  const selectedLiquidationReportFiles = useMemo(
+    () =>
+      selectedLiquidationReport && !adminLiquidationDetailQuery.isError && !["draft", "not_started", "pending_activity_completion"].includes(selectedLiquidationReport.status)
+        ? [...state.liquidationReportFiles]
+          .filter((file) => file.liquidationReportId === selectedLiquidationReport.id)
+          .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+        : [],
+    [selectedLiquidationReport, adminLiquidationDetailQuery.isError, state.liquidationReportFiles],
+  );
+  const selectedLiquidationReportFile = useMemo(
+    () => selectedLiquidationReportFiles.find((file) => file.id === selectedLiquidationFileId) ?? selectedLiquidationReportFiles[0] ?? null,
+    [selectedLiquidationReportFiles, selectedLiquidationFileId],
+  );
+  const selectedLiquidationBudgetRequest = useMemo(
+    () => state.budgetRequests.find((item) => item.id === selectedLiquidationReport?.budgetRequestId)
+      ?? adminLiquidationReviewRows.find((row) => row.report.id === selectedLiquidationReport?.id)?.budgetRequest
+      ?? null,
+    [selectedLiquidationReport?.budgetRequestId, selectedLiquidationReport?.id, state.budgetRequests, adminLiquidationReviewRows],
+  );
+  const selectedLiquidationOrganization = useMemo(
+    () => state.organizationProfiles.find((org) => org.id === selectedLiquidationReport?.organizationId)
+      ?? adminLiquidationReviewRows.find((row) => row.report.id === selectedLiquidationReport?.id)?.organization
+      ?? null,
+    [selectedLiquidationReport?.organizationId, selectedLiquidationReport?.id, state.organizationProfiles, adminLiquidationReviewRows],
+  );
+  const budgetRecentActivities = useMemo<RecentActivityEntry[]>(() => {
+    if (!selectedBudgetRequest) return [];
+    const historyEntries = (selectedBudgetRequest.revisionHistory ?? []).map((entry, idx) => {
+      const dotClassName =
+        entry.action === "needs_revision" || entry.action === "rejected_red"
+          ? "bg-rose-500"
+          : entry.action === "approved_for_ftf_green" ||
+            entry.action === "hard_copy_submitted" ||
+            entry.action === "budget_released" ||
+            entry.action === "completed"
+            ? "bg-emerald-500"
+            : "bg-amber-400";
+      const title =
+        entry.action === "needs_revision" ? "Revision Requested"
+          : entry.action === "rejected_red" ? "Rejected"
+            : entry.action === "approved_for_ftf_green" || entry.action === "hard_copy_submitted" ? "Awaiting Release"
+                : entry.action === "budget_released" ? "Budget Released"
+                  : entry.action === "completed" ? "Budget Released"
+                    : entry.action.replaceAll("_", " ");
+      return {
+        key: `budget-history-${idx}-${entry.changedAt}`,
+        title,
+        timestamp: formatDateTimeLabel(entry.changedAt),
+        note: entry.adminRemarks ? `"${entry.adminRemarks}"` : undefined,
+        dotClassName,
+      };
+    });
+    return [
+      {
+        key: `budget-submitted-${selectedBudgetRequest.id}`,
+        title: "Pending Review",
+        timestamp: formatDateTimeLabel(selectedBudgetRequest.createdAt),
+        dotClassName: "bg-muted-foreground/40",
+      },
+      ...historyEntries,
+      ...(selectedBudgetRequest.userNote
+        ? [
+          {
+            key: `budget-note-${selectedBudgetRequest.id}`,
+            title: "Message from organization",
+            note: `"${selectedBudgetRequest.userNote}"`,
+            dotClassName: "bg-sky-500",
+          },
+        ]
+        : []),
+    ];
+  }, [selectedBudgetRequest]);
+  const liquidationRecentActivities = useMemo<RecentActivityEntry[]>(() => {
+    if (!selectedLiquidationReport) return [];
+    const historyEntries = (selectedLiquidationReport.revisionHistory ?? []).map((entry, idx) => {
+      const dotClassName =
+        entry.action === "overdue" || entry.action === "rejected_red"
+          ? "bg-rose-500"
+          : entry.action === "approved_for_ftf_green" ||
+            entry.action === "completed_liquidated" ||
+            entry.action === "hard_copy_submitted"
+            ? "bg-emerald-500"
+            : entry.action === "submitted"
+              ? "bg-muted-foreground/40"
+              : "bg-amber-400";
+      const title =
+        entry.action === "overdue" ? "Marked Overdue"
+          : entry.action === "needs_revision" ? "Revision Requested"
+            : entry.action === "approved_for_ftf_green" ? "Approved"
+              : entry.action === "submitted" ? "Submitted"
+                : entry.action === "hard_copy_submitted" ? "Hardcopy Submitted"
+                  : entry.action === "completed_liquidated" ? "Liquidated"
+                    : entry.action;
+      return {
+        key: `liquidation-history-${idx}-${entry.changedAt}`,
+        title,
+        timestamp: formatDateTimeLabel(entry.changedAt),
+        note: entry.adminRemarks ? `"${entry.adminRemarks}"` : undefined,
+        dotClassName,
+      };
+    });
+    return [
+      {
+        key: `liquidation-created-${selectedLiquidationReport.id}`,
+        title: "Report Created",
+        timestamp: formatDateTimeLabel(selectedLiquidationReport.createdAt),
+        dotClassName: "bg-muted-foreground/40",
+      },
+      ...historyEntries,
+    ];
+  }, [selectedLiquidationReport]);
+  function formatStatusLabel(status: string) {
+    return statusLabelMap[status] ?? status.replaceAll("_", " ");
+  }
+  function formatShortDate(value?: string | null) {
+    if (!value) return "Pending";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Pending";
+    return new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(parsed);
+  }
+  function formatDateTimeLabel(value?: string | null) {
+    if (!value) return "Pending";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Pending";
+    return new Intl.DateTimeFormat("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsed);
+  }
+  const formatCompactDateParts = (value?: string | null) => {
+    if (!value) {
+      return { date: "Pending", time: "" };
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return { date: "Pending", time: "" };
+    }
+    return {
+      date: new Intl.DateTimeFormat("en-PH", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(parsed),
+      time: new Intl.DateTimeFormat("en-PH", {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(parsed),
+    };
+  };
+  const formatFileMetaLabel = (fileType?: string | null, fileSize?: number | null) => {
+    const normalizedType = (fileType || "PDF").replace("application/", "").toUpperCase();
+    const sizeLabel = fileSize ? `${Math.max(1, Math.round(fileSize / 1024))} KB` : "File attached";
+    return `${normalizedType} • ${sizeLabel}`;
+  };
+  const getManilaDateIso = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+  const visibleLiquidationReports = useMemo(
+    () =>
+      section === "liquidation-monitoring"
+        ? adminLiquidationReviewRows.map((row) => row.report)
+        : state.liquidationReports
+        .filter((report) => {
+          const linkedBudget = state.budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
+          return Boolean(linkedBudget && budgetReleaseStatuses.has(linkedBudget.status));
+        })
+        .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()),
+    [adminLiquidationReviewRows, section, budgetReleaseStatuses, state.budgetRequests, state.liquidationReports],
+  );
+  const liquidationReportStatusOptions = useMemo(
+    () => Array.from(new Set(visibleLiquidationReports.map((report) => report.status))),
+    [visibleLiquidationReports],
+  );
+  const organizationProfileById = useMemo(
+    () => new Map(state.organizationProfiles.map((organization) => [organization.id, organization] as const)),
+    [state.organizationProfiles],
+  );
+  const latestLiquidationByRequestId = useMemo(() => {
+    const map = new Map<string, LiquidationReport>();
+    state.liquidationReports.forEach((report) => {
+      const existing = map.get(report.budgetRequestId);
+      if (!existing || new Date(report.updatedAt || report.createdAt).getTime() > new Date(existing.updatedAt || existing.createdAt).getTime()) map.set(report.budgetRequestId, report);
+    });
+    return map;
+  }, [state.liquidationReports]);
+  const getLatestLiquidationReportForBudgetRequest = useCallback(
+    (id: string) => latestLiquidationByRequestId.get(id) ?? null,
+    [latestLiquidationByRequestId],
+  );
+  const [annualAllocations, setAnnualAllocations] = useState<AnnualBudgetAllocation[]>([]);
+  const selectedFiscalYear = budgetMonitoringFilters.fiscalPeriod.fiscalYear;
+  const dashboardQuery = useQuery({
+    // Dashboard responses are permission-scoped; don't reuse one role's cached
+    // response after switching administrators in the same app session.
+    queryKey: ["admin", "dashboard", user?.id, currentAdminRoleCode, [...(user?.permissionCodes ?? [])].sort().join(","), selectedFiscalYear],
+    queryFn: () => fetchAdminDashboardSummary(selectedFiscalYear),
+    enabled: Boolean(supabase && section === "overview"),
+  });
+  const sidebarCountsQuery = useQuery({
+    // Independent of the current page and fiscal-year filters.
+    queryKey: ["admin", "sidebar-counts", user?.id, currentAdminRoleCode, [...(user?.permissionCodes ?? [])].sort().join(",")],
+    queryFn: fetchAdminSidebarCounts,
+    enabled: Boolean(supabase && user?.id && readAdminSession()?.sessionToken),
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: "always",
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  });
+  useEffect(() => {
+    if (!supabase || !user?.id || !readAdminSession()?.sessionToken) return;
+    return subscribeToAdminSidebarChanges(() => {
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] }),
+      ]).catch((error) => {
+        if (import.meta.env.DEV) console.debug("Admin sidebar refresh failed.", error);
+      });
+    });
+  }, [user?.id, currentAdminRoleCode]);
+  const sidebarCounts = sidebarCountsQuery.data ?? dashboardQuery.data?.summary;
+  const [isConfigureAnnualBudgetModalOpen, setIsConfigureAnnualBudgetModalOpen] = useState<boolean>(false);
+
+  const loadAnnualBudgetAllocations = useCallback(async () => {
+    try {
+      const rows = await adminGetAnnualBudgetAllocationsFromSupabase();
+      setAnnualAllocations(rows);
+    } catch {
+      // Gracefully retain current
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!["budget-utilization", "budget-monitoring", "liquidation-monitoring"].includes(section)) return;
+    void loadAnnualBudgetAllocations();
+  }, [loadAnnualBudgetAllocations, section]);
+
+  const getBudgetRequestFiscalYear = useCallback((r: BudgetRequest): number => {
+    if (typeof r.fiscalYear === "number" && r.fiscalYear >= 2000 && r.fiscalYear <= 2100) {
+      return r.fiscalYear;
+    }
+    if (r.releaseDate) {
+      const yr = new Date(r.releaseDate).getFullYear();
+      if (!Number.isNaN(yr)) return yr;
+    }
+    if (r.activityDate) {
+      const yr = new Date(r.activityDate).getFullYear();
+      if (!Number.isNaN(yr)) return yr;
+    }
+    if (r.createdAt) {
+      const yr = new Date(r.createdAt).getFullYear();
+      if (!Number.isNaN(yr)) return yr;
+    }
+    return 2026;
+  }, []);
+
+  const adminBudgetRequests = useMemo(() => {
+    return state.budgetRequests.filter((r) => r.status !== "draft");
+  }, [state.budgetRequests]);
+
+  const budgetSemesterOptions = useMemo(
+    () =>
+      buildBudgetSemesterOptions(
+        state.ypopPeriods,
+        state.budgetRequests,
+        state.organizationProfiles,
+        state.ypopEntries,
+      ),
+    [state.ypopPeriods, state.budgetRequests, state.organizationProfiles, state.ypopEntries],
+  );
+
+  const selectedBudgetSemesterLabel = useMemo(() => {
+    if (budgetRequestsSemesterFilter === ALL_SEMESTERS_KEY) return "All Semesters";
+    const found = budgetSemesterOptions.find(
+      (opt) => opt.key === budgetRequestsSemesterFilter || opt.label === budgetRequestsSemesterFilter,
+    );
+    return found ? found.label : budgetRequestsSemesterFilter;
+  }, [budgetRequestsSemesterFilter, budgetSemesterOptions]);
+
+  const semesterScopedBudgetRequests = useMemo(() => {
+    if (budgetRequestsSemesterFilter === ALL_SEMESTERS_KEY) return adminBudgetRequests;
+    return adminBudgetRequests.filter((request) =>
+      isBudgetRequestInSemester(
+        request,
+        budgetRequestsSemesterFilter,
+        budgetSemesterOptions,
+        state.ypopEntries,
+        state.ypopOrgActivities,
+      ),
+    );
+  }, [
+    adminBudgetRequests,
+    budgetRequestsSemesterFilter,
+    budgetSemesterOptions,
+    state.ypopEntries,
+    state.ypopOrgActivities,
+  ]);
+
+  const availableFiscalYears = useMemo(() => {
+    const years = new Set<number>();
+    [2024, 2025, 2026].forEach((year) => years.add(year));
+    years.add(new Date().getFullYear());
+    annualAllocations.forEach((a) => years.add(a.fiscalYear));
+    monitoringQuery.data?.fiscalYears.forEach(year => years.add(year));
+    adminBudgetRequests.forEach((req) => {
+      years.add(getBudgetRequestFiscalYear(req));
+    });
+    return Array.from(years).sort((a, b) => b - a);
+  }, [annualAllocations, adminBudgetRequests, getBudgetRequestFiscalYear, monitoringQuery.data?.fiscalYears]);
+
+  const selectedFYAllocation = useMemo(() => {
+    return (
+      annualAllocations.find((a) => a.fiscalYear === selectedFiscalYear && a.isActive) ??
+      annualAllocations.find((a) => a.fiscalYear === selectedFiscalYear) ??
+      null
+    );
+  }, [annualAllocations, selectedFiscalYear]);
+
+  const monitoringAllYears = budgetMonitoringFilters.fiscalPeriod.mode === "all" || budgetMonitoringFilters.fiscalPeriod.mode === "quarter_all_years";
+  const combinedAllocations = useMemo(() => {
+    const byYear = new Map<number, AnnualBudgetAllocation>();
+    annualAllocations.forEach(allocation => {
+      const existing = byYear.get(allocation.fiscalYear);
+      if (!existing || allocation.isActive) byYear.set(allocation.fiscalYear, allocation);
+    });
+    return [...byYear.values()];
+  }, [annualAllocations]);
+  const combinedFYAllocation = useMemo<AnnualBudgetAllocation | null>(() => combinedAllocations.length ? {
+    ...combinedAllocations[0],
+    totalAmount: combinedAllocations.reduce((sum, allocation) => sum + allocation.totalAmount, 0),
+    statutoryBaselineNotes: `Combined configured annual allocations: ${combinedAllocations.map(a => a.fiscalYear).sort().join(", ")}.`,
+  } : null, [combinedAllocations]);
+  const monitoringAllocationCoverageComplete = adminBudgetRequests.every(request =>
+    combinedAllocations.some(allocation => allocation.fiscalYear === getBudgetRequestFiscalYear(request)));
+
+  const annualAllocation = selectedFYAllocation ? selectedFYAllocation.totalAmount : null;
+  const annualAllocationFiscalYear = selectedFiscalYear;
+
+  const fyBudgetRequests = useMemo(() => {
+    return adminBudgetRequests.filter((r) => getBudgetRequestFiscalYear(r) === selectedFiscalYear);
+  }, [adminBudgetRequests, selectedFiscalYear, getBudgetRequestFiscalYear]);
+
+  const fyLiquidationReports = useMemo(() => {
+    const requestsById = new Map(state.budgetRequests.map(request => [request.id, request]));
+    return state.liquidationReports.filter((report) => {
+      const related = requestsById.get(report.budgetRequestId);
+      return related ? getBudgetRequestFiscalYear(related) === selectedFiscalYear : false;
+    });
+  }, [state.budgetRequests, state.liquidationReports, selectedFiscalYear, getBudgetRequestFiscalYear]);
+
+  const periodBudgetRequests = useMemo(
+    () => adminBudgetRequests.filter(request => matchesFiscalPeriod(request, budgetMonitoringFilters.fiscalPeriod)),
+    [adminBudgetRequests, budgetMonitoringFilters.fiscalPeriod],
+  );
+
+  const budgetMonitoringEntries = useMemo<BudgetMonitoringEntry[]>(() => {
+    const now = new Date();
+
+    if (section !== "budget-monitoring") return [];
+    return periodBudgetRequests
+      .filter((request) => budgetReleaseStatuses.has(request.status))
+      .map((request) => {
+        const liquidation = getLatestLiquidationReportForBudgetRequest(request.id);
+        const approvedAmount = Number(request.approvedAmount || request.requestedAmount || 0);
+        const releasedAmount = Number(request.releasedAmount || 0);
+        const remainingAmount = Math.max(approvedAmount - releasedAmount, 0);
+        const utilizationRate = approvedAmount > 0 ? Math.round((releasedAmount / approvedAmount) * 100) : 0;
+        const deadlineDate = liquidation?.deadlineAt ? new Date(liquidation.deadlineAt) : null;
+        const completedAtDate = liquidation?.completedAt ? new Date(liquidation.completedAt) : null;
+        const requestAgeInDays = Math.max(Math.ceil((now.getTime() - new Date(request.updatedAt || request.createdAt).getTime()) / 86400000), 0);
+        const goSignalAt = liquidation?.goSignalAt || request.goSignalAt || "";
+        const liquidationStatus = liquidation?.status ?? "pending_activity_completion";
+        let riskLabel: BudgetMonitoringEntry["riskLabel"] = "Needs Attention";
+
+        const escalateDays = Number(getEffectiveSystemSetting("workflow.escalate_after_days") || 7);
+        const reminderDays = Number(getEffectiveSystemSetting("workflow.review_reminder_days") || 3);
+        const overdueEnabled = Boolean(getEffectiveSystemSetting("workflow.overdue_indicators_enabled"));
+        const reminderEnabled = Boolean(getEffectiveSystemSetting("workflow.review_reminder_enabled"));
+
+        if (liquidationStatus === "completed_liquidated") {
+          riskLabel = "Completed";
+        } else if (!liquidation && requestAgeInDays >= escalateDays) {
+          riskLabel = overdueEnabled ? "Overdue" : "Needs Attention";
+        } else if (!liquidation && reminderEnabled && requestAgeInDays >= reminderDays) {
+          riskLabel = "Needs Attention";
+        } else if (
+          liquidationStatus === "overdue" ||
+          (deadlineDate && !Number.isNaN(deadlineDate.getTime()) && deadlineDate.getTime() < now.getTime() && !completedAtDate)
+        ) {
+          riskLabel = overdueEnabled ? "Overdue" : "Needs Attention";
+        } else if (
+          liquidationStatus === "approved_for_ftf_green" ||
+          liquidationStatus === "budget_released" ||
+          liquidationStatus === "hard_copy_submitted"
+        ) {
+          riskLabel = "On Track";
+        } else if (liquidation && deadlineDate && !Number.isNaN(deadlineDate.getTime())) {
+          const daysUntilDeadline = Math.ceil((deadlineDate.getTime() - now.getTime()) / 86400000);
+          if (daysUntilDeadline <= 0) {
+            riskLabel = completedAtDate ? "Completed" : overdueEnabled ? "Overdue" : "Needs Attention";
+          } else if ((reminderEnabled && daysUntilDeadline <= reminderDays) || utilizationRate < 50) {
+            riskLabel = "Needs Attention";
+          } else {
+            riskLabel = "On Track";
+          }
+        }
+
+        return {
+          budgetRequestId: request.id,
+          liquidationReportId: liquidation?.id ?? null,
+          title: request.activityTitle,
+          organizationName: organizationProfileById.get(request.organizationId)?.organizationName ?? "Unknown organization",
+          approvedAmount,
+          releasedAmount,
+          remainingAmount,
+          utilizationRate,
+          budgetStatus: request.status,
+          liquidationStatus,
+          releaseDate: request.releaseDate || "",
+          goSignalAt,
+          deadlineAt: liquidation?.deadlineAt || "",
+          hardCopySubmittedAt: liquidation?.hardCopySubmittedAt || "",
+          completedAt: liquidation?.completedAt || "",
+          remarks: liquidation?.remarks || "None",
+          ageInDays: liquidation?.deadlineAt ? Math.max(Math.ceil((now.getTime() - new Date(liquidation.deadlineAt).getTime()) / 86400000), 0) : 0,
+          riskLabel,
+        };
+      })
+      .sort((left, right) => {
+        if (left.riskLabel !== right.riskLabel) {
+          const order = new Map<BudgetMonitoringEntry["riskLabel"], number>([
+            ["Overdue", 0],
+            ["Needs Attention", 1],
+            ["On Track", 2],
+            ["Completed", 3],
+          ]);
+          return (order.get(left.riskLabel) ?? 99) - (order.get(right.riskLabel) ?? 99);
+        }
+        return right.approvedAmount - left.approvedAmount;
+      });
+  }, [section, budgetReleaseStatuses, periodBudgetRequests, organizationProfileById, getLatestLiquidationReportForBudgetRequest]);
+  const filteredAdminBudgetRequests = useMemo(() => {
+    if (section === "budget-utilization") return adminBudgetReviewRows.map((row) => row.request);
+    const query = budgetRequestsSearch.trim().toLowerCase();
+    return semesterScopedBudgetRequests.filter((request) => {
+      const requestOrganization = state.organizationProfiles.find((org) => org.id === request.organizationId) ?? null;
+      const matchesSearch =
+        !query ||
+        [
+          request.activityTitle,
+          requestOrganization?.organizationName ?? "",
+          request.venue ?? "",
+          buildPublicRecordCode("BR", request, adminBudgetRequests),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesStatus =
+        budgetRequestsStatusFilter === "all"
+          ? true
+          : budgetRequestsStatusFilter === "under_review"
+            ? request.status === "under_review" || request.status === "submitted"
+            : budgetRequestsStatusFilter === "awaiting_release"
+              ? request.status === "awaiting_release" || ["approved_for_ftf_green", "hard_copy_submitted"].includes(String(request.status))
+            : budgetRequestsStatusFilter === "budget_released"
+              ? request.status === "budget_released" || String(request.status) === "completed"
+              : request.status === budgetRequestsStatusFilter;
+      const matchesDistrict = budgetRequestsDistrictFilter === "all" || requestOrganization?.district === budgetRequestsDistrictFilter;
+      const matchesBarangay = budgetRequestsBarangayFilter === "all" || requestOrganization?.barangay === budgetRequestsBarangayFilter;
+      const matchesClassification =
+        budgetRequestsClassificationFilter === "all" || requestOrganization?.majorClassification === budgetRequestsClassificationFilter;
+      return matchesSearch && matchesStatus && matchesDistrict && matchesBarangay && matchesClassification;
+    });
+  }, [
+    semesterScopedBudgetRequests,
+    budgetRequestsSearch,
+    budgetRequestsStatusFilter,
+    budgetRequestsDistrictFilter,
+    budgetRequestsBarangayFilter,
+    budgetRequestsClassificationFilter,
+    adminBudgetRequests,
+    state.organizationProfiles,
+    adminBudgetReviewRows,
+    section,
+  ]);
+  const filteredVisibleLiquidationReports = useMemo(() => {
+    if (section === "liquidation-monitoring") return adminLiquidationReviewRows.map((row) => row.report);
+    const query = liquidationReportsSearch.trim().toLowerCase();
+    return visibleLiquidationReports.filter((report) => {
+      const linkedBudget = state.budgetRequests.find((request) => request.id === report.budgetRequestId) ?? null;
+      const liquidationOrg = state.organizationProfiles.find((org) => org.id === report.organizationId) ?? null;
+      const matchesSearch =
+        !query ||
+        [
+          liquidationOrg?.organizationName ?? "",
+          linkedBudget?.activityTitle ?? "",
+          buildPublicRecordCode("LR", report, visibleLiquidationReports),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesStatus = matchesLiquidationStatusFilter(
+        report.status,
+        liquidationReportsStatusFilter as LiquidationReportsStatusFilter,
+        report.deadlineAt,
+      );
+      const matchesDistrict = liquidationReportsDistrictFilter === "all" || liquidationOrg?.district === liquidationReportsDistrictFilter;
+      const matchesBarangay = liquidationReportsBarangayFilter === "all" || liquidationOrg?.barangay === liquidationReportsBarangayFilter;
+      const matchesClassification =
+        liquidationReportsClassificationFilter === "all" || liquidationOrg?.majorClassification === liquidationReportsClassificationFilter;
+      return matchesSearch && matchesStatus && matchesDistrict && matchesBarangay && matchesClassification;
+    });
+  }, [
+    liquidationReportsSearch,
+    liquidationReportsStatusFilter,
+    liquidationReportsDistrictFilter,
+    liquidationReportsBarangayFilter,
+    liquidationReportsClassificationFilter,
+    state.budgetRequests,
+    state.organizationProfiles,
+    visibleLiquidationReports,
+    adminLiquidationReviewRows,
+    section,
+  ]);
+  const liquidationReportsExportFilters = useMemo(() => {
+    const readableStatus = liquidationReportsStatusFilter === "all"
+      ? "All Status"
+      : liquidationReportsStatusFilter.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+    return [
+      `Status: ${readableStatus}`,
+      ...(liquidationReportsSearch.trim() ? [`Search: "${liquidationReportsSearch.trim()}"`] : []),
+      ...(liquidationReportsDistrictFilter !== "all" ? [`District: ${liquidationReportsDistrictFilter}`] : []),
+      ...(liquidationReportsBarangayFilter !== "all" ? [`Barangay: ${liquidationReportsBarangayFilter}`] : []),
+      ...(liquidationReportsClassificationFilter !== "all" ? [`Classification: ${liquidationReportsClassificationFilter}`] : []),
+    ];
+  }, [
+    liquidationReportsStatusFilter,
+    liquidationReportsSearch,
+    liquidationReportsDistrictFilter,
+    liquidationReportsBarangayFilter,
+    liquidationReportsClassificationFilter,
+  ]);
+  const handleLiquidationReportsExport = async (exportFormat: ExportFormat, pageConfig?: PdfPageConfig) => {
+    try {
+      const matching = await fetchAllAdminReviewResourceRows({ resource: "liquidations", search: liquidationReportsSearch,
+        status: liquidationReportsStatusFilter, district: liquidationReportsDistrictFilter,
+        barangay: liquidationReportsBarangayFilter, classification: liquidationReportsClassificationFilter,
+        ...getAdminReportRange(liquidationReportPeriod) });
+      const liquidationReportsExportRows = matching.filter((row): row is AdminLiquidationReviewRow => "report" in row)
+        .map(({ report, organization, budgetRequest: linkedBudget }) => {
+          const isOverdue = report.status === "overdue" || isLiquidationOverdue(report.deadlineAt, report.status);
+          return {
+            liquidationReference: report.publicRecordCode || buildPublicRecordCode("LR", report, [report]),
+            organization: organization?.organizationName ?? "Unknown organization",
+            activity: linkedBudget?.activityTitle ?? "Approved budget",
+            budgetRequestReference: linkedBudget
+              ? linkedBudget.publicRecordCode || buildPublicRecordCode("BR", linkedBudget as BudgetRequest, [linkedBudget as BudgetRequest])
+              : "",
+            district: organization?.district ?? "",
+            barangay: organization?.addressBarangay || organization?.barangay || "",
+            classification: organization?.majorClassification ?? "",
+            status: isOverdue
+              ? "Overdue"
+              : LIQUIDATION_STATUS_LABEL_CONFIG[report.status]?.label ?? report.status.replaceAll("_", " "),
+            requestedAmount: Number(linkedBudget?.requestedAmount ?? 0),
+            approvedAmount: Number(linkedBudget?.approvedAmount || linkedBudget?.requestedAmount || 0),
+            releasedAmount: Number(linkedBudget?.releasedAmount ?? 0),
+            deadline: formatShortDate(report.deadlineAt),
+            hardCopySubmittedAt: formatShortDate(report.hardCopySubmittedAt),
+            completedAt: formatShortDate(report.completedAt),
+            adminRemarks: report.remarks ?? "",
+          };
+        });
+      if (!liquidationReportsExportRows.length) {
+        toast({ title: "No liquidation reports found", description: "Try changing the selected filters." }); return;
+      }
+      await exportReport(
+        exportFormat,
+        {
+          config: {
+            ...withAdminReportPeriod({ title: "Liquidation Reports", filenamePrefix: "liquidation-reports" }, liquidationReportPeriod),
+            orientation: "landscape",
+            xlsxSheetName: "Liquidation Reports",
+            columns: [
+              { label: "Liquidation Reference", value: (row) => row.liquidationReference, pdfWidth: 65, xlsxWidth: 24 },
+              { label: "Organization", value: (row) => row.organization, pdfWidth: 80, xlsxWidth: 30, xlsxWrap: true },
+              { label: "Activity", value: (row) => row.activity, pdfWidth: 76, xlsxWidth: 28, xlsxWrap: true },
+              { label: "Budget Request", value: (row) => row.budgetRequestReference, pdfWidth: 58, xlsxWidth: 22 },
+              { label: "District", value: (row) => row.district, pdfWidth: 52, xlsxWidth: 16, excludeFromPdf: true },
+              { label: "Barangay", value: (row) => row.barangay, pdfWidth: 58, xlsxWidth: 20, excludeFromPdf: true },
+              { label: "Classification", value: (row) => row.classification, pdfWidth: 65, xlsxWidth: 24, excludeFromPdf: true },
+              { label: "Status", value: (row) => row.status, pdfWidth: 60, xlsxWidth: 22 },
+              { label: "Requested Amount", value: (row) => row.requestedAmount, xlsxType: "currency", pdfAlign: "right", pdfWidth: 55, xlsxWidth: 20 },
+              { label: "Approved Amount", value: (row) => row.approvedAmount, xlsxType: "currency", pdfAlign: "right", pdfWidth: 55, xlsxWidth: 20 },
+              { label: "Released Amount", value: (row) => row.releasedAmount, xlsxType: "currency", pdfAlign: "right", pdfWidth: 55, xlsxWidth: 20 },
+              { label: "Deadline", value: (row) => row.deadline, pdfWidth: 54, xlsxWidth: 18 },
+              { label: "Hardcopy Submitted", value: (row) => row.hardCopySubmittedAt, pdfWidth: 58, xlsxWidth: 22, excludeFromPdf: true },
+              { label: "Completed", value: (row) => row.completedAt, pdfWidth: 54, xlsxWidth: 18 },
+              { label: "Admin Remarks", value: (row) => row.adminRemarks, pdfWidth: 76, xlsxWidth: 36, xlsxWrap: true },
+            ],
+          },
+          rows: liquidationReportsExportRows,
+          metadataLines: [`Total Liquidation Reports: ${liquidationReportsExportRows.length}`],
+          filterSummaryLines: [...liquidationReportsExportFilters, ...adminReportMetadata(liquidationReportPeriod)],
+        },
+        pageConfig,
+      );
+      toast({ title: "Export Ready", description: `The liquidation reports ${exportFormat.toUpperCase()} export has been downloaded.` });
+    } catch (error) {
+      console.error("Unable to export liquidation reports:", error);
+      toast({ title: "Export Failed", description: "Unable to export liquidation reports. Please try again.", variant: "destructive" });
+    }
+  };
+  const filteredRenewals = adminRenewalsQueue;
+  const filteredNewsReleases = useMemo(() => {
+    const query = newsSearch.trim().toLowerCase();
+    return newsReleases.filter((news) => {
+      const matchesSearch =
+        !query ||
+        [news.title, news.description, news.facebookPostUrl ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesVisibility = newsVisibilityFilter === "all" || news.visibilityStatus === newsVisibilityFilter;
+      const matchesCategory = newsCategoryFilter === "all" || news.category === newsCategoryFilter;
+      return matchesSearch && matchesVisibility && matchesCategory;
+    });
+  }, [newsSearch, newsVisibilityFilter, newsCategoryFilter, newsReleases]);
+  const filteredTemplates = useMemo(() => {
+    const query = templateSearch.trim().toLowerCase();
+    return [...state.templates]
+      .filter((template) => {
+        const matchesSearch =
+          !query ||
+          [template.name, template.description, template.templateFileName]
+            .join(" ")
+            .toLowerCase()
+            .includes(query);
+        const matchesStatus =
+          templateStatusFilter === "all" ||
+          (templateStatusFilter === "active" ? template.isActive : !template.isActive);
+        const categories =
+          Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+            ? template.templateCategories.filter(Boolean)
+            : [deriveTemplateCategory(template.name)];
+        const matchesCategory = templateCategoryFilter === "all" || categories.includes(templateCategoryFilter);
+        return matchesSearch && matchesStatus && matchesCategory;
+      })
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }, [state.templates, templateSearch, templateStatusFilter, templateCategoryFilter]);
+  const templateCategoryOptions = useMemo(
+    () =>
+      buildAdminTemplateCategoryOptions(
+        state.templates,
+        state.customTemplateCategories ?? [],
+      ),
+    [state.templates, state.customTemplateCategories],
+  );
+  const newsCategoriesList = useMemo(
+    () => buildAdminNewsCategoryOptions(state.newsCategories ?? [], newsReleases),
+    [state.newsCategories, newsReleases],
+  );
+  const newsCategoryOptions = useMemo(
+    () => newsCategoriesList.map((c) => c.name),
+    [newsCategoriesList],
+  );
+  const openInquiryDetails = (inquiry: InquiryRecord) => {
+    const normalizedStatus = normalizeInquiryStatus(inquiry.status);
+    setSelectedInquiry({ ...inquiry, status: normalizedStatus });
+    setInquiryStatusDraft(normalizedStatus);
+    setInquiryAdminRemarksDraft(inquiry.adminRemarks);
+  };
+  const dashboardBudgetTotals = useMemo(() => {
+    const approved = fyBudgetRequests.filter(r => APPROVED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0);
+    const released = fyBudgetRequests.filter(r => RELEASED_BUDGET_STATUSES.has(r.status)).reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+    const liquidated = fyBudgetRequests.filter(r => latestLiquidationByRequestId.get(r.id)?.status === "completed_liquidated").reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+    return dashboardQuery.data?.budgetTotals ?? { approved, released, liquidated };
+  }, [fyBudgetRequests, latestLiquidationByRequestId, dashboardQuery.data]);
+  const filteredBudgetMonitoringRequests = useMemo(
+    () => filterBudgetRequests(adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId),
+    [adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId],
+  );
+  const pasigBudgetMapRows = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((request) => APPROVED_BUDGET_STATUSES.has(request.status) || RELEASED_BUDGET_STATUSES.has(request.status))
+      .map((request) => {
+        const organization = organizationProfileById.get(request.organizationId) ?? null;
+        const approvedAmount = Number(request.approvedAmount || request.requestedAmount || 0);
+        const releasedAmount = RELEASED_BUDGET_STATUSES.has(request.status) ? Number(request.releasedAmount || 0) : 0;
+        const liquidatedAmount = latestLiquidationByRequestId.get(request.id)?.status === "completed_liquidated" ? releasedAmount : 0;
+        return {
+          district: organization?.district?.trim() || "Unassigned District",
+          barangay: organization?.barangay?.trim() || "Unassigned Barangay",
+          organizationId: request.organizationId,
+          approvedAmount,
+          releasedAmount,
+          liquidatedAmount,
+        };
+      });
+  }, [filteredBudgetMonitoringRequests, latestLiquidationByRequestId, organizationProfileById]);
+  const filteredBudgetMonitoringEntries = useMemo(() => {
+    const query = budgetMonitoringSearch.trim().toLowerCase();
+    const visibleRequestIds = new Set(filteredBudgetMonitoringRequests.map(request => request.id));
+    return budgetMonitoringEntries.filter((entry) => {
+      const linkedRequest = state.budgetRequests.find((request) => request.id === entry.budgetRequestId) ?? null;
+      if (!visibleRequestIds.has(entry.budgetRequestId)) return false;
+      const matchesSearch = !query || [entry.title, entry.organizationName, buildPublicRecordCode("BR", linkedRequest, state.budgetRequests)].join(" ").toLowerCase().includes(query);
+      const matchesRisk = budgetMonitoringRiskFilter === "all" || entry.riskLabel === budgetMonitoringRiskFilter;
+      return matchesSearch && matchesRisk;
+    });
+  }, [budgetMonitoringEntries, filteredBudgetMonitoringRequests, budgetMonitoringRiskFilter, budgetMonitoringSearch, state.budgetRequests]);
+  const budgetAllocationRows = useMemo<BarangayAllocationEntry[]>(() => {
+    const grouped = new Map<string, BarangayAllocationEntry>();
+    const organizationIdsByGroup = new Map<string, Set<string>>();
+
+    filteredBudgetMonitoringRequests
+      .filter((request) => budgetReleaseStatuses.has(request.status))
+      .forEach((request) => {
+        const organization = organizationProfileById.get(request.organizationId) ?? null;
+        const district = organization?.district?.trim() || "Unassigned District";
+        const barangay = organization?.barangay?.trim() || "Unassigned Barangay";
+        const releasedAmount = Number(request.releasedAmount || 0);
+        const approvedAmount = Number(request.approvedAmount || request.requestedAmount || 0);
+        const remainingAmount = Math.max(approvedAmount - releasedAmount, 0);
+        const utilizationRate = approvedAmount > 0 ? Math.round((releasedAmount / approvedAmount) * 100) : 0;
+        const isLiquidated = latestLiquidationByRequestId.get(request.id)?.status === "completed_liquidated";
+        const liquidatedAmount = isLiquidated ? releasedAmount : 0;
+        const key = `${district}::${barangay}`;
+        const organizationIds = organizationIdsByGroup.get(key) ?? new Set<string>();
+        organizationIds.add(request.organizationId);
+        organizationIdsByGroup.set(key, organizationIds);
+        const existing = grouped.get(key);
+
+        if (existing) {
+          existing.organizationCount = organizationIds.size;
+          existing.releasedBudgetCount += 1;
+          existing.approvedAmount += approvedAmount;
+          existing.requestedAmount += Number(request.requestedAmount || 0);
+          existing.releasedAmount += releasedAmount;
+          existing.remainingAmount += remainingAmount;
+          existing.utilizationRate = existing.approvedAmount > 0 ? Math.round((existing.releasedAmount / existing.approvedAmount) * 100) : 0;
+          existing.liquidatedAmount += liquidatedAmount;
+          return;
+        }
+
+        grouped.set(key, {
+          district,
+          barangay,
+          organizationCount: organizationIds.size,
+          releasedBudgetCount: 1,
+          approvedAmount,
+          requestedAmount: Number(request.requestedAmount || 0),
+          releasedAmount,
+          remainingAmount,
+          utilizationRate,
+          liquidatedAmount,
+        });
+      });
+
+    const { sortBy } = budgetMonitoringFilters;
+    return [...grouped.values()].sort((left, right) => {
+      if (left.district !== right.district) return left.district.localeCompare(right.district);
+      const nameCompare = left.barangay.localeCompare(right.barangay);
+      if (sortBy === "org_desc" || sortBy === "category_desc") return -nameCompare;
+      if (sortBy === "org_asc" || sortBy === "category_asc") return nameCompare;
+      const amountKey = sortBy.startsWith("approved") ? "approvedAmount" : sortBy.startsWith("requested") ? "requestedAmount" : sortBy.startsWith("liquidated") ? "liquidatedAmount" : "releasedAmount";
+      const amountCompare = left[amountKey] - right[amountKey];
+      if (amountCompare) return sortBy.endsWith("_asc") ? amountCompare : -amountCompare;
+      return nameCompare;
+    });
+  }, [organizationProfileById, filteredBudgetMonitoringRequests, latestLiquidationByRequestId, budgetMonitoringFilters.sortBy]);
+  const filteredBudgetAllocationRows = useMemo(() => {
+    const query = budgetAllocationSearch.trim().toLowerCase();
+    return budgetAllocationRows.filter((row) => {
+      if (query && !row.barangay.toLowerCase().includes(query) && !row.district.toLowerCase().includes(query)) return false;
+      return true;
+    });
+  }, [budgetAllocationRows, budgetAllocationSearch]);
+  const budgetAllocationMobilePageSize = 6;
+  const budgetAllocationMobilePageCount = Math.max(
+    1,
+    Math.ceil(filteredBudgetAllocationRows.length / budgetAllocationMobilePageSize),
+  );
+  const pagedBudgetAllocationRows = useMemo(
+    () =>
+      filteredBudgetAllocationRows.slice(
+        (budgetAllocationMobilePage - 1) * budgetAllocationMobilePageSize,
+        budgetAllocationMobilePage * budgetAllocationMobilePageSize,
+      ),
+    [budgetAllocationMobilePage, filteredBudgetAllocationRows],
+  );
+  const groupedPagedBudgetAllocationRows = useMemo(() => {
+    const groups = new Map<string, BarangayAllocationEntry[]>();
+    pagedBudgetAllocationRows.forEach((row) => {
+      const districtRows = groups.get(row.district) ?? [];
+      districtRows.push(row);
+      groups.set(row.district, districtRows);
+    });
+    return [...groups.entries()].map(([district, rows]) => ({
+      district,
+      rows,
+      organizationCount: rows.reduce((sum, row) => sum + row.organizationCount, 0),
+    }));
+  }, [pagedBudgetAllocationRows]);
+  useEffect(() => {
+    setBudgetAllocationMobilePage(1);
+  }, [budgetAllocationSearch, filteredBudgetMonitoringRequests]);
+  useEffect(() => {
+    setBarangayDetailSearch("");
+  }, [selectedBudgetAllocation]);
+  const selectedBudgetAllocationOrganizationDetails = useMemo<BarangayAllocationOrganizationDetail[]>(() => {
+    if (!selectedBudgetAllocation) return [];
+
+    const grouped = new Map<string, BarangayAllocationOrganizationDetail>();
+
+    filteredBudgetMonitoringRequests
+      .filter((request) => budgetReleaseStatuses.has(request.status))
+      .forEach((request) => {
+        const organization = organizationProfileById.get(request.organizationId);
+        const district = organization?.district?.trim() || "Unassigned District";
+        const barangay = organization?.barangay?.trim() || "Unassigned Barangay";
+
+        if (district !== selectedBudgetAllocation.district || barangay !== selectedBudgetAllocation.barangay) return;
+
+        const current =
+          grouped.get(request.organizationId) ??
+          ({
+            organizationId: request.organizationId,
+            organizationName: organization?.organizationName || "Unknown organization",
+            district,
+            barangay,
+            budgetRequestCount: 0,
+            releasedBudgetCount: 0,
+            approvedAmount: 0,
+            releasedAmount: 0,
+            remainingAmount: 0,
+            utilizationRate: 0,
+            requests: [],
+          } satisfies BarangayAllocationOrganizationDetail);
+
+        const remainingAmount = Math.max(request.approvedAmount - request.releasedAmount, 0);
+        current.budgetRequestCount += 1;
+        current.releasedBudgetCount += 1;
+        current.approvedAmount += request.approvedAmount;
+        current.releasedAmount += request.releasedAmount;
+        current.remainingAmount += remainingAmount;
+        current.utilizationRate = current.approvedAmount > 0 ? Math.round((current.releasedAmount / current.approvedAmount) * 100) : 0;
+        current.requests.push({
+          id: request.id,
+          createdAt: request.createdAt,
+          activityTitle: request.activityTitle,
+          status: request.status,
+          approvedAmount: request.approvedAmount,
+          releasedAmount: request.releasedAmount,
+          remainingAmount,
+          activityDate: request.activityDate,
+          releaseDate: request.releaseDate,
+          goSignalAt: request.goSignalAt,
+          hardCopySubmittedAt: request.hardCopySubmittedAt,
+        });
+        grouped.set(request.organizationId, current);
+      });
+
+    return [...grouped.values()].sort((left, right) => {
+      if (right.releasedAmount !== left.releasedAmount) return right.releasedAmount - left.releasedAmount;
+      return left.organizationName.localeCompare(right.organizationName);
+    });
+  }, [organizationProfileById, selectedBudgetAllocation, filteredBudgetMonitoringRequests]);
+  const budgetAllocationSummary = useMemo(() => {
+    const totalApproved = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.approvedAmount, 0);
+    const totalReleased = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.releasedAmount, 0);
+    const totalRemaining = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.remainingAmount, 0);
+    const totalLiquidated = filteredBudgetAllocationRows.reduce((sum, row) => sum + row.liquidatedAmount, 0);
+    const utilizationRate = totalApproved > 0 ? Math.round((totalReleased / totalApproved) * 100) : 0;
+    const liquidationUtilizationRate = totalReleased > 0 ? Math.round((totalLiquidated / totalReleased) * 100) : 0;
+    return {
+      barangayCount: filteredBudgetAllocationRows.length,
+      totalApproved,
+      totalReleased,
+      totalRemaining,
+      totalLiquidated,
+      liquidationUtilizationRate,
+      utilizationRate,
+    };
+  }, [filteredBudgetAllocationRows]);
+  const budgetMonitoringChartData = useMemo<BudgetMonitoringChartRow[]>(() => {
+    const rows: BudgetMonitoringChartRow[] = [
+      { riskLabel: "On Track", count: 0, approvedAmount: 0, releasedAmount: 0, remainingAmount: 0 },
+      { riskLabel: "Needs Attention", count: 0, approvedAmount: 0, releasedAmount: 0, remainingAmount: 0 },
+      { riskLabel: "Overdue", count: 0, approvedAmount: 0, releasedAmount: 0, remainingAmount: 0 },
+      { riskLabel: "Completed", count: 0, approvedAmount: 0, releasedAmount: 0, remainingAmount: 0 },
+    ];
+    const bucketByLabel = new Map(rows.map((row) => [row.riskLabel, row]));
+    budgetMonitoringEntries.forEach((entry) => {
+      const bucket = bucketByLabel.get(entry.riskLabel);
+      if (!bucket) return;
+      bucket.count += 1;
+      bucket.approvedAmount += entry.approvedAmount;
+      bucket.releasedAmount += entry.releasedAmount;
+      bucket.remainingAmount += entry.remainingAmount;
+    });
+    return rows;
+  }, [budgetMonitoringEntries]);
+  const budgetMonitoringStatusRows = useMemo(() => {
+    const totalCount = Math.max(budgetMonitoringEntries.length, 1);
+    return budgetMonitoringChartData.map((row) => ({
+      ...row,
+      percentage: budgetMonitoringEntries.length ? Math.round((row.count / totalCount) * 100) : 0,
+      dotClass:
+        row.riskLabel === "On Track"
+          ? "bg-primary"
+          : row.riskLabel === "Needs Attention"
+            ? "bg-amber-400"
+            : row.riskLabel === "Overdue"
+              ? "bg-rose-500"
+              : "bg-emerald-500",
+      barClass:
+        row.riskLabel === "On Track"
+          ? "bg-primary"
+          : row.riskLabel === "Needs Attention"
+            ? "bg-amber-400"
+            : row.riskLabel === "Overdue"
+              ? "bg-rose-500"
+              : "bg-emerald-500",
+      chartColor:
+        row.riskLabel === "On Track"
+          ? "#2460A7"
+          : row.riskLabel === "Needs Attention"
+            ? "#F59E0B"
+            : row.riskLabel === "Overdue"
+              ? "#F43F5E"
+              : "#10B981",
+    }));
+  }, [budgetMonitoringChartData, budgetMonitoringEntries.length]);
+  const allocationOrganizationNamesByGroup = useMemo(() => {
+    const grouped = new Map<string, Set<string>>();
+
+    fyBudgetRequests
+      .filter((request) => budgetReleaseStatuses.has(request.status))
+      .forEach((request) => {
+        const organization = organizationProfileById.get(request.organizationId);
+        const district = organization?.district?.trim() || "Unassigned District";
+        const barangay = organization?.barangay?.trim() || "Unassigned Barangay";
+        const name = organization?.organizationName?.trim() || "Unknown organization";
+        const key = `${district}::${barangay}`;
+        const names = grouped.get(key) ?? new Set<string>();
+        names.add(name);
+        grouped.set(key, names);
+      });
+
+    return grouped;
+  }, [organizationProfileById, fyBudgetRequests]);
+  const budgetMonitoringExportRows = useMemo<BudgetMonitoringExportRow[]>(
+    () =>
+      filteredBudgetMonitoringEntries.map((entry) => {
+        const linkedRequest = state.budgetRequests.find((req) => req.id === entry.budgetRequestId);
+        const recordCode = buildPublicRecordCode("BR", linkedRequest, state.budgetRequests);
+        return {
+          organizationName: entry.organizationName,
+          recordCode,
+          activity: entry.title,
+          approvedAmount: entry.approvedAmount,
+          releasedAmount: entry.releasedAmount,
+          remainingAmount: entry.remainingAmount,
+          utilizationRate: entry.utilizationRate,
+          budgetStatus: entry.budgetStatus,
+          liquidationStatus: entry.liquidationStatus,
+          releaseDate: entry.releaseDate,
+          goSignalAt: entry.goSignalAt,
+          deadlineAt: entry.deadlineAt,
+          hardCopySubmittedAt: entry.hardCopySubmittedAt,
+          completedAt: entry.completedAt,
+          remarks: entry.remarks,
+          riskLabel: entry.riskLabel,
+        };
+      }),
+    [filteredBudgetMonitoringEntries, state.budgetRequests],
+  );
+  const allocationByBarangayExportRows = useMemo<AllocationByBarangayExportRow[]>(
+    () =>
+      filteredBudgetAllocationRows.map((entry) => ({
+        district: entry.district,
+        barangay: entry.barangay,
+        organizationNames: [
+          ...(allocationOrganizationNamesByGroup.get(`${entry.district}::${entry.barangay}`) ?? new Set<string>()),
+        ].sort((left, right) => left.localeCompare(right)),
+        approvedAmount: entry.approvedAmount,
+        releasedAmount: entry.releasedAmount,
+      })),
+    [allocationOrganizationNamesByGroup, filteredBudgetAllocationRows],
+  );
+  const budgetRequestExportFilters = useMemo(() => {
+    const summary: string[] = [];
+    if (budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY) {
+      summary.push(`Semester: ${selectedBudgetSemesterLabel}`);
+    } else {
+      summary.push("Semester: All Semesters");
+    }
+    if (budgetRequestsSearch.trim()) summary.push(`Search: "${budgetRequestsSearch.trim()}"`);
+    if (budgetRequestsStatusFilter !== "all") summary.push(`Status: ${budgetRequestsStatusFilter}`);
+    if (budgetRequestsDistrictFilter !== "all") summary.push(`District: ${budgetRequestsDistrictFilter}`);
+    if (budgetRequestsBarangayFilter !== "all") summary.push(`Barangay: ${budgetRequestsBarangayFilter}`);
+    if (budgetRequestsClassificationFilter !== "all") summary.push(`Classification: ${budgetRequestsClassificationFilter}`);
+    return summary;
+  }, [
+    budgetRequestsSemesterFilter,
+    selectedBudgetSemesterLabel,
+    budgetRequestsBarangayFilter,
+    budgetRequestsClassificationFilter,
+    budgetRequestsDistrictFilter,
+    budgetRequestsSearch,
+    budgetRequestsStatusFilter,
+  ]);
+
+  const budgetMonitoringExportFilters = useMemo(() => {
+    const summary: string[] = [];
+    if (budgetMonitoringSearch.trim()) summary.push(`Search: "${budgetMonitoringSearch.trim()}"`);
+    if (budgetMonitoringRiskFilter !== "all") summary.push(`Risk Level: ${budgetMonitoringRiskFilter}`);
+    return summary;
+  }, [budgetMonitoringRiskFilter, budgetMonitoringSearch]);
+  const allocationExportFilters = useMemo(() => {
+    const period = getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod));
+    return [period, ...[
+      budgetMonitoringFilters.purposeCategory !== "all" ? `Purpose: ${budgetMonitoringFilters.purposeCategory}` : null,
+      budgetMonitoringFilters.budgetStatus !== "all" ? `Status: ${budgetMonitoringFilters.budgetStatus}` : null,
+      budgetMonitoringFilters.majorClassification !== "all" ? `Classification: ${budgetMonitoringFilters.majorClassification}` : null,
+      budgetMonitoringFilters.district !== "all" ? `District: ${budgetMonitoringFilters.district}` : null,
+      budgetMonitoringFilters.barangay !== "all" ? `Barangay: ${budgetMonitoringFilters.barangay}` : null,
+      budgetMonitoringFilters.releaseStatus !== "all" ? `Release: ${budgetMonitoringFilters.releaseStatus}` : null,
+      budgetMonitoringFilters.liquidationStatus !== "all" ? `Liquidation: ${budgetMonitoringFilters.liquidationStatus}` : null,
+    ].filter((value): value is string => Boolean(value))];
+  }, [budgetMonitoringFilters]);
+  const handleReportExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
+    try {
+      if (activeReportExport === "budget-requests") {
+        const matching = await fetchAllAdminReviewResourceRows({ resource: "budgets", search: budgetRequestsSearch,
+          status: budgetRequestsStatusFilter, semester: budgetRequestsSemesterFilter,
+          district: budgetRequestsDistrictFilter, barangay: budgetRequestsBarangayFilter,
+          classification: budgetRequestsClassificationFilter, ...getAdminReportRange(budgetReportPeriod) });
+        const budgetRequestExportRows: BudgetRequestExportRow[] = matching.filter((row): row is AdminBudgetReviewRow => "request" in row)
+          .map(({ request, organization }) => ({ organizationName: organization.organizationName, activity: request.activityTitle,
+            approvedAmount: Number(request.approvedAmount ?? request.requestedAmount ?? 0),
+            releasedAmount: Number(request.releasedAmount ?? 0), releasedDate: request.releaseDate || "" }));
+        if (!budgetRequestExportRows.length) {
+          toast({ title: "No Data", description: "No budget requests match the current filters." });
+          return;
+        }
+        const totalApproved = budgetRequestExportRows.reduce((sum, row) => sum + row.approvedAmount, 0);
+        const totalReleased = budgetRequestExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
+        const exportTitle =
+          budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY
+            ? `Budget Requests - ${selectedBudgetSemesterLabel}`
+            : "Budget Requests";
+
+        await exportReport(
+          format,
+          {
+            config: {
+              ...budgetRequestExportConfig,
+              ...withAdminReportPeriod({ title: exportTitle, filenamePrefix: "budget-requests" }, budgetReportPeriod),
+            },
+            rows: budgetRequestExportRows,
+            metadataLines: [
+              `Semester: ${selectedBudgetSemesterLabel}`,
+              `Total Requests: ${budgetRequestExportRows.length}`,
+              `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
+              `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
+            ],
+            filterSummaryLines: [...budgetRequestExportFilters, ...adminReportMetadata(budgetReportPeriod)],
+            totalsRow:
+              format === "pdf"
+                ? buildBudgetRequestPdfTotalsRow(budgetRequestExportRows)
+                : format === "csv"
+                  ? undefined
+                  : buildBudgetRequestTotalsRow(budgetRequestExportRows),
+            xlsxTotalsRow: format === "xlsx" ? buildBudgetRequestXlsxTotalsRow(budgetRequestExportRows) : undefined,
+          },
+          pageConfig,
+        );
+        toast({ title: "Export Ready", description: `The budget request ${format.toUpperCase()} export has been downloaded.` });
+        return;
+      }
+
+      if (activeReportExport === "budget-monitoring") {
+        if (!budgetMonitoringExportRows.length) {
+          toast({ title: "No Data", description: "No budget monitoring entries match the current filters." });
+          return;
+        }
+        const totalApproved = budgetMonitoringExportRows.reduce((sum, row) => sum + row.approvedAmount, 0);
+        const totalReleased = budgetMonitoringExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
+        const totalRemaining = budgetMonitoringExportRows.reduce((sum, row) => sum + row.remainingAmount, 0);
+
+        await exportReport(
+          format,
+          {
+            config: withAdminReportPeriod(budgetMonitoringExportConfig, fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod)),
+            rows: budgetMonitoringExportRows,
+            metadataLines: [
+              `Reporting Period: ${getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))}`,
+              `Total Monitored Records: ${budgetMonitoringExportRows.length}`,
+              `Total Approved Amount: ${formatCurrencyPdf(totalApproved)}`,
+              `Total Released Amount: ${formatCurrencyPdf(totalReleased)}`,
+              `Total Remaining Amount: ${formatCurrencyPdf(totalRemaining)}`,
+            ],
+            filterSummaryLines: [...budgetMonitoringExportFilters, ...adminReportMetadata(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))],
+            totalsRow:
+              format === "pdf"
+                ? buildBudgetMonitoringPdfTotalsRow(budgetMonitoringExportRows)
+                : format === "csv"
+                  ? undefined
+                  : buildBudgetMonitoringTotalsRow(budgetMonitoringExportRows),
+            xlsxTotalsRow: format === "xlsx" ? buildBudgetMonitoringXlsxTotalsRow(budgetMonitoringExportRows) : undefined,
+          },
+          pageConfig,
+        );
+        toast({ title: "Export Ready", description: `The Budget Monitoring ${format.toUpperCase()} export has been downloaded.` });
+        return;
+      }
+
+      if (activeReportExport === "allocation-by-barangay") {
+        if (!allocationByBarangayExportRows.length) {
+          toast({ title: "No Data", description: "No barangay allocations match the current filters." });
+          return;
+        }
+
+        await exportReport(
+          format,
+          {
+            config: withAdminReportPeriod(allocationByBarangayExportConfig, fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod)),
+            rows: allocationByBarangayExportRows,
+            metadataLines: [
+              `Total Barangays: ${budgetAllocationSummary.barangayCount}`,
+              `Total Organizations: ${allocationByBarangayExportRows.reduce((sum, row) => sum + row.organizationNames.length, 0)}`,
+              `Total Approved Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalApproved)}`,
+              `Total Released Amount: ${formatCurrencyPdf(budgetAllocationSummary.totalReleased)}`,
+            ],
+            filterSummaryLines: [...allocationExportFilters, ...adminReportMetadata(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))],
+            totalsRow:
+              format === "pdf"
+                ? buildAllocationPdfTotalsRow(allocationByBarangayExportRows)
+                : format === "csv"
+                  ? undefined
+                  : buildAllocationTotalsRow(allocationByBarangayExportRows),
+            xlsxTotalsRow: format === "xlsx" ? buildAllocationXlsxTotalsRow(allocationByBarangayExportRows) : undefined,
+          },
+          pageConfig,
+        );
+        toast({ title: "Export Ready", description: `The allocation by barangay ${format.toUpperCase()} export has been downloaded.` });
+      }
+    } catch (error) {
+      console.error("Failed to export admin report:", error);
+      toast({
+        title: "Export Failed",
+        description: "The selected report could not be generated.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+  const validDocumentTypeIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const doc of templateDocuments) {
+      if (doc.id) ids.add(doc.id);
+      if (doc.databaseId) ids.add(doc.databaseId);
+    }
+    return ids;
+  }, [templateDocuments]);
+  const overviewStats = useMemo(() => {
+    const summary = dashboardQuery.data?.summary;
+    return {
+      organizations: summary?.organizationsTotal ?? (!supabase ? state.organizationProfiles.length : 0),
+      pendingProfiles: summary?.pendingProfiles ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "pending_review" || item.profileStatus === "incomplete").length : 0),
+      pendingDocuments: summary?.pendingDocuments ?? (!supabase ? state.documentSubmissions.filter((item) => item.status === "submitted" || item.status === "under_admin_review").length : 0),
+      revisions: summary?.revisions ?? (!supabase ? state.documentSubmissions.filter((item) => item.status === "needs_revision").length : 0),
+      approvedDocs: summary?.approvedDocs ?? (!supabase ? state.documentSubmissions.filter((item) => item.status === "approved_green").length : 0),
+      pendingBudget: summary?.pendingBudget ?? (!supabase ? state.budgetRequests.filter((item) => item.status === "submitted" || item.status === "under_review").length : 0),
+      approvedBudget: summary?.approvedBudget ?? (!supabase ? state.budgetRequests.filter((item) => item.status === "awaiting_release" || item.status === "approved_for_ftf_green" || item.status === "hard_copy_submitted").length : 0),
+      releasedBudget: summary?.releasedBudget ?? (!supabase ? state.budgetRequests.filter((item) => item.status === "budget_released").length : 0),
+      pendingLiquidation: summary?.pendingLiquidation ?? (!supabase ? state.liquidationReports.filter((item) => item.status === "submitted" || item.status === "under_review").length : 0),
+      overdueLiquidation: summary?.overdueLiquidation ?? (!supabase ? state.liquidationReports.filter((item) => item.status === "overdue").length : 0),
+      pendingInquiries: summary?.pendingInquiries ?? (!supabase ? state.inquiries.filter((item) => item.status === "pending_review").length : 0),
+      nonCompliant: summary?.nonCompliant ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "suspended_inactive").length : 0),
+      ypopEntriesTotal: summary?.ypopEntriesTotal ?? (!supabase ? state.ypopEntries.length : 0),
+      budgetRequestsTotal: summary?.budgetRequestsTotal ?? (!supabase ? state.budgetRequests.filter((item) => item.status !== "draft").length : 0),
+      liquidationsTotal: summary?.liquidationsTotal ?? (!supabase ? state.liquidationReports.length : 0),
+      inquiriesTotal: summary?.inquiriesTotal ?? (!supabase ? state.inquiries.length : 0),
+    };
+  }, [dashboardQuery.data, state]);
+
+  const pendingYpop = useMemo(() => {
+    if (sidebarCounts) return sidebarCounts.pendingYpop ?? 0;
+    if (supabase) return 0;
+    const pendingCityLed = (state.ypopEventParticipations ?? []).filter(
+      (p) => p.status === "pending_evaluation" || p.status === "pending_verification",
+    ).length;
+    const pendingOrgLed = (state.ypopOrgActivities ?? []).filter(
+      (a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review",
+    ).length;
+    return pendingCityLed + pendingOrgLed;
+  }, [state.ypopEventParticipations, state.ypopOrgActivities, sidebarCounts]);
+
+  const pendingRenewalsCount = useMemo(
+    () => sidebarCounts?.pendingRenewals ?? (!supabase ? adminRenewals.filter((renewal) => renewal.status !== "approved").length : 0),
+    [adminRenewals, sidebarCounts],
+  );
+
+  const sidebarGroups = useMemo<PortalNavGroup[]>(() => {
+    const withOverrides = (id: string, overrides: Partial<PortalNavItem> = {}): PortalNavItem | null => {
+      const base = adminNavItemsById.get(id);
+      if (!base) return null;
+      return { ...base, ...overrides };
+    };
+    const compact = (items: Array<PortalNavItem | null>) => items.filter((item): item is PortalNavItem => item !== null);
+
+    const allGroups: PortalNavGroup[] = [
+      { id: "workspace", label: "Workspace", items: compact([withOverrides("overview")]) },
+      {
+        id: "organizations",
+        label: "Organizations",
+        items: compact([
+          withOverrides("registrations", {
+            label: "Registrations",
+            icon: UserPlus,
+            count: (sidebarCounts?.pendingProfiles ?? overviewStats.pendingProfiles) || undefined,
+          }),
+          withOverrides("renewals", {
+            label: "Renewals",
+            icon: RefreshCw,
+            count: pendingRenewalsCount || undefined,
+          }),
+          withOverrides("yorp-registry", { icon: Globe }),
+        ]),
+      },
+      {
+        id: "programs",
+        label: "Programs",
+        items: compact([withOverrides("ypop-validation", { icon: Award, count: pendingYpop || undefined })]),
+      },
+      {
+        id: "budget-management",
+        label: "Budget Management",
+        items: compact([
+          withOverrides("budget-utilization", { count: (sidebarCounts?.pendingBudget ?? overviewStats.pendingBudget) || undefined }),
+          withOverrides("liquidation-monitoring", {
+            icon: Clipboard,
+            count: ((sidebarCounts?.overdueLiquidation ?? overviewStats.overdueLiquidation) + (sidebarCounts?.pendingLiquidation ?? overviewStats.pendingLiquidation)) || undefined,
+          }),
+          withOverrides("budget-monitoring", { label: "Budget Monitoring", icon: TrendingUp }),
+        ]),
+      },
+      {
+        id: "content",
+        label: "Content",
+        items: compact([
+          withOverrides("news-releases", { icon: Newspaper }),
+          withOverrides("templates", { label: "Forms & Templates" }),
+        ]),
+      },
+      {
+        id: "communication",
+        label: "Communication",
+        items: compact([
+          withOverrides("inquiries", { icon: Inbox, count: (sidebarCounts?.pendingInquiries ?? overviewStats.pendingInquiries) || undefined }),
+        ]),
+      },
+      {
+        id: "administration",
+        label: "Administration",
+        items: [
+          { id: "administrators", label: "Administrators", icon: Shield },
+          { id: "activity-logs", label: "Activity Logs", icon: Activity },
+          { id: "settings", label: "Settings", icon: Settings },
+          { id: "backup-recovery", label: "Backup & Recovery", icon: DatabaseBackup },
+        ],
+      },
+    ];
+
+    return allGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => hasAdminNavPermission(user?.permissionCodes, item.id, currentAdminRoleCode)),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [overviewStats, sidebarCounts, pendingRenewalsCount, pendingYpop, user, currentAdminRoleCode]);
+
+  const totalLiquidated = useMemo(
+    () =>
+      fyLiquidationReports
+        .filter((report) => report.status === "completed_liquidated")
+        .reduce((sum, report) => {
+          const relatedBudgetRequest = fyBudgetRequests.find((request) => request.id === report.budgetRequestId);
+          return sum + (relatedBudgetRequest?.releasedAmount ?? 0);
+        }, 0),
+    [fyLiquidationReports, fyBudgetRequests],
+  );
+
+  const budgetApprovedTotal = useMemo(
+    () =>
+      fyBudgetRequests
+        .filter((r) => ["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
+        .reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0),
+    [fyBudgetRequests],
+  );
+
+  const purposeCategoryBreakdown = useMemo(() => {
+    const totals = new Map<string, { approvedAmount: number; releasedAmount: number; count: number }>();
+    fyBudgetRequests
+      .filter((r) => ["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released", "completed"].includes(r.status))
+      .forEach((r) => {
+        const category = (r.purposeCategory || "").trim() || "General / Uncategorized";
+        const app = r.approvedAmount || r.requestedAmount || 0;
+        const rel = r.releasedAmount || 0;
+        const prev = totals.get(category) ?? { approvedAmount: 0, releasedAmount: 0, count: 0 };
+        totals.set(category, {
+          approvedAmount: prev.approvedAmount + app,
+          releasedAmount: prev.releasedAmount + rel,
+          count: prev.count + 1,
+        });
+      });
+    return Array.from(totals.entries())
+      .map(([category, d]) => ({
+        category,
+        amount: d.approvedAmount,
+        approvedAmount: d.approvedAmount,
+        releasedAmount: d.releasedAmount,
+        count: d.count,
+      }))
+      .sort((a, b) => b.approvedAmount - a.approvedAmount);
+  }, [fyBudgetRequests]);
+
+  const budgetMonitoringApprovedTotal = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((r) => APPROVED_BUDGET_STATUSES.has(r.status))
+      .reduce((sum, r) => sum + (r.approvedAmount || r.requestedAmount || 0), 0);
+  }, [filteredBudgetMonitoringRequests]);
+
+  const budgetMonitoringReleasedTotal = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((r) => RELEASED_BUDGET_STATUSES.has(r.status))
+      .reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+  }, [filteredBudgetMonitoringRequests]);
+
+  const budgetMonitoringLiquidatedTotal = useMemo(() => {
+    return filteredBudgetMonitoringRequests
+      .filter((r) => {
+        const liq = latestLiquidationByRequestId.get(r.id);
+        return liq?.status === "completed_liquidated";
+      })
+      .reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+  }, [filteredBudgetMonitoringRequests, latestLiquidationByRequestId]);
+
+  const budgetMonitoringPurposeCategories = useMemo(() => {
+    return aggregatePurposeCategories(
+      filteredBudgetMonitoringRequests,
+      latestLiquidationByRequestId,
+      budgetMonitoringFilters.sortBy
+    );
+  }, [filteredBudgetMonitoringRequests, latestLiquidationByRequestId, budgetMonitoringFilters.sortBy]);
+
+  const budgetMonitoringOrganizationFundingRows = useMemo<OrganizationFundingRow[]>(() => {
+    return aggregateOrganizationFundingRows(
+      filteredBudgetMonitoringRequests,
+      state.organizationProfiles,
+      latestLiquidationByRequestId,
+      budgetMonitoringFilters.sortBy
+    );
+  }, [
+    filteredBudgetMonitoringRequests,
+    state.organizationProfiles,
+    latestLiquidationByRequestId,
+    budgetMonitoringFilters.sortBy,
+  ]);
+
+  const budgetMonitoringFilterOptions = useMemo(() => {
+    const withoutPurpose = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, purposeCategory: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const withoutClassification = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, majorClassification: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const withoutDistrict = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, district: "all", barangay: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const withoutBarangay = filterBudgetRequests(adminBudgetRequests, { ...budgetMonitoringFilters, barangay: "all" }, organizationProfileById, latestLiquidationByRequestId);
+    const canonical = new Set<string>(advocacyOptions);
+    const availableCategories = Array.from(new Set(withoutPurpose.map(r => (r.purposeCategory || "").trim().toLowerCase()).filter(value => canonical.has(value))));
+    const profilesFor = (requests: BudgetRequest[]) => Array.from(new Set(requests.map(r => r.organizationId))).map(id => organizationProfileById.get(id)).filter((profile): profile is NonNullable<typeof profile> => Boolean(profile));
+    const availableClassifications = Array.from(new Set(profilesFor(withoutClassification).map(o => o.majorClassification?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+    const availableDistricts = Array.from(new Set(profilesFor(withoutDistrict).map(o => o.district?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+    const availableBarangays = Array.from(new Set(profilesFor(withoutBarangay).map(o => o.barangay?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+    return { availableCategories, availableClassifications, availableDistricts, availableBarangays };
+  }, [adminBudgetRequests, budgetMonitoringFilters, organizationProfileById, latestLiquidationByRequestId]);
+  const organizationFundingRows = useMemo<OrganizationFundingRow[]>(() => {
+    if (section !== "budget-monitoring") return [];
+    const requestsByOrganization = new Map<string, BudgetRequest[]>();
+    fyBudgetRequests.forEach(request => {
+      const rows = requestsByOrganization.get(request.organizationId) ?? [];
+      rows.push(request);
+      requestsByOrganization.set(request.organizationId, rows);
+    });
+    const liquidatedIds = new Set(fyLiquidationReports.filter(report => report.status === "completed_liquidated").map(report => report.budgetRequestId));
+    return state.organizationProfiles
+      .map((org) => {
+        const orgRequests = requestsByOrganization.get(org.id) ?? [];
+        const totalRequested = orgRequests.reduce((sum, r) => sum + (r.requestedAmount || 0), 0);
+        const totalReleased = orgRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0);
+        const totalLiquidated = orgRequests.reduce((sum, r) => {
+          const isLiquidated = liquidatedIds.has(r.id);
+          return sum + (isLiquidated ? r.releasedAmount || 0 : 0);
+        }, 0);
+        return {
+          organizationId: org.id,
+          urn: org.urn || "—",
+          organizationName: org.organizationName,
+          majorClassification: org.majorClassification,
+          barangay: org.barangay?.trim() || "Unassigned Barangay",
+          totalRequested,
+          totalReleased,
+          totalLiquidated,
+        };
+      })
+      .filter((row) => row.totalRequested > 0);
+  }, [section, state.organizationProfiles, fyBudgetRequests, fyLiquidationReports]);
+
+  const organizationBudgetDetail = useMemo<OrganizationBudgetDetail | null>(() => {
+    if (!selectedOrganizationBudgetDetailId) return null;
+    const org = state.organizationProfiles.find((o) => o.id === selectedOrganizationBudgetDetailId);
+    if (!org) return null;
+    const orgRequests = fyBudgetRequests.filter((r) => r.organizationId === org.id);
+    const requests: OrganizationBudgetRequestRow[] = orgRequests.map((r) => ({
+      id: r.id,
+      activityTitle: r.activityTitle,
+      referenceCode: buildPublicRecordCode("BR", r, fyBudgetRequests),
+      releasedAmount: r.releasedAmount || 0,
+      status: r.status,
+      isLiquidated: fyLiquidationReports.some((lr) => lr.budgetRequestId === r.id && lr.status === "completed_liquidated"),
+    }));
+    const registrationDate = new Date(org.verifiedAt || org.createdAt);
+    return {
+      organizationId: org.id,
+      urn: org.urn || "—",
+      organizationName: org.organizationName,
+      district: org.district,
+      barangay: org.barangay,
+      registrationDate,
+      expiryDate: addYears(registrationDate, 3),
+      totalRequested: orgRequests.reduce((sum, r) => sum + (r.requestedAmount || 0), 0),
+      totalReleased: orgRequests.reduce((sum, r) => sum + (r.releasedAmount || 0), 0),
+      totalLiquidated: requests.reduce((sum, r) => sum + (r.isLiquidated ? r.releasedAmount : 0), 0),
+      completedCount: requests.filter((r) => r.isLiquidated).length,
+      requests,
+    };
+  }, [selectedOrganizationBudgetDetailId, state.organizationProfiles, fyBudgetRequests, fyLiquidationReports]);
+
+  useEffect(() => {
+    let isActive = true;
+    const activeFiles = section === "registrations" && selectedRegistrationId
+      ? selectedRegistrationFiles
+      : [];
+    const filesWithUploads = activeFiles.filter((file) => file.fileUrl && file.fileUrl.trim());
+
+    if (!filesWithUploads.length) {
+      documentPreviewSourceRef.current = {};
+      setDocumentPreviewUrls((prev) => (Object.keys(prev).length > 0 ? {} : prev));
+      return;
+    }
+
+    void (async () => {
+      const nextUrls: Record<string, string> = {};
+      const nextSources: Record<string, string> = {};
+      const filesToResolve = filesWithUploads.filter((file) => {
+        const existingSource = documentPreviewSourceRef.current[file.id];
+        if (existingSource === file.fileUrl) {
+          return false;
+        }
+        return true;
+      });
+
+      if (!filesToResolve.length) return;
+
+      const resolvedEntries = await Promise.all(
+        filesToResolve.map(async (file) => {
+          try {
+            const resolvedUrl = await resolveSupabaseFileUrl(file.fileUrl);
+            return [file.id, file.fileUrl, resolvedUrl ?? ""] as const;
+          } catch {
+            return [file.id, file.fileUrl, ""] as const;
+          }
+        }),
+      );
+
+      if (!isActive) return;
+      for (const [fileId, sourceUrl, resolvedUrl] of resolvedEntries) {
+        nextUrls[fileId] = resolvedUrl;
+        nextSources[fileId] = sourceUrl;
+      }
+
+      documentPreviewSourceRef.current = { ...documentPreviewSourceRef.current, ...nextSources };
+      setDocumentPreviewUrls((current) => {
+        const merged = { ...current, ...nextUrls };
+        const hasChanged =
+          Object.keys(merged).length !== Object.keys(current).length ||
+          Object.entries(merged).some(([fileId, resolvedUrl]) => current[fileId] !== resolvedUrl);
+        return hasChanged ? merged : current;
+      });
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [section, selectedRegistrationId, selectedRegistrationFiles]);
+
+  useEffect(() => {
+    const firstReviewableFile = templateDocuments
+      .map((documentType) =>
+        selectedRegistrationFiles.find(
+          (file) =>
+            file.documentTypeId === documentType.id ||
+            (documentType.databaseId && file.documentTypeId === documentType.databaseId),
+        ),
+      )
+      .find((file): file is NonNullable<typeof file> => Boolean(file)) ?? null;
+
+    setActiveRegistrationReviewFileId((current) => {
+      if (current && selectedRegistrationFiles.some((file) => file.id === current)) {
+        return current;
+      }
+      return firstReviewableFile?.id ?? null;
+    });
+  }, [selectedRegistrationFiles, templateDocuments]);
+
+  useEffect(() => {
+    setSelectedRegistrationReviewFileIds([]);
+    setRegistrationBulkDecision("approve");
+    setRegistrationBulkRemark("");
+    setRegistrationActivityVisibleCount(4);
+    setIsRegistrationActivityPopoverOpen(false);
+    setIsRegistrationDecisionHelpOpen(false);
+    setIsRegistrationDecisionConfirmOpen(false);
+  }, [selectedRegistrationId]);
+
+  useEffect(() => {
+    setActiveRenewalReviewFileId((current) =>
+      preserveOrSelectFirstRenewalReviewFile(current, orderedRenewalPreviewFiles),
+    );
+  }, [orderedRenewalPreviewFiles]);
+
+  useEffect(() => {
+    setSelectedRenewalReviewFileIds([]);
+    setRenewalBulkDecision("approve");
+    setRenewalBulkRemark("");
+    setRenewalActivityVisibleCount(4);
+    setIsRenewalActivityPopoverOpen(false);
+    setIsRenewalDecisionHelpOpen(false);
+    setIsRenewalDecisionConfirmOpen(false);
+    setIsRenewalRevisionDialogOpen(false);
+    setIsRenewalRejectDialogOpen(false);
+    setRenewalDecisionRemarksDraft("");
+  }, [selectedRenewalId]);
+
+  useEffect(() => {
+    if (!selectedBudgetRequestId) {
+      lastInitializedBudgetIdRef.current = null;
+      setIsBudgetApprovedAmountDirty(false);
+      setIsBudgetDecisionDirty(false);
+      setIsBudgetRemarkDirty(false);
+      setBudgetApprovedAmountDraft("");
+      setBudgetBulkDecision("approve");
+      setBudgetBulkRemark("");
+      setSelectedBudgetReviewFileIds([]);
+      setSelectedBudgetFileId(null);
+      return;
+    }
+
+    // If already initialized for this request ID, do NOT reset form fields
+    if (lastInitializedBudgetIdRef.current === selectedBudgetRequestId) {
+      // Synchronize only clean fields if remote server record changed while Admin has not edited them
+      if (selectedBudgetRequest && !isBudgetApprovedAmountDirty) {
+        const initialAmt = selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0;
+        setBudgetApprovedAmountDraft(initialAmt > 0 ? String(initialAmt) : "");
+      }
+      return;
+    }
+
+    // Newly opened budget request: initialize review panel once
+    if (selectedBudgetRequest) {
+      lastInitializedBudgetIdRef.current = selectedBudgetRequestId;
+      setBudgetInfoCollapsed(true);
+      setBudgetActivityVisibleCount(4);
+      setIsBudgetActivityPopoverOpen(false);
+      setSelectedBudgetReviewFileIds([]);
+      setSelectedBudgetFileId(null);
+      setBudgetBulkDecision("approve");
+      setBudgetBulkRemark("");
+      const initialAmt = selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0;
+      setBudgetApprovedAmountDraft(initialAmt > 0 ? String(initialAmt) : "");
+      setIsBudgetApprovedAmountDirty(false);
+      setIsBudgetDecisionDirty(false);
+      setIsBudgetRemarkDirty(false);
+    }
+  }, [
+    selectedBudgetRequestId,
+    selectedBudgetRequest?.id,
+    selectedBudgetRequest?.approvedAmount,
+    selectedBudgetRequest?.requestedAmount,
+    isBudgetApprovedAmountDirty,
+  ]);
+
+  useEffect(() => {
+    if (selectedBudgetReviewFileIds.length > 1 && budgetBulkDecision !== "approve") {
+      setBudgetBulkDecision("approve");
+      setBudgetBulkRemark("");
+    }
+  }, [selectedBudgetReviewFileIds.length, budgetBulkDecision]);
+
+  useEffect(() => {
+    if (!isBudgetDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (budgetDecisionHelpPanelRef.current?.contains(target)) return;
+      if (budgetDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsBudgetDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsBudgetDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isBudgetDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (!isBudgetActivityPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (budgetActivityPanelRef.current?.contains(target)) return;
+      if (budgetActivityTriggerRef.current?.contains(target)) return;
+      setIsBudgetActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsBudgetActivityPopoverOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isBudgetActivityPopoverOpen]);
+
+  useEffect(() => {
+    setLiquidationInfoCollapsed(true);
+    setLiquidationActivityVisibleCount(4);
+    setIsLiquidationActivityPopoverOpen(false);
+    setSelectedLiquidationReviewFileIds([]);
+    setLiquidationBulkDecision("approve");
+    setLiquidationBulkRemark("");
+    setLiquidationHardcopyDateReceived(new Date().toISOString().slice(0, 10));
+  }, [selectedLiquidationReportId]);
+
+  useEffect(() => {
+    if (selectedLiquidationReviewFileIds.length > 1 && liquidationBulkDecision !== "approve") {
+      setLiquidationBulkDecision("approve");
+      setLiquidationBulkRemark("");
+    }
+  }, [selectedLiquidationReviewFileIds.length, liquidationBulkDecision]);
+
+  useEffect(() => {
+    if (!isLiquidationDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (liquidationDecisionHelpPanelRef.current?.contains(target)) return;
+      if (liquidationDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsLiquidationDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsLiquidationDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isLiquidationDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (!isLiquidationActivityPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (liquidationActivityPanelRef.current?.contains(target)) return;
+      if (liquidationActivityTriggerRef.current?.contains(target)) return;
+      setIsLiquidationActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsLiquidationActivityPopoverOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isLiquidationActivityPopoverOpen]);
+
+  useEffect(() => {
+    if (!isRegistrationActivityPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (registrationActivityPanelRef.current?.contains(target)) return;
+      if (registrationActivityTriggerRef.current?.contains(target)) return;
+      setIsRegistrationActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRegistrationActivityPopoverOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRegistrationActivityPopoverOpen]);
+
+  useEffect(() => {
+    if (!isRegistrationDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (registrationDecisionHelpPanelRef.current?.contains(target)) return;
+      if (registrationDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsRegistrationDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRegistrationDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRegistrationDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (selectedRegistrationReviewFileIds.length > 1 && registrationBulkDecision !== "approve") {
+      setRegistrationBulkDecision("approve");
+      setRegistrationBulkRemark("");
+    }
+  }, [selectedRegistrationReviewFileIds.length, registrationBulkDecision]);
+
+  useEffect(() => {
+    if (!isRenewalActivityPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (renewalActivityPanelRef.current?.contains(target)) return;
+      if (renewalActivityTriggerRef.current?.contains(target)) return;
+      setIsRenewalActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRenewalActivityPopoverOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRenewalActivityPopoverOpen]);
+
+  useEffect(() => {
+    if (!isRenewalDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (renewalDecisionHelpPanelRef.current?.contains(target)) return;
+      if (renewalDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsRenewalDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsRenewalDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRenewalDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (!isYpopActivityPopoverOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (ypopActivityPanelRef.current?.contains(target)) return;
+      if (ypopActivityTriggerRef.current?.contains(target)) return;
+      setIsYpopActivityPopoverOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsYpopActivityPopoverOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isYpopActivityPopoverOpen]);
+
+  useEffect(() => {
+    if (!isYpopDecisionHelpOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (ypopDecisionHelpPanelRef.current?.contains(target)) return;
+      if (ypopDecisionHelpTriggerRef.current?.contains(target)) return;
+      setIsYpopDecisionHelpOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsYpopDecisionHelpOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isYpopDecisionHelpOpen]);
+
+  useEffect(() => {
+    if (selectedRenewalReviewFileIds.length > 1 && renewalBulkDecision !== "approve") {
+      setRenewalBulkDecision("approve");
+      setRenewalBulkRemark("");
+    }
+  }, [selectedRenewalReviewFileIds.length, renewalBulkDecision]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!selectedBudgetRequestFile) {
+      setBudgetPreviewUrl("");
+      setBudgetPreviewEmptyMessage(selectedBudgetRequest ? "No budget request file was uploaded." : "");
+      setBudgetPreviewCanInline(false);
+      setBudgetPreviewLoading(false);
+      return;
+    }
+
+    const previewTitle = selectedBudgetRequestFile.fileName || selectedBudgetRequest.activityTitle || "Budget Request File";
+    setBudgetPreviewTitle(previewTitle);
+
+    if (!selectedBudgetRequestFile.fileUrl.trim()) {
+      setBudgetPreviewUrl("");
+      setBudgetPreviewEmptyMessage("No budget request file was uploaded.");
+      setBudgetPreviewCanInline(false);
+      setBudgetPreviewLoading(false);
+      return;
+    }
+
+    setBudgetPreviewLoading(true);
+    setBudgetPreviewEmptyMessage("");
+
+    void (async () => {
+      try {
+        const resolvedUrl = await resolveSupabaseFileUrl(selectedBudgetRequestFile.fileUrl);
+        if (!isActive) return;
+        const finalUrl = resolvedUrl ?? "";
+        setBudgetPreviewUrl(finalUrl);
+        setBudgetPreviewCanInline(canInlinePreviewFile(previewTitle) || canInlinePreviewFile(finalUrl));
+      } catch (error) {
+        if (!isActive) return;
+        setBudgetPreviewUrl("");
+        setBudgetPreviewCanInline(false);
+        setBudgetPreviewEmptyMessage(
+          error instanceof Error ? error.message : "The budget request file preview could not be loaded right now.",
+        );
+      } finally {
+        if (isActive) setBudgetPreviewLoading(false);
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedBudgetRequest?.id, selectedBudgetRequest?.activityTitle, selectedBudgetRequestFile?.id, selectedBudgetRequestFile?.fileUrl]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!selectedLiquidationReportFile) {
+      setLiquidationPreviewUrl("");
+      setLiquidationPreviewEmptyMessage(selectedLiquidationReport ? "No liquidation file was uploaded." : "");
+      setLiquidationPreviewCanInline(false);
+      setLiquidationPreviewLoading(false);
+      return;
+    }
+
+    const previewTitle =
+      selectedLiquidationReportFile.fileName || selectedLiquidationBudgetRequest?.activityTitle || "Liquidation File";
+    setLiquidationPreviewTitle(previewTitle);
+
+    if (!selectedLiquidationReportFile.fileUrl.trim()) {
+      setLiquidationPreviewUrl("");
+      setLiquidationPreviewEmptyMessage("No liquidation file was uploaded.");
+      setLiquidationPreviewCanInline(false);
+      setLiquidationPreviewLoading(false);
+      return;
+    }
+
+    setLiquidationPreviewLoading(true);
+    setLiquidationPreviewEmptyMessage("");
+
+    void (async () => {
+      try {
+        const resolvedUrl = await resolveSupabaseFileUrl(selectedLiquidationReportFile.fileUrl);
+        if (!isActive) return;
+        const finalUrl = resolvedUrl ?? "";
+        setLiquidationPreviewUrl(finalUrl);
+        setLiquidationPreviewCanInline(canInlinePreviewFile(previewTitle) || canInlinePreviewFile(finalUrl));
+      } catch (error) {
+        if (!isActive) return;
+        setLiquidationPreviewUrl("");
+        setLiquidationPreviewCanInline(false);
+        setLiquidationPreviewEmptyMessage(
+          error instanceof Error ? error.message : "The liquidation file preview could not be loaded right now.",
+        );
+      } finally {
+        if (isActive) setLiquidationPreviewLoading(false);
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [
+    selectedLiquidationBudgetRequest?.activityTitle,
+    selectedLiquidationReport?.id,
+    selectedLiquidationReportFile?.id,
+    selectedLiquidationReportFile?.fileUrl,
+  ]);
+
+
+  const activeAdminChangeResources = useMemo<AdminPortalChangeResource[]>(() => {
+    if (section === "registrations") return ["registration"];
+    if (section === "renewals") return ["renewals"];
+    if (section === "budget-utilization") return ["budgets"];
+    if (section === "liquidation-monitoring") return ["liquidations"];
+    if (section === "ypop-validation" && ypopAdminView === "periods") return ["ypop_city_led", "ypop_org_led"];
+    if (section === "ypop-validation" && ypopAdminView === "entry-review") {
+      // The entry review summary combines both lanes, so keep its scoped
+      // refresh signal active for City-led and Organization-led changes.
+      return ["ypop_city_led", "ypop_org_led"];
+    }
+    if (section === "ypop-validation" && ypopAdminView === "period-detail") return ["ypop_city_led", "ypop_org_led"];
+    return [];
+  }, [section, ypopAdminView, entryReviewTab]);
+
+  const adminVersionSelectionRef = useRef({
+    selectedRegistrationId, selectedRenewalId, selectedBudgetRequestId, selectedLiquidationReportId,
+    selectedYpopId, selectedYpopPeriodId, ypopAdminView, entryReviewTab, activeEntryReviewGroupId,
+  });
+  adminVersionSelectionRef.current = {
+    selectedRegistrationId, selectedRenewalId, selectedBudgetRequestId, selectedLiquidationReportId,
+    selectedYpopId, selectedYpopPeriodId, ypopAdminView, entryReviewTab, activeEntryReviewGroupId,
+  };
+
+  const refreshAdminResourceForVersion = async (resource: AdminPortalChangeResource) => {
+    const selection = adminVersionSelectionRef.current;
+    if (resource === "registration") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "registrations"] }),
+        ...(selection.selectedRegistrationId ? [queryClient.invalidateQueries({ queryKey: ["admin", "registration", selection.selectedRegistrationId] })] : []),
+      ]);
+    } else if (resource === "renewals") {
+      const refreshes: Promise<unknown>[] = [queryClient.invalidateQueries({ queryKey: ["admin", "renewal-queue"] })];
+      if (selection.selectedRenewalId) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "renewal-context", selection.selectedRenewalId] }));
+      }
+      await Promise.all(refreshes);
+    } else if (resource === "budgets") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "budgets"] }),
+        ...(selection.selectedBudgetRequestId ? [queryClient.invalidateQueries({ queryKey: ["admin", "budget-detail", selection.selectedBudgetRequestId] })] : []),
+      ]);
+    } else if (resource === "liquidations") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "liquidations"] }),
+        ...(selection.selectedLiquidationReportId ? [queryClient.invalidateQueries({ queryKey: ["admin", "liquidation-detail", selection.selectedLiquidationReportId] })] : []),
+      ]);
+    } else {
+      const refreshes: Promise<unknown>[] = [];
+      if (selection.ypopAdminView === "entry-review" && selection.selectedYpopId && !selection.selectedYpopId.startsWith("virtual-")) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "entry-review", selection.selectedYpopId] }));
+        if (selection.activeEntryReviewGroupId) {
+          refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "review-files", selection.entryReviewTab, selection.activeEntryReviewGroupId] }));
+        }
+      }
+      if (selection.ypopAdminView === "period-detail" && selection.selectedYpopPeriodId) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "period-submissions", selection.selectedYpopPeriodId] }));
+      }
+      if (selection.ypopAdminView === "periods") refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "periods"] }));
+      await Promise.all(refreshes);
+    }
+  };
+
+  const refreshAdminVersionBaseline = async () => {
+    const epoch = ++adminVersionMutationEpochRef.current;
+    try {
+      // Ignore an older in-flight poll, then establish the post-mutation value.
+      // This prevents that same update from being replayed by the next check.
+      await adminVersionRequestRef.current?.catch(() => undefined);
+      const versions = await requestAdminVersionSnapshot();
+      if (epoch === adminVersionMutationEpochRef.current) adminPortalChangeVersionsRef.current = versions;
+    } catch (error) {
+      if (import.meta.env.DEV) console.debug("Could not align the Admin status-version baseline after a local mutation.", error);
+    }
+  };
+
+  useEffect(() => {
+    const resources = activeAdminChangeResources;
+    if (!resources.length || !readAdminSession()?.sessionToken || !supabase) return;
+    let disposed = false;
+    let requestInFlight = false;
+    let timer: number | null = null;
+    const schedule = () => {
+      if (disposed || !readAdminSession()?.sessionToken || document.visibilityState !== "visible") return;
+      timer = window.setTimeout(() => { void checkVersions(); }, 8_000);
+    };
+    const checkVersions = async () => {
+      if (disposed || document.visibilityState !== "visible" || requestInFlight) return;
+      requestInFlight = true;
+      const mutationEpoch = adminVersionMutationEpochRef.current;
+      try {
+        const versions = await requestAdminVersionSnapshot();
+        if (disposed || mutationEpoch !== adminVersionMutationEpochRef.current) return;
+        const previous = adminPortalChangeVersionsRef.current;
+        adminPortalChangeVersionsRef.current = versions;
+        if (!previous) return;
+        const changedResources = getChangedAdminPortalResources(previous, versions, resources);
+        for (const resource of changedResources.filter((item) => !item.startsWith("ypop_"))) {
+          await refreshAdminResourceForVersion(resource);
+        }
+        const ypopResourceChanged = changedResources.find((item) => item.startsWith("ypop_"));
+        if (ypopResourceChanged) await refreshAdminResourceForVersion(ypopResourceChanged);
+      } catch (error) {
+        if (import.meta.env.DEV) console.debug("Admin status-version check failed.", error);
+      } finally {
+        requestInFlight = false;
+        schedule();
+      }
+    };
+    const handleVisibility = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = null;
+      if (document.visibilityState === "visible") void checkVersions();
+    };
+    void checkVersions();
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      disposed = true;
+      if (timer !== null) window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [activeAdminChangeResources, requestAdminVersionSnapshot]);
+
+  const refreshAdminState = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] });
+    if (section === "budget-monitoring") {
+      await monitoringQuery.refetch();
+      return null;
+    }
+    if (section === "budget-utilization") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "budgets"] }),
+        ...(selectedBudgetRequestId ? [queryClient.invalidateQueries({ queryKey: ["admin", "budget-detail", selectedBudgetRequestId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "liquidation-monitoring") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "liquidations"] }),
+        ...(selectedLiquidationReportId ? [queryClient.invalidateQueries({ queryKey: ["admin", "liquidation-detail", selectedLiquidationReportId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "registrations") {
+      await refreshScopedAdminQueries();
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "renewals") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-queue"] });
+      if (selectedRenewalId) {
+        await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-context", selectedRenewalId] });
+      }
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (["overview", "inquiries", "activity-logs", "notifications"].includes(section)) {
+      await refreshScopedAdminQueries();
+      return null;
+    }
+    if (section === "ypop-validation") {
+      await refreshAdminYpop();
+      return null;
+    }
+    const pageState = await loadAdminPortalSectionState(section);
+    if (pageState) mergeRemoteStateRef.current(pageState);
+    return pageState;
+  };
+
+  // Reconcile renewal packets that already have every required file approved.
+  // This also recovers packets approved before automatic finalization was in
+  // place, and keeps URN issuance tied to the same all-approved condition.
+  useEffect(() => {
+    if (renewalReviewSubmitting) return;
+    if (!selectedRenewal || !["submitted", "under_review", "resubmitted"].includes(selectedRenewal.status)) return;
+
+    const requiredTemplates = renewalRequiredDocuments;
+    const allRequiredFilesApproved = requiredTemplates.length > 0 && requiredTemplates.every((documentType) => {
+      const file = effectiveRenewalFiles.find(
+        (entry) =>
+          entry.documentTypeId === documentType.id ||
+          (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
+      );
+      return file?.adminStatus === "approved_green";
+    });
+    if (!allRequiredFilesApproved || renewalVerificationAttemptsRef.current.has(selectedRenewal.id)) return;
+
+    const renewalId = selectedRenewal.id;
+    renewalVerificationAttemptsRef.current.add(renewalId);
+    void (async () => {
+      try {
+        const approval = await adminApproveRenewalInSupabase({ renewalId });
+        await refreshAdminState();
+        toast({
+          title: "Renewal verified",
+          description: `All required documents are approved. New URN: ${approval.certificateUrn}.`,
+        });
+      } catch (error) {
+        console.error("Failed to finalize fully approved renewal:", error);
+        toast({
+          title: "Documents approved; verification failed",
+          description: error instanceof Error ? error.message : "The renewal could not be verified automatically.",
+          variant: "destructive",
+        });
+      }
+    })();
+  }, [selectedRenewal?.id, selectedRenewal?.status, effectiveRenewalFiles, renewalRequiredDocuments, renewalReviewSubmitting]);
+
+  const refreshAdminPageData = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "sidebar-counts"] });
+    if (section === "budget-monitoring") {
+      await monitoringQuery.refetch();
+      return null;
+    }
+    if (section === "budget-utilization") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "budgets"] }),
+        ...(selectedBudgetRequestId ? [queryClient.invalidateQueries({ queryKey: ["admin", "budget-detail", selectedBudgetRequestId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "liquidation-monitoring") {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "review", "liquidations"] }),
+        ...(selectedLiquidationReportId ? [queryClient.invalidateQueries({ queryKey: ["admin", "liquidation-detail", selectedLiquidationReportId] })] : []),
+      ]);
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "registrations") {
+      await refreshScopedAdminQueries();
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (section === "renewals") {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-queue"] });
+      if (selectedRenewalId) {
+        await queryClient.invalidateQueries({ queryKey: ["admin", "renewal-context", selectedRenewalId] });
+      }
+      await refreshAdminVersionBaseline();
+      return null;
+    }
+    if (["overview", "inquiries", "activity-logs", "notifications"].includes(section)) {
+      await refreshScopedAdminQueries();
+      return null;
+    }
+    if (section === "ypop-validation") {
+      await refreshAdminYpop();
+      return null;
+    }
+    const pageState = await loadAdminPortalSectionState(section);
+    if (pageState) mergeRemoteStateRef.current(pageState);
+    return pageState;
+  };
+
+  const [isRefreshingYpop, setIsRefreshingYpop] = useState(false);
+
+  const refreshAdminYpop = async () => {
+    setIsRefreshingYpop(true);
+    try {
+      const refreshes: Promise<unknown>[] = [];
+      if (ypopAdminView === "entry-review" && selectedYpopId && !selectedYpopId.startsWith("virtual-")) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "entry-review", selectedYpopId] }));
+      }
+      if (ypopAdminView === "period-detail" && selectedYpopPeriodId) {
+        refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "period-submissions", selectedYpopPeriodId] }));
+      }
+      if (ypopAdminView === "periods") refreshes.push(queryClient.invalidateQueries({ queryKey: ["admin", "ypop", "periods"] }));
+      await Promise.all(refreshes);
+      await refreshAdminVersionBaseline();
+      return null;
+    } finally {
+      setIsRefreshingYpop(false);
+    }
+  };
+
+  const handleConfirmYpopSubmissionDelete = async () => {
+    if (!ypopDeletionTarget || !ypopDeletionOperationRef.current || ypopDeletionBusyRef.current) return;
+    ypopDeletionBusyRef.current = true;
+    setIsDeletingYpopSubmissions(true);
+    try {
+      const result = await deleteAdminYpopSubmissions({
+        periodId: ypopDeletionTarget.periodId,
+        organizationIds: ypopDeletionTarget.rows.map((row) => row.organizationId),
+        operationId: ypopDeletionOperationRef.current,
+      });
+      // Apply the committed deletion immediately, including local attendance
+      // caches. A failed refresh must not be reported as a failed deletion.
+      mergeRemoteState({ ypopDeletionReceipts: result.receipts });
+      setSelectedYpopOrganizationIds(new Set());
+      setSelectedYpopId(null);
+      ypopDeletionOperationRef.current = null;
+      setYpopDeletionTarget(null);
+      toast({
+        title: result.deletedCount ? "YPOP submissions deleted" : "Submissions already removed",
+        description: result.storageWarning || `${result.deletedCount} ${result.deletedCount === 1 ? "submission was" : "submissions were"} removed. Organizations can submit again while the semester is open.`,
+        ...(result.storageWarning ? { variant: "destructive" as const } : {}),
+      });
+      try {
+        await refreshAdminYpop();
+      } catch (error) {
+        console.warn("YPOP deletion succeeded; refresh failed", error);
+        toast({ title: "Submissions deleted", description: "The latest list could not be loaded. Refresh this page to update the totals." });
+      }
+    } catch (error) {
+      toast({ title: "Unable to delete submissions", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+      // Keep the operation ID when retrying a request whose response was lost.
+    } finally {
+      ypopDeletionBusyRef.current = false;
+      setIsDeletingYpopSubmissions(false);
+    }
+  };
+
+  const selectedBudgetRequests = useMemo(() => {
+    return state.budgetRequests.filter((r) => selectedBudgetRequestIds.has(r.id));
+  }, [state.budgetRequests, selectedBudgetRequestIds]);
+
+  const hasReleasedOrCompletedSelected = useMemo(() => {
+    return selectedBudgetRequests.some((r) => r.status === "budget_released" || String(r.status) === "completed");
+  }, [selectedBudgetRequests]);
+
+  const hasPreReleaseAdvancedStageSelected = useMemo(() => {
+    return selectedBudgetRequests.some((r) => r.status === "approved_for_ftf_green" || r.status === "hard_copy_submitted");
+  }, [selectedBudgetRequests]);
+
+  const associatedLiquidationCount = useMemo(() => {
+    const selectedIds = selectedBudgetRequestIds;
+    if (selectedIds.size === 0) return 0;
+    return (state.liquidationReports || []).filter((lr) => selectedIds.has(lr.budgetRequestId)).length;
+  }, [state.liquidationReports, selectedBudgetRequestIds]);
+
+  const handleInitiateBudgetRequestsDelete = useCallback(() => {
+    if (selectedBudgetRequestIds.size === 0) return;
+    setIsDeleteBudgetRequestsModalOpen(true);
+  }, [selectedBudgetRequestIds.size]);
+
+  const handleConfirmBudgetRequestsDelete = useCallback(async () => {
+    const idsToDelete = Array.from(selectedBudgetRequestIds);
+    if (!idsToDelete.length) return;
+
+    try {
+      setIsDeletingBudgetRequests(true);
+      const result = await deleteAdminBudgetRequestsInSupabase(idsToDelete);
+      await refreshAdminState();
+      setSelectedBudgetRequestIds(new Set());
+      if (result.storageWarning) {
+        toast({
+          title: "Budget Requests Deleted",
+          description: `${result.deletedCount} budget request(s) deleted. ${result.storageWarning}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Budget Requests Deleted",
+          description: `Successfully deleted ${result.deletedCount} budget request(s).`,
+        });
+      }
+    } catch (err: any) {
+      console.error("Failed to delete budget requests:", err);
+      toast({
+        title: "Deletion Failed",
+        description: err?.message || "Failed to delete the selected budget requests.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingBudgetRequests(false);
+      setIsDeleteBudgetRequestsModalOpen(false);
+    }
+  }, [selectedBudgetRequestIds, refreshAdminState]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void (async () => {
+      if (section !== "budget-monitoring") await refreshAdminState();
+      if (!isActive) return;
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, [section]);
+
+  useEffect(() => {
+    let isActive = true;
+    void (async () => {
+      const accountsById = await getAdminAccountsInSupabase();
+      if (isActive) setAdminAccountsById(accountsById);
+    })();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const refreshAdministrators = async () => {
+    setAdministratorsLoading(true);
+    try {
+      const [administratorRows, roleRows, unitRows] = await Promise.all([
+        getAdministratorsInSupabase(),
+        getAdministratorRolesInSupabase(),
+        getAdministratorUnitsInSupabase(),
+      ]);
+      setAdministrators(administratorRows);
+      setAdministratorRoles(roleRows.filter((role) => role.code === "super_admin" || role.code === "admin"));
+      setAdministratorUnits(unitRows);
+    } catch (error) {
+      console.error("Unable to load administrators:", error);
+      toast({
+        title: "Unable to load administrators",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAdministratorsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (section !== "administrators") return;
+    let isActive = true;
+    void (async () => {
+      if (!isActive) return;
+      await refreshAdministrators();
+    })();
+    return () => {
+      isActive = false;
+    };
+  }, [section]);
+
+  const resetAdministratorForm = () => {
+    setAdministratorModalMode(null);
+    setEditingAdministratorId(null);
+    setAdministratorDisplayNameDraft("");
+    setAdministratorEmailDraft("");
+    setAdministratorEmailError(null);
+    setAdministratorUsernameDraft("");
+    setAdministratorRoleIdDraft(null);
+    setAdministratorUnitIdDraft(null);
+  };
+
+  const startEditingAdministrator = (administrator: AdministratorRecord) => {
+    setAdministratorModalMode("edit");
+    setEditingAdministratorId(administrator.id);
+    setAdministratorDisplayNameDraft(administrator.displayName);
+    setAdministratorEmailDraft(administrator.email);
+    setAdministratorEmailError(null);
+    setAdministratorUsernameDraft(administrator.username);
+    setAdministratorRoleIdDraft(administratorRoles.find((role) => role.code === administrator.roleCode)?.id ?? null);
+    setAdministratorUnitIdDraft(administratorUnits.find((unit) => unit.code === administrator.unitCode)?.id ?? null);
+  };
+
+  const MAX_USERNAME_COLLISION_ATTEMPTS = 20;
+
+  const handleCreateAdministrator = async () => {
+    if (!administratorDisplayNameDraft.trim() || !administratorEmailDraft.trim()) {
+      toast({ title: "Missing information", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    if (administratorRoleIdDraft === null || administratorUnitIdDraft === null) {
+      toast({ title: "Missing information", description: "Please select a role and unit.", variant: "destructive" });
+      return;
+    }
+    const baseUsername = administratorEmailDraft
+      .trim()
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "");
+    if (!baseUsername) {
+      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+
+    setSavingAdministrator(true);
+    setAdministratorEmailError(null);
+    try {
+      let attempt = 0;
+      for (; ;) {
+        const candidateUsername = attempt === 0 ? baseUsername : `${baseUsername}${attempt + 1}`;
+        try {
+          await createAdministratorInSupabase({
+            displayName: administratorDisplayNameDraft,
+            email: administratorEmailDraft,
+            username: candidateUsername,
+            roleId: administratorRoleIdDraft,
+            unitId: administratorUnitIdDraft,
+          });
+          break;
+        } catch (error) {
+          if (error instanceof DuplicateUsernameError && attempt < MAX_USERNAME_COLLISION_ATTEMPTS) {
+            attempt += 1;
+            continue;
+          }
+          throw error;
+        }
+      }
+      toast({
+        title: "Administrator invited",
+        description: `An invite email has been sent to ${administratorEmailDraft.trim()}.`,
+      });
+      resetAdministratorForm();
+      await refreshAdministrators();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Please try again.";
+      if (/email/i.test(message) || /organization/i.test(message) || /administrator/i.test(message)) {
+        setAdministratorEmailError(message);
+      }
+      toast({
+        title: "Unable to add administrator",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingAdministrator(false);
+    }
+  };
+
+  const handleResendInvite = async (administrator: AdministratorRecord) => {
+    setResendingInviteId(administrator.id);
+    try {
+      await resendAdminInviteInSupabase(administrator.id);
+      toast({ title: "Invite resent", description: `A new invite email has been sent to ${administrator.email}.` });
+    } catch (error) {
+      toast({
+        title: "Unable to resend the invite",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setResendingInviteId(null);
+    }
+  };
+
+  const executeSendPasswordReset = async (administrator: AdministratorRecord) => {
+    if (sendingPasswordResetId) return;
+    if (user?.roleCode !== "super_admin") {
+      toast({
+        title: "Access Denied",
+        description: "Only Super Administrators are authorized to send administrator password reset links.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const targetEmail = administrator.email.trim().toLowerCase();
+    if (!targetEmail) {
+      toast({
+        title: "Invalid Email",
+        description: "This administrator account does not have a registered email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingPasswordResetId(administrator.id);
+    try {
+      if (supabase) {
+        const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+          redirectTo: getPasswordResetUrl(),
+        });
+        if (error) {
+          toast({
+            title: "Unable to Send Password Reset",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      toast({
+        title: "Password Reset Link Sent",
+        description: `A secure password reset link has been dispatched to ${administrator.email}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Unable to Send Password Reset",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingPasswordResetId(null);
+    }
+  };
+
+  const handleInitiateSendPasswordReset = (administrator: AdministratorRecord) => {
+    if (user?.roleCode !== "super_admin") {
+      toast({
+        title: "Access Denied",
+        description: "Only Super Administrators are authorized to send administrator password reset links.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const requireConfirmation = getEffectiveSystemSetting("security.allow_admin_password_reset");
+    if (requireConfirmation) {
+      setPendingPasswordResetAdmin(administrator);
+    } else {
+      void executeSendPasswordReset(administrator);
+    }
+  };
+
+  const handleUpdateAdministrator = async () => {
+    if (!editingAdministratorId) return;
+    if (!administratorDisplayNameDraft.trim() || !administratorEmailDraft.trim() || !administratorUsernameDraft.trim()) {
+      toast({ title: "Missing information", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    if (administratorRoleIdDraft === null || administratorUnitIdDraft === null) {
+      toast({ title: "Missing information", description: "Please select a role and unit.", variant: "destructive" });
+      return;
+    }
+    setSavingAdministrator(true);
+    try {
+      await updateAdministratorInSupabase({
+        id: editingAdministratorId,
+        displayName: administratorDisplayNameDraft,
+        email: administratorEmailDraft,
+        username: administratorUsernameDraft,
+        roleId: administratorRoleIdDraft,
+        unitId: administratorUnitIdDraft,
+      });
+      toast({ title: "Administrator updated" });
+      resetAdministratorForm();
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to update administrator",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingAdministrator(false);
+    }
+  };
+
+  const handleToggleAdministratorActive = async (administrator: AdministratorRecord) => {
+    try {
+      await setAdministratorActiveInSupabase(administrator.id, !administrator.isActive);
+      toast({
+        title: administrator.isActive ? "Administrator suspended" : "Administrator reactivated",
+        description: administrator.displayName,
+      });
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to update status",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAdministrator = async (administrator: AdministratorRecord) => {
+    try {
+      await deleteAdministratorInSupabase(administrator.id);
+      toast({ title: "Administrator deleted", description: administrator.displayName });
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to delete administrator",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateRolePermissions = async (roleId: number, permissionCodes: string[]) => {
+    try {
+      await updateRolePermissionsInSupabase(roleId, permissionCodes);
+      await refreshAdministrators();
+    } catch (error) {
+      toast({
+        title: "Unable to update permissions",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportAdministrators = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
+    if (!filteredAdministrators.length) {
+      toast({ title: "No administrators found", description: "Try changing the selected filters." });
+      return;
+    }
+    try {
+      await exportReport(
+        format,
+        {
+          config: {
+            title: "Administrators",
+            filenamePrefix: "administrators",
+            columns: [
+              { label: "Display Name", value: (row: AdministratorRecord) => row.displayName, pdfWidth: 100, xlsxWidth: 24 },
+              { label: "Email", value: (row: AdministratorRecord) => row.email, pdfWidth: 130, xlsxWidth: 28 },
+              { label: "Username", value: (row: AdministratorRecord) => row.username, pdfWidth: 90, xlsxWidth: 18 },
+              { label: "Role", value: (row: AdministratorRecord) => row.roleLabel ?? "", pdfWidth: 70, xlsxWidth: 16 },
+              { label: "Unit", value: (row: AdministratorRecord) => row.unitLabel ?? "", pdfWidth: 110, xlsxWidth: 24 },
+              {
+                label: "Status",
+                value: (row: AdministratorRecord) => (row.isActive ? "Active" : "Suspended"),
+                pdfWidth: 60,
+                xlsxWidth: 14,
+              },
+            ],
+          },
+          rows: filteredAdministrators,
+          metadataLines: [
+            `Total Administrators: ${filteredAdministrators.length}`,
+            `Active Accounts: ${filteredAdministrators.filter((a) => a.isActive).length}`,
+            `Suspended Accounts: ${filteredAdministrators.filter((a) => !a.isActive).length}`,
+          ],
+        },
+        pageConfig,
+      );
+      toast({ title: "Export Ready", description: `The administrators ${format.toUpperCase()} export has been downloaded.` });
+    } catch (error) {
+      console.error("Unable to export administrators:", error);
+      toast({
+        title: "Export Failed",
+        description: "Unable to export administrators. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredAdministrators = useMemo(() => {
+    const searchTerm = administratorSearch.trim().toLowerCase();
+    return administrators.filter((administrator) => {
+      if (administratorRoleFilter !== "all" && administrator.roleCode !== administratorRoleFilter) return false;
+      if (administratorUnitFilter !== "all" && administrator.unitCode !== administratorUnitFilter) return false;
+      if (administratorStatusFilter === "active" && !administrator.isActive) return false;
+      if (administratorStatusFilter === "suspended" && administrator.isActive) return false;
+      if (!searchTerm) return true;
+      const haystack = `${administrator.displayName} ${administrator.email} ${administrator.username}`.toLowerCase();
+      return haystack.includes(searchTerm);
+    });
+  }, [administrators, administratorRoleFilter, administratorUnitFilter, administratorStatusFilter, administratorSearch]);
+
+  const editingAdministrator = administrators.find((administrator) => administrator.id === editingAdministratorId) ?? null;
+
+  const appendAuditLog = async (
+    action: string,
+    relatedType: string,
+    relatedId: string,
+    description: string,
+    organizationId = profile?.id ?? "",
+    category?: AuditCategory,
+  ) => {
+    if (!shouldLogActivityType(action, category)) {
+      return;
+    }
+    await createAdminActivityLogInSupabase({
+      organizationId,
+      action,
+      relatedType,
+      relatedId,
+      description,
+      category,
+    });
+  };
+
+  const handleSaveInquiryStatus = async (overrideStatus?: InquiryRecord["status"]) => {
+    if (!selectedInquiry || savingInquiryStatus) return;
+
+    const nextStatus = overrideStatus ?? inquiryStatusDraft;
+    setSavingInquiryStatus(true);
+    try {
+      const previousStatus = selectedInquiry.status;
+      const savedInquiry = await adminUpdateInquiryInSupabase(selectedInquiry.id, {
+        status: nextStatus,
+        adminRemarks: inquiryAdminRemarksDraft.trim(),
+      });
+
+      updateInquiry(savedInquiry.id, savedInquiry);
+      setAdminListRefreshKey((current) => current + 1);
+      setSelectedInquiry(savedInquiry);
+      setInquiryStatusDraft(savedInquiry.status);
+      setInquiryAdminRemarksDraft(savedInquiry.adminRemarks);
+
+      void appendAuditLog(
+        "update_inquiry_status",
+        "inquiry",
+        savedInquiry.id,
+        `Changed inquiry status from ${statusLabelMap[previousStatus] ?? previousStatus} to ${statusLabelMap[savedInquiry.status] ?? savedInquiry.status}.`,
+        savedInquiry.organizationId,
+      ).catch((error) => console.error("Unable to record inquiry status activity:", error));
+
+      toast({
+        title: "Inquiry status updated",
+        description: `The inquiry is now ${statusLabelMap[savedInquiry.status] ?? savedInquiry.status}.`,
+      });
+    } catch (error) {
+      console.error("Unable to update inquiry status:", error);
+      toast({
+        title: "Status update failed",
+        description: error instanceof Error ? error.message : "The inquiry status could not be updated.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingInquiryStatus(false);
+    }
+  };
+
+  const openDownloadDialog = async (
+    current: { fileName: string; fileUrl: string } | null | undefined,
+    files: { fileName: string; fileUrl: string }[],
+    zipName: string,
+  ) => {
+    if (downloadDialogResolving) return;
+    const candidates = files.filter((file) => file.fileUrl.trim());
+    if (!candidates.length) {
+      toast({
+        title: "No documents to download",
+        description: "There are no files available for this record yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setDownloadDialogResolving(true);
+    try {
+      const resolved = await Promise.all(
+        candidates.map(async (file) => ({
+          name: file.fileName,
+          url: await resolveSupabaseFileUrl(file.fileUrl),
+          sourceUrl: file.fileUrl,
+        })),
+      );
+      const currentResolved = current?.fileUrl
+        ? resolved.find((entry) => entry.sourceUrl === current.fileUrl) ?? null
+        : null;
+      setDownloadDialogCurrentFile(
+        currentResolved ? { name: currentResolved.name, url: currentResolved.url } : null,
+      );
+      setDownloadDialogAllFiles(resolved.map(({ name, url }) => ({ name, url })));
+      setDownloadDialogZipName(zipName);
+      setDownloadDialogOpen(true);
+    } catch (error) {
+      toast({
+        title: "Unable to prepare download",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadDialogResolving(false);
+    }
+  };
+
+  const handleMarkInquiryReviewed = async (inquiry: InquiryRecord) => {
+    try {
+      const savedInquiry = await adminUpdateInquiryInSupabase(inquiry.id, {
+        status: "reviewed",
+        adminRemarks: inquiry.adminRemarks,
+      });
+
+      updateInquiry(savedInquiry.id, savedInquiry);
+      setAdminListRefreshKey((current) => current + 1);
+      if (selectedInquiry?.id === savedInquiry.id) {
+        setSelectedInquiry(savedInquiry);
+        setInquiryStatusDraft(savedInquiry.status);
+        setInquiryAdminRemarksDraft(savedInquiry.adminRemarks);
+      }
+
+      void appendAuditLog(
+        "update_inquiry_status",
+        "inquiry",
+        savedInquiry.id,
+        `Changed inquiry status from ${statusLabelMap[inquiry.status] ?? inquiry.status} to ${statusLabelMap[savedInquiry.status] ?? savedInquiry.status}.`,
+        savedInquiry.organizationId,
+      ).catch((error) => console.error("Unable to record inquiry status activity:", error));
+
+      toast({
+        title: "Inquiry status updated",
+        description: `The inquiry is now ${statusLabelMap[savedInquiry.status] ?? savedInquiry.status}.`,
+      });
+    } catch (error) {
+      console.error("Unable to update inquiry status:", error);
+      toast({
+        title: "Status update failed",
+        description: error instanceof Error ? error.message : "The inquiry status could not be updated.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const executeDeleteInquiry = async (inquiry: InquiryRecord) => {
+    if (isDeletingInquiry) return;
+    setIsDeletingInquiry(true);
+    setDeleteInquiryError(null);
+
+    try {
+      const targetId = inquiry.id;
+      const refCode = getInquiryReferenceCode(inquiry, state.inquiries);
+      await deleteInquiryInSupabase(targetId);
+      removeInquiry(targetId);
+      setAdminListRefreshKey((current) => current + 1);
+
+      if (selectedInquiry?.id === targetId) {
+        setSelectedInquiry(null);
+      }
+      if (replyDialogInquiry?.id === targetId) {
+        setReplyDialogInquiry(null);
+      }
+
+      setInquiryToDelete(null);
+      toast({
+        title: "Inquiry deleted",
+        description: `Inquiry ${refCode} has been permanently deleted.`,
+      });
+    } catch (error: any) {
+      console.error("Failed to delete inquiry:", error);
+      const message = error instanceof Error ? error.message : "Failed to delete inquiry. Please try again.";
+      setDeleteInquiryError(message);
+      toast({
+        title: "Deletion failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingInquiry(false);
+    }
+  };
+
+  const handleInitiateDeleteInquiry = (inquiry: InquiryRecord) => {
+    const requireReauth = getEffectiveSystemSetting("security.reauth_delete_inquiry");
+    if (requireReauth) {
+      setInquiryToDelete(inquiry);
+      setDeleteInquiryError(null);
+    } else {
+      void executeDeleteInquiry(inquiry);
+    }
+  };
+
+  const handleConfirmDeleteInquiry = async () => {
+    if (!inquiryToDelete) return;
+    await executeDeleteInquiry(inquiryToDelete);
+  };
+
+  const notifyOrganizationUser = (params: {
+    userId: string;
+    organizationId: string;
+    title: string;
+    message: string;
+    type: string;
+    relatedType: string;
+    relatedId: string;
+  }) => {
+    createNotification({
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      userId: params.userId,
+      organizationId: params.organizationId,
+      title: params.title,
+      message: params.message,
+      type: params.type,
+      relatedType: params.relatedType,
+      relatedId: params.relatedId,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    });
+  };
+
+  const openRegistrationDeleteDialog = async (organization: OrganizationProfile) => {
+    setRegistrationDeleteTarget(organization);
+    setRegistrationDeleteConfirmation("");
+    setRegistrationDeleteError("");
+    setRegistrationDeleteCounts(null);
+    setRegistrationDeletePreflightLoading(true);
+
+    try {
+      const result = await preflightRegistrationDeletion(organization.id);
+      setRegistrationDeleteCounts(result.counts);
+    } catch (error) {
+      setRegistrationDeleteError(
+        error instanceof Error
+          ? error.message
+          : "The registration deletion preflight check could not be completed.",
+      );
+    } finally {
+      setRegistrationDeletePreflightLoading(false);
+    }
+  };
+
+  const closeRegistrationDeleteDialog = () => {
+    if (registrationDeleteLoading) return;
+    setRegistrationDeleteTarget(null);
+    setRegistrationDeleteConfirmation("");
+    setRegistrationDeleteError("");
+    setRegistrationDeleteCounts(null);
+  };
+
+  const confirmRegistrationPermanentDeletion = async () => {
+    if (
+      !registrationDeleteTarget ||
+      !organizationDeletionConfirmationMatches(
+        registrationDeleteConfirmation,
+        registrationDeleteTarget.organizationName,
+      ) ||
+      registrationDeleteLoading
+    ) {
+      return;
+    }
+
+    setRegistrationDeleteLoading(true);
+    setRegistrationDeleteError("");
+    try {
+      await permanentlyDeleteRegistrationAccount(
+        registrationDeleteTarget.id,
+        registrationDeleteConfirmation,
+      );
+      removeOrganizationAccountFromCache(registrationDeleteTarget.id);
+      setSelectedRegistrationId(null);
+      setSelectedRegistrationIds((prev) => {
+        const next = new Set(prev);
+        next.delete(registrationDeleteTarget.id);
+        return next;
+      });
+      const wasSuspended = registrationDeleteTarget.profileStatus === "suspended_inactive";
+      const targetName = registrationDeleteTarget.organizationName;
+      setRegistrationDeleteTarget(null);
+      setRegistrationDeleteConfirmation("");
+      if (wasSuspended) {
+        toast({
+          title: "Suspended registration deleted.",
+          description: "The organization can now start a new registration.",
+        });
+      } else {
+        toast({
+          title: "Registration account permanently deleted.",
+          description: `Account and associated records for ${targetName} have been removed.`,
+        });
+      }
+
+      try {
+        await refreshScopedAdminQueries();
+      } catch (refreshError) {
+        console.error("Failed to refresh admin state after registration deletion:", refreshError);
+      }
+    } catch (error) {
+      setRegistrationDeleteError(
+        error instanceof Error
+          ? error.message
+          : "The registration account could not be deleted. Please try again.",
+      );
+    } finally {
+      setRegistrationDeleteLoading(false);
+    }
+  };
+
+  const handleRegistrationSelectionChange = (nextRegistrationId: string | null) => {
+    setSelectedRegistrationId(nextRegistrationId);
+  };
+
+  const handleRenewalSelectionChange = (nextRenewalId: string | null) => {
+    setSelectedRenewalId(nextRenewalId);
+    if (!nextRenewalId) {
+      if (selectedRenewalId) renewalVerificationAttemptsRef.current.delete(selectedRenewalId);
+      setActiveRenewalReviewFileId(null);
+      setSelectedRenewalReviewFileIds([]);
+    }
+  };
+
+  const handleAdminSectionNavigate = (id: string) => {
+    const nextRoute = routeMap[id] ?? routeMap.overview;
+    const currentRoute = routeMap[section] ?? routeMap.overview;
+    if (nextRoute === currentRoute) return;
+    navigate(nextRoute);
+  };
+
+  const submitRegistrationReviewDecisions = async () => {
+    if (!selectedRegistrationProfile || !selectedRegistrationSubmission) return;
+
+    if (selectedRegistrationProfile.profileStatus === "suspended_inactive") {
+      toast({
+        title: "Organization Suspended",
+        description: "Review actions are unavailable because this organization account is permanently suspended.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const decision = registrationBulkDecision;
+    const targetFiles = selectedRegistrationFiles.filter(
+      (file) => selectedRegistrationReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+    );
+
+    if (!targetFiles.length) {
+      toast({
+        title: "No documents selected",
+        description: "Select at least one submitted document before confirming a decision.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (registrationDecisionRequiresRemark(decision) && targetFiles.length > 1) {
+      toast({
+        title: "One document at a time",
+        description: `${registrationReviewDecisionLabel[decision]} requires selecting a single document.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const remark = registrationBulkRemark.trim();
+    if (registrationDecisionRequiresRemark(decision) && !remark) {
+      toast({
+        title: "Comment required",
+        description: `Add a remark before you can ${registrationReviewDecisionLabel[decision].toLowerCase()} this document.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRegistrationReviewSubmitting(true);
+    try {
+      const result = await submitDocumentReviewBatchToSupabase({
+        decisions: targetFiles.map((file) => ({
+          fileId: file.id,
+          status:
+            decision === "approve"
+              ? "approved_green"
+              : decision === "needs_revision"
+                ? "needs_revision"
+                : "rejected_red",
+          adminRemarks: decision === "approve" ? undefined : remark,
+          expectedUpdatedAt: file.updatedAt,
+        })),
+      });
+
+      const successfulFileIds = new Set(
+        result.results.filter((item) => item.success).map((item) => item.fileId),
+      );
+      const successfulFiles = targetFiles.filter((file) => successfulFileIds.has(file.id));
+      const failedResults = result.results.filter((item) => !item.success);
+
+      if (!successfulFiles.length) {
+        throw new Error(
+          failedResults.map((item) => item.error).filter(Boolean).join(" ") ||
+          "No document review decisions were saved. Please refresh and try again.",
+        );
+      }
+
+      const freshPageData = await refreshAdminPageData();
+      setAdminListRefreshKey((current) => current + 1);
+
+      for (const file of successfulFiles) {
+        if (decision === "approve") {
+          await appendAuditLog(
+            "Approved document submission",
+            "document_submission_file",
+            file.id,
+            `Approved ${file.fileName} from the registration detail review.`,
+            selectedRegistrationProfile.id,
+          );
+        } else if (decision === "needs_revision") {
+          await appendAuditLog(
+            "Document revision requested",
+            "document_submission_file",
+            file.id,
+            `Requested revisions for ${file.fileName} from the registration detail review.`,
+            selectedRegistrationProfile.id,
+          );
+        } else {
+          await appendAuditLog(
+            "Rejected document submission",
+            "document_submission_file",
+            file.id,
+            `Rejected ${file.fileName} from the registration detail review.`,
+            selectedRegistrationProfile.id,
+          );
+        }
+      }
+
+      await appendAuditLog(
+        "Submitted batch document review",
+        "document_submission",
+        selectedRegistrationSubmission.id,
+        `Submitted ${result.successCount} document review decision${result.successCount === 1 ? "" : "s"} for ${selectedRegistrationProfile.organizationName}.`,
+        selectedRegistrationProfile.id,
+      );
+
+      notifyOrganizationUser({
+        userId: selectedRegistrationProfile.userId,
+        organizationId: selectedRegistrationProfile.id,
+        title: "Document review updated",
+        message: `The admin submitted ${result.successCount} document review decision${result.successCount === 1 ? "" : "s"} for your registration files.`,
+        type: "document_review_update",
+        relatedType: "document_submission",
+        relatedId: selectedRegistrationSubmission.id,
+      });
+
+      const freshlyUpdatedOrg = freshPageData?.organizationProfiles.find(
+        (o) => o.id === selectedRegistrationProfile.id,
+      );
+      const isNowVerified = freshlyUpdatedOrg?.profileStatus === "verified";
+      let regEventType: OrgTransactionalEmailEventType = "document_approved";
+      if (isNowVerified) {
+        regEventType = "registration_approved";
+      } else if (decision === "needs_revision") {
+        regEventType = "document_needs_revision";
+      } else if (decision === "reject") {
+        regEventType = "document_rejected";
+      }
+
+      void dispatchOrgTransactionalEmailInSupabase({
+        eventType: regEventType,
+        organizationId: selectedRegistrationProfile.id,
+        userId: selectedRegistrationProfile.userId,
+        referenceId: selectedRegistrationSubmission.id,
+        title: isNowVerified
+          ? "Organization Accreditation Registration Approved"
+          : decision === "needs_revision"
+          ? "Registration Document Revision Requested"
+          : decision === "reject"
+          ? "Registration Document Rejected"
+          : "Registration Document Approved",
+        status: isNowVerified ? "verified" : decision,
+        statusLabel: isNowVerified
+          ? "Verified & Approved"
+          : decision === "needs_revision"
+          ? "Needs Revision"
+          : decision === "reject"
+          ? "Rejected"
+          : "Approved",
+        remarks: remark || undefined,
+        itemName: successfulFiles.map((f) => f.fileName).join(", "),
+      });
+
+      setSelectedRegistrationReviewFileIds([]);
+      setRegistrationBulkDecision("approve");
+      setRegistrationBulkRemark("");
+
+      if (failedResults.length) {
+        toast({
+          title: "Review partially completed",
+          description: `${result.successCount} saved; ${result.failureCount} failed. ${failedResults
+            .map((item) => item.error)
+            .filter(Boolean)
+            .join(" ")}`,
+          variant: "destructive",
+        });
+      } else {
+        if (isNowVerified) {
+          toast({
+            title: "Organization automatically verified",
+            description: `All required documents approved. Official URN: ${freshlyUpdatedOrg?.urn || "Assigned"}.`,
+          });
+        } else {
+          toast({
+            title: "Review completed",
+            description: `${result.successCount} document${result.successCount === 1 ? "" : "s"} were updated successfully.`,
+          });
+        }
+      }
+    } catch (error) {
+      await refreshAdminPageData();
+      toast({
+        title: "Unable to submit review decisions",
+        description: error instanceof Error ? error.message : "The selected review decisions could not be saved.",
+        variant: "destructive",
+      });
+    } finally {
+      setRegistrationReviewSubmitting(false);
+    }
+  };
+
+  const submitRenewalReviewDecisions = async () => {
+    if (!selectedRenewal || !selectedRenewalProfile || renewalReviewSubmitting) return;
+
+    const decision = renewalBulkDecision;
+    const targetFiles = effectiveRenewalFiles.filter(
+      (file) => selectedRenewalReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+    );
+
+    if (!targetFiles.length) {
+      toast({
+        title: "No documents selected",
+        description: "Select at least one submitted document before confirming a decision.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (registrationDecisionRequiresRemark(decision) && targetFiles.length > 1) {
+      toast({
+        title: "One document at a time",
+        description: `${registrationReviewDecisionLabel[decision]} requires selecting a single document.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const remark = renewalBulkRemark.trim();
+    if (registrationDecisionRequiresRemark(decision) && !remark) {
+      toast({
+        title: "Comment required",
+        description: `Add a remark before you can ${registrationReviewDecisionLabel[decision].toLowerCase()} this document.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRenewalReviewSubmitting(true);
+    try {
+      const result = await submitDocumentReviewBatchToSupabase({
+        decisions: targetFiles.map((file) => ({
+          fileId: file.id,
+          status:
+            decision === "approve"
+              ? "approved_green"
+              : decision === "needs_revision"
+                ? "needs_revision"
+                : "rejected_red",
+          adminRemarks: decision === "approve" ? undefined : remark,
+          expectedUpdatedAt: file.updatedAt,
+        })),
+      });
+
+      const successfulFileIds = new Set(
+        result.results.filter((item) => item.success).map((item) => item.fileId),
+      );
+      const successfulFiles = targetFiles.filter((file) => successfulFileIds.has(file.id));
+      const failedResults = result.results.filter((item) => !item.success);
+
+      if (!successfulFiles.length) {
+        throw new Error(
+          failedResults.map((item) => item.error).filter(Boolean).join(" ") ||
+          "No document review decisions were saved. Please refresh and try again.",
+        );
+      }
+
+      let renewalVerifiedUrn: string | null = null;
+      let renewalVerificationError: string | null = null;
+      // The review RPC returns the saved files; show those immediately. A fresh
+      // packet below still checks every required file before issuing the URN.
+      const savedReviewFiles = result.results
+        .filter((item) => item.success && item.file)
+        .map((item) => item.file!);
+      // Audit each saved decision concurrently with the packet/URN checks.
+      const auditWrites = Promise.allSettled(successfulFiles.map((file) => appendAuditLog(
+        decision === "approve"
+          ? "Approved renewal document"
+          : decision === "needs_revision"
+            ? "Renewal document revision requested"
+            : "Rejected renewal document",
+        "document_submission_file",
+        file.id,
+        `${decision === "approve" ? "Approved" : decision === "needs_revision" ? "Requested revisions for" : "Rejected"} ${file.fileName} from the renewal detail review.`,
+        selectedRenewalProfile.id,
+      )));
+      const reviewPacketById = new Map(effectiveRenewalFiles.map((file) => [file.id, file]));
+      for (const file of savedReviewFiles) reviewPacketById.set(file.id, file);
+      const updatedReviewPacketFiles = Array.from(reviewPacketById.values());
+      queryClient.setQueryData<Awaited<ReturnType<typeof fetchAdminRenewalReviewContext>>>(
+        ["admin", "renewal-context", selectedRenewal.id],
+        (current) => current ? { ...current, documentSubmissionFiles: updatedReviewPacketFiles } : current,
+      );
+      const requiredRenewalTemplates = renewalRequiredDocuments;
+      const allRequiredFilesApproved =
+        requiredRenewalTemplates.length > 0 &&
+        requiredRenewalTemplates.every((documentType) => {
+          const file = updatedReviewPacketFiles.find(
+            (entry) =>
+              entry.documentTypeId === documentType.id ||
+              (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
+          );
+          return file?.adminStatus === "approved_green";
+        });
+
+      if (decision === "approve" && selectedRenewal.status !== "approved" && allRequiredFilesApproved) {
+        renewalVerificationAttemptsRef.current.add(selectedRenewal.id);
+        try {
+          const approval = await adminApproveRenewalInSupabase({ renewalId: selectedRenewal.id });
+          renewalVerifiedUrn = approval.certificateUrn;
+          // Use the authoritative approval response so displaying the URN
+          // does not wait on a second full portal reload.
+          setAdminRenewals((current) => current.map((renewal) =>
+            renewal.id === approval.renewalId
+              ? { ...renewal, status: "approved", certificateUrn: approval.certificateUrn }
+              : renewal,
+          ));
+        } catch (error) {
+          renewalVerificationError =
+            error instanceof Error ? error.message : "The renewal could not be verified automatically.";
+        }
+      }
+
+      // Refresh the bounded current renewal page and only the open packet after the audit writes.
+      const refreshResults = await Promise.allSettled([
+        auditWrites.then(async (results) => {
+          for (const auditResult of results) {
+            if (auditResult.status === "rejected") {
+              console.warn("Could not record renewal review activity:", auditResult.reason);
+            }
+          }
+          await refreshAdminPageData();
+        }),
+      ]);
+      for (const refreshResult of refreshResults) {
+        if (refreshResult.status === "rejected") {
+          console.warn("Could not refresh renewal review activity:", refreshResult.reason);
+        }
+      }
+
+      notifyOrganizationUser({
+        userId: selectedRenewalProfile.userId,
+        organizationId: selectedRenewalProfile.id,
+        title: "Renewal document review updated",
+        message: `The admin submitted ${result.successCount} review decision${result.successCount === 1 ? "" : "s"} for your renewal files.`,
+        type: "document_review_update",
+        relatedType: "renewal",
+        relatedId: selectedRenewal.id,
+      });
+
+      void dispatchOrgTransactionalEmailInSupabase({
+        eventType:
+          decision === "approve"
+            ? "document_approved"
+            : decision === "needs_revision"
+            ? "document_needs_revision"
+            : "document_rejected",
+        organizationId: selectedRenewalProfile.id,
+        userId: selectedRenewalProfile.userId,
+        referenceId: selectedRenewal.id,
+        title:
+          decision === "approve"
+            ? "Renewal Document Approved"
+            : decision === "needs_revision"
+            ? "Renewal Document Revision Requested"
+            : "Renewal Document Rejected",
+        status: decision,
+        statusLabel:
+          decision === "approve"
+            ? "Approved"
+            : decision === "needs_revision"
+            ? "Needs Revision"
+            : "Rejected",
+        remarks: remark || undefined,
+        itemName: successfulFiles.map((f) => f.fileName).join(", "),
+      });
+
+      setSelectedRenewalReviewFileIds([]);
+      setRenewalBulkDecision("approve");
+      setRenewalBulkRemark("");
+
+      if (failedResults.length) {
+        toast({
+          title: "Review partially completed",
+          description: `${result.successCount} saved; ${result.failureCount} failed.`,
+          variant: "destructive",
+        });
+      } else if (renewalVerifiedUrn) {
+        toast({
+          title: "Renewal verified",
+          description: `All required documents are approved. New URN: ${renewalVerifiedUrn}.`,
+        });
+      } else if (renewalVerificationError) {
+        toast({
+          title: "Documents approved; verification failed",
+          description: renewalVerificationError,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Review Completed",
+          description: `${result.successCount} document${result.successCount === 1 ? "" : "s"} were updated successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to submit renewal review decisions:", error);
+      toast({
+        title: "Unable to submit review decisions",
+        description: error instanceof Error ? error.message : "The selected review decisions could not be saved.",
+        variant: "destructive",
+      });
+    } finally {
+      setRenewalReviewSubmitting(false);
+      setIsRenewalDecisionConfirmOpen(false);
+    }
+  };
+
+  const handleRequestRevisionRenewalConfirm = async () => {
+    if (!selectedRenewal || !selectedRenewalProfile) return;
+    const remarks = renewalDecisionRemarksDraft.trim();
+    if (!remarks) {
+      toast({
+        title: "Remarks Required",
+        description: "Please provide remarks explaining what needs revision.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setRenewalDecisionSubmitting(true);
+    try {
+      await adminRequestRenewalRevisionInSupabase({
+        renewalId: selectedRenewal.id,
+        adminRemarks: remarks,
+      });
+
+      notifyOrganizationUser({
+        userId: selectedRenewalProfile.userId,
+        organizationId: selectedRenewalProfile.id,
+        title: "Renewal Revision Requested",
+        message: `Revisions requested for your organization renewal: ${remarks}`,
+        type: "renewal_status_update",
+        relatedType: "renewal",
+        relatedId: selectedRenewal.id,
+      });
+
+      toast({
+        title: "Revision Requested",
+        description: `Revision requested for ${selectedRenewalProfile.organizationName}.`,
+      });
+
+      setIsRenewalRevisionDialogOpen(false);
+      await refreshAdminState();
+    } catch (error) {
+      console.error("Failed to request renewal revision:", error);
+      toast({
+        title: "Request Failed",
+        description: error instanceof Error ? error.message : "Unable to request renewal revision.",
+        variant: "destructive",
+      });
+    } finally {
+      setRenewalDecisionSubmitting(false);
+    }
+  };
+
+  const handleRejectRenewalConfirm = async () => {
+    if (!selectedRenewal || !selectedRenewalProfile) return;
+    const remarks = renewalDecisionRemarksDraft.trim();
+    if (!remarks) {
+      toast({
+        title: "Remarks Required",
+        description: "Please provide remarks explaining the reason for rejection.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setRenewalDecisionSubmitting(true);
+    try {
+      await adminRejectRenewalInSupabase({
+        renewalId: selectedRenewal.id,
+        adminRemarks: remarks,
+      });
+
+      notifyOrganizationUser({
+        userId: selectedRenewalProfile.userId,
+        organizationId: selectedRenewalProfile.id,
+        title: "Renewal Rejected",
+        message: `Your organization renewal has been rejected: ${remarks}`,
+        type: "renewal_status_update",
+        relatedType: "renewal",
+        relatedId: selectedRenewal.id,
+      });
+
+      toast({
+        title: "Renewal Rejected",
+        description: `Renewal for ${selectedRenewalProfile.organizationName} has been rejected.`,
+      });
+
+      setIsRenewalRejectDialogOpen(false);
+      await refreshAdminState();
+    } catch (error) {
+      console.error("Failed to reject renewal:", error);
+      toast({
+        title: "Rejection Failed",
+        description: error instanceof Error ? error.message : "Unable to reject renewal.",
+        variant: "destructive",
+      });
+    } finally {
+      setRenewalDecisionSubmitting(false);
+    }
+  };
+
+  const openAdminConfirmation = (params: PendingAdminConfirmation) => {
+    setPendingAdminConfirmation(params);
+    setApprovalAcknowledged(false);
+    setStatusChangeRemarkDraft("currentAdminRemarks" in params ? params.currentAdminRemarks ?? "" : "");
+  };
+
+  const closeAdminConfirmation = () => {
+    if (processingAdminConfirmation) return;
+    setPendingAdminConfirmation(null);
+    setApprovalAcknowledged(false);
+    setStatusChangeRemarkDraft("");
+  };
+
+  const toggleRegistrationCard = (organizationId: string) => {
+    setExpandedRegistrationIds((current) =>
+      current.includes(organizationId)
+        ? current.filter((id) => id !== organizationId)
+        : [...current, organizationId],
+    );
+  };
+
+
+  const toggleDocumentCard = (fileId: string) => {
+    setExpandedDocumentFileIds((current) =>
+      current.includes(fileId)
+        ? current.filter((id) => id !== fileId)
+        : [...current, fileId],
+    );
+  };
+
+  const getDocumentReviewCommentDraft = (file: { id: string; adminStatus?: string | null; adminRemarks?: string | null }) => {
+    const storedDraft = documentReviewRemarksByFileId[file.id];
+    if (typeof storedDraft === "string") {
+      return storedDraft;
+    }
+
+    if (file.adminStatus === "needs_revision" || file.adminStatus === "rejected_red") {
+      return file.adminRemarks?.trim() || "";
+    }
+
+    return "";
+  };
+
+  const getAdminConfirmationCopy = () => {
+    if (!pendingAdminConfirmation) {
+      return {
+        title: "",
+        description: "",
+        checkboxLabel: "",
+        confirmLabel: "",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "document") {
+      if (pendingAdminConfirmation.action === "approve") {
+        return {
+          title: "Confirm Document Approval",
+          description: `Click the checkbox to acknowledge this approval before marking ${pendingAdminConfirmation.fileName} as approved.`,
+          checkboxLabel: "I acknowledge this approval action.",
+          confirmLabel: "Approve Submission",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "needs_revision") {
+        return {
+          title: "Confirm Revision Request",
+          description: `Click the checkbox to acknowledge this revision request before returning ${pendingAdminConfirmation.fileName} to the organization user.`,
+          checkboxLabel: "I acknowledge this revision request.",
+          confirmLabel: "Request Revision",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      return {
+        title: "Confirm Document Rejection",
+        description: `Click the checkbox to acknowledge this rejection before marking ${pendingAdminConfirmation.fileName} as rejected. Rejecting a registration document will permanently suspend the organization account.`,
+        checkboxLabel: "I acknowledge that rejecting this document will permanently suspend the organization account.",
+        confirmLabel: "Reject & Suspend Account",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "profile") {
+      return {
+        title: "Confirm Needs Update Status",
+        description: `Click the checkbox to acknowledge this update request before marking ${pendingAdminConfirmation.organizationName} as needing changes.`,
+        checkboxLabel: "I acknowledge this needs update action.",
+        confirmLabel: "Mark Needs Update",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "budget") {
+      if (pendingAdminConfirmation.action === "approve") {
+        return {
+          title: "Confirm Budget Approval",
+          description: `Click the checkbox to acknowledge this approval before marking ${pendingAdminConfirmation.activityTitle} as approved (Awaiting Release).`,
+          checkboxLabel: "I acknowledge this budget approval.",
+          confirmLabel: "Approve Budget",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "needs_revision") {
+        return {
+          title: "Confirm Budget Revision",
+          description: `Click the checkbox and add a comment before requesting changes for ${pendingAdminConfirmation.activityTitle}.`,
+          checkboxLabel: "I acknowledge this revision request.",
+          confirmLabel: "Request Revision",
+          showCommentBox: true,
+          commentLabel: "Admin Comment",
+          commentPlaceholder: "Explain what needs to be corrected before approval.",
+        };
+      }
+      return {
+        title: "",
+        description: "",
+        checkboxLabel: "",
+        confirmLabel: "",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.action === "overdue") {
+      return {
+        title: "Confirm Liquidation Overdue",
+        description: `Click the checkbox to mark ${pendingAdminConfirmation.activityTitle} as overdue.`,
+        checkboxLabel: "I acknowledge this overdue action.",
+        confirmLabel: "Mark Overdue",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "liquidation") {
+      if (pendingAdminConfirmation.action === "approve") {
+        return {
+          title: "Confirm Liquidation Go Signal",
+          description: `Click the checkbox to approve the liquidation record for ${pendingAdminConfirmation.activityTitle}.`,
+          checkboxLabel: "I acknowledge this liquidation approval.",
+          confirmLabel: "Approve Liquidation",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "submitted_hardcopy") {
+        return {
+          title: "Confirm Liquidation Hardcopy Submission",
+          description: `Click the checkbox to confirm that the liquidation hard copy for ${pendingAdminConfirmation.activityTitle} has been submitted.`,
+          checkboxLabel: "I acknowledge this liquidation hardcopy submission.",
+          confirmLabel: "Mark Submitted Hardcopy",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "complete") {
+        return {
+          title: "Confirm Liquidation Completion",
+          description: `Click the checkbox to confirm that the liquidation for ${pendingAdminConfirmation.activityTitle} is complete and fully liquidated.`,
+          checkboxLabel: "I acknowledge this liquidation completion.",
+          confirmLabel: "Complete Liquidation",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      return {
+        title: "Confirm Liquidation Revision",
+        description: `Click the checkbox and add a comment before requesting changes for ${pendingAdminConfirmation.activityTitle}.`,
+        checkboxLabel: "I acknowledge this revision request.",
+        confirmLabel: "Request Revision",
+        showCommentBox: true,
+        commentLabel: "Admin Comment",
+        commentPlaceholder: "Explain what needs to be corrected before liquidation can proceed.",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "transparency_post") {
+      if (pendingAdminConfirmation.action === "publish") {
+        return {
+          title: "Confirm Transparency Publish",
+          description: `Click the checkbox to publish "${pendingAdminConfirmation.title}" to the portal.`,
+          checkboxLabel: "I acknowledge this publish action.",
+          confirmLabel: "Publish Post",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      return {
+        title: "Confirm Transparency Hide",
+        description: `Click the checkbox to hide "${pendingAdminConfirmation.title}" from public view.`,
+        checkboxLabel: "I acknowledge this hide action.",
+        confirmLabel: "Hide Post",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "ypop_event") {
+      if (pendingAdminConfirmation.action === "verified") {
+        return {
+          title: "Confirm Event Verification",
+          description: `Click the checkbox to acknowledge this approval before verifying the proof submitted for ${pendingAdminConfirmation.activityName}.`,
+          checkboxLabel: "I acknowledge this event verification action.",
+          confirmLabel: "Mark Verified",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "needs_revision") {
+        return {
+          title: "Confirm Event Revision Request",
+          description: `Click the checkbox and add a comment before requesting revisions for ${pendingAdminConfirmation.activityName}.`,
+          checkboxLabel: "I acknowledge this event revision request.",
+          confirmLabel: "Request Revision",
+          showCommentBox: true,
+          commentLabel: "Admin Comment",
+          commentPlaceholder: "Explain what proof needs to be corrected or re-uploaded.",
+        };
+      }
+      return {
+        title: "",
+        description: "",
+        checkboxLabel: "",
+        confirmLabel: "",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    if (pendingAdminConfirmation.kind === "ypop_org_activity") {
+      if (pendingAdminConfirmation.action === "approved") {
+        return {
+          title: "Confirm PPA Approval",
+          description: `Click the checkbox to approve ${pendingAdminConfirmation.activityName}. This will automatically increase the organization-initiated bonus if a tier is reached.`,
+          checkboxLabel: "I acknowledge this PPA approval action.",
+          confirmLabel: "Approve PPA",
+          showCommentBox: false,
+          commentLabel: "",
+          commentPlaceholder: "",
+        };
+      }
+      if (pendingAdminConfirmation.action === "needs_revision") {
+        return {
+          title: "Confirm PPA Revision Request",
+          description: `Click the checkbox and add a comment before requesting revisions for ${pendingAdminConfirmation.activityName}.`,
+          checkboxLabel: "I acknowledge this PPA revision request.",
+          confirmLabel: "Request Revision",
+          showCommentBox: true,
+          commentLabel: "Admin Comment",
+          commentPlaceholder: "Explain what needs to be corrected in the narrative or proof files.",
+        };
+      }
+      return {
+        title: "",
+        description: "",
+        checkboxLabel: "",
+        confirmLabel: "",
+        showCommentBox: false,
+        commentLabel: "",
+        commentPlaceholder: "",
+      };
+    }
+
+    return {
+      title: "",
+      description: "",
+      checkboxLabel: "",
+      confirmLabel: "",
+      showCommentBox: false,
+      commentLabel: "",
+      commentPlaceholder: "",
+    };
+  };
+
+  const executeAdminConfirmation = async () => {
+    if (!pendingAdminConfirmation) return;
+
+    setProcessingAdminConfirmation(true);
+    try {
+      if (pendingAdminConfirmation.kind === "document") {
+        if (pendingAdminConfirmation.action === "approve") {
+          const selectedFile = state.documentSubmissionFiles.find((f) => f.id === pendingAdminConfirmation.fileId);
+          if (
+            selectedFile?.adminStatus === "needs_revision" &&
+            isAwaitingResubmission({
+              adminStatus: selectedFile.adminStatus,
+              revisionRequestedAt: selectedFile.revisionRequestedAt,
+              uploadedAt: selectedFile.uploadedAt,
+            })
+          ) {
+            toast({
+              title: "Awaiting Resubmission",
+              description: "The organization must submit a revised document before it can be approved.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
+        const status =
+          pendingAdminConfirmation.action === "approve"
+            ? "approved_green"
+            : pendingAdminConfirmation.action === "needs_revision"
+              ? "needs_revision"
+              : "rejected_red";
+        const adminRemarks = (
+          documentReviewRemarksByFileId[pendingAdminConfirmation.fileId] ?? pendingAdminConfirmation.currentAdminRemarks
+        ).trim();
+
+        if (pendingAdminConfirmation.action !== "approve" && !adminRemarks) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before requesting a revision or rejection.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        await updateDocumentSubmissionFileReviewInSupabase({
+          fileId: pendingAdminConfirmation.fileId,
+          status,
+          adminRemarks: pendingAdminConfirmation.action === "approve" ? undefined : adminRemarks,
+        });
+        await refreshAdminPageData();
+
+        if (pendingAdminConfirmation.action === "approve") {
+          await appendAuditLog(
+            "Approved document submission",
+            "document_submission_file",
+            pendingAdminConfirmation.fileId,
+            `Approved ${pendingAdminConfirmation.fileName} from the registration detail view.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          toast({
+            title: "Submission approved",
+            description: `${pendingAdminConfirmation.organizationName}'s document submission is now approved.`,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await appendAuditLog(
+            "Document revision requested",
+            "document_submission_file",
+            pendingAdminConfirmation.fileId,
+            `Requested revisions for ${pendingAdminConfirmation.fileName} from the registration detail view.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          toast({
+            title: "Revision requested",
+            description: `${pendingAdminConfirmation.organizationName} was asked to revise the document submission.`,
+          });
+        } else {
+          await appendAuditLog(
+            "Rejected document submission",
+            "document_submission_file",
+            pendingAdminConfirmation.fileId,
+            `Rejected ${pendingAdminConfirmation.fileName} from the registration detail view.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          toast({
+            title: "Submission rejected",
+            description: `${pendingAdminConfirmation.organizationName}'s document was rejected and the organization account is permanently suspended.`,
+          });
+        }
+      } else if (pendingAdminConfirmation.kind === "budget") {
+        const adminRemarks = statusChangeRemarkDraft.trim();
+        const selectedBudget = state.budgetRequests.find((item) => item.id === pendingAdminConfirmation.budgetRequestId) ?? null;
+        const budgetStatus = selectedBudget?.status ?? pendingAdminConfirmation.currentStatus;
+        const approvedAmount = Number(selectedBudget?.approvedAmount || pendingAdminConfirmation.requestedAmount || 0);
+
+        if (pendingAdminConfirmation.action === "approve") {
+          const reqFiles = state.budgetRequestFiles.filter((f) => f.budgetRequestId === pendingAdminConfirmation.budgetRequestId);
+          if (budgetStatus === "needs_revision" || reqFiles.some((file) => file.adminStatus === "needs_revision")) {
+            toast({
+              title: "Awaiting Resubmission",
+              description: "The organization must submit a revised budget request file before it can be approved.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
+        if (pendingAdminConfirmation.action === "approve" && !approvableBudgetStatuses.has(budgetStatus)) {
+          toast({
+            title: "Action unavailable",
+            description: "This budget request has already moved beyond the approval step.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          pendingAdminConfirmation.action === "needs_revision" &&
+          !adminRemarks
+        ) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before requesting a revision.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (pendingAdminConfirmation.action === "reject" && !adminRemarks) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before rejecting a budget request.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const budgetHistoryNow = new Date().toISOString();
+        const existingHistory = (state.budgetRequests.find((r) => r.id === pendingAdminConfirmation.budgetRequestId)?.revisionHistory ?? []);
+        let budgetPatch: Partial<BudgetRequest> = {};
+
+        if (pendingAdminConfirmation.action === "approve") {
+          budgetPatch = {
+            status: "awaiting_release",
+            approvedAmount,
+            goSignalAt: budgetHistoryNow,
+            adminRemarks: "",
+            revisionHistory: [...existingHistory, { action: "awaiting_release", adminRemarks: "", changedAt: budgetHistoryNow }],
+          };
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          const deadline = calculateRevisionDeadline();
+          budgetPatch = {
+            status: "needs_revision",
+            adminRemarks,
+            revisionRequestedAt: deadline.requestedAt,
+            revisionDueAt: deadline.dueAt,
+            revisionLockedAt: null,
+            revisionHistory: [...existingHistory, { action: "needs_revision", adminRemarks, changedAt: budgetHistoryNow, revisionDueAt: deadline.dueAt }],
+          };
+        } else {
+          budgetPatch = {
+            status: "rejected_red",
+            adminRemarks,
+            revisionHistory: [...existingHistory, { action: "rejected_red", adminRemarks, changedAt: budgetHistoryNow }],
+          };
+        }
+
+        await updateBudgetRequestInSupabase(pendingAdminConfirmation.budgetRequestId, budgetPatch);
+        updateBudgetRequest(pendingAdminConfirmation.budgetRequestId, budgetPatch);
+        await refreshAdminState();
+
+        if (pendingAdminConfirmation.action === "approve") {
+          await appendAuditLog(
+            "Approved budget request",
+            "budget_request",
+            pendingAdminConfirmation.budgetRequestId,
+            `Marked budget request "${pendingAdminConfirmation.activityTitle}" as approved (Awaiting Release).`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Budget request approved",
+            message: "Your budget request has been approved and is awaiting fund release.",
+            type: "budget_go_signal",
+            relatedType: "budget_request",
+            relatedId: pendingAdminConfirmation.budgetRequestId,
+          });
+          toast({
+            title: "Budget approved",
+            description: `${pendingAdminConfirmation.organizationName}'s budget request is now approved and awaiting fund release.`,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await appendAuditLog(
+            "Budget request needs revision",
+            "budget_request",
+            pendingAdminConfirmation.budgetRequestId,
+            `Requested revisions for budget request "${pendingAdminConfirmation.activityTitle}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Budget revision requested",
+            message: adminRemarks,
+            type: "budget_revision",
+            relatedType: "budget_request",
+            relatedId: pendingAdminConfirmation.budgetRequestId,
+          });
+          toast({
+            title: "Revision requested",
+            description: `${pendingAdminConfirmation.organizationName} was asked to revise the budget request.`,
+          });
+        } else {
+          await appendAuditLog(
+            "Rejected budget request",
+            "budget_request",
+            pendingAdminConfirmation.budgetRequestId,
+            `Rejected budget request "${pendingAdminConfirmation.activityTitle}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Budget request rejected",
+            message: adminRemarks,
+            type: "budget_rejected",
+            relatedType: "budget_request",
+            relatedId: pendingAdminConfirmation.budgetRequestId,
+          });
+          toast({
+            title: "Budget rejected",
+            description: `${pendingAdminConfirmation.organizationName}'s budget request was rejected.`,
+          });
+        }
+      } else if (pendingAdminConfirmation.kind === "liquidation") {
+        const selectedLiquidation =
+          state.liquidationReports.find((item) => item.id === pendingAdminConfirmation.liquidationReportId) ?? null;
+        const liquidationStatus = selectedLiquidation?.status ?? pendingAdminConfirmation.currentStatus;
+        const adminRemarks = statusChangeRemarkDraft.trim();
+        const liqHistoryNow = new Date().toISOString();
+        const existingLiqHistory =
+          state.liquidationReports.find((r) => r.id === pendingAdminConfirmation.liquidationReportId)?.revisionHistory ?? [];
+
+        if (
+          pendingAdminConfirmation.action === "approve" &&
+          !liquidationApprovableStatuses.has(liquidationStatus)
+        ) {
+          toast({
+            title: "Action unavailable",
+            description: "This liquidation report has already moved beyond the approval step.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          pendingAdminConfirmation.action === "submitted_hardcopy" &&
+          liquidationStatus !== "approved_for_ftf_green"
+        ) {
+          toast({
+            title: "Action unavailable",
+            description: "Hard copy submission can only be recorded after the liquidation report is approved.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          pendingAdminConfirmation.action === "complete" &&
+          liquidationStatus !== "hard_copy_submitted"
+        ) {
+          toast({
+            title: "Action unavailable",
+            description: "Liquidation can only be completed after hard copy submission has been recorded.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          liquidationLockedStatuses.has(liquidationStatus) &&
+          pendingAdminConfirmation.action !== "submitted_hardcopy" &&
+          pendingAdminConfirmation.action !== "complete"
+        ) {
+          toast({
+            title: "Action unavailable",
+            description: "This liquidation report is already finalized.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (pendingAdminConfirmation.action === "needs_revision" && !adminRemarks) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before requesting a revision.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        let liqPatch: Partial<LiquidationReport> = {};
+        if (pendingAdminConfirmation.action === "approve") {
+          liqPatch = {
+            status: "approved_for_ftf_green",
+            remarks: undefined,
+            goSignalAt: liqHistoryNow,
+            revisionHistory: [
+              ...existingLiqHistory,
+              { action: "approved_for_ftf_green", adminRemarks: "", changedAt: liqHistoryNow },
+            ],
+          };
+        } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
+          liqPatch = {
+            status: "hard_copy_submitted",
+            hardCopySubmittedAt: liqHistoryNow,
+            revisionHistory: [
+              ...existingLiqHistory,
+              { action: "hard_copy_submitted", adminRemarks: "", changedAt: liqHistoryNow },
+            ],
+          };
+        } else if (pendingAdminConfirmation.action === "complete") {
+          liqPatch = {
+            status: "completed_liquidated",
+            completedAt: liqHistoryNow,
+            revisionHistory: [
+              ...existingLiqHistory,
+              { action: "completed_liquidated", adminRemarks: "", changedAt: liqHistoryNow },
+            ],
+          };
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          const deadline = calculateRevisionDeadline();
+          liqPatch = {
+            status: "needs_revision",
+            remarks: adminRemarks,
+            revisionRequestedAt: deadline.requestedAt,
+            revisionDueAt: deadline.dueAt,
+            revisionLockedAt: null,
+            revisionHistory: [
+              ...existingLiqHistory,
+              { action: "needs_revision", adminRemarks, changedAt: liqHistoryNow, revisionDueAt: deadline.dueAt },
+            ],
+          };
+        } else {
+          liqPatch = {
+            status: "overdue",
+            remarks: adminRemarks,
+            revisionHistory: [
+              ...existingLiqHistory,
+              { action: "overdue", adminRemarks, changedAt: liqHistoryNow },
+            ],
+          };
+        }
+
+        await updateLiquidationReportInSupabase(pendingAdminConfirmation.liquidationReportId, liqPatch);
+        updateLiquidationReport(pendingAdminConfirmation.liquidationReportId, liqPatch);
+        await refreshAdminState();
+
+        if (pendingAdminConfirmation.action === "approve") {
+          await appendAuditLog(
+            "Approved liquidation report",
+            "liquidation_report",
+            pendingAdminConfirmation.liquidationReportId,
+            `Marked liquidation report for "${pendingAdminConfirmation.activityTitle}" as approved for face-to-face submission.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Liquidation go signal issued",
+            message: "Your liquidation soft copies have been pre-checked. You may now submit the hard copies face-to-face.",
+            type: "liquidation_go_signal",
+            relatedType: "liquidation_report",
+            relatedId: pendingAdminConfirmation.liquidationReportId,
+          });
+          toast({
+            title: "Liquidation approved",
+            description: `${pendingAdminConfirmation.organizationName}'s liquidation report is now approved.`,
+          });
+        } else if (pendingAdminConfirmation.action === "submitted_hardcopy") {
+          await appendAuditLog(
+            "Liquidation hard copy submitted",
+            "liquidation_report",
+            pendingAdminConfirmation.liquidationReportId,
+            `Recorded liquidation hard copy submission for "${pendingAdminConfirmation.activityTitle}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Hard copy recorded",
+            message: "Your liquidation hard copy has been recorded as submitted.",
+            type: "liquidation_hardcopy",
+            relatedType: "liquidation_report",
+            relatedId: pendingAdminConfirmation.liquidationReportId,
+          });
+          toast({
+            title: "Hard copy recorded",
+            description: `${pendingAdminConfirmation.organizationName}'s liquidation hard copy has been marked as submitted.`,
+          });
+        } else if (pendingAdminConfirmation.action === "complete") {
+          await appendAuditLog(
+            "Completed liquidation report",
+            "liquidation_report",
+            pendingAdminConfirmation.liquidationReportId,
+            `Marked liquidation report for "${pendingAdminConfirmation.activityTitle}" as completed and liquidated.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Liquidation completed",
+            message: "Your liquidation report has been finalized and marked as liquidated.",
+            type: "liquidation_completed",
+            relatedType: "liquidation_report",
+            relatedId: pendingAdminConfirmation.liquidationReportId,
+          });
+          toast({
+            title: "Liquidation completed",
+            description: `${pendingAdminConfirmation.organizationName}'s liquidation report is now marked as liquidated.`,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await appendAuditLog(
+            "Liquidation needs revision",
+            "liquidation_report",
+            pendingAdminConfirmation.liquidationReportId,
+            `Requested revisions for liquidation report "${pendingAdminConfirmation.activityTitle}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Liquidation revision requested",
+            message: adminRemarks,
+            type: "liquidation_revision",
+            relatedType: "liquidation_report",
+            relatedId: pendingAdminConfirmation.liquidationReportId,
+          });
+          toast({
+            title: "Revision requested",
+            description: `${pendingAdminConfirmation.organizationName} was asked to revise the liquidation report.`,
+          });
+        } else {
+          await appendAuditLog(
+            "Marked liquidation overdue",
+            "liquidation_report",
+            pendingAdminConfirmation.liquidationReportId,
+            `Marked liquidation report "${pendingAdminConfirmation.activityTitle}" as overdue.`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "",
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "Liquidation overdue",
+            message: "Your liquidation submission is overdue.",
+            type: "overdue",
+            relatedType: "liquidation_report",
+            relatedId: pendingAdminConfirmation.liquidationReportId,
+          });
+          toast({
+            title: "Liquidation marked overdue",
+            description: `${pendingAdminConfirmation.organizationName}'s liquidation report is now overdue.`,
+          });
+        }
+      } else if (pendingAdminConfirmation.kind === "ypop_event") {
+        const participation =
+          state.ypopEventParticipations.find((item) => item.id === pendingAdminConfirmation.participationId) ?? null;
+        const adminRemarks = statusChangeRemarkDraft.trim();
+
+        if (pendingAdminConfirmation.action === "verified") {
+          const eventFiles = state.ypopEventFiles.filter((f) => f.participationId === pendingAdminConfirmation.participationId);
+          const isAwaiting = participation?.status === "needs_revision" && isAwaitingResubmission({
+            status: participation.status,
+            revisionRequestedAt: participation.revisionRequestedAt,
+            proofSubmittedAt: participation.proofSubmittedAt,
+            files: eventFiles.map((f) => ({ uploadedAt: f.uploadedAt, id: f.id })),
+          });
+          if (isAwaiting) {
+            toast({
+              title: "Resubmission required",
+              description: "The organization must submit a revised event proof before it can be verified.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
+        if (
+          pendingAdminConfirmation.action === "needs_revision" &&
+          !adminRemarks
+        ) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before requesting a revision for this event proof.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const eventDeadline = pendingAdminConfirmation.action === "needs_revision" ? calculateRevisionDeadline() : null;
+        const patch = {
+          status: pendingAdminConfirmation.action,
+          adminRemarks: pendingAdminConfirmation.action === "verified" ? "" : adminRemarks,
+          proofSubmittedAt: participation?.proofSubmittedAt ?? null,
+          verifiedAt: pendingAdminConfirmation.action === "verified" ? now : "",
+          ...(eventDeadline ? {
+            revisionRequestedAt: eventDeadline.requestedAt,
+            revisionDueAt: eventDeadline.dueAt,
+            revisionLockedAt: null,
+          } : {}),
+          revisionHistory: [
+            ...(participation?.revisionHistory ?? []),
+            {
+              action: pendingAdminConfirmation.action,
+              adminRemarks: pendingAdminConfirmation.action === "verified" ? "" : adminRemarks,
+              changedAt: now,
+              ...(eventDeadline ? { revisionDueAt: eventDeadline.dueAt } : {}),
+            },
+          ],
+        };
+
+        const saved = await adminUpdateYpopEventParticipationInSupabase(pendingAdminConfirmation.participationId, patch);
+        updateYPOPEventParticipation(saved.id, saved);
+
+        const relatedEntry =
+          state.ypopEntries.find((item) => item.id === pendingAdminConfirmation.entryId) ??
+          state.ypopEntries.find((item) => item.organizationId === pendingAdminConfirmation.organizationId) ??
+          null;
+
+        if (relatedEntry) {
+          const semesterActivities = state.ypopCityActivities.filter((activity) => activity.semesterKey === relatedEntry.semester);
+          const period = state.ypopPeriods.find((item) => item.semesterKey === relatedEntry.semester) ?? null;
+          const updatedParticipations = [
+            ...state.ypopEventParticipations.filter(
+              (item) => item.id !== pendingAdminConfirmation.participationId && item.organizationId === relatedEntry.organizationId,
+            ),
+            saved,
+          ];
+          const updatedAttendance = buildVerifiedYpopAttendance(
+            semesterActivities,
+            updatedParticipations,
+            relatedEntry.cityLedAttendance ?? [],
+          );
+          const approvedCount = getApprovedYpopOrgActivityCount(
+            state.ypopOrgActivities,
+            relatedEntry.id,
+            relatedEntry.orgLedProjectCount ?? 0,
+          );
+          const updatedScore = computeYpopScore(
+            updatedAttendance,
+            semesterActivities,
+            approvedCount,
+            period?.orgLedTiers,
+          );
+
+          const hasNeedsRevision =
+            pendingAdminConfirmation.action === "needs_revision" ||
+            updatedParticipations.some((p) => p.status === "needs_revision") ||
+            state.ypopOrgActivities.some((a) => a.ypopEntryId === relatedEntry.id && a.status === "needs_revision");
+
+          const hasUnreviewed =
+            updatedParticipations.some((p) => p.status === "pending_verification") ||
+            state.ypopOrgActivities.some((a) => a.ypopEntryId === relatedEntry.id && (a.status === "submitted" || a.status === "under_review"));
+
+          const nextEntryStatus: YPOPEntry["status"] =
+            updatedScore.totalScore >= (relatedEntry.pointsRequired ?? YPOP_SCORE_THRESHOLD)
+              ? "qualified"
+              : hasNeedsRevision
+                ? "needs_revision"
+                : hasUnreviewed
+                  ? "under_review"
+                  : "not_qualified";
+
+          const effectiveRemarks = hasNeedsRevision && adminRemarks ? adminRemarks : (relatedEntry.adminRemarks ?? "");
+          const entryDeadline = hasNeedsRevision && adminRemarks ? calculateRevisionDeadline() : null;
+
+          const entryPatch: Partial<YPOPEntry> = {
+            cityLedAttendance: updatedAttendance,
+            orgLedProjectCount: approvedCount,
+            pointsEarned: updatedScore.totalScore,
+            status: nextEntryStatus,
+            adminRemarks: effectiveRemarks,
+            ...(entryDeadline ? {
+              revisionRequestedAt: entryDeadline.requestedAt,
+              revisionDueAt: entryDeadline.dueAt,
+              revisionLockedAt: null,
+            } : {}),
+            revisionHistory: hasNeedsRevision && adminRemarks
+              ? [...(relatedEntry.revisionHistory ?? []), { action: "needs_revision", adminRemarks, changedAt: now, revisionDueAt: entryDeadline?.dueAt }]
+              : (relatedEntry.revisionHistory ?? []),
+          };
+
+          try {
+            const savedEntry = await adminUpdateYpopEntryInSupabase(relatedEntry.id, entryPatch);
+            updateYPOPEntry(savedEntry.id, savedEntry);
+          } catch (err) {
+            console.warn("adminUpdateYpopEntryInSupabase error; updating store locally:", err);
+            updateYPOPEntry(relatedEntry.id, entryPatch);
+          }
+        }
+
+        await refreshAdminYpop();
+
+        const orgUserId = state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "";
+        if (pendingAdminConfirmation.action === "verified") {
+          await appendAuditLog(
+            "Verified YPOP event proof",
+            "ypop_event_participation",
+            pendingAdminConfirmation.participationId,
+            `Verified the YPOP event proof for "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "YPOP event proof verified",
+            message: `Your proof for ${pendingAdminConfirmation.activityName} has been verified.`,
+            type: "ypop_event_verified",
+            relatedType: "ypop_event_participation",
+            relatedId: pendingAdminConfirmation.participationId,
+          });
+          toast({
+            title: "Event proof verified",
+            description: `${pendingAdminConfirmation.organizationName}'s event proof is now marked verified.`,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await appendAuditLog(
+            "Requested YPOP event proof revision",
+            "ypop_event_participation",
+            pendingAdminConfirmation.participationId,
+            `Requested revisions for the YPOP event proof "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "YPOP event revision requested",
+            message: adminRemarks,
+            type: "ypop_event_revision",
+            relatedType: "ypop_event_participation",
+            relatedId: pendingAdminConfirmation.participationId,
+          });
+          toast({
+            title: "Revision requested",
+            description: `${pendingAdminConfirmation.organizationName} was asked to revise the event proof.`,
+          });
+        }
+      } else if (pendingAdminConfirmation.kind === "ypop_org_activity") {
+        const orgActivity =
+          state.ypopOrgActivities.find((item) => item.id === pendingAdminConfirmation.orgActivityId) ?? null;
+        const relatedEntry =
+          state.ypopEntries.find((item) => item.id === pendingAdminConfirmation.entryId) ?? null;
+        const adminRemarks = statusChangeRemarkDraft.trim();
+
+        if (pendingAdminConfirmation.action === "approved") {
+          const orgFiles = (state.ypopOrgActivityFiles ?? []).filter((f) => f.orgActivityId === pendingAdminConfirmation.orgActivityId);
+          const isAwaiting = orgActivity?.status === "needs_revision" && isAwaitingResubmission({
+            status: orgActivity.status,
+            revisionRequestedAt: orgActivity.revisionRequestedAt,
+            submittedAt: orgActivity.submittedAt,
+            files: orgFiles.map((f) => ({ uploadedAt: f.uploadedAt, id: f.id })),
+          });
+          if (isAwaiting) {
+            toast({
+              title: "Resubmission required",
+              description: "The organization must submit a revised PPA log before it can be approved.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
+        if (
+          pendingAdminConfirmation.action === "needs_revision" &&
+          !adminRemarks
+        ) {
+          toast({
+            title: "Comment required",
+            description: "Please add a short comment before requesting a revision for this PPA log.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const ppaDeadline = pendingAdminConfirmation.action === "needs_revision" ? calculateRevisionDeadline() : null;
+        const patch = {
+          status: pendingAdminConfirmation.action,
+          adminRemarks: pendingAdminConfirmation.action === "approved" ? "" : adminRemarks,
+          approvedAt: pendingAdminConfirmation.action === "approved" ? now : "",
+          ...(ppaDeadline ? {
+            revisionRequestedAt: ppaDeadline.requestedAt,
+            revisionDueAt: ppaDeadline.dueAt,
+            revisionLockedAt: null,
+          } : {}),
+          revisionHistory: [
+            ...(orgActivity?.revisionHistory ?? []),
+            {
+              action: pendingAdminConfirmation.action,
+              adminRemarks: pendingAdminConfirmation.action === "approved" ? "" : adminRemarks,
+              changedAt: now,
+              ...(ppaDeadline ? { revisionDueAt: ppaDeadline.dueAt } : {}),
+            },
+          ],
+        };
+
+        const savedOrgActivity = await adminUpdateYpopOrgActivityInSupabase(
+          pendingAdminConfirmation.orgActivityId,
+          patch,
+        );
+        updateYPOPOrgActivity(savedOrgActivity.id, savedOrgActivity);
+
+        if (relatedEntry) {
+          const semesterActivities = state.ypopCityActivities.filter((activity) => activity.semesterKey === relatedEntry.semester);
+          const period = state.ypopPeriods.find((item) => item.semesterKey === relatedEntry.semester) ?? null;
+          const approvedOrgActivities = [
+            ...state.ypopOrgActivities.filter((item) => item.id !== pendingAdminConfirmation.orgActivityId),
+            savedOrgActivity,
+          ];
+          const approvedCount = getApprovedYpopOrgActivityCount(approvedOrgActivities, relatedEntry.id, relatedEntry.orgLedProjectCount ?? 0);
+          const updatedScore = computeYpopScore(
+            relatedEntry.cityLedAttendance ?? [],
+            semesterActivities,
+            approvedCount,
+            period?.orgLedTiers,
+          );
+
+          const hasNeedsRevision =
+            pendingAdminConfirmation.action === "needs_revision" ||
+            approvedOrgActivities.some((a) => a.ypopEntryId === relatedEntry.id && a.status === "needs_revision") ||
+            state.ypopEventParticipations.some((p) => p.organizationId === relatedEntry.organizationId && p.status === "needs_revision");
+
+          const hasUnreviewed =
+            approvedOrgActivities.some((a) => a.ypopEntryId === relatedEntry.id && (a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review")) ||
+            state.ypopEventParticipations.some((p) => p.organizationId === relatedEntry.organizationId && (p.status === "pending_evaluation" || p.status === "pending_verification"));
+
+          const nextEntryStatus: YPOPEntry["status"] =
+            updatedScore.totalScore >= (relatedEntry.pointsRequired ?? YPOP_SCORE_THRESHOLD)
+              ? "qualified"
+              : hasNeedsRevision
+                ? "needs_revision"
+                : hasUnreviewed
+                  ? "under_review"
+                  : "not_qualified";
+
+          const effectiveRemarks = hasNeedsRevision && adminRemarks ? adminRemarks : (relatedEntry.adminRemarks ?? "");
+          const entryDeadline = hasNeedsRevision && adminRemarks ? calculateRevisionDeadline() : null;
+          const entryPatch: Partial<YPOPEntry> = {
+            orgLedProjectCount: approvedCount,
+            pointsEarned: updatedScore.totalScore,
+            status: nextEntryStatus,
+            adminRemarks: effectiveRemarks,
+            ...(entryDeadline ? {
+              revisionRequestedAt: entryDeadline.requestedAt,
+              revisionDueAt: entryDeadline.dueAt,
+              revisionLockedAt: null,
+            } : {}),
+            revisionHistory: hasNeedsRevision && adminRemarks
+              ? [...(relatedEntry.revisionHistory ?? []), { action: "needs_revision", adminRemarks, changedAt: now, revisionDueAt: entryDeadline?.dueAt }]
+              : (relatedEntry.revisionHistory ?? []),
+          };
+          try {
+            const savedEntry = await adminUpdateYpopEntryInSupabase(relatedEntry.id, entryPatch);
+            updateYPOPEntry(savedEntry.id, savedEntry);
+          } catch (err) {
+            console.warn("adminUpdateYpopEntryInSupabase error; updating store locally:", err);
+            updateYPOPEntry(relatedEntry.id, entryPatch);
+          }
+        }
+
+        await refreshAdminYpop();
+
+        const orgUserId = state.organizationProfiles.find((org) => org.id === pendingAdminConfirmation.organizationId)?.userId ?? "";
+        if (pendingAdminConfirmation.action === "approved") {
+          await appendAuditLog(
+            "Approved YPOP organization-initiated activity",
+            "ypop_org_activity",
+            pendingAdminConfirmation.orgActivityId,
+            `Approved the organization-initiated activity "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "PPA log approved",
+            message: `${pendingAdminConfirmation.activityName} now counts toward your YPOP organization-initiated activity bonus.`,
+            type: "ypop_org_activity_approved",
+            relatedType: "ypop_org_activity",
+            relatedId: pendingAdminConfirmation.orgActivityId,
+          });
+          toast({
+            title: "PPA approved",
+            description: `${pendingAdminConfirmation.organizationName}'s organization-initiated activity now counts toward the YPOP bonus.`,
+          });
+        } else if (pendingAdminConfirmation.action === "needs_revision") {
+          await appendAuditLog(
+            "Requested YPOP organization-initiated activity revision",
+            "ypop_org_activity",
+            pendingAdminConfirmation.orgActivityId,
+            `Requested revisions for the organization-initiated activity "${pendingAdminConfirmation.activityName}".`,
+            pendingAdminConfirmation.organizationId,
+          );
+          notifyOrganizationUser({
+            userId: orgUserId,
+            organizationId: pendingAdminConfirmation.organizationId,
+            title: "PPA revision requested",
+            message: adminRemarks,
+            type: "ypop_org_activity_revision",
+            relatedType: "ypop_org_activity",
+            relatedId: pendingAdminConfirmation.orgActivityId,
+          });
+          toast({
+            title: "Revision requested",
+            description: `${pendingAdminConfirmation.organizationName} was asked to revise the organization-initiated activity log.`,
+          });
+        }
+      } else if (pendingAdminConfirmation.kind === "transparency_post") {
+        const visibilityStatus = pendingAdminConfirmation.action === "publish" ? "published" : "hidden";
+        const updatedPost = await updateTransparencyPostInSupabase(pendingAdminConfirmation.id, {
+          visibilityStatus,
+        });
+        updateTransparencyPost(pendingAdminConfirmation.id, updatedPost);
+        await refreshAdminState();
+
+        if (pendingAdminConfirmation.action === "publish") {
+          await appendAuditLog(
+            "Published transparency post",
+            "transparency_post",
+            pendingAdminConfirmation.id,
+            `Published transparency post "${updatedPost.title}".`,
+          );
+          toast({
+            title: "Transparency post published",
+            description: `${updatedPost.title} is now visible in the portal.`,
+          });
+        } else {
+          await appendAuditLog(
+            "Hidden transparency post",
+            "transparency_post",
+            pendingAdminConfirmation.id,
+            `Hidden transparency post "${updatedPost.title}".`,
+          );
+          toast({
+            title: "Transparency post hidden",
+            description: `${updatedPost.title} is now hidden from public view.`,
+          });
+        }
+      } else {
+        await updateOrganizationProfileReviewInSupabase(pendingAdminConfirmation.organizationId, {
+          profileStatus: "needs_update",
+          verifiedAt: "",
+        });
+        await refreshAdminState();
+        await appendAuditLog(
+          "Marked needs update",
+          "organization_profile",
+          pendingAdminConfirmation.organizationId,
+          `Marked ${pendingAdminConfirmation.organizationName} for an organization profile update.`,
+          pendingAdminConfirmation.organizationId,
+        );
+        toast({
+          title: "Organization marked for update",
+          description: `${pendingAdminConfirmation.organizationName} needs to update the submitted profile details.`,
+        });
+      }
+
+      setPendingAdminConfirmation(null);
+      setApprovalAcknowledged(false);
+      setStatusChangeRemarkDraft("");
+    } catch (error) {
+      toast({
+        title: "Status update failed",
+        description: error instanceof Error ? error.message : "The review action could not be completed right now.",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingAdminConfirmation(false);
+    }
+  };
+
+  const resetTemplateForm = () => {
+    setTemplateModalMode(null);
+    setEditingTemplateId(null);
+    setTemplateNameDraft("");
+    setTemplateDescriptionDraft("");
+    setTemplateScopeDraft("document_submission");
+    setTemplateWorkflowScopeDraft("both");
+    setTemplateFileDraft(null);
+    setTemplateCategoryDraft("");
+  };
+
+  const resetNewsReleaseForm = () => {
+    setNewsModalMode(null);
+    setEditingNewsReleaseId(null);
+    setNewsTitleDraft("");
+    setNewsDescriptionDraft("");
+    setNewsFacebookPostUrlDraft("");
+    setNewsPreviewImageUrlDraft("");
+    setNewsPreviewImageFileDraft(null);
+    setNewsDatePostedDraft("");
+    setNewsVisibilityDraft("draft");
+    setNewsCategoryDraft("");
+  };
+
+  const resetTransparencyForm = () => {
+    setTransparencyModalMode(null);
+    setEditingTransparencyPostId(null);
+    setTransparencyTitleDraft("");
+    setTransparencyDescriptionDraft("");
+    setTransparencyCategoryDraft("");
+    setTransparencyAttachmentUrlDraft("");
+    setTransparencyPostDateDraft("");
+    setTransparencyVisibilityDraft("draft");
+  };
+
+  const startEditingTemplate = (templateId: string) => {
+    const template = state.templates.find((entry) => entry.id === templateId);
+    if (!template) return;
+    setTemplateModalMode("edit");
+    setEditingTemplateId(templateId);
+    setTemplateNameDraft(template.name);
+    setTemplateDescriptionDraft(template.description);
+    setTemplateFileDraft(null);
+    if (template.templateScope === "other") {
+      setTemplateWorkflowScopeDraft("downloadable");
+      setTemplateScopeDraft("other");
+    } else if (template.scope === "registration") {
+      setTemplateWorkflowScopeDraft("registration");
+      setTemplateScopeDraft("document_submission");
+    } else if (template.scope === "renewal") {
+      setTemplateWorkflowScopeDraft("renewal");
+      setTemplateScopeDraft("document_submission");
+    } else {
+      setTemplateWorkflowScopeDraft("both");
+      setTemplateScopeDraft("document_submission");
+    }
+    const categories =
+      Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+        ? template.templateCategories.filter(Boolean)
+        : [deriveTemplateCategory(template.name)];
+    setTemplateCategoryDraft(categories[0] ?? "");
+  };
+
+  const startEditingNewsRelease = (newsReleaseId: string) => {
+    const newsRelease = newsReleases.find((entry) => entry.id === newsReleaseId);
+    if (!newsRelease) return;
+    setNewsModalMode("edit");
+    setEditingNewsReleaseId(newsReleaseId);
+    setNewsTitleDraft(newsRelease.title);
+    setNewsDescriptionDraft(newsRelease.description);
+    setNewsFacebookPostUrlDraft(newsRelease.facebookPostUrl);
+    setNewsPreviewImageUrlDraft(newsRelease.previewImageUrl ?? "");
+    setNewsPreviewImageFileDraft(null);
+    setNewsDatePostedDraft(newsRelease.datePosted);
+    setNewsVisibilityDraft(newsRelease.visibilityStatus);
+    setNewsCategoryDraft(newsRelease.category ?? "");
+  };
+
+  const startEditingTransparencyPost = (postId: string) => {
+    const post = transparencyPosts.find((entry) => entry.id === postId);
+    if (!post) return;
+    setTransparencyModalMode("edit");
+    setEditingTransparencyPostId(postId);
+    setTransparencyTitleDraft(post.title);
+    setTransparencyDescriptionDraft(post.description);
+    setTransparencyCategoryDraft(post.category);
+    setTransparencyAttachmentUrlDraft(post.attachmentUrl);
+    setTransparencyPostDateDraft(post.postDate);
+    setTransparencyVisibilityDraft(post.visibilityStatus);
+  };
+
+  const handleCreateTemplate = async () => {
+    if (!templateNameDraft.trim()) {
+      toast({ title: "Template name required", description: "Please enter a document name.", variant: "destructive" });
+      return;
+    }
+    if (!templateDescriptionDraft.trim()) {
+      toast({
+        title: "Description required",
+        description: "Please enter a brief description of the form or template.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!templateCategoryDraft) {
+      toast({ title: "Category required", description: "Please select a category for this file.", variant: "destructive" });
+      return;
+    }
+    if (!templateFileDraft) {
+      toast({ title: "Template file required", description: "Please upload the document file for this template.", variant: "destructive" });
+      return;
+    }
+
+    setSavingTemplate(true);
+    let createdTemplateId: string | null = null;
+    let createdTemplateDatabaseId: string | null = null;
+    try {
+      const templateScope: "document_submission" | "other" =
+        templateWorkflowScopeDraft === "downloadable" ? "other" : "document_submission";
+      const scope: "registration" | "renewal" | "both" =
+        templateWorkflowScopeDraft === "registration"
+          ? "registration"
+          : templateWorkflowScopeDraft === "renewal"
+            ? "renewal"
+            : "both";
+
+      const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
+
+      const newTemplate = await createTemplateRecordInSupabase({
+        name: templateNameDraft.trim(),
+        description: templateDescriptionDraft.trim(),
+        templateDescription: templateDescriptionDraft.trim(),
+        templateScope,
+        scope,
+      });
+      createTemplate(newTemplate);
+      createdTemplateId = newTemplate.id;
+      createdTemplateDatabaseId = newTemplate.databaseId;
+
+      const categorizedTemplate = await updateTemplateCategoryInSupabase(newTemplate.databaseId, newTemplate.name, [normalizedCategory || templateCategoryDraft]);
+      updateTemplate(newTemplate.id, categorizedTemplate);
+      if (templateFileDraft) {
+        setUploadingTemplateId(newTemplate.id);
+        const uploadedTemplate = await uploadTemplateDocumentToSupabase({
+          databaseId: newTemplate.databaseId,
+          documentTypeName: newTemplate.name,
+          file: templateFileDraft,
+        });
+        updateTemplate(newTemplate.id, uploadedTemplate);
+        setUploadingTemplateId(null);
+      }
+      await appendAuditLog("Created template", "template", newTemplate.databaseId, `Created template "${newTemplate.name}" and uploaded a new file.`);
+      await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
+      resetTemplateForm();
+      toast({ title: "Template created", description: `${newTemplate.name} was added successfully.` });
+    } catch (error) {
+      setUploadingTemplateId(null);
+      if (createdTemplateId && createdTemplateDatabaseId) {
+        try {
+          await permanentlyDeleteTemplateRecordInSupabase(createdTemplateDatabaseId, templateNameDraft);
+          removeTemplate(createdTemplateId);
+        } catch {
+          // Best-effort rollback; surface the original create error below regardless.
+        }
+      }
+      toast({
+        title: "Create failed",
+        description: error instanceof Error ? error.message : "The template could not be created.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const applyNewsVisibilityChange = async (newsId: string, nextStatus: "published" | "hidden") => {
+    try {
+      const updatedNewsRelease = await updateNewsReleaseInSupabase(newsId, {
+        visibilityStatus: nextStatus,
+      });
+      updateNewsRelease(newsId, updatedNewsRelease);
+      await refreshAdminState();
+
+      if (nextStatus === "published") {
+        await appendAuditLog(
+          "Published news release",
+          "news_release",
+          newsId,
+          `Published news release "${updatedNewsRelease.title}".`,
+        );
+        toast({
+          title: "News release published",
+          description: `${updatedNewsRelease.title} is now visible in the portal.`,
+        });
+      } else {
+        await appendAuditLog(
+          "Hidden news release",
+          "news_release",
+          newsId,
+          `Hidden news release "${updatedNewsRelease.title}".`,
+        );
+        toast({
+          title: "News release hidden",
+          description: `${updatedNewsRelease.title} is now hidden from public view.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: nextStatus === "published" ? "Publish failed" : "Hide failed",
+        description: error instanceof Error ? error.message : "The news release's visibility could not be updated.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveNewsRelease = async () => {
+    if (!newsTitleDraft.trim()) {
+      toast({ title: "News title required", description: "Please enter a news release title.", variant: "destructive" });
+      return;
+    }
+    if (!newsDescriptionDraft.trim()) {
+      toast({ title: "Description required", description: "Please enter a news release description.", variant: "destructive" });
+      return;
+    }
+    const fbValidation = validateFacebookPostUrl(newsFacebookPostUrlDraft);
+    if (!fbValidation.isValid) {
+      toast({
+        title: "Invalid Facebook URL",
+        description: fbValidation.error || "Please enter a valid Facebook post URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!newsCategoryDraft.trim()) {
+      toast({ title: "Category required", description: "Please select or add a category for the news release.", variant: "destructive" });
+      return;
+    }
+    const hasThumbnail = Boolean(
+      newsPreviewImageFileDraft || (newsModalMode === "edit" && newsPreviewImageUrlDraft.trim()),
+    );
+    if (!hasThumbnail) {
+      toast({ title: "Thumbnail image required", description: "Please upload a thumbnail image for the news release.", variant: "destructive" });
+      return;
+    }
+    if (!newsDatePostedDraft) {
+      toast({ title: "Date required", description: "Please select the posting date.", variant: "destructive" });
+      return;
+    }
+
+    setSavingNewsRelease(true);
+    let uploadedPreviewImageUrl = "";
+    try {
+      if (newsPreviewImageFileDraft) {
+        uploadedPreviewImageUrl = await uploadNewsReleasePreviewImageToSupabase(newsPreviewImageFileDraft);
+      }
+      const resolvedPreviewImageUrl = uploadedPreviewImageUrl || newsPreviewImageUrlDraft.trim();
+      const previousPreviewImageUrl = editingNewsReleaseId
+        ? newsReleases.find((entry) => entry.id === editingNewsReleaseId)?.previewImageUrl?.trim() || ""
+        : "";
+
+      if (newsModalMode === "edit" && editingNewsReleaseId) {
+        const updatedNewsRelease = await updateNewsReleaseInSupabase(editingNewsReleaseId, {
+          title: newsTitleDraft,
+          description: newsDescriptionDraft,
+          facebookPostUrl: newsFacebookPostUrlDraft,
+          previewImageUrl: resolvedPreviewImageUrl,
+          datePosted: newsDatePostedDraft,
+          visibilityStatus: newsVisibilityDraft,
+          category: newsCategoryDraft,
+        });
+        updateNewsRelease(editingNewsReleaseId, updatedNewsRelease);
+        await appendAuditLog("Updated news release", "news_release", updatedNewsRelease.id, `Updated news release "${updatedNewsRelease.title}".`);
+        await refreshAdminState();
+        if (uploadedPreviewImageUrl && previousPreviewImageUrl && previousPreviewImageUrl !== uploadedPreviewImageUrl) {
+          void deleteNewsReleasePreviewImageFromSupabase(previousPreviewImageUrl);
+        }
+        toast({ title: "News release updated", description: `${updatedNewsRelease.title} was updated successfully.` });
+      } else {
+        const createdNewsRelease = await createNewsReleaseInSupabase({
+          title: newsTitleDraft,
+          description: newsDescriptionDraft,
+          facebookPostUrl: newsFacebookPostUrlDraft,
+          previewImageUrl: resolvedPreviewImageUrl,
+          datePosted: newsDatePostedDraft,
+          visibilityStatus: newsVisibilityDraft,
+          category: newsCategoryDraft,
+        });
+        createNewsRelease(createdNewsRelease);
+        await appendAuditLog("Created news release", "news_release", createdNewsRelease.id, `Created news release "${createdNewsRelease.title}".`);
+        await refreshAdminState();
+        toast({ title: "News release created", description: `${createdNewsRelease.title} was added successfully.` });
+      }
+      resetNewsReleaseForm();
+    } catch (error) {
+      if (uploadedPreviewImageUrl) {
+        void deleteNewsReleasePreviewImageFromSupabase(uploadedPreviewImageUrl);
+      }
+      toast({
+        title: newsModalMode === "edit" ? "Update failed" : "Create failed",
+        description: error instanceof Error ? error.message : "The news release could not be saved.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingNewsRelease(false);
+    }
+  };
+
+  const handleAddNewsCategory = async (newCatName: string) => {
+    try {
+      const created = await createNewsCategoryInSupabase(newCatName);
+      addNewsCategory(created);
+      await appendAuditLog("Created news category", "news_category", created.id, `Created news category "${created.name}".`);
+      toast({ title: "Category added", description: `Category "${created.name}" is now available.` });
+      return created.name;
+    } catch (err: any) {
+      toast({
+        title: "Failed to add category",
+        description: err.message || "The category could not be created.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const handleDeleteNewsCategory = async (cat: NewsCategoryRecord) => {
+    try {
+      await deleteNewsCategoryInSupabase(cat.id);
+      removeNewsCategory(cat.id);
+      if (newsCategoryDraft === cat.name) {
+        setNewsCategoryDraft("");
+      }
+      if (newsCategoryFilter === cat.name) {
+        setNewsCategoryFilter("all");
+      }
+      await appendAuditLog("Deleted news category", "news_category", cat.id, `Deleted news category "${cat.name}".`);
+      toast({ title: "Category deleted", description: `Category "${cat.name}" was removed successfully.` });
+    } catch (err: any) {
+      toast({
+        title: "Cannot delete category",
+        description: err.message || "Failed to delete category.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const handleDeleteNewsRelease = async (newsReleaseId: string) => {
+    const newsRelease = newsReleases.find((entry) => entry.id === newsReleaseId);
+    if (!newsRelease) return;
+    setPendingDeleteConfirmation({ kind: "news_release", id: newsReleaseId, title: newsRelease.title });
+  };
+
+  const handleDeleteTransparencyPost = async (postId: string) => {
+    const post = transparencyPosts.find((entry) => entry.id === postId);
+    if (!post) return;
+    setPendingDeleteConfirmation({ kind: "transparency_post", id: postId, title: post.title });
+  };
+
+  const confirmDeleteRecord = async () => {
+    const pending = pendingDeleteConfirmation;
+    if (!pending) return;
+
+    setPendingDeleteConfirmation(null);
+
+    try {
+      if (pending.kind === "news_release") {
+        const newsRelease = newsReleases.find((entry) => entry.id === pending.id);
+        if (!newsRelease) return;
+        await deleteNewsReleaseInSupabase(pending.id);
+        removeNewsRelease(pending.id);
+        await appendAuditLog("Deleted news release", "news_release", newsRelease.id, `Deleted news release "${newsRelease.title}".`);
+        await refreshAdminState();
+        if (editingNewsReleaseId === pending.id) {
+          resetNewsReleaseForm();
+        }
+        toast({ title: "News release deleted", description: `${newsRelease.title} was removed successfully.` });
+        return;
+      }
+
+      if (pending.kind === "ypop_period") {
+        await adminDeleteYpopPeriodFromSupabase(pending.id);
+        deleteYPOPPeriod(pending.id);
+        await refreshAdminState();
+        toast({ title: "Semester deleted", description: `"${pending.title}", its submissions, activities, and files have been removed.` });
+        return;
+      }
+
+      if (pending.kind === "ypop_city_activity") {
+        try { await adminDeleteYpopCityActivityFromSupabase(pending.id); } catch { /* local-only fallback */ }
+        deleteYPOPCityActivity(pending.id);
+        toast({ title: "City-led activity deleted", description: `"${pending.title}" was removed successfully.` });
+        return;
+      }
+
+      const post = transparencyPosts.find((entry) => entry.id === pending.id);
+      if (!post) return;
+      await deleteTransparencyPostInSupabase(pending.id);
+      await appendAuditLog("Deleted transparency post", "transparency_post", post.id, `Deleted transparency post "${post.title}".`);
+      await refreshAdminState();
+      if (editingTransparencyPostId === pending.id) {
+        resetTransparencyForm();
+      }
+      toast({ title: "Transparency post deleted", description: `${post.title} was removed successfully.` });
+    } catch (error) {
+      toast({
+        title: "Delete failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : pending.kind === "news_release"
+              ? "The news release could not be deleted."
+              : pending.kind === "ypop_city_activity"
+                ? "The city-led activity could not be deleted."
+                : "The transparency post could not be deleted.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInitiateDeleteCategory = (rawCategoryKey: string) => {
+    const normalized = normalizeTemplateCategoryKey(rawCategoryKey);
+    if (isSystemTemplateCategory(normalized)) {
+      setPendingCategoryDelete({
+        category: normalized,
+        isSystem: true,
+        count: 0,
+      });
+      return;
+    }
+    const usage = getTemplateCategoryUsage(normalized, state.templates);
+    setPendingCategoryDelete({
+      category: normalized,
+      isSystem: false,
+      count: usage.count,
+    });
+  };
+
+  const handleAddCustomTemplateCategory = async (rawCategoryKey: string) => {
+    const persistedCategory = await createAdminTemplateCategoryInSupabase(rawCategoryKey);
+    addCustomTemplateCategory(persistedCategory);
+  };
+
+  const handleUpdateTemplate = async () => {
+    const template = state.templates.find((entry) => entry.id === editingTemplateId);
+    if (!template) return;
+    if (!templateNameDraft.trim()) {
+      toast({ title: "Template name required", description: "Please enter a document name.", variant: "destructive" });
+      return;
+    }
+    if (!templateDescriptionDraft.trim()) {
+      toast({
+        title: "Description required",
+        description: "Please enter a brief description of the form or template.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!templateCategoryDraft) {
+      toast({ title: "Category required", description: "Please select a category for this file.", variant: "destructive" });
+      return;
+    }
+
+    setSavingTemplate(true);
+    try {
+      const templateScope: "document_submission" | "other" =
+        templateWorkflowScopeDraft === "downloadable" ? "other" : "document_submission";
+      const scope: "registration" | "renewal" | "both" =
+        templateWorkflowScopeDraft === "registration"
+          ? "registration"
+          : templateWorkflowScopeDraft === "renewal"
+            ? "renewal"
+            : "both";
+
+      const normalizedCategory = normalizeTemplateCategoryKey(templateCategoryDraft);
+
+      const updatedTemplate = await updateTemplateRecordInSupabase({
+        databaseId: template.databaseId,
+        lookupName: template.name,
+        name: templateNameDraft.trim(),
+        description: templateDescriptionDraft.trim(),
+        templateDescription: templateDescriptionDraft.trim(),
+        templateScope,
+        scope,
+      });
+      updateTemplate(template.id, updatedTemplate);
+      const currentCategory =
+        Array.isArray(template.templateCategories) && template.templateCategories.length > 0
+          ? template.templateCategories[0]
+          : deriveTemplateCategory(template.name);
+      if (normalizedCategory !== normalizeTemplateCategoryKey(currentCategory)) {
+        const categorizedTemplate = await updateTemplateCategoryInSupabase(template.databaseId, template.name, [normalizedCategory || templateCategoryDraft]);
+        updateTemplate(template.id, categorizedTemplate);
+      }
+      if (templateFileDraft) {
+        setUploadingTemplateId(template.id);
+        const uploadedTemplate = await uploadTemplateDocumentToSupabase({
+          databaseId: updatedTemplate.databaseId,
+          documentTypeName: updatedTemplate.name,
+          file: templateFileDraft,
+        });
+        updateTemplate(template.id, uploadedTemplate);
+        setUploadingTemplateId(null);
+      }
+      await appendAuditLog("Updated template", "template", template.databaseId, `Updated template "${template.name}" to "${updatedTemplate.name}".`);
+      await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
+      resetTemplateForm();
+      toast({ title: "Template updated", description: `${updatedTemplate.name} was updated successfully.` });
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: error instanceof Error ? error.message : "The template could not be updated.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    const template =
+      activeTemplates.find((entry) => entry.id === templateId || entry.databaseId === templateId) ||
+      state.templates.find((entry) => entry.id === templateId || entry.databaseId === templateId);
+    if (!template) return;
+
+    try {
+      await deleteTemplateRecordInSupabase(template.databaseId, template.name);
+      updateTemplate(template.id, {
+        isActive: false,
+        templateActive: false,
+      });
+      updateTemplate(template.databaseId, {
+        isActive: false,
+        templateActive: false,
+      });
+      if (pendingArchiveTemplate?.id === template.id || pendingArchiveTemplate?.databaseId === template.databaseId) {
+        setPendingArchiveTemplate(null);
+      }
+      await appendAuditLog("Archived file", "template", template.databaseId, `Archived file "${template.name}".`);
+      await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
+      if (editingTemplateId === template.id || editingTemplateId === template.databaseId || templateModalMode === "delete") {
+        resetTemplateForm();
+      }
+      toast({ title: "File archived", description: `${template.name} was archived.` });
+    } catch (error) {
+      toast({
+        title: "Archive failed",
+        description: error instanceof Error ? error.message : "The file could not be archived.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRestoreTemplate = async (templateId: string) => {
+    const template =
+      state.templates.find((entry) => entry.id === templateId || entry.databaseId === templateId) ||
+      activeTemplates.find((entry) => entry.id === templateId || entry.databaseId === templateId);
+    if (!template) return;
+
+    try {
+      const restoredTemplate = await reactivateTemplateRecordInSupabase(template.databaseId, template.name);
+      updateTemplate(template.id, restoredTemplate);
+      updateTemplate(template.databaseId, restoredTemplate);
+      if (pendingRestoreTemplate?.id === template.id || pendingRestoreTemplate?.databaseId === template.databaseId) {
+        setPendingRestoreTemplate(null);
+      }
+      await appendAuditLog("Restored file", "template", template.databaseId, `Restored file "${template.name}".`);
+      await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
+      toast({ title: "File restored", description: `${template.name} is active again.` });
+    } catch (error) {
+      toast({
+        title: "Restore failed",
+        description: error instanceof Error ? error.message : "The file could not be restored.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePermanentlyDeleteTemplate = async (templateId: string) => {
+    const template =
+      state.templates.find((entry) => entry.id === templateId || entry.databaseId === templateId) ||
+      activeTemplates.find((entry) => entry.id === templateId || entry.databaseId === templateId);
+    if (!template) return;
+
+    try {
+      await permanentlyDeleteTemplateRecordInSupabase(template.databaseId, template.name);
+      removeTemplate(template.id);
+      removeTemplate(template.databaseId);
+      if (editingTemplateId === template.id || editingTemplateId === template.databaseId) {
+        resetTemplateForm();
+      }
+      if (previewTemplate?.id === template.id || previewTemplate?.databaseId === template.databaseId) {
+        setPreviewTemplate(null);
+      }
+      if (pendingDeleteTemplate?.id === template.id || pendingDeleteTemplate?.databaseId === template.databaseId) {
+        setPendingDeleteTemplate(null);
+      }
+      await appendAuditLog("Deleted file", "template", template.databaseId, `Permanently deleted file "${template.name}".`);
+      await refreshAdminState();
+      invalidateRegistrationRequirementTypes();
+      removeTemplate(template.id);
+      removeTemplate(template.databaseId);
+      toast({ title: "File deleted", description: `${template.name} was permanently removed.` });
+    } catch (error) {
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "The file could not be deleted.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openFile = async (fileUrl: string, downloadName?: string) => {
+    try {
+      const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
+      if (!resolvedUrl) {
+        throw new Error("No file is available yet.");
+      }
+
+      if (downloadName) {
+        const link = document.createElement("a");
+        link.href = resolvedUrl;
+        link.download = downloadName;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+      }
+
+      window.open(resolvedUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      toast({
+        title: "Unable to open file",
+        description: error instanceof Error ? error.message : "The file could not be opened right now.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openPreview = async (fileUrl: string, title: string) => {
+    if (!fileUrl.trim() || fileUrl.startsWith("#")) {
+      setPreviewUrl("");
+      setPreviewTitle(title);
+      setPreviewEmptyMessage("No file uploaded yet.");
+      setPreviewCanInline(false);
+      setPreviewModalOpen(true);
+      return;
+    }
+
+    try {
+      const resolvedUrl = await resolveSupabaseFileUrl(fileUrl);
+      if (!resolvedUrl) {
+        throw new Error("No file is available yet.");
+      }
+
+      setPreviewUrl(resolvedUrl);
+      setPreviewTitle(title);
+      setPreviewEmptyMessage("");
+      setPreviewCanInline(canInlinePreviewFile(title) || canInlinePreviewFile(resolvedUrl));
+      setPreviewModalOpen(true);
+    } catch (error) {
+      toast({
+        title: "Unable to open preview",
+        description: error instanceof Error ? error.message : "The file preview could not be opened right now.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openBudgetRequestDetails = (requestId: string) => {
+    const req = adminBudgetReviewRows.find((row) => row.request.id === requestId)?.request
+      ?? state.budgetRequests.find((item) => item.id === requestId)
+      ?? null;
+    if (req?.status === "draft") return;
+    setSelectedBudgetRequestSnapshot(req);
+    const requestFiles = [...state.budgetRequestFiles]
+      .filter((file) => file.budgetRequestId === requestId)
+      .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+
+    if (section !== "budget-utilization") {
+      navigate(routeMap["budget-utilization"]);
+    }
+    setSelectedBudgetRequestId(requestId);
+    setSelectedBudgetFileId(requestFiles[0]?.id ?? null);
+  };
+
+  const closeBudgetRequestDetails = () => {
+    setSelectedBudgetRequestId(null);
+    setSelectedBudgetRequestSnapshot(null);
+    setSelectedBudgetFileId(null);
+    setBudgetPreviewUrl("");
+    setBudgetPreviewTitle("");
+    setBudgetPreviewEmptyMessage("");
+    setBudgetPreviewCanInline(false);
+    setBudgetPreviewLoading(false);
+  };
+
+  const openLiquidationDetails = (report: LiquidationReport) => {
+    const reportFiles = [...state.liquidationReportFiles]
+      .filter((file) => file.liquidationReportId === report.id)
+      .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+
+    if (section !== "liquidation-monitoring") {
+      navigate(routeMap["liquidation-monitoring"]);
+    }
+    setSelectedLiquidationReportSnapshot(report);
+    setSelectedLiquidationReportId(report.id);
+    setSelectedLiquidationFileId(reportFiles[0]?.id ?? null);
+    setLiquidationDetailsOpen(true);
+  };
+
+  const closeLiquidationDetails = () => {
+    setLiquidationDetailsOpen(false);
+    setSelectedLiquidationReportSnapshot(null);
+    setSelectedLiquidationReportId(null);
+    setSelectedLiquidationFileId(null);
+    setLiquidationPreviewUrl("");
+    setLiquidationPreviewTitle("");
+    setLiquidationPreviewEmptyMessage("");
+    setLiquidationPreviewCanInline(false);
+    setLiquidationPreviewLoading(false);
+  };
+
+  const performBudgetRequestStatusUpdate = async (
+    request: {
+      id: string;
+      organizationId: string;
+      organizationName: string;
+      submittedBy: string;
+      activityTitle: string;
+      requestedAmount: number;
+    },
+    action: "approve" | "needs_revision" | "reject",
+  ) => {
+    try {
+      if (action === "approve") {
+        const existingReq = state.budgetRequests.find((b) => b.id === request.id);
+        const reqFiles = state.budgetRequestFiles.filter((f) => f.budgetRequestId === request.id);
+        if (existingReq?.status === "needs_revision" || reqFiles.some((file) => file.adminStatus === "needs_revision")) {
+          toast({
+            title: "Awaiting Resubmission",
+            description: "The organization must submit a revised budget request file before it can be approved.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        await updateBudgetRequestInSupabase(request.id, {
+          status: "awaiting_release",
+          goSignalAt: new Date().toISOString(),
+          approvedAmount: request.requestedAmount,
+        });
+        await refreshAdminState();
+        notifyOrganizationUser({
+          userId: request.submittedBy,
+          organizationId: request.organizationId,
+          title: "Budget request approved",
+          message: "The admin approved your budget request. Fund release is now pending.",
+          type: "budget_go_signal",
+          relatedType: "budget_request",
+          relatedId: request.id,
+        });
+        await appendAuditLog(
+          "Approved budget request",
+          "budget_request",
+          request.id,
+          `Marked budget request "${request.activityTitle}" as approved (Awaiting Release).`,
+          request.organizationId,
+        );
+        toast({
+          title: "Budget approved",
+          description: `${request.organizationName}'s budget request is now approved and awaiting fund release.`,
+        });
+        return;
+      }
+
+      if (action === "needs_revision") {
+        await updateBudgetRequestInSupabase(request.id, { status: "needs_revision" });
+        await refreshAdminState();
+        notifyOrganizationUser({
+          userId: request.submittedBy,
+          organizationId: request.organizationId,
+          title: "Budget request needs revision",
+          message: "The admin reviewed your budget request and requested revisions before approval.",
+          type: "budget_revision",
+          relatedType: "budget_request",
+          relatedId: request.id,
+        });
+        await appendAuditLog(
+          "Budget request needs revision",
+          "budget_request",
+          request.id,
+          `Marked budget request "${request.activityTitle}" as needing revision.`,
+          request.organizationId,
+        );
+        toast({
+          title: "Revision requested",
+          description: `${request.organizationName} was asked to revise the budget request.`,
+        });
+        return;
+      }
+
+      await updateBudgetRequestInSupabase(request.id, { status: "rejected_red" });
+      await refreshAdminState();
+      notifyOrganizationUser({
+        userId: request.submittedBy,
+        organizationId: request.organizationId,
+        title: "Budget request rejected",
+        message: "The admin rejected your budget request. Please review the requirements and submit an updated request if needed.",
+        type: "budget_rejected",
+        relatedType: "budget_request",
+        relatedId: request.id,
+      });
+      await appendAuditLog(
+        "Rejected budget request",
+        "budget_request",
+        request.id,
+        `Rejected budget request "${request.activityTitle}".`,
+        request.organizationId,
+      );
+      toast({
+        title: "Budget rejected",
+        description: `${request.organizationName}'s budget request was rejected.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Unable to update budget",
+        description: error instanceof Error ? error.message : "The budget request could not be updated right now.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const selectedTemplate = editingTemplateId
+    ? state.templates.find((template) => template.id === editingTemplateId) ?? null
+    : null;
+
+  const handleSaveTransparencyPost = async () => {
+    if (!transparencyTitleDraft.trim()) {
+      toast({ title: "Title required", description: "Please enter a transparency post title.", variant: "destructive" });
+      return;
+    }
+    if (!transparencyDescriptionDraft.trim()) {
+      toast({ title: "Description required", description: "Please enter a transparency post description.", variant: "destructive" });
+      return;
+    }
+    if (!transparencyCategoryDraft.trim()) {
+      toast({ title: "Category required", description: "Please enter a transparency category.", variant: "destructive" });
+      return;
+    }
+    if (!transparencyPostDateDraft) {
+      toast({ title: "Post date required", description: "Please select a post date.", variant: "destructive" });
+      return;
+    }
+
+    setSavingTransparencyPost(true);
+    try {
+      if (transparencyModalMode === "edit" && editingTransparencyPostId) {
+        const updatedPost = await updateTransparencyPostInSupabase(editingTransparencyPostId, {
+          title: transparencyTitleDraft,
+          description: transparencyDescriptionDraft,
+          category: transparencyCategoryDraft,
+          attachmentUrl: transparencyAttachmentUrlDraft,
+          postDate: transparencyPostDateDraft,
+          visibilityStatus: transparencyVisibilityDraft,
+        });
+        updateTransparencyPost(editingTransparencyPostId, updatedPost);
+        await appendAuditLog("Updated transparency post", "transparency_post", updatedPost.id, `Updated transparency post "${updatedPost.title}".`);
+        await refreshAdminState();
+        toast({ title: "Transparency post updated", description: `${updatedPost.title} was updated successfully.` });
+      } else {
+        const createdPost = await createTransparencyPostInSupabase({
+          title: transparencyTitleDraft,
+          description: transparencyDescriptionDraft,
+          category: transparencyCategoryDraft,
+          attachmentUrl: transparencyAttachmentUrlDraft,
+          postDate: transparencyPostDateDraft,
+          visibilityStatus: transparencyVisibilityDraft,
+        });
+        await appendAuditLog("Created transparency post", "transparency_post", createdPost.id, `Created transparency post "${createdPost.title}".`);
+        await refreshAdminState();
+        toast({ title: "Transparency post created", description: `${createdPost.title} was added successfully.` });
+      }
+      resetTransparencyForm();
+    } catch (error) {
+      toast({
+        title: transparencyModalMode === "edit" ? "Update failed" : "Create failed",
+        description: error instanceof Error ? error.message : "The transparency post could not be saved.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTransparencyPost(false);
+    }
+  };
+
+  const activeContent = useMemo(() => {
+    const requiredPermission = ADMIN_NAV_PERMISSION_MAP[section];
+    const hasSectionAccess = !requiredPermission || hasAdminNavPermission(user?.permissionCodes, section, currentAdminRoleCode);
+    if (!hasSectionAccess) {
+      return (
+        <PortalEmptyState
+          title="Access Restricted"
+          description="You don't have permission to view this page. Contact a Super Admin if you believe this is a mistake."
+          action={
+            <Button onClick={() => navigate(routeMap.overview)}>Back to Overview</Button>
+          }
+        />
+      );
+    }
+    switch (section) {
+      case "overview": {
+        const canViewDashboardWidget = (widget: "registrations" | "ypop" | "budgetRequests" | "liquidations" | "inquiries" | "budgetMonitoring" | "recentActivity") =>
+          hasAdminDashboardWidgetPermission(user?.permissionCodes, widget, currentAdminRoleCode);
+        const attentionWidgetByKind = {
+          registration: "registrations",
+          budget: "budgetRequests",
+          liquidation: "liquidations",
+          inquiry: "inquiries",
+        } as const;
+        const attentionPermissionByHref = new Map<string, string>([
+          [routeMap.registrations, "registrations"],
+          [routeMap["ypop-validation"], "ypop-validation"],
+          [routeMap["budget-utilization"], "budget-utilization"],
+          [routeMap["liquidation-monitoring"], "liquidation-monitoring"],
+          [routeMap.inquiries, "inquiries"],
+        ]);
+        const formatActionName = (action: string) =>
+          action.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+        const findOrgName = (organizationId: string) =>
+          state.organizationProfiles.find((org) => org.id === organizationId)?.organizationName ?? "Organization";
+
+        const needsAttentionItems: NeedsAttentionItem[] = [
+          ...state.organizationProfiles
+            .filter((org) => org.profileStatus === "pending_review" || org.profileStatus === "incomplete")
+            .map((org) => ({
+              id: `org-${org.id}`,
+              icon: UserPlus,
+              orgName: org.organizationName,
+              actionText: "Submitted registration profile · Review registration",
+              verb: "Submitted" as const,
+              timestamp: org.updatedAt,
+              href: routeMap.registrations,
+            })),
+          ...(state.ypopEventParticipations ?? [])
+            .filter((p) => p.status === "pending_evaluation" || p.status === "pending_verification")
+            .map((p) => ({
+              id: `ypop-city-${p.id}`,
+              icon: Award,
+              orgName: findOrgName(p.organizationId),
+              actionText: `${p.activityName} · Review city-led proof`,
+              verb: "Submitted" as const,
+              timestamp: p.proofSubmittedAt || p.updatedAt || p.createdAt,
+              href: routeMap["ypop-validation"],
+            })),
+          ...(state.ypopOrgActivities ?? [])
+            .filter((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review")
+            .map((a) => ({
+              id: `ypop-org-${a.id}`,
+              icon: Award,
+              orgName: findOrgName(a.organizationId),
+              actionText: `${a.activityName} · Review org-led PPA`,
+              verb: "Submitted" as const,
+              timestamp: a.submittedAt || a.updatedAt || a.createdAt,
+              href: routeMap["ypop-validation"],
+            })),
+          ...state.budgetRequests
+            .filter((request) => request.status === "submitted" || request.status === "under_review")
+            .map((request) => ({
+              id: `budget-${request.id}`,
+              icon: Wallet,
+              orgName: findOrgName(request.organizationId),
+              actionText: `${request.activityTitle} · Review budget request`,
+              verb: "Submitted" as const,
+              timestamp: request.createdAt,
+              href: routeMap["budget-utilization"],
+            })),
+          ...state.liquidationReports
+            .filter((report) => report.status === "submitted" || report.status === "under_review" || report.status === "overdue")
+            .map((report) => {
+              const relatedBudgetRequest = state.budgetRequests.find((request) => request.id === report.budgetRequestId);
+              return {
+                id: `liquidation-${report.id}`,
+                icon: Clipboard,
+                orgName: findOrgName(report.organizationId),
+                actionText: `${relatedBudgetRequest?.activityTitle ?? "Liquidation report"} · Review liquidation`,
+                verb: "Submitted" as const,
+                timestamp: report.createdAt,
+                href: routeMap["liquidation-monitoring"],
+              };
+            }),
+          ...state.inquiries
+            .filter((inquiry) => inquiry.status === "pending_review")
+            .map((inquiry) => ({
+              id: `inquiry-${inquiry.id}`,
+              icon: Inbox,
+              orgName: inquiry.organizationName || inquiry.submitterName,
+              actionText: `${inquiry.subject} · Review inquiry`,
+              verb: "Received" as const,
+              timestamp: inquiry.createdAt,
+              href: routeMap.inquiries,
+            })),
+        ].filter((item) => hasAdminNavPermission(
+          user?.permissionCodes,
+          attentionPermissionByHref.get(item.href) ?? "",
+          currentAdminRoleCode,
+        ))
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(0, 5);
+        const dashboardAttentionItems = dashboardQuery.data
+          ? dashboardQuery.data.needsAttention.filter((item) => {
+              const widget = attentionWidgetByKind[item.kind as keyof typeof attentionWidgetByKind];
+              return Boolean(widget && canViewDashboardWidget(widget));
+            }).map((item): NeedsAttentionItem => {
+              const iconByKind: Record<string, LucideIcon> = {
+                registration: UserPlus,
+                budget: Wallet,
+                liquidation: Clipboard,
+                inquiry: Inbox,
+              };
+              const routeByKind: Record<string, string> = {
+                registration: routeMap.registrations,
+                budget: routeMap["budget-utilization"],
+                liquidation: routeMap["liquidation-monitoring"],
+                inquiry: routeMap.inquiries,
+              };
+              return {
+                id: item.id,
+                icon: iconByKind[item.kind] ?? Inbox,
+                orgName: item.organizationName,
+                actionText: item.actionText,
+                verb: item.verb,
+                timestamp: item.timestamp,
+                href: routeByKind[item.kind] ?? routeMap.overview,
+              };
+            })
+          : needsAttentionItems;
+        const dashboardRecentActivities = dashboardQuery.data
+          ? dashboardQuery.data.recentActivity.map((item) => ({
+              id: item.id,
+              message: formatActionName(item.action),
+              note: item.description,
+              timestamp: item.createdAt,
+              timestampLabel: formatDateTimeLabel(item.createdAt),
+            }))
+          : state.activityLogs.map((log) => ({
+              id: log.id,
+              message: formatActionName(log.action),
+              note: log.description,
+              timestamp: log.createdAt,
+              timestampLabel: formatDateTimeLabel(log.createdAt),
+            }));
+
+        return (
+          <div className="admin-dashboard-page space-y-3 lg:space-y-5">
+            <AdminPageHeader title="Overview" description="Monitor workflows, pending items, and recent activity." />
+            {/* Stat cards */}
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
+              {canViewDashboardWidget("registrations") ? <StatsCard
+                title="YORP REGISTRATIONS"
+                value={overviewStats.organizations}
+                icon={UserPlus}
+                trend="up"
+                trendLabel={`${overviewStats.pendingProfiles} awaiting review`}
+                description="YORP accreditation submissions"
+                onClick={() => navigate(routeMap.registrations)}
+              /> : null}
+              {canViewDashboardWidget("ypop") ? <StatsCard
+                title="YPOP VALIDATIONS"
+                value={overviewStats.ypopEntriesTotal}
+                icon={Award}
+                trend="up"
+                trendLabel={`${pendingYpop} awaiting review`}
+                description="YPOP eligibility evaluations"
+                onClick={() => navigate(routeMap["ypop-validation"])}
+              /> : null}
+              {canViewDashboardWidget("budgetRequests") ? <StatsCard
+                title="BUDGET REQUESTS"
+                value={overviewStats.budgetRequestsTotal}
+                icon={Wallet}
+                trend="up"
+                trendLabel={`${overviewStats.pendingBudget} awaiting review`}
+                description="Funding requests for approved projects"
+                onClick={() => navigate(routeMap["budget-utilization"])}
+              /> : null}
+              {canViewDashboardWidget("liquidations") ? <StatsCard
+                title="LIQUIDATIONS"
+                value={overviewStats.liquidationsTotal}
+                icon={Clipboard}
+                trend="up"
+                trendLabel={`${overviewStats.overdueLiquidation + overviewStats.pendingLiquidation} awaiting review`}
+                description="Financial accountability reports"
+                onClick={() => navigate(routeMap["liquidation-monitoring"])}
+              /> : null}
+              {canViewDashboardWidget("inquiries") ? <StatsCard
+                title="INQUIRIES"
+                value={overviewStats.inquiriesTotal}
+                icon={Inbox}
+                trend="up"
+                trendLabel={`${overviewStats.pendingInquiries} awaiting review`}
+                description="Questions from organization users"
+                onClick={() => navigate(routeMap.inquiries)}
+              /> : null}
+            </div>
+
+            {/* Needs Attention */}
+            {dashboardQuery.isError ? (
+              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+                {dashboardQuery.error instanceof Error ? dashboardQuery.error.message : "Dashboard metrics could not be loaded."}
+              </p>
+            ) : null}
+            <NeedsAttentionList items={dashboardAttentionItems} onNavigate={navigate} />
+
+            {/* Budget Monitoring + Recent Activity Log */}
+            <div className="flex flex-col gap-2.5 lg:flex-row">
+              {canViewDashboardWidget("budgetMonitoring") ? <BudgetMonitoringSummaryCard
+                fiscalYearLabel={
+                  annualAllocationFiscalYear ? `FY ${annualAllocationFiscalYear}-${annualAllocationFiscalYear + 1}` : "FY —"
+                }
+                annualAllocation={annualAllocation}
+                totalApproved={dashboardBudgetTotals.approved}
+                totalReleased={dashboardBudgetTotals.released}
+                totalLiquidated={dashboardBudgetTotals.liquidated}
+                onManageRequests={() => navigate(routeMap["budget-monitoring"])}
+              /> : null}
+              {canViewDashboardWidget("recentActivity") ? <RecentActivityLogCard
+                items={dashboardRecentActivities.slice(0, 4).map<RecentActivityLogItem>((activity) => ({
+                  id: activity.id,
+                  activity: activity.message,
+                  detail: activity.note,
+                  timestamp: activity.timestamp,
+                }))}
+                actorName={user?.displayName ?? "Administrator"}
+                actorRole="Administrator"
+                onViewFullLog={() => navigate(routeMap["activity-logs"])}
+              /> : null}
+            </div>
+          </div>
+        );
+      }
+      case "inquiries": {
+        const inquirySummary = adminListResult?.summary ?? {};
+        const pageInquiries = adminListResult?.rows.filter((row): row is InquiryRecord => "subject" in row) ?? (!supabase ? state.inquiries : []);
+        const totalInquiries = inquirySummary.total ?? (!supabase ? state.inquiries.length : 0);
+        const openInquiries = inquirySummary.pendingReview ?? (!supabase ? state.inquiries.filter((item) => item.status === "pending_review").length : 0);
+        const reviewedInquiries = inquirySummary.reviewed ?? (!supabase ? state.inquiries.filter((item) => ["reviewed", "responded", "in_review"].includes(item.status)).length : 0);
+        const closedInquiries = inquirySummary.closed ?? (!supabase ? state.inquiries.filter((item) => ["closed", "resolved"].includes(item.status)).length : 0);
+
+        return (
+          <div className="admin-inquiries-page space-y-3 lg:space-y-5">
+            <AdminPageHeader title="Inquiries" description="Manage questions and inquiries from organization users." />
+
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              <StatsCard
+                title="TOTAL INQUIRIES"
+                value={totalInquiries}
+                icon={MessageSquare}
+                description="Inquiries received during this period"
+              />
+              <StatsCard
+                title="OPEN"
+                value={openInquiries}
+                icon={AlertCircle}
+                description="Inquiries awaiting the team's first response"
+              />
+              <StatsCard
+                title="REVIEWED"
+                value={reviewedInquiries}
+                icon={CornerDownLeft}
+                description="Inquiries reviewed during this period"
+              />
+              <StatsCard
+                title="CLOSED"
+                value={closedInquiries}
+                icon={CheckCircle}
+                description="Inquiries resolved during this period"
+              />
+            </div>
+
+            <InquiriesTable
+              inquiries={pageInquiries}
+              getReferenceCode={(inquiry) => getInquiryReferenceCode(inquiry, pageInquiries)}
+              searchValue={inquirySearch}
+              onSearchChange={setInquirySearch}
+              statusFilter={inquiryStatusFilter}
+              onStatusFilterChange={setInquiryStatusFilter}
+              onSelectInquiry={openInquiryDetails}
+              onMarkReviewed={handleMarkInquiryReviewed}
+              onDeleteInquiry={handleInitiateDeleteInquiry}
+              serverPagination={supabase ? {
+                totalCount: adminListResult?.totalCount ?? 0,
+                onPageChange: setAdminListPage,
+              } : undefined}
+            />
+            {adminListLoading ? <p className="px-1 text-sm text-slate-500" role="status">Loading inquiry page…</p> : null}
+            {adminListError ? <p className="px-1 text-sm text-red-600" role="alert">{adminListError}</p> : null}
+          </div>
+        );
+      }
+      case "registrations": {
+        const selectedOrg = selectedRegistrationProfile;
+        const selectedSubmission = selectedRegistrationSubmission;
+        const selectedFiles = selectedRegistrationFiles.filter(
+          (file) => validDocumentTypeIds.has(file.documentTypeId) && file.adminStatus !== "draft",
+        );
+        const approvedDocumentCount = selectedFiles.filter((file) => file.adminStatus === "approved_green").length;
+        const allRequiredDocumentsApproved = selectedFiles.length === templateDocuments.length && approvedDocumentCount === templateDocuments.length;
+        const isAutoVerified = selectedOrg?.profileStatus === "verified";
+        const isOrgSuspended = selectedOrg?.profileStatus === "suspended_inactive";
+        const submittedDocumentCount = selectedFiles.length;
+        const reviewedDocumentCount = selectedFiles.filter((file) => file.adminStatus !== "submitted" && file.adminStatus !== "under_admin_review").length;
+        const needsRevisionCount = selectedFiles.filter((file) => file.adminStatus === "needs_revision").length;
+        const rejectedCount = selectedFiles.filter((file) => file.adminStatus === "rejected_red").length;
+        const unreviewedCount = selectedFiles.filter((file) => file.adminStatus === "submitted" || file.adminStatus === "under_admin_review").length;
+        const orderedSubmittedFiles = templateDocuments
+          .map((documentType) => {
+            const file = selectedFiles.find(
+              (entry) =>
+                entry.documentTypeId === documentType.id ||
+                (documentType.databaseId && entry.documentTypeId === documentType.databaseId),
+            );
+            if (!file) return null;
+            return { documentType, file };
+          })
+          .filter((entry): entry is { documentType: (typeof templateDocuments)[number]; file: (typeof selectedFiles)[number] } => Boolean(entry));
+        const filteredQueueEntries = orderedSubmittedFiles;
+        const activeReviewEntry =
+          filteredQueueEntries.find((entry) => entry.file.id === activeRegistrationReviewFileId) ??
+          filteredQueueEntries[0] ??
+          orderedSubmittedFiles.find((entry) => entry.file.id === activeRegistrationReviewFileId) ??
+          orderedSubmittedFiles[0] ??
+          null;
+        const activeReviewIndex = activeReviewEntry
+          ? filteredQueueEntries.findIndex((entry) => entry.file.id === activeReviewEntry.file.id)
+          : -1;
+        const selectedBulkFiles = orderedSubmittedFiles.filter((entry) => selectedRegistrationReviewFileIds.includes(entry.file.id));
+        const hasUnrevisedSelectedFiles = selectedBulkFiles.some((entry) =>
+          isAwaitingResubmission({
+            adminStatus: entry.file.adminStatus,
+            revisionRequestedAt: entry.file.revisionRequestedAt,
+            uploadedAt: entry.file.uploadedAt,
+          }),
+        );
+        const missingDocumentCount = Math.max(templateDocuments.length - submittedDocumentCount, 0);
+        const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
+        const decisionRequiresRemark = registrationDecisionRequiresRemark(registrationBulkDecision);
+        const isRegistrationDecisionConfirmDisabled =
+          isOrgSuspended ||
+          selectedBulkFiles.length === 0 ||
+          registrationReviewSubmitting ||
+          (registrationBulkDecision === "approve" && hasUnrevisedSelectedFiles) ||
+          (selectedBulkFiles.length === 1 && decisionRequiresRemark && !registrationBulkRemark.trim());
+
+        if (selectedOrg) {
+          if (selectedOrg.registrationType === "existing_urn") {
+            return (
+              <div className="space-y-4">
+              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
+              <UrnReviewPanel
+                profile={selectedOrg}
+                onBack={() => handleRegistrationSelectionChange(null)}
+                onReviewed={(updated) => updateOrganizationProfile(updated.id, updated)}
+                onDelete={() => void openRegistrationDeleteDialog(selectedOrg)}
+              />
+              </div>
+            );
+          }
+          const isRegistrationDocumentsComplete = templateDocuments.length > 0 && submittedDocumentCount >= templateDocuments.length;
+          const registrationCreatedDate = new Date(selectedOrg.createdAt);
+          const isRegistrationCreatedDateValid = !Number.isNaN(registrationCreatedDate.getTime());
+
+          const getActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const organizationActivityEntries = state.activityLogs
+            .filter(
+              (log) =>
+                log.relatedType === "document_submission_file" &&
+                log.organizationId === selectedOrg.id &&
+                log.action !== "Submitted batch document review",
+            )
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              const relatedFile = state.documentSubmissionFiles.find((file) => file.id === log.relatedId);
+              const docName = relatedFile
+                ? templateDocuments.find(
+                  (doc) =>
+                    doc.id === relatedFile.documentTypeId ||
+                    (doc.databaseId && doc.databaseId === relatedFile.documentTypeId),
+                )?.name ?? relatedFile.fileName
+                : "a document";
+              const verb =
+                log.action === "Approved document submission"
+                  ? "approved"
+                  : log.action === "Document revision requested"
+                    ? "requested revisions to the"
+                    : log.action === "Rejected document submission"
+                      ? "rejected"
+                      : "updated";
+              return { id: log.id, adminName, docName, verb, createdAt: log.createdAt };
+            });
+
+          const visibleActivityEntries = organizationActivityEntries.slice(0, registrationActivityVisibleCount);
+          const hasMoreActivityEntries = organizationActivityEntries.length > visibleActivityEntries.length;
+          const groupedActivityEntries = visibleActivityEntries.reduce<{ label: string; entries: typeof visibleActivityEntries }[]>(
+            (groups, entry) => {
+              const label = getActivityDayLabel(entry.createdAt);
+              const existingGroup = groups.find((group) => group.label === label);
+              if (existingGroup) {
+                existingGroup.entries.push(entry);
+              } else {
+                groups.push({ label, entries: [entry] });
+              }
+              return groups;
+            },
+            [],
+          );
+
+          const reviewSummaryCard = (
+            <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
+                <div className="flex flex-col gap-1">
+                  <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                  <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                    Review your decisions before submitting.
+                  </p>
+                </div>
+                <div className="relative shrink-0">
+                  <button
+                    ref={registrationActivityTriggerRef}
+                    type="button"
+                    aria-label="Decision history"
+                    onClick={() => setIsRegistrationActivityPopoverOpen((current) => !current)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                  >
+                    <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                  </button>
+                  {isRegistrationActivityPopoverOpen ? (
+                    <div
+                      ref={registrationActivityPanelRef}
+                      className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                    >
+                      <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                          Recent Activity
+                        </p>
+                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          A log of recent actions taken on this organization.
+                        </p>
+                      </div>
+
+                      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                        {groupedActivityEntries.length ? (
+                          groupedActivityEntries.map((group) => (
+                            <div key={group.label} className="space-y-2">
+                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                {group.label}
+                              </p>
+                              <div className="space-y-0">
+                                {group.entries.map((entry, index) => {
+                                  const entryDate = new Date(entry.createdAt);
+                                  const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                  return (
+                                    <div key={entry.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                                      {index < group.entries.length - 1 ? (
+                                        <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
+                                      ) : null}
+                                      <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
+                                        <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
+                                      </span>
+                                      <div className="min-w-0 flex-1 space-y-0.5">
+                                        <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                          <span className="font-semibold">{entry.adminName}</span> {entry.verb}{" "}
+                                          <span className="font-semibold">{entry.docName}</span>.
+                                        </p>
+                                        <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                          {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="py-6 text-center font-segoe text-sm text-slate-500">
+                            No activity recorded yet.
+                          </p>
+                        )}
+                      </div>
+
+                      {hasMoreActivityEntries ? (
+                        <div className="flex items-center justify-center border-t border-slate-300 p-4">
+                          <button
+                            type="button"
+                            onClick={() => setRegistrationActivityVisibleCount((current) => current + 4)}
+                            className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                          >
+                            Load older activity
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                {isAutoVerified ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-success-subtle bg-bg-success-subtle p-3.5 text-positive-secondary">
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle className="h-5 w-5 shrink-0 text-positive-secondary" strokeWidth={1.8} />
+                      <div>
+                        <p className="font-segoe text-sm font-semibold leading-tight">Organization Verified</p>
+                        <p className="font-segoe text-xs text-text-default">
+                          All required registration documents have been approved. Official deterministic URN has been generated and assigned.
+                        </p>
+                      </div>
+                    </div>
+                    {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
+                      <span className="shrink-0 rounded border border-border-success-subtle bg-admin-surface px-2.5 py-1 font-cascadia text-xs font-bold text-positive-secondary shadow-xs">
+                        URN: {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">
+                      {approvedDocumentCount} / {templateDocuments.length}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{needsRevisionCount + rejectedCount}</p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  onClick={() => handleRegistrationSelectionChange(null)}
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Registrations Queue
+                </button>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+                      isRegistrationDocumentsComplete
+                        ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
+                        : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
+                    )}
+                  >
+                    {submittedDocumentCount}/{templateDocuments.length} Documents Submitted
+                  </span>
+                  <RegistrationStatusPill status={selectedOrg.profileStatus} />
+                  {((selectedOrg.profileStatus !== "verified" && selectedOrg.profileStatus !== "suspended_inactive") ||
+                    (selectedOrg.profileStatus === "suspended_inactive" && isSuperAdmin)) ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void openRegistrationDeleteDialog(selectedOrg)}
+                      className="h-9 gap-1.5 border-destructive/30 font-segoe text-xs font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete Registration
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
+
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center justify-between gap-3 p-4",
+                    !registrationInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
+                  )}
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                    </div>
+                    <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {selectedOrg.organizationName}
+                    </h1>
+                    <ReferenceCodeChip code={selectedOrg.referenceId || "—"} />
+                    {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
+                      <span className="inline-flex items-center gap-1 rounded border border-border-success-subtle bg-bg-success-subtle px-2 py-0.5 font-cascadia text-xs font-semibold text-positive-secondary">
+                        URN: {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
+                      </span>
+                    ) : null}
+                    {selectedOrg.majorClassification ? <CategoryChip category={selectedOrg.majorClassification} /> : null}
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRegistrationInfoCollapsed((current) => !current)}
+                      className="font-segoe text-[11px] font-semibold leading-none text-slate-500"
+                    >
+                      {registrationInfoCollapsed ? "Expand Details" : "Collapse Details"}
+                    </button>
+                    <button
+                      type="button"
+                      aria-expanded={!registrationInfoCollapsed}
+                      onClick={() => setRegistrationInfoCollapsed((current) => !current)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                    >
+                      <ChevronDown
+                        className={cn("h-4 w-4 text-text-default transition-transform", !registrationInfoCollapsed && "rotate-180")}
+                        strokeWidth={1.6}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {!registrationInfoCollapsed ? (
+                  <div className="space-y-3 p-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <RegistrationInfoBox label="ORGANIZATION" title={selectedOrg.organizationName} />
+                      <RegistrationInfoBox
+                        label="CLASSIFICATION"
+                        title={selectedOrg.majorClassification || "N/A"}
+                        description={selectedOrg.subClassification || undefined}
+                      />
+                      <RegistrationInfoBox
+                        label="LOCATION"
+                        title={selectedOrg.district || "N/A"}
+                        description={selectedOrg.barangay || undefined}
+                      />
+                      <RegistrationInfoBox
+                        label="REGISTRATION DATE"
+                        title={isRegistrationCreatedDateValid ? format(registrationCreatedDate, "d MMM yyyy") : "N/A"}
+                        description={selectedOrg.isExistingOrganization ? "Existing Organization" : "New Organization"}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <RegistrationContactBox
+                        icon={UserRound}
+                        label="HEAD OF ORGANIZATION"
+                        title={getRepresentativeDisplayName(selectedOrg, "N/A")}
+                        description={`Adviser: ${getAdviserDisplayName(selectedOrg, "N/A")}`}
+                      />
+                      <RegistrationContactBox
+                        icon={Mail}
+                        label="EMAIL"
+                        title={selectedOrg.organizationEmail}
+                        description={
+                          selectedOrg.additionalEmails && selectedOrg.additionalEmails.length > 0
+                            ? `+${selectedOrg.additionalEmails.length} more (${selectedOrg.additionalEmails.join(", ")})`
+                            : "Verified Portal Account"
+                        }
+                        showCopy
+                      />
+                      <RegistrationContactBox
+                        icon={Phone}
+                        label="CONTACT"
+                        title={selectedOrg.contactNumber || "N/A"}
+                        description={
+                          selectedOrg.additionalContactNumbers && selectedOrg.additionalContactNumbers.length > 0
+                            ? `+${selectedOrg.additionalContactNumbers.length} more (${selectedOrg.additionalContactNumbers.join(", ")})`
+                            : undefined
+                        }
+                      />
+                      <RegistrationContactBox
+                        icon={Globe}
+                        label="FACEBOOK"
+                        title={selectedOrg.facebookPageUrl ? selectedOrg.facebookPageUrl.replace(/^https?:\/\/(www\.)?/i, "") : "N/A"}
+                        href={selectedOrg.facebookPageUrl || undefined}
+                      />
+                    </div>
+                    <div className="rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                      <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Office Address</p>
+                      <p className="mt-2 font-segoe text-sm font-medium leading-[140%] text-text-default">
+                        {selectedOrg.address || "No address provided"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {!isAutoVerified ? reviewSummaryCard : null}
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
+                <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {activeReviewEntry?.documentType.name ?? "No document selected"}
+                    </p>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {filteredQueueEntries.length ? (
+                        <div className="flex shrink-0 items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            disabled={activeReviewIndex <= 0}
+                            onClick={() =>
+                              setActiveRegistrationReviewFileId(
+                                filteredQueueEntries[Math.max(0, activeReviewIndex - 1)]?.file.id ?? null,
+                              )
+                            }
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                          >
+                            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
+                            Previous
+                          </button>
+                          <div className="flex items-center gap-1">
+                            {filteredQueueEntries.slice(0, 5).map((entry, index) => (
+                              <button
+                                key={entry.file.id}
+                                type="button"
+                                onClick={() => setActiveRegistrationReviewFileId(entry.file.id)}
+                                className={cn(
+                                  "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                  activeReviewEntry?.file.id === entry.file.id
+                                    ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                    : "text-text-default hover:bg-slate-50",
+                                )}
+                              >
+                                {index + 1}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            disabled={activeReviewIndex < 0 || activeReviewIndex >= filteredQueueEntries.length - 1}
+                            onClick={() =>
+                              setActiveRegistrationReviewFileId(
+                                filteredQueueEntries[Math.min(filteredQueueEntries.length - 1, activeReviewIndex + 1)]?.file.id ?? null,
+                              )
+                            }
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                          >
+                            Next
+                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
+                          </button>
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-label="Download documents"
+                        disabled={downloadDialogResolving || !filteredQueueEntries.length}
+                        onClick={() =>
+                          void openDownloadDialog(
+                            activeReviewEntry
+                              ? { fileName: activeReviewEntry.file.fileName, fileUrl: activeReviewEntry.file.fileUrl }
+                              : null,
+                            filteredQueueEntries.map((entry) => ({
+                              fileName: entry.file.fileName,
+                              fileUrl: entry.file.fileUrl,
+                            })),
+                            "Registration-Documents.zip",
+                          )
+                        }
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
+                    {activeReviewEntry && activeDocumentPreviewUrl ? (
+                      activeReviewEntry.file.fileType.startsWith("image/") ? (
+                        <img
+                          src={activeDocumentPreviewUrl}
+                          alt={activeReviewEntry.documentType.name}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        <iframe
+                          src={withHiddenPdfToolbar(activeDocumentPreviewUrl)}
+                          title={activeReviewEntry.documentType.name}
+                          className="h-full min-h-[500px] w-full border-0"
+                        />
+                      )
+                    ) : (
+                      <div
+                        className="flex h-full min-h-[500px] w-full items-center justify-center"
+                        style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
+                      >
+                        <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    {(() => {
+                      const selectableRegistrationFileIds = orderedSubmittedFiles
+                        .filter((entry) => entry.file.adminStatus !== "approved_green")
+                        .map((entry) => entry.file.id);
+                      const selectedRegistrationCount = selectableRegistrationFileIds.filter((id) =>
+                        selectedRegistrationReviewFileIds.includes(id),
+                      ).length;
+                      const isAllRegistrationSelected =
+                        selectableRegistrationFileIds.length > 0 &&
+                        selectedRegistrationCount === selectableRegistrationFileIds.length;
+                      const isRegistrationIndeterminate =
+                        selectedRegistrationCount > 0 &&
+                        selectedRegistrationCount < selectableRegistrationFileIds.length;
+                      const handleToggleSelectAllRegistration = () => {
+                        if (isOrgSuspended) return;
+                        if (isAllRegistrationSelected) {
+                          setSelectedRegistrationReviewFileIds((current) =>
+                            current.filter((id) => !selectableRegistrationFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedRegistrationReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableRegistrationFileIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isRegistrationIndeterminate;
+                                }}
+                                checked={isAllRegistrationSelected}
+                                disabled={isOrgSuspended || selectableRegistrationFileIds.length === 0}
+                                onChange={handleToggleSelectAllRegistration}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s submitted documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="space-y-0.5 pt-1">
+                      {orderedSubmittedFiles.length ? (
+                        orderedSubmittedFiles.map(({ documentType, file }) => {
+                          const isChecked = selectedRegistrationReviewFileIds.includes(file.id);
+                          const isActive = activeReviewEntry?.file.id === file.id;
+                          const uploadedDate = new Date(file.uploadedAt);
+                          const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                          const isLocked = file.adminStatus === "approved_green";
+
+                          return (
+                            <div
+                              key={file.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                setActiveRegistrationReviewFileId(file.id);
+                                if (!isLocked && !isOrgSuspended) setSelectedRegistrationReviewFileIds([file.id]);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                setActiveRegistrationReviewFileId(file.id);
+                                if (!isLocked && !isOrgSuspended) setSelectedRegistrationReviewFileIds([file.id]);
+                              }}
+                              className={cn(
+                                "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
+                                isChecked
+                                  ? "border border-border-info-tertiary bg-bg-info-tertiary"
+                                  : isActive
+                                    ? "border border-transparent bg-slate-50"
+                                    : "border border-transparent hover:bg-slate-50",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={isLocked || isOrgSuspended}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={() => {
+                                  if (isOrgSuspended) return;
+                                  setSelectedRegistrationReviewFileIds((current) =>
+                                    current.includes(file.id)
+                                      ? current.filter((id) => id !== file.id)
+                                      : [...current, file.id],
+                                  );
+                                }}
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
+                                    {documentType.name}
+                                  </p>
+                                  <DocumentQueueStatusPill
+                                    status={file.adminStatus}
+                                    isAwaiting={isAwaitingResubmission({
+                                      adminStatus: file.adminStatus,
+                                      revisionRequestedAt: file.revisionRequestedAt,
+                                      uploadedAt: file.uploadedAt,
+                                    })}
+                                  />
+                                </div>
+                                <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
+                                  {file.fileName}
+                                </p>
+                                <div className="flex items-center gap-2 pt-1">
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                  </p>
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    {formatFileSize(file.fileSize)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                          No documents submitted yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                      <div className="flex items-center gap-2">
+                        <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                        {isOrgSuspended ? (
+                          <RegistrationStatusPill status="suspended_inactive" />
+                        ) : null}
+                      </div>
+                      {!isOrgSuspended ? (
+                        <button
+                          type="button"
+                          ref={registrationDecisionHelpTriggerRef}
+                          onClick={() => setIsRegistrationDecisionHelpOpen((current) => !current)}
+                          aria-label="Review rules"
+                          className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                        >
+                          <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                        </button>
+                      ) : null}
+                      {!isOrgSuspended && isRegistrationDecisionHelpOpen ? (
+                        <div
+                          ref={registrationDecisionHelpPanelRef}
+                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                        >
+                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Approve</span> — multiple files can be selected.
+                          </p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Request Revision / Reject</span> — one file at a time, remarks required.
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-4">
+                      {isOrgSuspended ? (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-start gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle px-4 py-3">
+                            <Info className="mt-0.5 h-4 w-4 shrink-0 text-icon-danger-secondary" strokeWidth={1.6} />
+                            <p className="font-segoe text-[13px] leading-[140%] text-icon-danger-secondary">
+                              Review actions are unavailable because this organization account is permanently suspended.
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                            <Select disabled value="suspended">
+                              <SelectTrigger className="h-8 border-slate-300 text-[13px] text-slate-500 bg-slate-50 cursor-not-allowed">
+                                <SelectValue placeholder="Review unavailable — Account Suspended">
+                                  Review unavailable — Account Suspended
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="suspended">Review unavailable — Account Suspended</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled
+                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors cursor-not-allowed opacity-[0.38]"
+                          >
+                            Confirm
+                          </button>
+                        </div>
+                      ) : isAutoVerified ? (
+                        <div className="flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
+                          <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
+                          <div>
+                            <p className="font-segoe text-sm font-semibold text-positive-secondary">
+                              Registration Verified
+                            </p>
+                            <p className="mt-0.5 font-segoe text-xs text-text-default">
+                              All required registration documents have been approved. This organization is officially registered.
+                            </p>
+                          </div>
+                          {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
+                            <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
+                              <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
+                              <span className="font-cascadia text-base font-bold text-positive-secondary">
+                                {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
+                              </span>
+                            </div>
+                          ) : null}
+                          {selectedOrg.verifiedAt ? (
+                            <p className="font-segoe text-[11px] text-slate-500">
+                              Verified on {formatVerifiedDateLabel(selectedOrg.verifiedAt)}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <>
+                          {selectedBulkFiles.length === 0 ? (
+                            <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                              <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                            </div>
+                          ) : registrationBulkDecision === "approve" && hasUnrevisedSelectedFiles ? (
+                            <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
+                              <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                                Awaiting Resubmission: The organization must submit a revised document before it can be approved.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                              <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                              <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                                {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                            <Select
+                              value={registrationBulkDecision}
+                              onValueChange={(value) => {
+                                setRegistrationBulkDecision(value as RegistrationReviewDecision);
+                                setRegistrationRejectAcknowledged(false);
+                              }}
+                              disabled={selectedBulkFiles.length === 0}
+                            >
+                              <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="approve">Approve</SelectItem>
+                                <SelectItem
+                                  value="needs_revision"
+                                  disabled={selectedBulkFiles.length > 1}
+                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                                >
+                                  Request Revision
+                                </SelectItem>
+                                <SelectItem
+                                  value="reject"
+                                  disabled={selectedBulkFiles.length > 1}
+                                  className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                                >
+                                  Reject
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
+                            <div className="flex flex-col gap-1.5">
+                              <label className="font-segoe text-[13px] text-text-default">
+                                Remarks <span className="text-destructive">*</span>
+                              </label>
+                              <Textarea
+                                value={registrationBulkRemark}
+                                onChange={(event) => setRegistrationBulkRemark(event.target.value)}
+                                placeholder="Explain the reason or required action..."
+                                rows={3}
+                                className="resize-none text-[13px]"
+                              />
+                            </div>
+                          ) : null}
+
+                          <button
+                            type="button"
+                            disabled={isRegistrationDecisionConfirmDisabled}
+                            onClick={() => {
+                              setRegistrationRejectAcknowledged(false);
+                              setIsRegistrationDecisionConfirmOpen(true);
+                            }}
+                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                          >
+                            Confirm
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <DangerConfirmDialog
+                    open={isRegistrationDecisionConfirmOpen}
+                    onOpenChange={(open) => {
+                      setIsRegistrationDecisionConfirmOpen(open);
+                      if (!open) setRegistrationRejectAcknowledged(false);
+                    }}
+                    icon={registrationBulkDecision === "reject" ? AlertTriangle : CheckCircle}
+                    variant={registrationBulkDecision === "reject" ? "danger" : "info"}
+                    title={registrationBulkDecision === "reject" ? "Confirm Account Suspension" : "Confirm Review Decision"}
+                    description={registrationBulkDecision === "reject"
+                      ? "You are about to reject a registration document. This will permanently suspend the organization account. Review the selected document and rejection remark carefully before continuing."
+                      : "Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."}
+                    content={
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {selectedBulkFiles.map((entry) => {
+                            const remarkText = selectedBulkFiles.length === 1 && decisionRequiresRemark
+                              ? registrationBulkRemark.trim() || "—"
+                              : "—";
+                            return (
+                              <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                  {entry.documentType.name}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {registrationReviewDecisionLabel[registrationBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    }
+                    warning={registrationBulkDecision === "reject" ? (
+                      <div className="space-y-3">
+                        <p className="font-semibold">Critical: rejecting this registration document will permanently suspend the organization account.</p>
+                        <label className="flex items-start gap-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={registrationRejectAcknowledged}
+                            onChange={(event) => setRegistrationRejectAcknowledged(event.target.checked)}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
+                          />
+                          <span>I understand that this rejection permanently suspends the organization account.</span>
+                        </label>
+                      </div>
+                    ) : "Once submitted, these decisions cannot be changed from this review."}
+                    cancelLabel="Cancel"
+                    confirmLabel={registrationBulkDecision === "reject" ? "Reject & Suspend Account" : "Submit Review"}
+                    confirmIcon={Send}
+                    confirmDisabled={registrationBulkDecision === "reject" && !registrationRejectAcknowledged}
+                    onConfirm={submitRegistrationReviewDecisions}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const registrationRows = adminListResult?.rows.filter(
+          (row): row is AdminPortalRegistrationListRow => "profile" in row,
+        ) ?? (!supabase ? state.organizationProfiles.map((profile) => ({
+          profile,
+          submittedDocumentCount: state.documentSubmissionFiles.filter((file) =>
+            state.documentSubmissions.some((submission) =>
+              submission.id === file.submissionId && submission.organizationId === profile.id &&
+              (!submission.submissionScope || submission.submissionScope === "registration") && !submission.renewalId,
+            ) && file.adminStatus !== "draft" && Boolean(file.documentTypeId),
+          ).length,
+        })) : []);
+        const visibleRegistrationProfiles = registrationRows.map((row) => row.profile);
+        const documentCountsByOrgId: Record<string, { submitted: number; required: number | null }> = {};
+        for (const org of section === "registrations" ? visibleRegistrationProfiles : state.organizationProfiles) {
+          const serverRow = registrationRows.find((row) => row.profile.id === org.id);
+          const orgSubmission = state.documentSubmissions.find((item) => item.organizationId === org.id);
+          const submittedCount = orgSubmission
+            ? state.documentSubmissionFiles.filter(
+              (file) =>
+                file.submissionId === orgSubmission.id &&
+                validDocumentTypeIds.has(file.documentTypeId) &&
+                file.adminStatus !== "draft",
+            ).length
+            : 0;
+          documentCountsByOrgId[org.id] = {
+            submitted: serverRow?.submittedDocumentCount ?? submittedCount,
+            required: supabase
+              ? registrationRequirementTypesQuery.data?.length ?? null
+              : templateDocuments.length,
+          };
+        }
+
+        const verifiedCount = adminListResult?.summary.verified ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "verified").length : 0);
+        const pendingReviewCount = adminListResult?.summary.pendingReview ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "pending_review" || item.profileStatus === "incomplete").length : 0);
+        const profilesNeedingRevisionCount = adminListResult?.summary.needsRevision ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "needs_update").length : 0);
+        const suspendedCount = adminListResult?.summary.suspended ?? (!supabase ? state.organizationProfiles.filter((item) => item.profileStatus === "suspended_inactive").length : 0);
+
+        return (
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader title="Registrations" description="Review incoming YORP accreditation submissions." />
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              <StatsCard
+                title="VERIFIED"
+                value={verifiedCount}
+                icon={CheckCircle2}
+                description="Accredited organizations with verified profiles."
+              />
+              <StatsCard
+                title="PENDING REVIEW"
+                value={pendingReviewCount}
+                icon={Clock}
+                description="Submissions currently being evaluated."
+              />
+              <StatsCard
+                title="NEEDS REVISION"
+                value={profilesNeedingRevisionCount}
+                icon={AlertCircle}
+                description="Submissions requiring corrections."
+              />
+              <StatsCard
+                title="SUSPENDED"
+                value={suspendedCount}
+                icon={UserX}
+                description="Organizations with permanently suspended accounts."
+              />
+            </div>
+
+            <RegistrationsTable
+              registrations={visibleRegistrationProfiles}
+              documentCountsByOrgId={documentCountsByOrgId}
+              searchValue={registrationSearch}
+              onSearchChange={setRegistrationSearch}
+              statusFilter={registrationStatusFilter}
+              onStatusFilterChange={setRegistrationStatusFilter}
+              districtFilter={registrationDistrictFilter}
+              onDistrictFilterChange={setRegistrationDistrictFilter}
+              barangayFilter={registrationBarangayFilter}
+              onBarangayFilterChange={setRegistrationBarangayFilter}
+              classificationFilter={registrationClassificationFilter}
+              onClassificationFilterChange={setRegistrationClassificationFilter}
+              onReview={(organizationId) => handleRegistrationSelectionChange(organizationId)}
+              onDelete={(organization) => void openRegistrationDeleteDialog(organization)}
+              selectedOrgIds={selectedRegistrationIds}
+              onSelectedOrgIdsChange={setSelectedRegistrationIds}
+              isSuperAdmin={isSuperAdmin}
+              documentRequirementsMessage={registrationRequirementTypesQuery.isError ? "Unavailable" : "Checking"}
+              serverPagination={supabase ? {
+                totalCount: adminListResult?.totalCount ?? 0,
+                onPageChange: setAdminListPage,
+              } : undefined}
+            />
+            {adminListLoading ? <p className="px-1 text-sm text-slate-500" role="status">Loading registration page…</p> : null}
+            {adminListError ? <p className="px-1 text-sm text-red-600" role="alert">{adminListError}</p> : null}
+          </div>
+        );
+      }
+      case "renewals": {
+        if (supabase && selectedRenewalId &&
+            (adminRenewalRequiredTypesQuery.isPending || adminRenewalReviewContextQuery.isPending)) {
+          return <p className="p-4 text-sm text-slate-500" role="status">Loading renewal documents…</p>;
+        }
+        if (supabase && selectedRenewalId &&
+            (adminRenewalRequiredTypesQuery.isError || adminRenewalReviewContextQuery.isError)) {
+          const error = adminRenewalRequiredTypesQuery.error ?? adminRenewalReviewContextQuery.error;
+          return (
+            <div className="space-y-3 p-4">
+              <p className="text-sm text-red-600" role="alert">
+                {error instanceof Error ? error.message : "Unable to load renewal documents."}
+              </p>
+              <Button variant="outline" onClick={() => {
+                void adminRenewalRequiredTypesQuery.refetch();
+                void adminRenewalReviewContextQuery.refetch();
+              }}>Retry loading documents</Button>
+            </div>
+          );
+        }
+        const selectedRenewalRecord = selectedRenewal;
+        const selectedOrg = selectedRenewalProfile;
+        const selectedSubmission = selectedRenewalSubmission;
+        const renewalTemplates = renewalRequiredDocuments;
+        const validRenewalTypeIds = new Set(renewalTemplates.flatMap((item) => [item.id, item.databaseId]));
+        const selectedFiles = effectiveRenewalFiles.filter(
+          (file) => validRenewalTypeIds.has(file.documentTypeId) && file.adminStatus !== "draft",
+        );
+        const getRenewalFileForRequirement = (documentType: TemplateRecord) =>
+          selectedFiles.find(
+            (file) =>
+              file.documentTypeId === documentType.id ||
+              (documentType.databaseId && file.documentTypeId === documentType.databaseId),
+          );
+        const submittedDocumentCount = renewalTemplates.filter((documentType) =>
+          Boolean(getRenewalFileForRequirement(documentType)),
+        ).length;
+        const approvedDocumentCount = renewalTemplates.filter(
+          (documentType) => getRenewalFileForRequirement(documentType)?.adminStatus === "approved_green",
+        ).length;
+        const reviewedDocumentCount = selectedFiles.filter(
+          (file) => file.adminStatus !== "submitted" && file.adminStatus !== "under_admin_review",
+        ).length;
+        const needsRevisionCount = selectedFiles.filter((file) => file.adminStatus === "needs_revision").length;
+        const rejectedCount = selectedFiles.filter((file) => file.adminStatus === "rejected_red").length;
+        const unreviewedCount = selectedFiles.filter(
+          (file) => file.adminStatus === "submitted" || file.adminStatus === "under_admin_review",
+        ).length;
+        const orderedSubmittedFiles = renewalTemplates
+          .map((documentType) => {
+            const file = getRenewalFileForRequirement(documentType);
+            if (!file) return null;
+            return { documentType, file };
+          })
+          .filter(
+            (entry): entry is { documentType: (typeof renewalTemplates)[number]; file: (typeof selectedFiles)[number] } =>
+              Boolean(entry),
+          );
+        const filteredQueueEntries = orderedSubmittedFiles;
+        const activeReviewEntry =
+          filteredQueueEntries.find((entry) => entry.file.id === activeRenewalReviewFileId) ??
+          filteredQueueEntries[0] ??
+          orderedSubmittedFiles.find((entry) => entry.file.id === activeRenewalReviewFileId) ??
+          orderedSubmittedFiles[0] ??
+          null;
+        const activeReviewIndex = activeReviewEntry
+          ? filteredQueueEntries.findIndex((entry) => entry.file.id === activeReviewEntry.file.id)
+          : -1;
+        const selectedBulkFiles = orderedSubmittedFiles.filter((entry) =>
+          selectedRenewalReviewFileIds.includes(entry.file.id),
+        );
+        const hasUnrevisedSelectedRenewalFiles = selectedBulkFiles.some((entry) =>
+          isAwaitingResubmission({
+            adminStatus: entry.file.adminStatus,
+            revisionRequestedAt: entry.file.revisionRequestedAt,
+            uploadedAt: entry.file.uploadedAt,
+          }),
+        );
+        const decisionRequiresRemark = registrationDecisionRequiresRemark(renewalBulkDecision);
+        const isRenewalDecisionConfirmDisabled =
+          selectedBulkFiles.length === 0 ||
+          renewalReviewSubmitting ||
+          (renewalBulkDecision === "approve" && hasUnrevisedSelectedRenewalFiles) ||
+          (selectedBulkFiles.length === 1 && decisionRequiresRemark && !renewalBulkRemark.trim());
+
+        if (selectedRenewalRecord && selectedOrg) {
+          const isRenewalDocumentsComplete =
+            renewalTemplates.length > 0 && submittedDocumentCount >= renewalTemplates.length;
+          const renewalIssuedAccreditation = adminAccreditations.find(
+            (accreditation) =>
+              accreditation.organizationId === selectedOrg.id &&
+              accreditation.termNumber === selectedRenewalRecord.cycleNumber,
+          );
+          const renewalCertificateUrn =
+            selectedRenewalRecord.certificateUrn || renewalIssuedAccreditation?.certificateUrn || null;
+          const isRenewalVerified =
+            selectedRenewalRecord.status === "approved" && Boolean(renewalCertificateUrn);
+          const renewalVerifiedAt =
+            selectedRenewalRecord.reviewedAt || renewalIssuedAccreditation?.approvedAt || null;
+          const renewalCreatedDate = new Date(selectedRenewalRecord.submittedAt || selectedRenewalRecord.createdAt);
+          const isRenewalCreatedDateValid = !Number.isNaN(renewalCreatedDate.getTime());
+
+          const getActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const organizationActivityEntries = state.activityLogs
+            .filter(
+              (log) =>
+                (log.organizationId === selectedOrg.id || log.relatedId === selectedRenewalRecord.id) &&
+                (log.relatedType === "document_submission_file" ||
+                  log.relatedType === "organization_renewal" ||
+                  log.relatedType === "document_submission") &&
+                log.action !== "Submitted batch document review",
+            )
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              const relatedFile = effectiveRenewalFiles.find((file) => file.id === log.relatedId);
+              const docName = relatedFile
+                ? renewalTemplates.find(
+                  (doc) => doc.id === relatedFile.documentTypeId || doc.databaseId === relatedFile.documentTypeId,
+                )?.name ?? relatedFile.fileName
+                : log.relatedType === "organization_renewal"
+                  ? "renewal application"
+                  : "a document";
+              const verb =
+                log.action === "Approved renewal document" ||
+                  log.action === "Approved document submission" ||
+                  log.action === "Approved organization renewal"
+                  ? "approved"
+                  : log.action === "Renewal document revision requested" ||
+                    log.action === "Document revision requested" ||
+                    log.action === "Requested renewal revision"
+                    ? "requested revisions to"
+                    : log.action === "Rejected renewal document" ||
+                      log.action === "Rejected document submission" ||
+                      log.action === "Rejected organization renewal"
+                      ? "rejected"
+                      : "updated";
+              return { id: log.id, adminName, docName, verb, createdAt: log.createdAt };
+            });
+
+          const visibleActivityEntries = organizationActivityEntries.slice(0, renewalActivityVisibleCount);
+          const hasMoreActivityEntries = organizationActivityEntries.length > visibleActivityEntries.length;
+          const groupedActivityEntries = visibleActivityEntries.reduce<
+            { label: string; entries: typeof visibleActivityEntries }[]
+          >((groups, entry) => {
+            const label = getActivityDayLabel(entry.createdAt);
+            const existingGroup = groups.find((group) => group.label === label);
+            if (existingGroup) {
+              existingGroup.entries.push(entry);
+            } else {
+              groups.push({ label, entries: [entry] });
+            }
+            return groups;
+          }, []);
+
+          const reviewSummaryCard = (
+            <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
+                <div className="flex flex-col gap-1">
+                  <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                  <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                    Review your decisions before submitting.
+                  </p>
+                </div>
+                <div className="relative shrink-0">
+                  <button
+                    ref={renewalActivityTriggerRef}
+                    type="button"
+                    aria-label="Decision history"
+                    onClick={() => setIsRenewalActivityPopoverOpen((current) => !current)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                  >
+                    <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                  </button>
+                  {isRenewalActivityPopoverOpen ? (
+                    <div
+                      ref={renewalActivityPanelRef}
+                      className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                    >
+                      <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                          Recent Activity
+                        </p>
+                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          A log of recent actions taken on this renewal.
+                        </p>
+                      </div>
+
+                      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                        {groupedActivityEntries.length ? (
+                          groupedActivityEntries.map((group) => (
+                            <div key={group.label} className="space-y-2">
+                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                {group.label}
+                              </p>
+                              <div className="space-y-0">
+                                {group.entries.map((entry, index) => {
+                                  const entryDate = new Date(entry.createdAt);
+                                  const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                  return (
+                                    <div
+                                      key={entry.id}
+                                      className={cn(
+                                        "py-2 font-segoe text-[13px] leading-[140%] text-text-default",
+                                        index !== group.entries.length - 1 && "border-b border-slate-200",
+                                      )}
+                                    >
+                                      <p className="font-semibold text-text-default">{entry.adminName}</p>
+                                      <p className="text-slate-600">
+                                        {entry.verb}{" "}
+                                        <span className="font-medium text-text-default">{entry.docName}</span>
+                                      </p>
+                                      <p className="pt-0.5 text-xs text-slate-500">
+                                        {isValidEntryDate ? format(entryDate, "h:mm a") : "Recently"}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <Clock className="h-8 w-8 text-slate-400" />
+                            <p className="mt-2 font-segoe text-sm font-semibold text-text-default">No activity yet</p>
+                            <p className="font-segoe text-xs text-slate-500">
+                              Decisions made on this renewal will appear here.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {hasMoreActivityEntries ? (
+                        <div className="border-t border-slate-300 p-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setRenewalActivityVisibleCount((current) => current + 4)}
+                            className="font-segoe text-xs font-semibold text-public-bg-brand hover:underline"
+                          >
+                            Show more
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2.5 pt-4">
+                <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{approvedDocumentCount}</p>
+                </div>
+                <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                    Request Revision
+                  </p>
+                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">
+                    {needsRevisionCount + rejectedCount}
+                  </p>
+                </div>
+                <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
+                </div>
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="space-y-4">
+              {/* Header bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  onClick={() => handleRenewalSelectionChange(null)}
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Renewals Queue
+                </button>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+                      isRenewalDocumentsComplete
+                        ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
+                        : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
+                    )}
+                  >
+                    {submittedDocumentCount}/{renewalTemplates.length} Documents Submitted
+                  </span>
+                  <RenewalStatusPill status={selectedRenewalRecord.status} />
+                </div>
+              </div>
+
+              {/* Organization details card (collapsible) */}
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center justify-between gap-3 p-4",
+                    !renewalInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
+                  )}
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                    </div>
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {selectedOrg.organizationName}
+                    </p>
+                    <ReferenceCodeChip
+                      code={selectedOrg.referenceId || selectedOrg.urn || "—"}
+                      ariaLabel="Organization Reference Code"
+                    />
+                    <CategoryChip
+                      category={selectedOrg.majorClassification}
+                      ariaLabel="Major Classification"
+                    />
+                    <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 font-segoe text-xs font-medium text-slate-700">
+                      Cycle {selectedRenewalRecord.cycleNumber}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setRenewalInfoCollapsed((prev) => !prev)}
+                    className="flex items-center gap-1 font-segoe text-xs font-medium text-slate-600 hover:text-text-default"
+                  >
+                    <span>{renewalInfoCollapsed ? "Show details" : "Hide details"}</span>
+                    <ChevronDown
+                      className={cn("h-4 w-4 transition-transform duration-200", !renewalInfoCollapsed && "rotate-180")}
+                    />
+                  </button>
+                </div>
+
+                {!renewalInfoCollapsed ? (
+                  <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Organization</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.organizationName}</p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Major Classification</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.majorClassification || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">District & Barangay</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {selectedOrg.district || "—"} &bull; {selectedOrg.barangay || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Submitted Date</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {isRenewalCreatedDateValid ? format(renewalCreatedDate, "d MMM yyyy, h:mm a") : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Head of Organization</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {[selectedOrg.repFirstName, selectedOrg.repLastName].filter(Boolean).join(" ") || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Email Address</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.organizationEmail || "—"}</p>
+                      {selectedOrg.additionalEmails && selectedOrg.additionalEmails.length > 0 ? (
+                        <div className="mt-1 space-y-0.5">
+                          {selectedOrg.additionalEmails.map((email: string, idx: number) => (
+                            <p key={`admin-org-email-${idx}`} className="font-segoe text-xs text-slate-500">
+                              <span className="font-medium text-slate-400">Alt:</span> {email}
+                            </p>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Contact Number</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.contactNumber || "—"}</p>
+                      {selectedOrg.additionalContactNumbers && selectedOrg.additionalContactNumbers.length > 0 ? (
+                        <div className="mt-1 space-y-0.5">
+                          {selectedOrg.additionalContactNumbers.map((phone: string, idx: number) => (
+                            <p key={`admin-org-phone-${idx}`} className="font-segoe text-xs text-slate-500">
+                              <span className="font-medium text-slate-400">Alt:</span> {phone}
+                            </p>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div>
+                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Facebook Page</p>
+                      <p className="mt-1 font-segoe text-sm text-text-default">
+                        {selectedOrg.facebookPage ? (
+                          <a
+                            href={selectedOrg.facebookPage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-public-bg-brand hover:underline"
+                          >
+                            {selectedOrg.facebookPage}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Review summary cards */}
+              {reviewSummaryCard}
+
+              {/* 2-column Main review workspace */}
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_376px]">
+                {/* Left Column: Document Viewer */}
+                <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 p-4">
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {activeReviewEntry ? activeReviewEntry.documentType.name : "Select a document"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {filteredQueueEntries.length > 1 ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            aria-label="Previous document"
+                            disabled={activeReviewIndex <= 0}
+                            onClick={() => {
+                              if (activeReviewIndex > 0) {
+                                const prev = filteredQueueEntries[activeReviewIndex - 1];
+                                if (prev) setActiveRenewalReviewFileId(prev.file.id);
+                              }
+                            }}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                          >
+                            <ChevronLeft className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                          </button>
+                          <span className="px-1 font-segoe text-xs text-slate-500">
+                            {activeReviewIndex >= 0 ? activeReviewIndex + 1 : 0} of {filteredQueueEntries.length}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Next document"
+                            disabled={activeReviewIndex >= filteredQueueEntries.length - 1}
+                            onClick={() => {
+                              if (activeReviewIndex < filteredQueueEntries.length - 1) {
+                                const next = filteredQueueEntries[activeReviewIndex + 1];
+                                if (next) setActiveRenewalReviewFileId(next.file.id);
+                              }
+                            }}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                          >
+                            <ChevronRight className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                          </button>
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-label="Download documents"
+                        disabled={downloadDialogResolving || !filteredQueueEntries.length}
+                        onClick={() =>
+                          void openDownloadDialog(
+                            activeReviewEntry
+                              ? { fileName: activeReviewEntry.file.fileName, fileUrl: activeReviewEntry.file.fileUrl }
+                              : null,
+                            filteredQueueEntries.map((entry) => ({
+                              fileName: entry.file.fileName,
+                              fileUrl: entry.file.fileUrl,
+                            })),
+                            `${selectedOrg.organizationName.replace(/[^a-zA-Z0-9_-]/g, "_")}-Renewal-Documents.zip`,
+                          )
+                        }
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
+                    <AdminRenewalDocumentPreview
+                      file={activeReviewEntry?.file ?? null}
+                      title={activeReviewEntry?.documentType.name ?? "Renewal document preview"}
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column: Document Queue & Decision Box */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    {(() => {
+                      const selectableRenewalFileIds = orderedSubmittedFiles
+                        .filter((entry) => entry.file.adminStatus !== "approved_green")
+                        .map((entry) => entry.file.id);
+                      const selectedRenewalCount = selectableRenewalFileIds.filter((id) =>
+                        selectedRenewalReviewFileIds.includes(id),
+                      ).length;
+                      const isAllRenewalSelected =
+                        selectableRenewalFileIds.length > 0 &&
+                        selectedRenewalCount === selectableRenewalFileIds.length;
+                      const isRenewalIndeterminate =
+                        selectedRenewalCount > 0 &&
+                        selectedRenewalCount < selectableRenewalFileIds.length;
+                      const handleToggleSelectAllRenewal = () => {
+                        if (isAllRenewalSelected) {
+                          setSelectedRenewalReviewFileIds((current) =>
+                            current.filter((id) => !selectableRenewalFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedRenewalReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableRenewalFileIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isRenewalIndeterminate;
+                                }}
+                                checked={isAllRenewalSelected}
+                                disabled={selectableRenewalFileIds.length === 0}
+                                onChange={handleToggleSelectAllRenewal}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s renewal documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="space-y-0.5 pt-1">
+                      {orderedSubmittedFiles.length ? (
+                        orderedSubmittedFiles.map(({ documentType, file }) => {
+                          const isChecked = selectedRenewalReviewFileIds.includes(file.id);
+                          const isActive = activeReviewEntry?.file.id === file.id;
+                          const uploadedDate = new Date(file.uploadedAt);
+                          const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                          const isLocked = file.adminStatus === "approved_green";
+
+                          return (
+                            <div
+                              key={file.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                setActiveRenewalReviewFileId(file.id);
+                                if (!isLocked) setSelectedRenewalReviewFileIds([file.id]);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                setActiveRenewalReviewFileId(file.id);
+                                if (!isLocked) setSelectedRenewalReviewFileIds([file.id]);
+                              }}
+                              className={cn(
+                                "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
+                                isChecked
+                                  ? "border border-border-info-tertiary bg-bg-info-tertiary"
+                                  : isActive
+                                    ? "border border-transparent bg-slate-50"
+                                    : "border border-transparent hover:bg-slate-50",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={isLocked}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={() => {
+                                  setSelectedRenewalReviewFileIds((current) =>
+                                    current.includes(file.id)
+                                      ? current.filter((id) => id !== file.id)
+                                      : [...current, file.id],
+                                  );
+                                }}
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
+                                    {documentType.name}
+                                  </p>
+                                  <DocumentQueueStatusPill
+                                    status={file.adminStatus}
+                                    isAwaiting={isAwaitingResubmission({
+                                      adminStatus: file.adminStatus,
+                                      revisionRequestedAt: file.revisionRequestedAt,
+                                      uploadedAt: file.uploadedAt,
+                                    })}
+                                  />
+                                </div>
+                                <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
+                                  {file.fileName}
+                                </p>
+                                <div className="flex items-center gap-2 pt-1">
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                  </p>
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    {formatFileSize(file.fileSize)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                          No documents submitted yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {isRenewalVerified ? (
+                    <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                      <p className="border-b border-slate-300 pb-4 font-segoe text-lg font-semibold leading-none text-text-default">
+                        Review Decision
+                      </p>
+                      <div className="mt-4 flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
+                        <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
+                        <div>
+                          <p className="font-segoe text-sm font-semibold text-positive-secondary">Renewal Verified</p>
+                          <p className="mt-0.5 font-segoe text-xs text-text-default">
+                            All required renewal documents have been approved. This organization’s accreditation has been renewed.
+                          </p>
+                        </div>
+                        {renewalCertificateUrn ? (
+                          <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
+                            <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
+                            <span className="font-cascadia text-base font-bold text-positive-secondary">
+                              {renewalCertificateUrn}
+                            </span>
+                          </div>
+                        ) : null}
+                        {renewalVerifiedAt ? (
+                          <p className="font-segoe text-[11px] text-slate-500">
+                            Verified on {formatVerifiedDateLabel(renewalVerifiedAt)}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : (
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                      <button
+                        type="button"
+                        ref={renewalDecisionHelpTriggerRef}
+                        onClick={() => setIsRenewalDecisionHelpOpen((current) => !current)}
+                        aria-label="Review rules"
+                        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                      >
+                        <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                      </button>
+                      {isRenewalDecisionHelpOpen ? (
+                        <div
+                          ref={renewalDecisionHelpPanelRef}
+                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                        >
+                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Approve</span> &mdash; multiple files can be selected.
+                          </p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Request Revision / Reject</span> &mdash; one file at a time, remarks required.
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-4">
+                      {selectedBulkFiles.length === 0 ? (
+                        <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                        </div>
+                      ) : renewalBulkDecision === "approve" && hasUnrevisedSelectedRenewalFiles ? (
+                        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                            Awaiting Resubmission: The organization must submit a revised document before it can be approved.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                            {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                        <Select
+                          value={renewalBulkDecision}
+                          onValueChange={(value) => setRenewalBulkDecision(value as RegistrationReviewDecision)}
+                          disabled={selectedBulkFiles.length === 0}
+                        >
+                          <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="approve">Approve</SelectItem>
+                            <SelectItem
+                              value="needs_revision"
+                              disabled={selectedBulkFiles.length > 1}
+                              className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                            >
+                              Request Revision
+                            </SelectItem>
+                            <SelectItem
+                              value="reject"
+                              disabled={selectedBulkFiles.length > 1}
+                              className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                            >
+                              Reject
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">
+                            Remarks <span className="text-destructive">*</span>
+                          </label>
+                          <Textarea
+                            value={renewalBulkRemark}
+                            onChange={(event) => setRenewalBulkRemark(event.target.value)}
+                            placeholder="Explain the reason or required action..."
+                            rows={3}
+                            className="resize-none text-[13px]"
+                          />
+                        </div>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        disabled={isRenewalDecisionConfirmDisabled}
+                        onClick={() => setIsRenewalDecisionConfirmOpen(true)}
+                        className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+                  )}
+
+                  <DangerConfirmDialog
+                    open={isRenewalDecisionConfirmOpen}
+                    onOpenChange={setIsRenewalDecisionConfirmOpen}
+                    icon={CheckCircle}
+                    variant="info"
+                    title="Confirm Review Decision"
+                    description="Review your decisions and remarks before submitting. These will be applied to the renewal files below and shown to the organization in their portal."
+                    content={
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {selectedBulkFiles.map((entry) => {
+                            const remarkText = selectedBulkFiles.length === 1 && decisionRequiresRemark
+                              ? renewalBulkRemark.trim() || "—"
+                              : "—";
+                            return (
+                              <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                  {entry.documentType.name}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {registrationReviewDecisionLabel[renewalBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    }
+                    warning="Once submitted, these decisions cannot be changed from this review."
+                    cancelLabel="Cancel"
+                    confirmLabel="Submit Review"
+                    confirmIcon={Send}
+                    onConfirm={submitRenewalReviewDecisions}
+                  />
+
+                  {/* Modal: Request Renewal Revision */}
+                  <Dialog open={isRenewalRevisionDialogOpen} onOpenChange={setIsRenewalRevisionDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="font-segoe text-lg font-semibold text-text-default">
+                          Request Renewal Revision
+                        </DialogTitle>
+                        <DialogDescription className="font-segoe text-sm text-slate-500">
+                          Explain what needs revision for{" "}
+                          <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>. The organization
+                          will be notified to update and resubmit.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2 py-2">
+                        <label className="font-segoe text-xs font-semibold text-text-default">
+                          Remarks <span className="text-destructive">*</span>
+                        </label>
+                        <Textarea
+                          value={renewalDecisionRemarksDraft}
+                          onChange={(e) => setRenewalDecisionRemarksDraft(e.target.value)}
+                          placeholder="Describe the required updates or missing requirements..."
+                          rows={4}
+                          className="text-sm"
+                        />
+                      </div>
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting}
+                          onClick={() => setIsRenewalRevisionDialogOpen(false)}
+                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting || !renewalDecisionRemarksDraft.trim()}
+                          onClick={handleRequestRevisionRenewalConfirm}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-amber-600 px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                        >
+                          {renewalDecisionSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4" />
+                          )}
+                          Request Revision
+                        </button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Modal: Reject Renewal */}
+                  <Dialog open={isRenewalRejectDialogOpen} onOpenChange={setIsRenewalRejectDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="font-segoe text-lg font-semibold text-destructive">
+                          Reject Organization Renewal
+                        </DialogTitle>
+                        <DialogDescription className="font-segoe text-sm text-slate-500">
+                          Provide a clear justification for rejecting the renewal of{" "}
+                          <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>. This action is
+                          permanent.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2 py-2">
+                        <label className="font-segoe text-xs font-semibold text-text-default">
+                          Reason for Rejection <span className="text-destructive">*</span>
+                        </label>
+                        <Textarea
+                          value={renewalDecisionRemarksDraft}
+                          onChange={(e) => setRenewalDecisionRemarksDraft(e.target.value)}
+                          placeholder="State the reason why this renewal is being rejected..."
+                          rows={4}
+                          className="text-sm"
+                        />
+                      </div>
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting}
+                          onClick={() => setIsRenewalRejectDialogOpen(false)}
+                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={renewalDecisionSubmitting || !renewalDecisionRemarksDraft.trim()}
+                          onClick={handleRejectRenewalConfirm}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-destructive px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50"
+                        >
+                          {renewalDecisionSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="h-4 w-4" />
+                          )}
+                          Reject Renewal
+                        </button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const verifiedRenewalsCount = adminRenewalQueueQuery.data?.summary.approved ?? 0;
+        const pendingReviewRenewalsCount = adminRenewalQueueQuery.data?.summary.pending_review ?? 0;
+
+        return (
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Renewals"
+              description="Review incoming organization renewal applications and accreditation renewals."
+            />
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <StatsCard
+                title="VERIFIED"
+                value={verifiedRenewalsCount}
+                icon={CheckCircle2}
+                description="Renewals with all required documents approved and a new URN issued."
+              />
+              <StatsCard
+                title="PENDING REVIEW"
+                value={pendingReviewRenewalsCount}
+                icon={Clock}
+                description="Renewals awaiting review of their required documents."
+              />
+            </div>
+
+            <RenewalsTable
+              renewals={filteredRenewals}
+              searchValue={renewalSearch}
+              onSearchChange={setRenewalSearch}
+              statusFilter={renewalStatusFilter}
+              onStatusFilterChange={setRenewalStatusFilter}
+              districtFilter={renewalDistrictFilter}
+              onDistrictFilterChange={setRenewalDistrictFilter}
+              barangayFilter={renewalBarangayFilter}
+              onBarangayFilterChange={setRenewalBarangayFilter}
+              classificationFilter={renewalClassificationFilter}
+              onClassificationFilterChange={setRenewalClassificationFilter}
+              onReview={(renewalId) => handleRenewalSelectionChange(renewalId)}
+              serverPage={{
+                page: renewalReviewPage,
+                totalCount: adminRenewalQueueQuery.data?.totalCount ?? 0,
+                onPageChange: setRenewalReviewPage,
+              }}
+            />
+            {adminRenewalQueueQuery.isFetching ? <p className="px-1 text-sm text-slate-500" role="status">Loading renewal page…</p> : null}
+            {adminRenewalQueueQuery.error instanceof Error ? <p className="px-1 text-sm text-red-600" role="alert">{adminRenewalQueueQuery.error.message}</p> : null}
+          </div>
+        );
+      }
+      case "budget-utilization": {
+        if (selectedBudgetRequest) {
+          const linkedLiquidation = getLatestLiquidationReportForBudgetRequest(selectedBudgetRequest.id);
+          const linkedLiquidationCode = linkedLiquidation
+            ? buildPublicRecordCode("LR", linkedLiquidation, visibleLiquidationReports)
+            : null;
+          const proposedDate = new Date(selectedBudgetRequest.activityDate);
+          const isProposedDateValid = !Number.isNaN(proposedDate.getTime());
+
+          const budgetFiles = state.budgetRequestFiles.filter((file) => file.budgetRequestId === selectedBudgetRequest.id);
+          const budgetApprovedCount = budgetFiles.filter((file) => file.adminStatus === "approved_green").length;
+          const budgetNeedsRevisionCount = budgetFiles.filter(
+            (file) => file.adminStatus === "needs_revision" || file.adminStatus === "rejected_red",
+          ).length;
+          const budgetUnreviewedCount = budgetFiles.filter(
+            (file) => file.adminStatus === "submitted" || file.adminStatus === "under_admin_review",
+          ).length;
+
+          const getBudgetActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const budgetActivityEntries = state.activityLogs
+            .filter((log) =>
+              log.relatedType === "budget_request" &&
+              log.relatedId === selectedBudgetRequest.id &&
+              !isAdminNotificationAuditEntry(log),
+            )
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              return { id: log.id, adminName, action: log.description || log.action, createdAt: log.createdAt };
+            });
+          const visibleBudgetActivityEntries = budgetActivityEntries.slice(0, budgetActivityVisibleCount);
+          const hasMoreBudgetActivityEntries = budgetActivityEntries.length > visibleBudgetActivityEntries.length;
+          const groupedBudgetActivityEntries = visibleBudgetActivityEntries.reduce<
+            { label: string; entries: typeof visibleBudgetActivityEntries }[]
+          >((groups, entry) => {
+            const label = getBudgetActivityDayLabel(entry.createdAt);
+            const existingGroup = groups.find((group) => group.label === label);
+            if (existingGroup) {
+              existingGroup.entries.push(entry);
+            } else {
+              groups.push({ label, entries: [entry] });
+            }
+            return groups;
+          }, []);
+
+          const activeBudgetReviewIndex = selectedBudgetRequestFiles.findIndex((file) => file.id === selectedBudgetRequestFile?.id);
+          const selectedBudgetReviewFiles = selectedBudgetRequestFiles.filter(
+            (file) => selectedBudgetReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+          );
+          const budgetDecisionRequiresRemarkNow = budgetDecisionRequiresRemark(budgetBulkDecision);
+          const parsedApprovedAmount = Number(budgetApprovedAmountDraft);
+          const isApprovedAmountValid =
+            budgetBulkDecision !== "approve" ||
+            (budgetApprovedAmountDraft.trim() !== "" &&
+              !Number.isNaN(parsedApprovedAmount) &&
+              parsedApprovedAmount > 0);
+          const hasUnrevisedSelectedBudgetFiles = selectedBudgetReviewFiles.some(
+            (file) => file.adminStatus === "needs_revision" || selectedBudgetRequest?.status === "needs_revision",
+          );
+          const isBudgetDecisionConfirmDisabled =
+            selectedBudgetReviewFiles.length === 0 ||
+            budgetReviewSubmitting ||
+            !isApprovedAmountValid ||
+            (budgetDecisionRequiresRemarkNow && !budgetBulkRemark.trim()) ||
+            (budgetBulkDecision === "approve" && hasUnrevisedSelectedBudgetFiles);
+
+          const submitBudgetReviewDecisions = async () => {
+            if (!selectedBudgetRequest) return;
+            if (!selectedBudgetReviewFiles.length) return;
+            if (budgetBulkDecision === "approve" && hasUnrevisedSelectedBudgetFiles) {
+              toast({
+                title: "Resubmission required",
+                description: "The organization must submit a revised budget proposal before it can be approved.",
+                variant: "destructive",
+              });
+              setIsBudgetDecisionConfirmOpen(false);
+              return;
+            }
+            setBudgetReviewSubmitting(true);
+            const targetFileStatus: BudgetRequestFileAdminStatus =
+              budgetBulkDecision === "approve"
+                ? "approved_green"
+                : "needs_revision";
+
+            const remark = budgetBulkRemark.trim();
+            const filesToUpdate = selectedBudgetReviewFiles;
+
+            for (const file of filesToUpdate) {
+              try {
+                const saved = await adminUpdateBudgetRequestFileStatusInSupabase(file.id, {
+                  adminStatus: targetFileStatus,
+                  adminRemarks: remark,
+                });
+                updateBudgetRequestFile(saved.id, saved);
+              } catch (fileErr) {
+                console.error("Failed to update budget request file status:", fileErr);
+                setBudgetReviewSubmitting(false);
+                setIsBudgetDecisionConfirmOpen(false);
+                toast({
+                  title: "Review not saved",
+                  description: fileErr instanceof Error ? fileErr.message : "The document review failed. The budget request has not been approved.",
+                  variant: "destructive",
+                });
+                await refreshAdminPageData();
+                return;
+              }
+            }
+
+            // Multi-file approval safety check:
+            // Calculate effective status of each file after updating filesToUpdate
+            const updatedFileIds = new Set(filesToUpdate.map((f) => f.id));
+            const allEffectiveFileStatuses = selectedBudgetRequestFiles.map((f) =>
+              updatedFileIds.has(f.id) ? targetFileStatus : f.adminStatus,
+            );
+
+            let targetParentStatus: BudgetRequest["status"] = selectedBudgetRequest.status;
+            if (
+              budgetBulkDecision === "needs_revision" ||
+              allEffectiveFileStatuses.some((s) => s === "needs_revision")
+            ) {
+              targetParentStatus = "needs_revision";
+            } else if (allEffectiveFileStatuses.some((s) => s === "rejected_red")) {
+              targetParentStatus = "rejected_red";
+            } else if (
+              budgetBulkDecision === "approve" &&
+              (selectedBudgetRequestFiles.length === 0 ||
+                allEffectiveFileStatuses.every((s) => s === "approved_green"))
+            ) {
+              targetParentStatus = "awaiting_release";
+            } else {
+              // Unreviewed files still remain; keep parent in current pending review state
+              targetParentStatus = selectedBudgetRequest.status;
+            }
+
+            if (targetParentStatus !== selectedBudgetRequest.status) {
+              const budgetHistoryNow = new Date().toISOString();
+              const existingHistory = selectedBudgetRequest.revisionHistory ?? [];
+              const approvedAmountNum =
+                budgetBulkDecision === "approve" && budgetApprovedAmountDraft.trim() && !Number.isNaN(Number(budgetApprovedAmountDraft))
+                  ? Number(budgetApprovedAmountDraft)
+                  : Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
+
+              const parentPatch: Partial<BudgetRequest> = {
+                status: targetParentStatus,
+                adminRemarks: remark,
+                revisionHistory: [
+                  ...existingHistory,
+                  { action: targetParentStatus, adminRemarks: remark, changedAt: budgetHistoryNow },
+                ],
+                ...(targetParentStatus === "awaiting_release"
+                  ? {
+                    approvedAmount: approvedAmountNum,
+                    goSignalAt: budgetHistoryNow,
+                  }
+                  : {}),
+              };
+
+              try {
+                const savedRequest = await updateBudgetRequestInSupabase(selectedBudgetRequest.id, parentPatch);
+                updateBudgetRequest(selectedBudgetRequest.id, savedRequest);
+                await refreshAdminPageData();
+
+                if (targetParentStatus === "awaiting_release") {
+                  const formattedApproved = `₱${approvedAmountNum.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  const formattedRequested = `₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                  void appendAuditLog(
+                    "Approved budget request",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Marked budget request "${selectedBudgetRequest.activityTitle}" as approved (Awaiting Release) with approved amount ${formattedApproved} (Requested: ${formattedRequested}).`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  notifyOrganizationUser({
+                    userId: selectedBudgetOrganization?.userId ?? "",
+                    organizationId: selectedBudgetRequest.organizationId,
+                    title: "Budget request approved",
+                    message: `Your budget request for '${selectedBudgetRequest.activityTitle}' has been approved for ${formattedApproved} and is awaiting fund release.`,
+                    type: "budget_go_signal",
+                    relatedType: "budget_request",
+                    relatedId: selectedBudgetRequest.id,
+                  });
+                  toast({
+                    title: "Budget approved",
+                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget request is now approved and awaiting fund release for ${formattedApproved}.`,
+                  });
+                } else if (targetParentStatus === "needs_revision") {
+                  void appendAuditLog(
+                    "Budget revision requested",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Requested revision for budget request "${selectedBudgetRequest.activityTitle}". Remarks: ${remark}`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  notifyOrganizationUser({
+                    userId: selectedBudgetOrganization?.userId ?? "",
+                    organizationId: selectedBudgetRequest.organizationId,
+                    title: "Budget revision requested",
+                    message: `The admin requested revisions for your budget request: ${remark}`,
+                    type: "budget_revision_requested",
+                    relatedType: "budget_request",
+                    relatedId: selectedBudgetRequest.id,
+                  });
+                  toast({
+                    title: "Revision requested",
+                    description: "Revision notice sent to organization.",
+                  });
+                } else if (targetParentStatus === "rejected_red") {
+                  void appendAuditLog(
+                    "Budget request rejected",
+                    "budget_request",
+                    selectedBudgetRequest.id,
+                    `Rejected budget request "${selectedBudgetRequest.activityTitle}". Remarks: ${remark}`,
+                    selectedBudgetRequest.organizationId,
+                  ).catch(console.error);
+                  notifyOrganizationUser({
+                    userId: selectedBudgetOrganization?.userId ?? "",
+                    organizationId: selectedBudgetRequest.organizationId,
+                    title: "Budget request rejected",
+                    message: `Your budget request was rejected: ${remark}`,
+                    type: "budget_rejected",
+                    relatedType: "budget_request",
+                    relatedId: selectedBudgetRequest.id,
+                  });
+                  toast({
+                    title: "Budget rejected",
+                    description: "Budget request has been rejected.",
+                  });
+                }
+              } catch (err) {
+                console.error("Failed to update parent budget request in Supabase:", err);
+                await refreshAdminPageData();
+                toast({
+                  title: "Update failed",
+                  description: "Unable to update the budget request. The document review may have been saved, but the budget lifecycle update failed. Please refresh and try again.",
+                  variant: "destructive",
+                });
+              }
+            } else {
+              // Parent status remains unchanged (e.g. only 1 of multiple documents was approved)
+              await refreshAdminPageData();
+              if (budgetBulkDecision === "approve") {
+                void appendAuditLog(
+                  "Approved budget request document",
+                  "budget_request",
+                  selectedBudgetRequest.id,
+                  `Approved document for budget request "${selectedBudgetRequest.activityTitle}".`,
+                  selectedBudgetRequest.organizationId,
+                ).catch(console.error);
+                toast({
+                  title: "Document approved",
+                  description: "Document marked approved. Review remaining documents to advance the budget proposal.",
+                });
+              }
+            }
+
+            setBudgetReviewSubmitting(false);
+            setSelectedBudgetReviewFileIds([]);
+            setBudgetBulkRemark("");
+            setIsBudgetDecisionConfirmOpen(false);
+            setIsBudgetApprovedAmountDirty(false);
+            setIsBudgetDecisionDirty(false);
+            setIsBudgetRemarkDirty(false);
+            lastInitializedBudgetIdRef.current = null;
+            setSelectedBudgetRequestSnapshot(null);
+          };
+
+          return (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={closeBudgetRequestDetails}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Requests
+                </button>
+                <BudgetStatusPill status={selectedBudgetRequest.status} />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-300 bg-admin-surface p-4">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                    <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                  </div>
+                  <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    {selectedBudgetRequest.activityTitle}
+                  </h1>
+                  <ReferenceCodeChip
+                    code={buildPublicRecordCode("BR", selectedBudgetRequest, state.budgetRequests)}
+                    className="w-[109px] rounded"
+                  />
+                  {selectedBudgetOrganization?.majorClassification ? (
+                    <CategoryChip category={selectedBudgetOrganization.majorClassification} />
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center justify-between gap-3 p-4",
+                    !budgetInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
+                  )}
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Budget Request Information</p>
+                    <ReferenceCodeChip
+                      code={buildPublicRecordCode("BR", selectedBudgetRequest, state.budgetRequests)}
+                      className="w-[109px] rounded"
+                    />
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBudgetInfoCollapsed((current) => !current)}
+                      className="font-segoe text-[11px] font-semibold leading-none text-slate-500"
+                    >
+                      {budgetInfoCollapsed ? "Expand Details" : "Collapse Details"}
+                    </button>
+                    <button
+                      type="button"
+                      aria-expanded={!budgetInfoCollapsed}
+                      onClick={() => setBudgetInfoCollapsed((current) => !current)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                    >
+                      <ChevronDown
+                        className={cn("h-4 w-4 text-text-default transition-transform", !budgetInfoCollapsed && "rotate-180")}
+                        strokeWidth={1.6}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {!budgetInfoCollapsed ? (
+                  <div className="grid grid-cols-1 gap-2.5 p-4 lg:grid-cols-3">
+                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
+                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
+                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Project Name</p>
+                        <p className="truncate font-segoe text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                          {selectedBudgetRequest.activityTitle}
+                        </p>
+                      </div>
+                      {selectedBudgetRequest.activityDescription ? (
+                        <div className="flex flex-col gap-1 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Purpose Description</p>
+                          <p className="font-segoe text-[13px] font-normal leading-[140%] text-text-default whitespace-pre-wrap">
+                            {selectedBudgetRequest.activityDescription}
+                          </p>
+                        </div>
+                      ) : null}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                            {formatAdvocacyLabel(selectedBudgetRequest.purposeCategory) || "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                            {isProposedDateValid ? format(proposedDate, "d MMM yyyy") : "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                            {selectedBudgetRequest.venue || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
+                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Submitted By</p>
+                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Organization Name</p>
+                        <p className="truncate font-segoe text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                          {selectedBudgetOrganization?.organizationName ?? "Unknown organization"}
+                        </p>
+                        <ReferenceCodeChip code={selectedBudgetOrganization?.referenceId || "—"} className="w-[109px] rounded" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Head of Organization</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                            {selectedBudgetOrganization ? getRepresentativeDisplayName(selectedBudgetOrganization, "—") : "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Contact</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default text-right">
+                            {selectedBudgetOrganization?.contactNumber || "—"}
+                            {selectedBudgetOrganization?.additionalContactNumbers && selectedBudgetOrganization.additionalContactNumbers.length > 0
+                              ? ` (+${selectedBudgetOrganization.additionalContactNumbers.length})`
+                              : ""}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Email</span>
+                          <span className="truncate font-segoe text-[13px] font-semibold leading-none text-text-default text-right">
+                            {selectedBudgetOrganization?.organizationEmail || "—"}
+                            {selectedBudgetOrganization?.additionalEmails && selectedBudgetOrganization.additionalEmails.length > 0
+                              ? ` (+${selectedBudgetOrganization.additionalEmails.length})`
+                              : ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
+                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
+                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Total Requested</p>
+                        <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-border-info-tertiary">
+                          {`₱${Math.round(selectedBudgetRequest.requestedAmount).toLocaleString()}`}
+                        </p>
+                      </div>
+                      {selectedBudgetRequest.approvedAmount ? (
+                        <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Approved Amount</p>
+                          <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-positive-secondary">
+                            {`₱${Math.round(selectedBudgetRequest.approvedAmount).toLocaleString()}`}
+                          </p>
+                        </div>
+                      ) : null}
+                      {selectedBudgetRequest.releasedAmount ? (
+                        <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Released Amount</p>
+                          <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-role-blue-text">
+                            {`₱${Math.round(selectedBudgetRequest.releasedAmount).toLocaleString()}`}
+                          </p>
+                        </div>
+                      ) : null}
+                      <div className="flex items-center justify-between py-2">
+                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Liquidation</span>
+                        {linkedLiquidation && linkedLiquidationCode ? (
+                          <button
+                            type="button"
+                            onClick={() => openLiquidationDetails(linkedLiquidation)}
+                            aria-label={`Open linked liquidation report ${linkedLiquidationCode}`}
+                            title="Open linked liquidation report"
+                            className="inline-flex h-[22px] w-[109px] shrink-0 items-center gap-1.5 rounded border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <span className="min-w-0 flex-1 truncate text-left">{linkedLiquidationCode}</span>
+                            <ArrowUpRight aria-hidden="true" className="h-2.5 w-2.5 shrink-0" strokeWidth={1.8} />
+                          </button>
+                        ) : (
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-slate-400">Not yet submitted</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                    <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                      Review your decisions before submitting.
+                    </p>
+                  </div>
+                  <div className="relative shrink-0">
+                    <button
+                      ref={budgetActivityTriggerRef}
+                      type="button"
+                      aria-label="Decision history"
+                      onClick={() => setIsBudgetActivityPopoverOpen((current) => !current)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                    >
+                      <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                    </button>
+                    {isBudgetActivityPopoverOpen ? (
+                      <div
+                        ref={budgetActivityPanelRef}
+                        className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                      >
+                        <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                          <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">Recent Activity</p>
+                          <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                            A log of recent actions taken on this budget request.
+                          </p>
+                        </div>
+
+                        <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                          {groupedBudgetActivityEntries.length ? (
+                            groupedBudgetActivityEntries.map((group) => (
+                              <div key={group.label} className="space-y-2">
+                                <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                  {group.label}
+                                </p>
+                                <div className="space-y-0">
+                                  {group.entries.map((entry, index) => {
+                                    const entryDate = new Date(entry.createdAt);
+                                    const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                    return (
+                                      <div key={entry.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                                        {index < group.entries.length - 1 ? (
+                                          <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
+                                        ) : null}
+                                        <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
+                                          <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
+                                        </span>
+                                        <div className="min-w-0 flex-1 space-y-0.5">
+                                          <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                            <span className="font-semibold">{entry.adminName}</span> {entry.action}
+                                          </p>
+                                          <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                            {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="py-6 text-center font-segoe text-sm text-slate-500">No activity recorded yet.</p>
+                          )}
+                        </div>
+
+                        {hasMoreBudgetActivityEntries ? (
+                          <div className="flex items-center justify-center border-t border-slate-300 p-4">
+                            <button
+                              type="button"
+                              onClick={() => setBudgetActivityVisibleCount((current) => current + 4)}
+                              className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                            >
+                              Load older activity
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{budgetApprovedCount}</p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{budgetNeedsRevisionCount}</p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{budgetUnreviewedCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
+                <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {selectedBudgetRequestFile?.fileName ?? "No document selected"}
+                    </p>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {selectedBudgetRequestFiles.length ? (
+                        <div className="flex shrink-0 items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            disabled={activeBudgetReviewIndex <= 0}
+                            onClick={() =>
+                              setSelectedBudgetFileId(selectedBudgetRequestFiles[Math.max(0, activeBudgetReviewIndex - 1)]?.id ?? null)
+                            }
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                          >
+                            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
+                            Previous
+                          </button>
+                          <div className="flex items-center gap-1">
+                            {selectedBudgetRequestFiles.slice(0, 5).map((file, index) => (
+                              <button
+                                key={file.id}
+                                type="button"
+                                onClick={() => setSelectedBudgetFileId(file.id)}
+                                className={cn(
+                                  "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                  selectedBudgetRequestFile?.id === file.id
+                                    ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                    : "text-text-default hover:bg-slate-50",
+                                )}
+                              >
+                                {index + 1}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            disabled={activeBudgetReviewIndex < 0 || activeBudgetReviewIndex >= selectedBudgetRequestFiles.length - 1}
+                            onClick={() =>
+                              setSelectedBudgetFileId(
+                                selectedBudgetRequestFiles[Math.min(selectedBudgetRequestFiles.length - 1, activeBudgetReviewIndex + 1)]?.id ?? null,
+                              )
+                            }
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                          >
+                            Next
+                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
+                          </button>
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-label="Download documents"
+                        disabled={downloadDialogResolving || !selectedBudgetRequestFiles.length}
+                        onClick={() =>
+                          void openDownloadDialog(
+                            selectedBudgetRequestFile
+                              ? { fileName: selectedBudgetRequestFile.fileName, fileUrl: selectedBudgetRequestFile.fileUrl }
+                              : null,
+                            selectedBudgetRequestFiles.map((file) => ({ fileName: file.fileName, fileUrl: file.fileUrl })),
+                            "Budget-Request-Documents.zip",
+                          )
+                        }
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
+                    {selectedBudgetRequestFile && budgetPreviewUrl ? (
+                      budgetPreviewCanInline ? (
+                        isImagePreviewFile(selectedBudgetRequestFile.fileName) || isImagePreviewFile(budgetPreviewUrl) ? (
+                          <img src={budgetPreviewUrl} alt={budgetPreviewTitle} className="h-full w-full object-contain" />
+                        ) : (
+                          <iframe src={withHiddenPdfToolbar(budgetPreviewUrl)} title={budgetPreviewTitle} className="h-full min-h-[500px] w-full border-0" />
+                        )
+                      ) : (
+                        <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
+                          <p>This file cannot be previewed inline.</p>
+                          <button
+                            type="button"
+                            onClick={() => window.open(budgetPreviewUrl, "_blank", "noopener,noreferrer")}
+                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
+                          >
+                            <Eye className="h-4 w-4" strokeWidth={1.6} />
+                            Open File
+                          </button>
+                        </div>
+                      )
+                    ) : selectedBudgetRequestFile && budgetPreviewLoading ? (
+                      <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
+                    ) : (
+                      <div
+                        className="flex h-full min-h-[500px] w-full items-center justify-center"
+                        style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
+                      >
+                        <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    {(() => {
+                      const selectableBudgetFileIds = selectedBudgetRequestFiles
+                        .filter((file) => file.adminStatus !== "approved_green")
+                        .map((file) => file.id);
+                      const selectedBudgetCount = selectableBudgetFileIds.filter((id) =>
+                        selectedBudgetReviewFileIds.includes(id),
+                      ).length;
+                      const isAllBudgetSelected =
+                        selectableBudgetFileIds.length > 0 &&
+                        selectedBudgetCount === selectableBudgetFileIds.length;
+                      const isBudgetIndeterminate =
+                        selectedBudgetCount > 0 &&
+                        selectedBudgetCount < selectableBudgetFileIds.length;
+                      const handleToggleSelectAllBudget = () => {
+                        if (isAllBudgetSelected) {
+                          setSelectedBudgetReviewFileIds((current) =>
+                            current.filter((id) => !selectableBudgetFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedBudgetReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableBudgetFileIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isBudgetIndeterminate;
+                                }}
+                                checked={isAllBudgetSelected}
+                                disabled={selectableBudgetFileIds.length === 0}
+                                onChange={handleToggleSelectAllBudget}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization's submitted documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="space-y-0.5 pt-1">
+                      {selectedBudgetRequestFiles.length ? (
+                        selectedBudgetRequestFiles.map((file) => {
+                          const isChecked = selectedBudgetReviewFileIds.includes(file.id);
+                          const isActive = selectedBudgetRequestFile?.id === file.id;
+                          const uploadedDate = new Date(file.uploadedAt);
+                          const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                          const isLocked = file.adminStatus === "approved_green";
+
+                          return (
+                            <div
+                              key={file.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                setSelectedBudgetFileId(file.id);
+                                if (!isLocked) setSelectedBudgetReviewFileIds([file.id]);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                setSelectedBudgetFileId(file.id);
+                                if (!isLocked) setSelectedBudgetReviewFileIds([file.id]);
+                              }}
+                              className={cn(
+                                "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
+                                isChecked
+                                  ? "border border-border-info-tertiary bg-bg-info-tertiary"
+                                  : isActive
+                                    ? "border border-transparent bg-slate-50"
+                                    : "border border-transparent hover:bg-slate-50",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={isLocked}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={() => {
+                                  setSelectedBudgetReviewFileIds((current) =>
+                                    current.includes(file.id) ? current.filter((id) => id !== file.id) : [...current, file.id],
+                                  );
+                                }}
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">{file.fileName}</p>
+                                  <DocumentQueueStatusPill
+                                    status={file.adminStatus}
+                                    isAwaiting={
+                                      (file.adminStatus === "needs_revision" || selectedBudgetRequest?.status === "needs_revision") &&
+                                      isAwaitingResubmission({
+                                        adminStatus: file.adminStatus,
+                                        revisionRequestedAt: selectedBudgetRequest?.revisionRequestedAt,
+                                        uploadedAt: file.uploadedAt,
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="flex items-center gap-2 pt-1">
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                  </p>
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">{formatFileSize(file.fileSize)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">No files submitted yet.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedBudgetRequest.goSignalAt &&
+                    (selectedBudgetRequest.status === "awaiting_release" ||
+                      selectedBudgetRequest.status === "approved_for_ftf_green" ||
+                      selectedBudgetRequest.status === "hard_copy_submitted" ||
+                      selectedBudgetRequest.status === "budget_released" ||
+                      String(selectedBudgetRequest.status) === "completed") ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
+                        Approved · {format(new Date(selectedBudgetRequest.goSignalAt), "MMMM d, yyyy 'at' h:mm a")}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                        {(selectedBudgetRequest.status === "submitted" ||
+                          selectedBudgetRequest.status === "under_review" ||
+                          selectedBudgetRequest.status === "needs_revision") && (
+                            <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate documents and issue formal budget proposal determination.</p>
+                          )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <BudgetStatusPill status={selectedBudgetRequest.status} />
+                        {(selectedBudgetRequest.status === "submitted" ||
+                          selectedBudgetRequest.status === "under_review" ||
+                          selectedBudgetRequest.status === "needs_revision") ? (
+                          <button
+                            type="button"
+                            ref={budgetDecisionHelpTriggerRef}
+                            onClick={() => setIsBudgetDecisionHelpOpen((current) => !current)}
+                            aria-label="Review rules"
+                            className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                          >
+                            <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                          </button>
+                        ) : null}
+                      </div>
+                      {isBudgetDecisionHelpOpen &&
+                        (selectedBudgetRequest.status === "submitted" ||
+                          selectedBudgetRequest.status === "under_review" ||
+                          selectedBudgetRequest.status === "needs_revision") ? (
+                        <div
+                          ref={budgetDecisionHelpPanelRef}
+                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                        >
+                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Approve</span> — multiple files can be selected.
+                          </p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Request Revision</span> — one file at a time, remarks required.
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-col gap-3 pt-4">
+                      {/* Initial Review Stage: submitted or under_review */}
+                      {(selectedBudgetRequest.status === "submitted" ||
+                        selectedBudgetRequest.status === "under_review") && (
+                          <>
+                            {selectedBudgetReviewFiles.length === 0 ? (
+                              <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                                <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                                <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                              </div>
+                            ) : (
+                              <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                                <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                                <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                                  {selectedBudgetReviewFiles.length} document{selectedBudgetReviewFiles.length === 1 ? "" : "s"} selected.
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                              <Select
+                                value={budgetBulkDecision}
+                                onValueChange={(value) => {
+                                  setBudgetBulkDecision(value as BudgetReviewDecision);
+                                  setIsBudgetDecisionDirty(true);
+                                }}
+                                disabled={selectedBudgetReviewFiles.length === 0}
+                              >
+                                <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="approve">Approve</SelectItem>
+                                  <SelectItem
+                                    value="needs_revision"
+                                    disabled={selectedBudgetReviewFiles.length > 1}
+                                    className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                                  >
+                                    Needs Revision
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {selectedBudgetReviewFiles.length > 0 && budgetBulkDecision === "approve" && (
+                              <div className="space-y-2.5 rounded-md border border-slate-200 bg-slate-50/70 p-3">
+                                {hasUnrevisedSelectedBudgetFiles && (
+                                  <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800">
+                                    <p className="font-semibold">Awaiting Resubmission</p>
+                                    <p className="mt-0.5 text-[11px] text-amber-700">
+                                      The organization must submit a revised budget document before it can be approved.
+                                    </p>
+                                  </div>
+                                )}
+                                <div className="flex items-center justify-between">
+                                  <span className="font-segoe text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
+                                  <span className="font-mono text-[13px] font-bold text-text-default">
+                                    {`₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label htmlFor="budget-approved-amount-input" className="font-segoe text-[13px] font-medium text-text-default">
+                                    Approved Amount (₱) <span className="text-destructive">*</span>
+                                  </label>
+                                  <Input
+                                    id="budget-approved-amount-input"
+                                    data-testid="admin-approved-amount-input"
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={budgetApprovedAmountDraft}
+                                    onChange={(event) => {
+                                      setBudgetApprovedAmountDraft(event.target.value);
+                                      setIsBudgetApprovedAmountDirty(true);
+                                    }}
+                                    onWheel={(event) => event.currentTarget.blur()}
+                                    placeholder="0.00"
+                                    className="h-8 border-slate-300 font-mono text-[13px]"
+                                  />
+                                  {(() => {
+                                    const parsedApproved = Number(budgetApprovedAmountDraft);
+                                    const reqAmount = selectedBudgetRequest.requestedAmount || 0;
+                                    if (!budgetApprovedAmountDraft.trim() || Number.isNaN(parsedApproved) || parsedApproved <= 0) {
+                                      return (
+                                        <p className="text-[11px] text-destructive">
+                                          Approved amount is required and must be greater than 0.
+                                        </p>
+                                      );
+                                    }
+                                    const diff = reqAmount - parsedApproved;
+                                    if (diff > 0.001) {
+                                      return (
+                                        <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                                          Approved amount is ₱{diff.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} less than requested.
+                                        </p>
+                                      );
+                                    }
+                                    if (diff < -0.001) {
+                                      return (
+                                        <p className="text-[11px] font-medium text-blue-700 dark:text-blue-400">
+                                          Approved amount exceeds the requested amount.
+                                        </p>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedBudgetReviewFiles.length === 1 && budgetBulkDecision === "needs_revision" && (
+                              <div className="flex flex-col gap-1.5">
+                                <label className="font-segoe text-[13px] text-text-default">
+                                  Remarks <span className="text-destructive">*</span>
+                                </label>
+                                <Textarea
+                                  value={budgetBulkRemark}
+                                  onChange={(event) => {
+                                    setBudgetBulkRemark(event.target.value);
+                                    setIsBudgetRemarkDirty(true);
+                                  }}
+                                  placeholder="Explain required revisions or document corrections..."
+                                  rows={3}
+                                  className="resize-none text-[13px]"
+                                />
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              disabled={isBudgetDecisionConfirmDisabled}
+                              onClick={() => setIsBudgetDecisionConfirmOpen(true)}
+                              className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                            >
+                              Confirm Document Decision
+                            </button>
+                          </>
+                        )}
+
+                      {/* Needs Revision Stage */}
+                      {selectedBudgetRequest.status === "needs_revision" && (
+                        <div className="space-y-3">
+                          <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
+                            <p className="font-semibold">Revision Requested</p>
+                            <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected documents or information from the organization.</p>
+                            {selectedBudgetRequest.adminRemarks ? (
+                              <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Awaiting Release stage (New Workflow) */}
+                      {selectedBudgetRequest.status === "awaiting_release" && (
+                        <div className="space-y-3">
+                          <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
+                            <p className="font-semibold">Approved — Awaiting Release</p>
+                            <p className="mt-0.5 text-[11px] text-slate-600">
+                              This budget proposal is approved for {`₱${(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}. When funds are disbursed, click below to mark the budget as released.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={budgetLifecycleSubmitting}
+                            onClick={() => {
+                              const executeRelease = async () => {
+                                setBudgetLifecycleSubmitting(true);
+                                try {
+                                  const budgetHistoryNow = new Date().toISOString();
+                                  const existingHistory = selectedBudgetRequest.revisionHistory ?? [];
+                                  const approvedAmount = Number(selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0);
+                                  const budgetPatch: Partial<BudgetRequest> = {
+                                    status: "budget_released",
+                                    releasedAmount: approvedAmount,
+                                    releaseDate: getManilaDateIso(),
+                                    goSignalAt: selectedBudgetRequest.goSignalAt || budgetHistoryNow,
+                                    adminRemarks: "",
+                                    revisionHistory: [
+                                      ...existingHistory,
+                                      { action: "budget_released", adminRemarks: "", changedAt: budgetHistoryNow },
+                                    ],
+                                  };
+                                  await updateBudgetRequestInSupabase(selectedBudgetRequest.id, budgetPatch);
+                                  updateBudgetRequest(selectedBudgetRequest.id, budgetPatch);
+                                  await refreshAdminPageData();
+                                  void appendAuditLog(
+                                    "Budget cash released",
+                                    "budget_request",
+                                    selectedBudgetRequest.id,
+                                    `Released cash for budget request "${selectedBudgetRequest.activityTitle}".`,
+                                    selectedBudgetRequest.organizationId,
+                                  ).catch(console.error);
+                                  notifyOrganizationUser({
+                                    userId: selectedBudgetOrganization?.userId ?? "",
+                                    organizationId: selectedBudgetRequest.organizationId,
+                                    title: "Budget released",
+                                    message: "Your budget has been released.",
+                                    type: "budget_released",
+                                    relatedType: "budget_request",
+                                    relatedId: selectedBudgetRequest.id,
+                                  });
+                                  toast({
+                                    title: "Budget released",
+                                    description: `${selectedBudgetOrganization?.organizationName ?? "Organization"}'s budget is now in monitoring and liquidation has been unlocked.`,
+                                  });
+                                } catch (err) {
+                                  console.error("Failed to release budget:", err);
+                                  toast({
+                                    title: "Release failed",
+                                    description: "Could not update budget request status.",
+                                    variant: "destructive",
+                                  });
+                                } finally {
+                                  setBudgetLifecycleSubmitting(false);
+                                }
+                              };
+                              void executeRelease();
+                            }}
+                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
+                          >
+                            {budgetLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+                            Budget Released
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Budget Released stage - Final Terminal State */}
+                      {(selectedBudgetRequest.status === "budget_released" || String(selectedBudgetRequest.status) === "completed") && (
+                        <div className="rounded-md border border-border-mandatory-subtle bg-bg-mandatory-subtle p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-text-mandatory" />
+                            <p className="font-semibold text-sm text-text-mandatory">Budget Released</p>
+                          </div>
+                          <p className="font-segoe text-xs leading-[140%] text-slate-600">
+                            This budget request has reached its final lifecycle stage. Liquidation processing is now available.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Rejected stage */}
+                      {selectedBudgetRequest.status === "rejected_red" && (
+                        <div className="rounded-md border border-status-danger-border bg-danger-subtle p-4 text-xs text-icon-danger-secondary">
+                          <p className="font-semibold text-sm">Request Rejected</p>
+                          <p className="mt-1 text-slate-600">This budget request was rejected. No further actions are available.</p>
+                          {selectedBudgetRequest.adminRemarks ? (
+                            <p className="mt-1.5 font-mono text-[11px] text-rose-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
+                          ) : null}
+                        </div>
+                      )}
+
+                      {/* Draft stage */}
+                      {selectedBudgetRequest.status === "draft" && (
+                        <div className="rounded-md border border-border-closed-subtle bg-neutral-100 p-4 text-xs text-neutral-tertiary">
+                          <p className="font-semibold text-text-default">Draft Budget Proposal</p>
+                          <p className="mt-1 text-slate-600">The organization has not yet submitted this proposal for review.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <DangerConfirmDialog
+                    open={isBudgetDecisionConfirmOpen}
+                    onOpenChange={setIsBudgetDecisionConfirmOpen}
+                    icon={CheckCircle}
+                    variant="info"
+                    title="Confirm Review Decision"
+                    description="Review your decisions and remarks before submitting. These will be applied to the proposal and shown to the organization in their portal."
+                    content={
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Proposal</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                            {budgetBulkDecision === "approve" ? "Approved Amount" : "Remarks"}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {(() => {
+                            const thirdColValue = budgetBulkDecision === "approve"
+                              ? `₱${Number(budgetApprovedAmountDraft || selectedBudgetRequest.approvedAmount || selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : budgetBulkRemark.trim() || "—";
+                            return (
+                              <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={selectedBudgetRequest.activityTitle}>
+                                  {selectedBudgetRequest.activityTitle}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {budgetReviewDecisionLabel[budgetBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={thirdColValue !== "—" ? thirdColValue : undefined}>
+                                  {thirdColValue}
+                                </p>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    }
+                    warning="Once submitted, these decisions cannot be changed from this review."
+                    cancelLabel="Cancel"
+                    confirmLabel="Submit Review"
+                    confirmIcon={Send}
+                    onConfirm={submitBudgetReviewDecisions}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const pendingReviewBudgetRequestCount = adminBudgetReviewQuery.data?.summary.pendingReview ?? 0;
+        const pendingReviewBudgetRequestTodayCount = adminBudgetReviewQuery.data?.summary.pendingReviewToday ?? 0;
+        const approvedBudgetTotal = adminBudgetReviewQuery.data?.summary.approvedTotal ?? 0;
+        const releasedBudgetTotal = adminBudgetReviewQuery.data?.summary.releasedTotal ?? 0;
+        const budgetSummaryLoading = adminBudgetReviewQuery.isPending;
+        const formatBudgetStatCurrency = (value: number) => `₱${Math.round(value).toLocaleString()}`;
+        const budgetOrganizationsById = Object.fromEntries([
+          ...state.organizationProfiles,
+          ...adminBudgetReviewRows.map((row) => row.organization),
+        ].map((org) => [org.id, org]));
+
+        return (
+          <div className="space-y-4">
+            <AdminPageHeader
+              title="Budget Requests"
+              wrapActions
+              description="Review funding requests for YPOP-approved projects."
+              action={
+                <div className="flex flex-wrap items-end gap-2">
+                  <AdminReportingPeriodSelector compact value={budgetReportPeriod} years={reportYears} onChange={period => { setBudgetReviewPage(0); setBudgetReportPeriod(period); }} />
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setActiveReportExport("budget-requests");
+                    }}
+                    disabled={filteredAdminBudgetRequests.length === 0}
+                    className="flex h-10 items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    <Download className="h-4 w-4 text-slate-500" />
+                    <span>Export</span>
+                  </Button>
+                </div>
+              }
+            />
+            <p className="text-xs text-text-secondary">Filtered by activity date, falling back to request creation date.</p>
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <StatsCard
+                title="PENDING REVIEW"
+                value={budgetSummaryLoading ? "—" : pendingReviewBudgetRequestCount}
+                icon={Clock}
+                trend="up"
+                trendLabel={budgetSummaryLoading ? undefined : `${pendingReviewBudgetRequestTodayCount} received today`}
+                description="Requests awaiting administrative review."
+              />
+              <StatsCard
+                title="APPROVED BUDGET"
+                value={budgetSummaryLoading ? "—" : formatBudgetStatCurrency(approvedBudgetTotal)}
+                icon={Wallet}
+                description="Approved amount in the selected reporting period."
+              />
+              <StatsCard
+                title="RELEASED BUDGET"
+                value={budgetSummaryLoading ? "—" : formatBudgetStatCurrency(releasedBudgetTotal)}
+                icon={Wallet}
+                description="Released amount in the selected reporting period."
+              />
+            </div>
+
+            <BudgetRequestsTable
+              requests={filteredAdminBudgetRequests}
+              organizationsById={budgetOrganizationsById}
+              searchValue={budgetRequestsSearch}
+              onSearchChange={setBudgetRequestsSearch}
+              statusFilter={budgetRequestsStatusFilter}
+              onStatusFilterChange={setBudgetRequestsStatusFilter}
+              districtFilter={budgetRequestsDistrictFilter}
+              onDistrictFilterChange={setBudgetRequestsDistrictFilter}
+              barangayFilter={budgetRequestsBarangayFilter}
+              onBarangayFilterChange={setBudgetRequestsBarangayFilter}
+              classificationFilter={budgetRequestsClassificationFilter}
+              onClassificationFilterChange={setBudgetRequestsClassificationFilter}
+              onReview={(requestId) => openBudgetRequestDetails(requestId)}
+              serverPage={{ page: budgetReviewPage, totalCount: adminBudgetReviewQuery.data?.totalCount ?? 0, onPageChange: setBudgetReviewPage }}
+              allRequests={filteredAdminBudgetRequests}
+              selectedRequestIds={selectedBudgetRequestIds}
+              onSelectedRequestIdsChange={setSelectedBudgetRequestIds}
+              onDeleteSelected={handleInitiateBudgetRequestsDelete}
+              isDeleting={isDeletingBudgetRequests}
+            />
+
+            {/* Permanent deletion confirmation modal */}
+            <DangerConfirmDialog
+              open={isDeleteBudgetRequestsModalOpen}
+              onOpenChange={setIsDeleteBudgetRequestsModalOpen}
+              icon={Trash2}
+              variant="danger"
+              warningTone={hasReleasedOrCompletedSelected ? "danger" : "caution"}
+              title={selectedBudgetRequests.length === 1 ? "Delete Budget Request?" : `Delete ${selectedBudgetRequests.length} Budget Requests?`}
+              description={
+                <span>
+                  You are about to permanently delete{" "}
+                  <strong>
+                    {selectedBudgetRequests.length} {selectedBudgetRequests.length === 1 ? "budget request" : "budget requests"}
+                  </strong>.
+                </span>
+              }
+              content={
+                <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    Selected Requests:
+                  </p>
+                  <ul className="flex max-h-48 flex-col gap-2 overflow-y-auto font-segoe text-xs text-slate-700 pr-1">
+                    {selectedBudgetRequests.map((req) => {
+                      const amount = Math.round(Number(req.releasedAmount || req.approvedAmount || req.requestedAmount || 0));
+                      const statusLabel =
+                        String(req.status) === "completed"
+                          ? "Budget Released"
+                          : req.status === "budget_released"
+                            ? "Budget Released"
+                            : req.status === "approved_for_ftf_green" || req.status === "hard_copy_submitted"
+                              ? "Awaiting Release"
+                                : req.status === "needs_revision"
+                                  ? "Needs Revision"
+                                  : req.status === "rejected_red"
+                                    ? "Rejected"
+                                    : req.status === "under_review"
+                                      ? "Under Review"
+                                      : "Submitted";
+
+                      return (
+                        <li key={req.id} className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 last:border-b-0 last:pb-0">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-900 truncate">{req.activityTitle}</span>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate">
+                              <span>{budgetOrganizationsById[req.organizationId]?.organizationName ?? "Organization"}</span>
+                              <span>•</span>
+                              <span className="font-medium text-slate-700">{statusLabel}</span>
+                            </div>
+                          </div>
+                          <span className="shrink-0 font-mono font-semibold text-slate-800">
+                            ₱{amount.toLocaleString()}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <div className="mt-2 border-t border-slate-200 pt-2.5 font-segoe text-xs text-slate-600 space-y-1">
+                    <p className="font-semibold text-slate-700">Permanent Impact:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
+                      <li>{selectedBudgetRequests.length} Budget Request record(s) will be permanently removed.</li>
+                      <li>Associated submission documents will be deleted from secure storage.</li>
+                      {associatedLiquidationCount > 0 ? (
+                        <li>{associatedLiquidationCount} associated Liquidation Report(s) and documents will be permanently removed.</li>
+                      ) : null}
+                      <li>Related operational notifications will be safely removed.</li>
+                      <li>An immutable administrative audit log of this deletion will be preserved.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
+              warning={
+                hasReleasedOrCompletedSelected ? (
+                  <span>
+                    <strong>Financial lifecycle warning:</strong> One or more selected requests have already reached a released or completed stage. Deleting them will remove their associated liquidation workflow and financial records from the active system. Continue only if this deletion is intentional.
+                  </span>
+                ) : hasPreReleaseAdvancedStageSelected ? (
+                  <span>
+                    <strong>Notice:</strong> One or more selected requests have already passed initial administrative review (Onsite Required / Hardcopy Submitted) and are approaching the financial disbursement stage.
+                  </span>
+                ) : (
+                  "This action is permanent and cannot be undone."
+                )
+              }
+              confirmLabel={
+                isDeletingBudgetRequests
+                  ? "Deleting..."
+                  : selectedBudgetRequests.length === 1
+                    ? "Delete Budget Request"
+                    : `Delete ${selectedBudgetRequests.length} Budget Requests`
+              }
+              confirmDisabled={isDeletingBudgetRequests}
+              onConfirm={handleConfirmBudgetRequestsDelete}
+            />
+          </div>
+        );
+      }
+      case "liquidation-monitoring":
+        if (liquidationDetailsOpen && selectedLiquidationReport) {
+          const linkedBudgetRequest = selectedLiquidationBudgetRequest;
+          const proposedDate = linkedBudgetRequest ? new Date(linkedBudgetRequest.activityDate) : null;
+          const isProposedDateValid = Boolean(proposedDate && !Number.isNaN(proposedDate.getTime()));
+
+          const releasedBudgetAmount = linkedBudgetRequest?.releasedAmount || 0;
+          const totalLiquidatedAmount = selectedLiquidationReport.status === "completed_liquidated" ? releasedBudgetAmount : 0;
+          const unliquidatedVariance = Math.max(releasedBudgetAmount - totalLiquidatedAmount, 0);
+
+          const liquidationFiles = selectedLiquidationReportFiles;
+          const liquidationApprovedCount = liquidationFiles.filter((file) => file.adminStatus === "approved_green").length;
+          const liquidationNeedsRevisionCount = liquidationFiles.filter(
+            (file) => file.adminStatus === "needs_revision" || file.adminStatus === "rejected_red",
+          ).length;
+          const liquidationUnreviewedCount = liquidationFiles.filter(
+            (file) => file.adminStatus === "submitted" || file.adminStatus === "under_admin_review",
+          ).length;
+
+          const getLiquidationActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const liquidationActivityEntries = state.activityLogs
+            .filter((log) =>
+              log.relatedType === "liquidation_report" &&
+              log.relatedId === selectedLiquidationReport.id &&
+              !isAdminNotificationAuditEntry(log),
+            )
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              return { id: log.id, adminName, action: log.description || log.action, createdAt: log.createdAt };
+            });
+          const visibleLiquidationActivityEntries = liquidationActivityEntries.slice(0, liquidationActivityVisibleCount);
+          const hasMoreLiquidationActivityEntries = liquidationActivityEntries.length > visibleLiquidationActivityEntries.length;
+          const groupedLiquidationActivityEntries = visibleLiquidationActivityEntries.reduce<
+            { label: string; entries: typeof visibleLiquidationActivityEntries }[]
+          >((groups, entry) => {
+            const label = getLiquidationActivityDayLabel(entry.createdAt);
+            const existingGroup = groups.find((group) => group.label === label);
+            if (existingGroup) {
+              existingGroup.entries.push(entry);
+            } else {
+              groups.push({ label, entries: [entry] });
+            }
+            return groups;
+          }, []);
+
+          const activeLiquidationReviewIndex = liquidationFiles.findIndex((file) => file.id === selectedLiquidationReportFile?.id);
+          const selectedLiquidationReviewFiles = liquidationFiles.filter(
+            (file) => selectedLiquidationReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+          );
+          const liquidationDecisionRequiresRemarkNow = budgetDecisionRequiresRemark(liquidationBulkDecision);
+          const isLiquidationDecisionConfirmDisabled =
+            selectedLiquidationReviewFiles.length === 0 ||
+            liquidationReviewSubmitting ||
+            (selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow && !liquidationBulkRemark.trim());
+
+          const renderLiquidationDocumentReviewControls = (completionMessage: string) => {
+            if (liquidationUnreviewedCount > 0 || selectedLiquidationReviewFiles.length > 0) {
+              return (
+                <>
+                  {selectedLiquidationReviewFiles.length === 0 ? (
+                    <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                        {selectedLiquidationReviewFiles.length} document{selectedLiquidationReviewFiles.length === 1 ? "" : "s"} selected.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                    <Select
+                      value={liquidationBulkDecision}
+                      onValueChange={(value) => setLiquidationBulkDecision(value as BudgetReviewDecision)}
+                      disabled={selectedLiquidationReviewFiles.length === 0}
+                    >
+                      <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="approve">Approve</SelectItem>
+                        <SelectItem
+                          value="needs_revision"
+                          disabled={selectedLiquidationReviewFiles.length > 1}
+                          className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                        >
+                          Needs Revision
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow ? (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-segoe text-[13px] text-text-default">
+                        Remarks <span className="text-destructive">*</span>
+                      </label>
+                      <Textarea
+                        value={liquidationBulkRemark}
+                        onChange={(event) => setLiquidationBulkRemark(event.target.value)}
+                        placeholder="Explain the reason or required action..."
+                        rows={3}
+                        className="resize-none text-[13px]"
+                      />
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    disabled={isLiquidationDecisionConfirmDisabled}
+                    onClick={() => setIsLiquidationDecisionConfirmOpen(true)}
+                    className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                  >
+                    Confirm Document Decision
+                  </button>
+                </>
+              );
+            }
+
+            return (
+              <div className="flex items-start gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
+                <p className="font-segoe text-[13px] leading-[140%] text-text-positive-strong">
+                  {completionMessage}
+                </p>
+              </div>
+            );
+          };
+
+          const submitLiquidationReviewDecisions = async () => {
+            if (!selectedLiquidationReviewFiles.length) return;
+            setLiquidationReviewSubmitting(true);
+            const targetStatus: BudgetRequestFileAdminStatus =
+              liquidationBulkDecision === "approve"
+                ? "approved_green"
+                : "needs_revision";
+            const remark =
+              selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow
+                ? liquidationBulkRemark.trim()
+                : "";
+            const failedNames: string[] = [];
+            const updatedFiles: LiquidationReportFile[] = [];
+
+            for (const file of selectedLiquidationReviewFiles) {
+              try {
+                const saved = await adminUpdateLiquidationReportFileStatusInSupabase(file.id, {
+                  adminStatus: targetStatus,
+                  adminRemarks: remark,
+                });
+                updateLiquidationReportFile(saved.id, saved);
+                updatedFiles.push(saved);
+              } catch {
+                failedNames.push(file.fileName);
+              }
+            }
+
+            // Multi-file safety and parent lifecycle advancement
+            if (failedNames.length === 0) {
+              const allEffectiveFileStatuses = liquidationFiles.map((file) => {
+                const justUpdated = updatedFiles.find((u) => u.id === file.id);
+                if (justUpdated) return justUpdated.adminStatus;
+                return file.adminStatus;
+              });
+
+              let targetParentStatus: LiquidationReport["status"] = selectedLiquidationReport.status;
+
+              if (liquidationBulkDecision === "needs_revision") {
+                targetParentStatus = "needs_revision";
+              } else if (
+                liquidationBulkDecision === "approve" &&
+                (liquidationFiles.length === 0 || allEffectiveFileStatuses.every((s) => s === "approved_green"))
+              ) {
+                targetParentStatus = "approved_for_ftf_green";
+              } else {
+                targetParentStatus = selectedLiquidationReport.status;
+              }
+
+              if (targetParentStatus !== selectedLiquidationReport.status) {
+                const liqHistoryNow = new Date().toISOString();
+                const existingHistory = selectedLiquidationReport.revisionHistory ?? [];
+                const deadline = targetParentStatus === "needs_revision" ? calculateRevisionDeadline() : null;
+                const parentPatch: Partial<LiquidationReport> = {
+                  status: targetParentStatus,
+                  remarks: remark,
+                  ...(deadline ? {
+                    revisionRequestedAt: deadline.requestedAt,
+                    revisionDueAt: deadline.dueAt,
+                    revisionLockedAt: null,
+                  } : {}),
+                  revisionHistory: [
+                    ...existingHistory,
+                    { action: targetParentStatus, adminRemarks: remark, changedAt: liqHistoryNow, ...(deadline ? { revisionDueAt: deadline.dueAt } : {}) },
+                  ],
+                  ...(targetParentStatus === "approved_for_ftf_green"
+                    ? { goSignalAt: selectedLiquidationReport.goSignalAt || liqHistoryNow }
+                    : {}),
+                };
+
+                try {
+                  await updateLiquidationReportInSupabase(selectedLiquidationReport.id, parentPatch);
+                  updateLiquidationReport(selectedLiquidationReport.id, parentPatch);
+                  await refreshAdminPageData();
+
+                  if (targetParentStatus === "approved_for_ftf_green") {
+                    void appendAuditLog(
+                      "Approved liquidation report",
+                      "liquidation_report",
+                      selectedLiquidationReport.id,
+                      `Marked liquidation report for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}" as approved for face-to-face submission.`,
+                      selectedLiquidationReport.organizationId,
+                    ).catch(console.error);
+                    notifyOrganizationUser({
+                      userId: selectedLiquidationOrganization?.userId ?? "",
+                      organizationId: selectedLiquidationReport.organizationId,
+                      title: "Liquidation approved",
+                      message: "Your liquidation soft copies have been approved. You may now submit hard copies onsite.",
+                      type: "liquidation_go_signal",
+                      relatedType: "liquidation_report",
+                      relatedId: selectedLiquidationReport.id,
+                    });
+                    toast({
+                      title: "Liquidation approved",
+                      description: `${selectedLiquidationOrganization?.organizationName ?? "Organization"}'s liquidation report is now approved.`,
+                    });
+                  } else if (targetParentStatus === "needs_revision") {
+                    void appendAuditLog(
+                      "Liquidation revision requested",
+                      "liquidation_report",
+                      selectedLiquidationReport.id,
+                      `Requested revisions for liquidation report "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}". Remarks: ${remark}`,
+                      selectedLiquidationReport.organizationId,
+                    ).catch(console.error);
+                    notifyOrganizationUser({
+                      userId: selectedLiquidationOrganization?.userId ?? "",
+                      organizationId: selectedLiquidationReport.organizationId,
+                      title: "Liquidation revision requested",
+                      message: `The admin requested revisions for your liquidation report: ${remark}`,
+                      type: "liquidation_revision",
+                      relatedType: "liquidation_report",
+                      relatedId: selectedLiquidationReport.id,
+                    });
+                    toast({
+                      title: "Revision requested",
+                      description: "Revision notice sent to organization.",
+                    });
+                  } else if (targetParentStatus === "rejected_red") {
+                    void appendAuditLog(
+                      "Rejected liquidation report",
+                      "liquidation_report",
+                      selectedLiquidationReport.id,
+                      `Rejected liquidation report for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}". Remarks: ${remark}`,
+                      selectedLiquidationReport.organizationId,
+                    ).catch(console.error);
+                    notifyOrganizationUser({
+                      userId: selectedLiquidationOrganization?.userId ?? "",
+                      organizationId: selectedLiquidationReport.organizationId,
+                      title: "Liquidation rejected",
+                      message: `Your liquidation report was rejected: ${remark}`,
+                      type: "liquidation_rejected",
+                      relatedType: "liquidation_report",
+                      relatedId: selectedLiquidationReport.id,
+                    });
+                    toast({
+                      title: "Liquidation rejected",
+                      description: "Liquidation report has been rejected.",
+                    });
+                  }
+                } catch (err) {
+                  console.error("Failed to update parent liquidation report in Supabase:", err);
+                  await refreshAdminPageData();
+                  toast({
+                    title: "Update failed",
+                    description: "Unable to update liquidation report. The document review may have been saved, but parent lifecycle update failed. Please refresh and try again.",
+                    variant: "destructive",
+                  });
+                }
+              } else {
+                await refreshAdminPageData();
+                if (liquidationBulkDecision === "approve") {
+                  void appendAuditLog(
+                    "Approved liquidation document",
+                    "liquidation_report",
+                    selectedLiquidationReport.id,
+                    `Approved document for liquidation report "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}".`,
+                    selectedLiquidationReport.organizationId,
+                  ).catch(console.error);
+                  toast({
+                    title: "Document approved",
+                    description: "Document marked approved. Review remaining documents to advance the liquidation report.",
+                  });
+                }
+              }
+            }
+
+            setLiquidationReviewSubmitting(false);
+            setSelectedLiquidationReviewFileIds([]);
+            setLiquidationBulkRemark("");
+            setIsLiquidationDecisionConfirmOpen(false);
+
+            if (failedNames.length) {
+              toast({
+                title: "Some updates failed",
+                description: failedNames.join(", "),
+                variant: "destructive",
+              });
+            }
+          };
+
+          const submitLiquidationLifecycleDecision = async () => {
+            if (!selectedLiquidationReport) return;
+            if (selectedLiquidationReport.status === "completed_liquidated") return;
+
+            setLiquidationLifecycleSubmitting(true);
+            try {
+              const liqHistoryNow = new Date().toISOString();
+              const existingHistory = selectedLiquidationReport.revisionHistory ?? [];
+
+              const liqPatch: Partial<LiquidationReport> = {
+                status: "completed_liquidated",
+                completedAt: liqHistoryNow,
+                remarks: "",
+                revisionHistory: [
+                  ...existingHistory,
+                  { action: "completed_liquidated", adminRemarks: "", changedAt: liqHistoryNow },
+                ],
+              };
+
+              await updateLiquidationReportInSupabase(selectedLiquidationReport.id, liqPatch);
+              updateLiquidationReport(selectedLiquidationReport.id, liqPatch);
+              await refreshAdminPageData();
+
+              void appendAuditLog(
+                "Completed liquidation report",
+                "liquidation_report",
+                selectedLiquidationReport.id,
+                `Recorded liquidation as completed/liquidated for "${linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}".`,
+                selectedLiquidationReport.organizationId,
+              ).catch(console.error);
+              notifyOrganizationUser({
+                userId: selectedLiquidationOrganization?.userId ?? "",
+                organizationId: selectedLiquidationReport.organizationId,
+                title: "Liquidation completed",
+                message: "Your liquidation report has been finalized and fully liquidated.",
+                type: "liquidation_completed",
+                relatedType: "liquidation_report",
+                relatedId: selectedLiquidationReport.id,
+              });
+              toast({
+                title: "Liquidation completed",
+                description: `${selectedLiquidationOrganization?.organizationName ?? "Organization"}'s liquidation is now recorded as liquidated.`,
+              });
+            } catch (err) {
+              console.error("Failed to update liquidation lifecycle decision:", err);
+              await refreshAdminPageData();
+              toast({
+                title: "Update failed",
+                description: "Could not update liquidation report status. Please try again.",
+                variant: "destructive",
+              });
+            } finally {
+              setLiquidationLifecycleSubmitting(false);
+            }
+          };
+
+          return (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={closeLiquidationDetails}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Reports
+                </button>
+                <LiquidationStatusLabel status={selectedLiquidationReport.status} deadlineAt={selectedLiquidationReport.deadlineAt} />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-300 bg-admin-surface p-4">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                    <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                  </div>
+                  <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    {linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}
+                  </h1>
+                  <ReferenceCodeChip
+                    code={buildPublicRecordCode("LR", selectedLiquidationReport, visibleLiquidationReports)}
+                    className="w-[109px] rounded"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center justify-between gap-3 p-4",
+                    !liquidationInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
+                  )}
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Liquidation Report Information</p>
+                    <ReferenceCodeChip
+                      code={buildPublicRecordCode("LR", selectedLiquidationReport, visibleLiquidationReports)}
+                      className="w-[109px] rounded"
+                    />
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLiquidationInfoCollapsed((current) => !current)}
+                      className="font-segoe text-[11px] font-semibold leading-none text-slate-500"
+                    >
+                      {liquidationInfoCollapsed ? "Expand Details" : "Collapse Details"}
+                    </button>
+                    <button
+                      type="button"
+                      aria-expanded={!liquidationInfoCollapsed}
+                      onClick={() => setLiquidationInfoCollapsed((current) => !current)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                    >
+                      <ChevronDown
+                        className={cn("h-4 w-4 text-text-default transition-transform", !liquidationInfoCollapsed && "rotate-180")}
+                        strokeWidth={1.6}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {!liquidationInfoCollapsed ? (
+                  <div className="grid grid-cols-1 gap-2.5 p-4 lg:grid-cols-2">
+                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
+                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
+                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
+                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Project Name</p>
+                        <p className="truncate font-segoe text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                          {linkedBudgetRequest?.activityTitle ?? "—"}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                            {formatAdvocacyLabel(linkedBudgetRequest?.purposeCategory) || "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                            {isProposedDateValid && proposedDate ? format(proposedDate, "d MMM yyyy") : "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-2">
+                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                            {linkedBudgetRequest?.venue || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
+                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
+                      <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Released Budget</span>
+                        <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          {formatPesoAmount(releasedBudgetAmount)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Total Liquidated</span>
+                        <span
+                          className={cn(
+                            "font-segoe text-[13px] font-semibold leading-none",
+                            totalLiquidatedAmount > 0 ? "text-bg-success-default" : "text-text-default",
+                          )}
+                        >
+                          {formatPesoAmount(totalLiquidatedAmount)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between border-b border-slate-300 py-2">
+                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Unliquidated Variance</span>
+                        <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          {formatPesoAmount(unliquidatedVariance)} ({unliquidatedVariance === 0 ? "Balanced" : "Outstanding"})
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between py-2">
+                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Request</span>
+                        {linkedBudgetRequest ? (
+                          <button
+                            type="button"
+                            onClick={() => openBudgetRequestDetails(linkedBudgetRequest.id)}
+                            className="flex h-[22px] w-[109px] shrink-0 items-center gap-1.5 rounded border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference transition-colors hover:bg-slate-100"
+                          >
+                            <span className="min-w-0 flex-1 truncate text-left">
+                              {buildPublicRecordCode("BR", linkedBudgetRequest, state.budgetRequests)}
+                            </span>
+                            <ExternalLink className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
+                          </button>
+                        ) : (
+                          <span className="font-segoe text-[13px] font-semibold leading-none text-slate-400">—</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                    <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                      Review your decisions before submitting.
+                    </p>
+                  </div>
+                  <div className="relative shrink-0">
+                    <button
+                      ref={liquidationActivityTriggerRef}
+                      type="button"
+                      aria-label="Decision history"
+                      onClick={() => setIsLiquidationActivityPopoverOpen((current) => !current)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                    >
+                      <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                    </button>
+                    {isLiquidationActivityPopoverOpen ? (
+                      <div
+                        ref={liquidationActivityPanelRef}
+                        className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                      >
+                        <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                          <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">Recent Activity</p>
+                          <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                            A log of recent actions taken on this liquidation report.
+                          </p>
+                        </div>
+
+                        <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                          {groupedLiquidationActivityEntries.length ? (
+                            groupedLiquidationActivityEntries.map((group) => (
+                              <div key={group.label} className="space-y-2">
+                                <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                  {group.label}
+                                </p>
+                                <div className="space-y-0">
+                                  {group.entries.map((entry, index) => {
+                                    const entryDate = new Date(entry.createdAt);
+                                    const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                    return (
+                                      <div key={entry.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                                        {index < group.entries.length - 1 ? (
+                                          <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
+                                        ) : null}
+                                        <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
+                                          <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
+                                        </span>
+                                        <div className="min-w-0 flex-1 space-y-0.5">
+                                          <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                            <span className="font-semibold">{entry.adminName}</span> {entry.action}
+                                          </p>
+                                          <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                            {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="py-6 text-center font-segoe text-sm text-slate-500">No activity recorded yet.</p>
+                          )}
+                        </div>
+
+                        {hasMoreLiquidationActivityEntries ? (
+                          <div className="flex items-center justify-center border-t border-slate-300 p-4">
+                            <button
+                              type="button"
+                              onClick={() => setLiquidationActivityVisibleCount((current) => current + 4)}
+                              className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                            >
+                              Load older activity
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{liquidationApprovedCount}</p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{liquidationNeedsRevisionCount}</p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
+                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{liquidationUnreviewedCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
+                <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
+                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                      {selectedLiquidationReportFile?.fileName ?? "No document selected"}
+                    </p>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {liquidationFiles.length ? (
+                        <div className="flex shrink-0 items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            disabled={activeLiquidationReviewIndex <= 0}
+                            onClick={() =>
+                              setSelectedLiquidationFileId(liquidationFiles[Math.max(0, activeLiquidationReviewIndex - 1)]?.id ?? null)
+                            }
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                          >
+                            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
+                            Previous
+                          </button>
+                          <div className="flex items-center gap-1">
+                            {liquidationFiles.slice(0, 5).map((file, index) => (
+                              <button
+                                key={file.id}
+                                type="button"
+                                onClick={() => setSelectedLiquidationFileId(file.id)}
+                                className={cn(
+                                  "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                  selectedLiquidationReportFile?.id === file.id
+                                    ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                    : "text-text-default hover:bg-slate-50",
+                                )}
+                              >
+                                {index + 1}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            disabled={activeLiquidationReviewIndex < 0 || activeLiquidationReviewIndex >= liquidationFiles.length - 1}
+                            onClick={() =>
+                              setSelectedLiquidationFileId(
+                                liquidationFiles[Math.min(liquidationFiles.length - 1, activeLiquidationReviewIndex + 1)]?.id ?? null,
+                              )
+                            }
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                          >
+                            Next
+                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
+                          </button>
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-label="Download documents"
+                        disabled={downloadDialogResolving || !liquidationFiles.length}
+                        onClick={() =>
+                          void openDownloadDialog(
+                            selectedLiquidationReportFile
+                              ? { fileName: selectedLiquidationReportFile.fileName, fileUrl: selectedLiquidationReportFile.fileUrl }
+                              : null,
+                            liquidationFiles.map((file) => ({ fileName: file.fileName, fileUrl: file.fileUrl })),
+                            "Liquidation-Report-Documents.zip",
+                          )
+                        }
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-[500px] flex-1 items-center justify-center overflow-hidden">
+                    {selectedLiquidationReportFile && liquidationPreviewUrl ? (
+                      liquidationPreviewCanInline ? (
+                        isImagePreviewFile(selectedLiquidationReportFile.fileName) || isImagePreviewFile(liquidationPreviewUrl) ? (
+                          <img src={liquidationPreviewUrl} alt={liquidationPreviewTitle} className="h-full w-full object-contain" />
+                        ) : (
+                          <iframe src={withHiddenPdfToolbar(liquidationPreviewUrl)} title={liquidationPreviewTitle} className="h-full min-h-[500px] w-full border-0" />
+                        )
+                      ) : (
+                        <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
+                          <p>This file cannot be previewed inline.</p>
+                          <button
+                            type="button"
+                            onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}
+                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
+                          >
+                            <Eye className="h-4 w-4" strokeWidth={1.6} />
+                            Open File
+                          </button>
+                        </div>
+                      )
+                    ) : selectedLiquidationReportFile && liquidationPreviewLoading ? (
+                      <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
+                    ) : (
+                      <div
+                        className="flex h-full min-h-[500px] w-full items-center justify-center"
+                        style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
+                      >
+                        <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    {(() => {
+                      const selectableLiquidationFileIds = liquidationFiles
+                        .filter((file) => file.adminStatus !== "approved_green")
+                        .map((file) => file.id);
+                      const selectedLiquidationCount = selectableLiquidationFileIds.filter((id) =>
+                        selectedLiquidationReviewFileIds.includes(id),
+                      ).length;
+                      const isAllLiquidationSelected =
+                        selectableLiquidationFileIds.length > 0 &&
+                        selectedLiquidationCount === selectableLiquidationFileIds.length;
+                      const isLiquidationIndeterminate =
+                        selectedLiquidationCount > 0 &&
+                        selectedLiquidationCount < selectableLiquidationFileIds.length;
+                      const handleToggleSelectAllLiquidation = () => {
+                        if (isAllLiquidationSelected) {
+                          setSelectedLiquidationReviewFileIds((current) =>
+                            current.filter((id) => !selectableLiquidationFileIds.includes(id)),
+                          );
+                        } else {
+                          setSelectedLiquidationReviewFileIds((current) =>
+                            Array.from(new Set([...current, ...selectableLiquidationFileIds])),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isLiquidationIndeterminate;
+                                }}
+                                checked={isAllLiquidationSelected}
+                                disabled={selectableLiquidationFileIds.length === 0}
+                                onChange={handleToggleSelectAllLiquidation}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s submitted liquidation documents and select one to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="space-y-0.5 pt-1">
+                      {liquidationFiles.length ? (
+                        liquidationFiles.map((file) => {
+                          const isChecked = selectedLiquidationReviewFileIds.includes(file.id);
+                          const isActive = selectedLiquidationReportFile?.id === file.id;
+                          const uploadedDate = new Date(file.uploadedAt);
+                          const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                          const isLocked = file.adminStatus === "approved_green";
+
+                          return (
+                            <div
+                              key={file.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                setSelectedLiquidationFileId(file.id);
+                                if (!isLocked) setSelectedLiquidationReviewFileIds([file.id]);
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                setSelectedLiquidationFileId(file.id);
+                                if (!isLocked) setSelectedLiquidationReviewFileIds([file.id]);
+                              }}
+                              className={cn(
+                                "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
+                                isChecked
+                                  ? "border border-border-info-tertiary bg-bg-info-tertiary"
+                                  : isActive
+                                    ? "border border-transparent bg-slate-50"
+                                    : "border border-transparent hover:bg-slate-50",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={isLocked}
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={() => {
+                                  setSelectedLiquidationReviewFileIds((current) =>
+                                    current.includes(file.id) ? current.filter((id) => id !== file.id) : [...current, file.id],
+                                  );
+                                }}
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">{file.fileName}</p>
+                                  <DocumentQueueStatusPill status={file.adminStatus} />
+                                </div>
+                                <div className="flex items-center gap-2 pt-1">
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                    Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                  </p>
+                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">{formatFileSize(file.fileSize)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">No documents submitted yet.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedLiquidationReport.goSignalAt &&
+                    (selectedLiquidationReport.status === "approved_for_ftf_green" ||
+                      selectedLiquidationReport.status === "hard_copy_submitted" ||
+                      selectedLiquidationReport.status === "completed_liquidated") ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
+                        Approved · {format(new Date(selectedLiquidationReport.goSignalAt), "MMMM d, yyyy 'at' h:mm a")}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {selectedLiquidationReport.hardCopySubmittedAt &&
+                    (selectedLiquidationReport.status === "hard_copy_submitted" ||
+                      selectedLiquidationReport.status === "completed_liquidated") ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
+                      <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
+                        Hardcopy Received · {format(new Date(selectedLiquidationReport.hardCopySubmittedAt), "d MMM yyyy")}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {selectedLiquidationReport.status === "pending_activity_completion" ? (
+                    <div className="rounded-md border border-border-warning-subtle bg-bg-warning-subtle p-4 text-xs text-text-warning-secondary">
+                      <p className="font-semibold text-sm text-text-warning-secondary">Pending Activity Completion</p>
+                      <p className="mt-1 text-xs text-slate-600 leading-[140%]">
+                        The organization has not yet submitted its liquidation report. Liquidation documents can be submitted once the project activity is completed.
+                      </p>
+                    </div>
+                  ) : selectedLiquidationReport.status === "not_started" || selectedLiquidationReport.status === "draft" ? (
+                    <div className="rounded-md border border-border-closed-subtle bg-neutral-100 p-4 text-xs text-neutral-tertiary">
+                      <p className="font-semibold text-sm text-text-default">Liquidation Not Yet Submitted</p>
+                      <p className="mt-1 text-xs text-slate-600 leading-[140%]">
+                        The organization has not submitted a liquidation report for this activity.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                      <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                          {(selectedLiquidationReport.status === "submitted" ||
+                            selectedLiquidationReport.status === "under_review" ||
+                            selectedLiquidationReport.status === "needs_revision" ||
+                            selectedLiquidationReport.status === "overdue") && (
+                              <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
+                            )}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <LiquidationStatusLabel status={selectedLiquidationReport.status} deadlineAt={selectedLiquidationReport.deadlineAt} />
+                          {(selectedLiquidationReport.status === "submitted" ||
+                            selectedLiquidationReport.status === "under_review" ||
+                            selectedLiquidationReport.status === "needs_revision" ||
+                            selectedLiquidationReport.status === "overdue") ? (
+                            <button
+                              type="button"
+                              ref={liquidationDecisionHelpTriggerRef}
+                              onClick={() => setIsLiquidationDecisionHelpOpen((current) => !current)}
+                              aria-label="Review rules"
+                              className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                            >
+                              <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                            </button>
+                          ) : null}
+                        </div>
+                        {isLiquidationDecisionHelpOpen &&
+                          (selectedLiquidationReport.status === "submitted" ||
+                            selectedLiquidationReport.status === "under_review" ||
+                            selectedLiquidationReport.status === "needs_revision" ||
+                            selectedLiquidationReport.status === "overdue") ? (
+                          <div
+                            ref={liquidationDecisionHelpPanelRef}
+                            className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                          >
+                            <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                            <p className="font-segoe text-xs leading-[140%] text-text-default">
+                              <span className="font-semibold">Approve</span> — multiple files can be selected.
+                            </p>
+                            <p className="font-segoe text-xs leading-[140%] text-text-default">
+                              <span className="font-semibold">Needs Revision</span> — one file at a time, remarks required.
+                            </p>
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="flex flex-col gap-3 pt-4">
+                        {/* Reviewable Stage: submitted, under_review, overdue, or needs_revision with active unreviewed files */}
+                        {(selectedLiquidationReport.status === "submitted" ||
+                          selectedLiquidationReport.status === "under_review" ||
+                          (selectedLiquidationReport.status === "needs_revision" && liquidationFiles.some((f) => f.adminStatus === "submitted" || f.adminStatus === "under_admin_review")) ||
+                          selectedLiquidationReport.status === "overdue") && (
+                            renderLiquidationDocumentReviewControls(
+                              liquidationFiles.length > 0
+                                ? "All submitted documents have been reviewed."
+                                : "No documents submitted yet."
+                            )
+                          )}
+
+                        {/* Needs Revision stage awaiting organization action */}
+                        {selectedLiquidationReport.status === "needs_revision" &&
+                          !liquidationFiles.some((f) => f.adminStatus === "submitted" || f.adminStatus === "under_admin_review") && (
+                            <div className="space-y-3">
+                              <div className="rounded-md border border-border-warning-subtle bg-amber-50 p-3 text-xs text-text-warning-secondary">
+                                <p className="font-semibold">Revision Requested</p>
+                                <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected liquidation proofs or receipts from organization.</p>
+                                {selectedLiquidationReport.remarks ? (
+                                  <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedLiquidationReport.remarks}</p>
+                                ) : null}
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Approved — Onsite Required stage (Sequential Action) */}
+                        {(selectedLiquidationReport.status === "approved_for_ftf_green" ||
+                          selectedLiquidationReport.status === "hard_copy_submitted") && (
+                          <div className="space-y-3">
+                            <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-3 text-xs text-positive-secondary">
+                              <p className="font-semibold">Approved — Onsite Required</p>
+                              <p className="mt-0.5 text-[11px] text-slate-600">
+                                The liquidation report has been approved. The organization must complete the required onsite process before the liquidation can be finalized.
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              disabled={liquidationLifecycleSubmitting}
+                              onClick={submitLiquidationLifecycleDecision}
+                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
+                            >
+                              {liquidationLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                              Liquidated
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Completed stage (Liquidated) - Final Terminal State */}
+                        {selectedLiquidationReport.status === "completed_liquidated" && (
+                          <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-positive-secondary" />
+                              <p className="font-semibold text-sm text-positive-secondary">Liquidated</p>
+                            </div>
+                            <p className="font-segoe text-xs leading-[140%] text-slate-600">
+                              This liquidation report has been finalized and recorded as liquidated.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Rejected stage */}
+                        {selectedLiquidationReport.status === "rejected_red" && (
+                          <div className="rounded-md border border-status-danger-border bg-danger-subtle p-4 text-xs text-icon-danger-secondary space-y-2">
+                            <p className="font-semibold text-sm">Report Rejected</p>
+                            <p className="text-xs leading-[140%] text-slate-600">This liquidation report was rejected.</p>
+                            {selectedLiquidationReport.remarks ? (
+                              <p className="font-mono text-[11px] text-red-900">Remarks: {selectedLiquidationReport.remarks}</p>
+                            ) : null}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <DangerConfirmDialog
+                    open={isLiquidationDecisionConfirmOpen}
+                    onOpenChange={setIsLiquidationDecisionConfirmOpen}
+                    icon={CheckCircle}
+                    variant="info"
+                    title="Confirm Review Decision"
+                    description="Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."
+                    content={
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {selectedLiquidationReviewFiles.map((file) => {
+                            const remarkText = selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow
+                              ? liquidationBulkRemark.trim() || "—"
+                              : "—";
+                            return (
+                              <div key={file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={file.fileName}>
+                                  {file.fileName}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {budgetReviewDecisionLabel[liquidationBulkDecision]}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    }
+                    warning="Once submitted, these decisions cannot be changed from this review."
+                    cancelLabel="Cancel"
+                    confirmLabel="Submit Review"
+                    confirmIcon={Send}
+                    onConfirm={submitLiquidationReviewDecisions}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+        {
+          const liquidationOrganizationsById = Object.fromEntries([
+            ...state.organizationProfiles,
+            ...adminLiquidationReviewRows.map((row) => row.organization),
+          ].map((org) => [org.id, org]));
+          const liquidationPageBudgets = adminLiquidationReviewRows.map((row) => row.budgetRequest as BudgetRequest);
+          const liquidationBudgetRequestsById = Object.fromEntries([
+            ...state.budgetRequests,
+            ...liquidationPageBudgets,
+          ].map((request) => [request.id, request]));
+          const pendingReviewLiquidationCount = adminLiquidationReviewQuery.data?.summary.pendingReview ?? 0;
+          const overdueLiquidationCount = adminLiquidationReviewQuery.data?.summary.overdue ?? 0;
+
+          return (
+            <div className="space-y-4">
+              <AdminPageHeader
+                title="Liquidation Reports"
+                wrapActions
+                description="Review financial accountability documents for released funds."
+                action={
+                <div className="flex flex-wrap items-end gap-2">
+                  <AdminReportingPeriodSelector compact value={liquidationReportPeriod} years={reportYears} onChange={period => { setLiquidationReviewPage(0); setLiquidationReportPeriod(period); }} />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!adminLiquidationReviewQuery.data?.totalCount}
+                    onClick={() => setLiquidationExportDialogOpen(true)}
+                    className="h-10 gap-2 border-slate-300 bg-admin-surface px-4 text-text-default hover:bg-slate-50"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </div>
+                }
+              />
+              <p className="text-xs text-text-secondary">Filtered by report creation date. Deadlines may fall in a different year or quarter.</p>
+
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <StatsCard
+                  title="PENDING REVIEW"
+                  value={pendingReviewLiquidationCount}
+                  icon={Clock}
+                  description="Submissions being evaluated."
+                />
+                <StatsCard
+                  title="OVERDUE"
+                  value={overdueLiquidationCount}
+                  icon={AlertTriangle}
+                  description="Liquidation reports past their deadline."
+                />
+              </div>
+
+              <LiquidationReportsTable
+                reports={filteredVisibleLiquidationReports}
+                allReports={visibleLiquidationReports}
+                organizationsById={liquidationOrganizationsById}
+                budgetRequestsById={liquidationBudgetRequestsById}
+                allBudgetRequests={liquidationPageBudgets}
+                searchValue={liquidationReportsSearch}
+                onSearchChange={setLiquidationReportsSearch}
+                statusFilter={liquidationReportsStatusFilter}
+                onStatusFilterChange={setLiquidationReportsStatusFilter}
+                districtFilter={liquidationReportsDistrictFilter}
+                onDistrictFilterChange={setLiquidationReportsDistrictFilter}
+                barangayFilter={liquidationReportsBarangayFilter}
+                onBarangayFilterChange={setLiquidationReportsBarangayFilter}
+                classificationFilter={liquidationReportsClassificationFilter}
+                onClassificationFilterChange={setLiquidationReportsClassificationFilter}
+                onReview={(reportId) => {
+                  const report = adminLiquidationReviewRows.find((row) => row.report.id === reportId)?.report
+                    ?? state.liquidationReports.find((item) => item.id === reportId);
+                  if (report) openLiquidationDetails(report);
+                }}
+                onOpenLinkedRequest={(requestId) => openBudgetRequestDetails(requestId)}
+                serverPage={{ page: liquidationReviewPage, totalCount: adminLiquidationReviewQuery.data?.totalCount ?? 0, onPageChange: setLiquidationReviewPage }}
+              />
+
+              <AdminExportDialog
+                open={liquidationExportDialogOpen}
+                onOpenChange={setLiquidationExportDialogOpen}
+                title="Export Liquidation Reports"
+                description="Export all liquidation reports matching the current filters and reporting period."
+                periodFilter={{ enabled: true, showSelector: false, value: liquidationReportPeriod, onChange: period => { setLiquidationReviewPage(0); setLiquidationReportPeriod(period); }, years: reportYears }}
+                initialPaperSize="a4"
+                initialOrientation="landscape"
+                onExport={handleLiquidationReportsExport}
+              />
+            </div>
+          );
+        }
+      case "news-releases":
+        return (
+          <div className="space-y-3 lg:space-y-5">
+            <AdminPageHeader
+              title="News Releases"
+              description="Create and publish announcements visible to all organizations on the portal's news feed."
+              action={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewsModalMode("create");
+                    setEditingNewsReleaseId(null);
+                    setNewsTitleDraft("");
+                    setNewsDescriptionDraft("");
+                    setNewsFacebookPostUrlDraft("");
+                    setNewsPreviewImageUrlDraft("");
+                    setNewsDatePostedDraft(new Date().toISOString().slice(0, 10));
+                    setNewsVisibilityDraft("draft");
+                    setNewsCategoryDraft("");
+                  }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                >
+                  <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                  Add News
+                </button>
+              }
+            />
+            <NewsReleasesTable
+              newsReleases={filteredNewsReleases}
+              searchValue={newsSearch}
+              onSearchChange={setNewsSearch}
+              statusFilter={newsVisibilityFilter}
+              onStatusFilterChange={setNewsVisibilityFilter}
+              categoryFilter={newsCategoryFilter}
+              onCategoryFilterChange={setNewsCategoryFilter}
+              categoryOptions={newsCategoryOptions}
+              viewMode={newsViewMode}
+              onViewModeChange={setNewsViewMode}
+              onEdit={(news) => startEditingNewsRelease(news.id)}
+              onTogglePublish={(news) => {
+                const nextStatus = news.visibilityStatus === "published" ? "hidden" : "published";
+                setPendingNewsVisibilityConfirmation({
+                  title: news.title,
+                  nextStatus,
+                  onConfirm: () => applyNewsVisibilityChange(news.id, nextStatus),
+                });
+              }}
+              onDelete={(news) => void handleDeleteNewsRelease(news.id)}
+            />
+            <NewsReleaseFormDialog
+              mode={newsModalMode}
+              title={newsTitleDraft}
+              onTitleChange={setNewsTitleDraft}
+              description={newsDescriptionDraft}
+              onDescriptionChange={setNewsDescriptionDraft}
+              category={newsCategoryDraft}
+              onCategoryChange={setNewsCategoryDraft}
+              categories={newsCategoriesList}
+              categoryOptions={newsCategoryOptions}
+              allNewsReleases={newsReleases}
+              onAddCategory={handleAddNewsCategory}
+              onDeleteCategory={handleDeleteNewsCategory}
+              facebookPostUrl={newsFacebookPostUrlDraft}
+              onFacebookPostUrlChange={setNewsFacebookPostUrlDraft}
+              previewImageUrl={newsPreviewImageUrlDraft}
+              onPreviewImageUrlChange={setNewsPreviewImageUrlDraft}
+              previewImageFile={newsPreviewImageFileDraft}
+              onPreviewImageFileChange={setNewsPreviewImageFileDraft}
+              datePosted={newsDatePostedDraft}
+              onDatePostedChange={setNewsDatePostedDraft}
+              visibility={newsVisibilityDraft}
+              onVisibilityChange={setNewsVisibilityDraft}
+              saving={savingNewsRelease}
+              onCancel={resetNewsReleaseForm}
+              onSave={() => {
+                const currentStatus = editingNewsReleaseId
+                  ? newsReleases.find((entry) => entry.id === editingNewsReleaseId)?.visibilityStatus
+                  : undefined;
+                if (
+                  newsModalMode === "edit" &&
+                  currentStatus &&
+                  newsVisibilityDraft !== currentStatus &&
+                  (newsVisibilityDraft === "published" || newsVisibilityDraft === "hidden")
+                ) {
+                  setPendingNewsVisibilityConfirmation({
+                    title: newsTitleDraft,
+                    nextStatus: newsVisibilityDraft,
+                    onConfirm: () => handleSaveNewsRelease(),
+                  });
+                  return;
+                }
+                void handleSaveNewsRelease();
+              }}
+            />
+          </div>
+        );
+      case "budget-monitoring":
+      case "public-transparency-posts": {
+        if (section === "budget-monitoring" && supabase && (monitoringQuery.isPending || monitoringQuery.isError)) {
+          return <div className="space-y-4">
+            <AdminPageHeader title="Budget Monitoring" description="Track budgets from request through liquidation." />
+            <BudgetMonitoringPageControls
+              filters={budgetMonitoringFilters}
+              availableFiscalYears={availableFiscalYears}
+              filterOptions={budgetMonitoringFilterOptions}
+              onChangeFilters={setBudgetMonitoringFilters}
+              onResetFilters={() => setBudgetMonitoringFilters(current => ({ ...createDefaultBudgetMonitoringFilters(current.fiscalPeriod.fiscalYear), fiscalPeriod: current.fiscalPeriod }))}
+            />
+            <div role={monitoringQuery.isError ? "alert" : "status"} className="rounded-lg border border-border bg-admin-surface p-6 text-sm">
+              {monitoringQuery.isError ? <>
+                <p>Budget Monitoring could not be loaded. {monitoringQuery.error.message}</p>
+                <Button className="mt-3" onClick={() => void monitoringQuery.refetch()}>Retry</Button>
+              </> : <p>Loading the selected reporting period...</p>}
+            </div>
+          </div>;
+        }
+        return (
+          <div className="space-y-4">
+            {isConfiguringPublicSnapshot ? (
+              <PublicBudgetSnapshotConfigPage onBack={() => setIsConfiguringPublicSnapshot(false)} />
+            ) : (
+              <>
+                {!selectedBudgetAllocation ? (
+                  <>
+                    <AdminPageHeader
+                      title="Budget Monitoring"
+                      description="Track budgets from request through liquidation."
+                      action={
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            disabled={
+                              budgetMonitoringTab === "barangay-allocation"
+                                ? !allocationByBarangayExportRows.length
+                                : !budgetMonitoringExportRows.length
+                            }
+                            onClick={() => {
+                              if (budgetMonitoringTab === "barangay-allocation") {
+                                setActiveReportExport("allocation-by-barangay");
+                              } else {
+                                setActiveReportExport("budget-monitoring");
+                              }
+                            }}
+                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                          >
+                            <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                            Export
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate("/admin/budget-utilization")}
+                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                          >
+                            <ArrowUpRight className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                            Review Budget Requests
+                          </button>
+                        </div>
+                      }
+                    />
+
+                    <div className="monitoring-tabs flex min-h-[52px] w-fit items-center gap-0 rounded-md border border-segmented-control-border bg-segmented-control-bg p-1 shadow-sm">
+                      {(["overview", "map", "barangay-allocation", "public"] as const).map((tab) => {
+                        const isActive = budgetMonitoringTab === tab;
+                        const Icon = tab === "overview" ? PieChartIcon : tab === "barangay-allocation" || tab === "map" ? MapPin : Globe;
+                        const label = tab === "overview" ? "Overview" : tab === "barangay-allocation" ? "Allocation by Barangay" : tab === "map" ? "Map" : "Public Preview";
+                        return (
+                          <button
+                            key={tab}
+                            type="button"
+                            onClick={() => setBudgetMonitoringTab(tab)}
+                            className={cn(
+                              "flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-3 font-segoe text-sm font-semibold leading-[140%] transition-colors",
+                              isActive ? "bg-admin-surface text-public-text-brand" : "text-segmented-control-inactive-text",
+                            )}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : null}
+
+                <BudgetMonitoringPageControls
+                  filters={budgetMonitoringFilters}
+                  availableFiscalYears={availableFiscalYears}
+                  filterOptions={budgetMonitoringFilterOptions}
+                  onChangeFilters={setBudgetMonitoringFilters}
+                  onResetFilters={() => setBudgetMonitoringFilters(current => ({ ...createDefaultBudgetMonitoringFilters(current.fiscalPeriod.fiscalYear), fiscalPeriod: current.fiscalPeriod }))}
+                />
+
+                {budgetMonitoringTab === "overview" ? (
+                  <>
+                    <BudgetMonitoringOverview
+                      selectedFiscalYear={selectedFiscalYear}
+                      annualAllocation={monitoringAllYears ? combinedFYAllocation : selectedFYAllocation}
+                      reportingPeriodLabel={getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))}
+                      allYears={monitoringAllYears}
+                      allocationComparisonAvailable={budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year" || (budgetMonitoringFilters.fiscalPeriod.mode === "all" && monitoringAllocationCoverageComplete)}
+                      onOpenConfigureModal={() => setIsConfigureAnnualBudgetModalOpen(true)}
+                      approvedBudget={budgetMonitoringApprovedTotal}
+                      releasedBudget={budgetMonitoringReleasedTotal}
+                      liquidatedBudget={budgetMonitoringLiquidatedTotal}
+                      pendingDisbursement={Math.max(budgetMonitoringApprovedTotal - budgetMonitoringReleasedTotal, 0)}
+                      categoryBreakdown={budgetMonitoringPurposeCategories}
+                      formatPesoAmount={formatPesoAmount}
+                      formatCompactPeso={formatCompactPeso}
+                    />
+
+                    <OrganizationFundingTable
+                      rows={budgetMonitoringOrganizationFundingRows}
+                      searchValue={organizationFundingSearch}
+                      onSearchChange={setOrganizationFundingSearch}
+                      onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
+                    />
+                  </>
+                ) : budgetMonitoringTab === "map" ? (
+                  <PasigBudgetMap
+                    rows={pasigBudgetMapRows}
+                    organizationRows={budgetMonitoringOrganizationFundingRows}
+                    formatPesoAmount={formatPesoAmount}
+                    selectedDistrict={budgetMonitoringFilters.district}
+                    selectedBarangay={budgetMonitoringFilters.barangay}
+                    fiscalPeriodLabel={getAdminReportPeriodLabel(fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod))}
+                    onViewOrganization={setSelectedOrganizationBudgetDetailId}
+                  />
+                ) : budgetMonitoringTab === "barangay-allocation" ? (
+                  selectedBudgetAllocation ? (
+                    <div className="space-y-4">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBudgetAllocation(null)}
+                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                      >
+                        <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                        Back to Allocation
+                      </button>
+
+                      <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface p-4">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                          <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                        </div>
+                        <h1 className="font-segoe text-lg font-semibold leading-none text-text-default">
+                          Barangay {selectedBudgetAllocation.barangay}
+                        </h1>
+                      </div>
+
+                      <OrganizationFundingTable
+                        rows={budgetMonitoringOrganizationFundingRows.filter((row) => row.barangay === selectedBudgetAllocation.barangay)}
+                        searchValue={barangayDetailSearch}
+                        onSearchChange={setBarangayDetailSearch}
+                        onView={(organizationId) => setSelectedOrganizationBudgetDetailId(organizationId)}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                        <StatsCard
+                          title="TOTAL RELEASED"
+                          value={formatPesoAmount(budgetAllocationSummary.totalReleased)}
+                          icon={Banknote}
+                          description="Cash released to organizations in this selection."
+                        />
+                        <StatsCard
+                          title="TOTAL LIQUIDATED"
+                          value={formatPesoAmount(budgetAllocationSummary.totalLiquidated)}
+                          icon={CheckCircle2}
+                          description="Released budgets audited and cleared."
+                        />
+                        <StatsCard
+                          title="UTILIZATION RATE"
+                          value={`${budgetAllocationSummary.liquidationUtilizationRate}%`}
+                          icon={TrendingUp}
+                          description="Share of released budgets already liquidated."
+                        />
+                      </div>
+
+                      <div className="rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                        <div className="flex flex-wrap items-center gap-2 border-b border-slate-300 p-4">
+                          <div className="flex h-10 min-w-[120px] flex-1 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3.5 py-2.5">
+                            <Search className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
+                            <input
+                              value={budgetAllocationSearch}
+                              onChange={(event) => setBudgetAllocationSearch(event.target.value)}
+                              placeholder="Search by district or barangay..."
+                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+                            />
+                          </div>
+
+                          </div>
+
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+                          <span className="w-[22%]">Barangay</span>
+                          <span className="w-[15%]">Released</span>
+                          <span className="w-[15%]">Liquidated</span>
+                          <span className="w-[15%]">Remaining</span>
+                          <span className="w-[23%]">Utilization</span>
+                          <span className="w-[90px] shrink-0">Actions</span>
+                        </div>
+
+                        {groupedPagedBudgetAllocationRows.length === 0 ? (
+                          <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
+                            <p className="font-segoe text-sm font-semibold text-text-default">No matching barangays</p>
+                            <p className="font-segoe text-xs text-slate-500">Try adjusting the search, district, or barangay filters.</p>
+                          </div>
+                        ) : (
+                          groupedPagedBudgetAllocationRows.map((group) => {
+                            const isCollapsed = collapsedAllocationDistricts.includes(group.district);
+                            return (
+                              <div key={group.district} className="border-b border-slate-300 last:border-b-0">
+                                <div className="flex items-center justify-between gap-2 bg-slate-50 px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-segoe text-xs font-semibold uppercase leading-none text-text-default">{group.district}</p>
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-1.5 py-0.5 font-segoe text-[10px] font-semibold leading-[140%] text-slate-500">
+                                      {group.rows.length} barangay{group.rows.length === 1 ? "" : "s"} · {group.organizationCount} org{group.organizationCount === 1 ? "" : "s"}
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setCollapsedAllocationDistricts((current) =>
+                                        current.includes(group.district) ? current.filter((d) => d !== group.district) : [...current, group.district],
+                                      )
+                                    }
+                                    className="flex shrink-0 items-center gap-1.5"
+                                  >
+                                    <span className="font-segoe text-[11px] font-semibold leading-none text-slate-500">
+                                      {isCollapsed ? "Expand Details" : "Collapse Details"}
+                                    </span>
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50">
+                                      <ChevronDown className={cn("h-4 w-4 text-text-default transition-transform", isCollapsed && "-rotate-180")} strokeWidth={1.6} />
+                                    </span>
+                                  </button>
+                                </div>
+
+                                {!isCollapsed
+                                  ? group.rows.map((entry) => {
+                                    const remaining = Math.max(entry.releasedAmount - entry.liquidatedAmount, 0);
+                                    const rowUtilization = entry.releasedAmount > 0 ? Math.round((entry.liquidatedAmount / entry.releasedAmount) * 100) : 0;
+                                    return (
+                                      <div
+                                        key={`${entry.district}-${entry.barangay}`}
+                                        className="flex items-center justify-between gap-2 border-t border-slate-300 p-4 transition-colors hover:bg-slate-50"
+                                      >
+                                        <div className="flex w-[22%] min-w-0 items-center gap-2">
+                                          <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">Brgy. {entry.barangay}</p>
+                                          <span className="inline-flex shrink-0 items-center gap-1 rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                                            {entry.organizationCount} org{entry.organizationCount === 1 ? "" : "s"}
+                                          </span>
+                                        </div>
+                                        <div className="flex w-[15%] items-center">
+                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.releasedAmount)}</p>
+                                        </div>
+                                        <div className="flex w-[15%] items-center">
+                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.liquidatedAmount)}</p>
+                                        </div>
+                                        <div className="flex w-[15%] items-center">
+                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(remaining)}</p>
+                                        </div>
+                                        <div className="flex w-[23%] items-center gap-2">
+                                          <div className="h-2 w-full max-w-[140px] overflow-hidden rounded-full bg-bg-progress-track">
+                                            <div className="h-full rounded-full bg-bg-success-default transition-all" style={{ width: `${Math.min(rowUtilization, 100)}%` }} />
+                                          </div>
+                                          <span className="shrink-0 font-segoe text-xs font-semibold text-text-default">{rowUtilization}%</span>
+                                        </div>
+                                        <div className="flex w-[90px] shrink-0 items-center">
+                                          <button
+                                            type="button"
+                                            onClick={() => setSelectedBudgetAllocation(entry)}
+                                            className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                                          >
+                                            <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
+                                            View
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                  : null}
+                              </div>
+                            );
+                          })
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
+                          <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+                            Showing <span className="text-text-default">{pagedBudgetAllocationRows.length}</span> of{" "}
+                            <span className="text-text-default">{filteredBudgetAllocationRows.length}</span> records
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setBudgetAllocationMobilePage((page) => Math.max(1, page - 1))}
+                              disabled={budgetAllocationMobilePage === 1}
+                              className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+                            >
+                              <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
+                              Previous
+                            </button>
+                            <div className="flex items-center gap-2">
+                              {Array.from({ length: budgetAllocationMobilePageCount }, (_, index) => index)
+                                .slice(0, 5)
+                                .map((index) => (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => setBudgetAllocationMobilePage(index + 1)}
+                                    className={cn(
+                                      "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                                      index + 1 === budgetAllocationMobilePage
+                                        ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                        : "text-text-default hover:bg-slate-50",
+                                    )}
+                                  >
+                                    {index + 1}
+                                  </button>
+                                ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setBudgetAllocationMobilePage((page) => Math.min(budgetAllocationMobilePageCount, page + 1))}
+                              disabled={budgetAllocationMobilePage >= budgetAllocationMobilePageCount}
+                              className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+                            >
+                              Next
+                              <ChevronRight className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )
+                ) : budgetMonitoringTab === "public" ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-admin-surface p-4 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-public-bg-brand/10 text-public-text-brand">
+                          <Globe className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h2 className="font-segoe text-sm font-bold text-text-default">Public Portal Preview</h2>
+                          <p className="font-segoe text-xs text-slate-500">
+                            Live public snapshot for the selected fiscal year. Admin filters apply to the monitoring views, while this preview shows the published citywide totals.
+                          </p>
+                        </div>
+                      </div>
+                      <a
+                        href="https://ytrace.app/budget-transparency"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface px-3 py-1.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                      >
+                        Open Live Public Page <ArrowUpRight className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 shadow-sm">
+                      <PublicBudgetOverview
+                        selectedFiscalYear={selectedFiscalYear}
+                        availableFiscalYears={availableFiscalYears}
+                        showFiscalYearSelector={false}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
+
+            <OrganizationBudgetDrawer
+              detail={organizationBudgetDetail}
+              onOpenChange={(open) => {
+                if (!open) setSelectedOrganizationBudgetDetailId(null);
+              }}
+              onReviewRequest={(requestId) => {
+                setSelectedOrganizationBudgetDetailId(null);
+                openBudgetRequestDetails(requestId);
+              }}
+            />
+          </div>
+        );
+      }
+      case "templates":
+        return (
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Forms & Templates"
+              description="Manage forms and templates published to the Organization Portal."
+              action={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTemplateModalMode("create");
+                    setEditingTemplateId(null);
+                    setTemplateNameDraft("");
+                    setTemplateDescriptionDraft("");
+                    setTemplateScopeDraft("document_submission");
+                    setTemplateFileDraft(null);
+                    setTemplateCategoryDraft("");
+                  }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                >
+                  <Upload className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                  Upload File
+                </button>
+              }
+            />
+            <TemplatesTable
+              templates={filteredTemplates}
+              categoryOptions={templateCategoryOptions}
+              searchValue={templateSearch}
+              onSearchChange={setTemplateSearch}
+              statusFilter={templateStatusFilter}
+              onStatusFilterChange={setTemplateStatusFilter}
+              categoryFilter={templateCategoryFilter}
+              onCategoryFilterChange={setTemplateCategoryFilter}
+              onPreview={(template) => setPreviewTemplate(template)}
+              onEdit={(template) => startEditingTemplate(template.id)}
+              onArchive={(template) => setPendingArchiveTemplate(template)}
+              onRestore={(template) => setPendingRestoreTemplate(template)}
+              onDelete={(template) => setPendingDeleteTemplate(template)}
+            />
+            <TemplateFormDialog
+              mode={templateModalMode === "create" || templateModalMode === "edit" ? templateModalMode : null}
+              name={templateNameDraft}
+              onNameChange={setTemplateNameDraft}
+              description={templateDescriptionDraft}
+              onDescriptionChange={setTemplateDescriptionDraft}
+              category={templateCategoryDraft}
+              onCategoryChange={setTemplateCategoryDraft}
+              workflowScope={templateWorkflowScopeDraft}
+              onWorkflowScopeChange={setTemplateWorkflowScopeDraft}
+              file={templateFileDraft}
+              onFileChange={setTemplateFileDraft}
+              existingFileName={selectedTemplate?.templateFileName}
+              existingFileSize={selectedTemplate?.templateFileSize}
+              saving={savingTemplate || uploadingTemplateId !== null}
+              onCancel={resetTemplateForm}
+              onSave={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
+              categoryOptions={templateCategoryOptions}
+              onAddCategory={handleAddCustomTemplateCategory}
+              onDeleteCategory={handleInitiateDeleteCategory}
+            />
+            <Dialog
+              open={previewModalOpen}
+              onOpenChange={(open) => {
+                setPreviewModalOpen(open);
+                if (!open) {
+                  setPreviewUrl("");
+                  setPreviewTitle("");
+                  setPreviewEmptyMessage("");
+                  setPreviewCanInline(false);
+                }
+              }}
+            >
+              <DialogContent className="h-[100dvh] max-w-none overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-w-5xl sm:rounded-xl sm:border">
+                <div className="flex h-full flex-col sm:h-auto sm:max-h-[90vh]">
+                  <div className="border-b border-border/70 px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
+                    <DialogHeader>
+                      <DialogTitle className="max-w-[calc(100vw-5rem)] break-words text-lg leading-tight sm:max-w-none sm:text-xl">
+                        {previewTitle || "File Preview"}
+                      </DialogTitle>
+                      <DialogDescription className="text-sm">
+                        Preview the uploaded file here.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </div>
+                  <div className="flex-1 overflow-hidden p-4 sm:p-6">
+                    <div className="h-[calc(100dvh-11rem)] overflow-hidden rounded-md border border-border/70 bg-muted/20 sm:h-[70vh]">
+                      {previewUrl && previewCanInline ? (
+                        <iframe
+                          src={previewUrl}
+                          title={previewTitle || "File preview"}
+                          className="h-full w-full"
+                        />
+                      ) : previewUrl ? (
+                        <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+                          <div className="space-y-2">
+                            <p className="text-base font-medium text-foreground">Preview not available in the browser</p>
+                            <p className="max-w-md text-sm text-muted-foreground">
+                              This file type cannot be shown inline. Open or download the file to review it in a compatible app.
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <Button type="button" variant="outline" onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Open File
+                            </Button>
+                            <Button
+                              type="button"
+                              className="admin-template-preview-download"
+                              onClick={() => void openFile(previewUrl, previewTitle || "uploaded-file")}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Download File
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground">
+                          {previewEmptyMessage || "No file uploaded yet."}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <DangerConfirmDialog
+              variant="info"
+              open={Boolean(pendingArchiveTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPendingArchiveTemplate(null);
+              }}
+              icon={Archive}
+              title="Archive File"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to archive </span>
+                  <span className="font-semibold text-text-default">{pendingArchiveTemplate?.name ?? ""}</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                <>
+                  This file will be removed from the active <span className="font-semibold">Forms &amp; Templates</span> list
+                  available to users. You can restore it at any time.
+                </>
+              }
+              confirmLabel="Confirm Archive"
+              confirmIcon={Archive}
+              onConfirm={async () => {
+                if (pendingArchiveTemplate) {
+                  await handleDeleteTemplate(pendingArchiveTemplate.id);
+                }
+              }}
+            />
+            <DangerConfirmDialog
+              open={Boolean(pendingDeleteTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPendingDeleteTemplate(null);
+              }}
+              icon={Trash2}
+              title="Delete File"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to delete </span>
+                  <span className="font-semibold text-text-default">{pendingDeleteTemplate?.name ?? ""}</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                <>
+                  This template will be permanently removed from the <span className="font-semibold">Forms &amp; Templates</span>{" "}
+                  list. Any previously submitted organization documents referencing this template will remain safely preserved in their records.
+                </>
+              }
+              warningTone="danger"
+              confirmLabel="Delete File"
+              confirmIcon={Trash2}
+              onConfirm={async () => {
+                if (pendingDeleteTemplate) {
+                  await handlePermanentlyDeleteTemplate(pendingDeleteTemplate.id);
+                }
+              }}
+            />
+            <DangerConfirmDialog
+              variant="info"
+              open={Boolean(pendingRestoreTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPendingRestoreTemplate(null);
+              }}
+              icon={Archive}
+              title="Restore File"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to restore </span>
+                  <span className="font-semibold text-text-default">{pendingRestoreTemplate?.name ?? ""}</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                <>
+                  This file will be restored to the active <span className="font-semibold">Forms &amp; Templates</span> list
+                  and made available to users again.
+                </>
+              }
+              confirmLabel="Confirm Restore"
+              confirmIcon={Archive}
+              onConfirm={async () => {
+                if (pendingRestoreTemplate) {
+                  await handleRestoreTemplate(pendingRestoreTemplate.id);
+                }
+              }}
+            />
+            <DangerConfirmDialog
+              variant="warning"
+              warningTone="caution"
+              open={Boolean(pendingCategoryDelete && pendingCategoryDelete.isSystem)}
+              onOpenChange={(open) => {
+                if (!open) setPendingCategoryDelete(null);
+              }}
+              icon={AlertTriangle}
+              title="Cannot Delete Category"
+              description={`${formatCanonicalCategoryLabel(pendingCategoryDelete?.category)} is a system category and cannot be deleted.`}
+              confirmLabel="Understood"
+              cancelLabel="Close"
+              onConfirm={() => setPendingCategoryDelete(null)}
+            />
+            <DangerConfirmDialog
+              variant="warning"
+              warningTone="caution"
+              open={Boolean(pendingCategoryDelete && !pendingCategoryDelete.isSystem && pendingCategoryDelete.count > 0)}
+              onOpenChange={(open) => {
+                if (!open) setPendingCategoryDelete(null);
+              }}
+              icon={AlertTriangle}
+              title="Cannot Delete Category"
+              description={`The category "${formatCanonicalCategoryLabel(pendingCategoryDelete?.category)}" is currently used by ${pendingCategoryDelete?.count} template(s).`}
+              warning="Reassign or remove all associated templates before deleting this category."
+              confirmLabel="Understood"
+              cancelLabel="Close"
+              onConfirm={() => setPendingCategoryDelete(null)}
+            />
+            <DangerConfirmDialog
+              open={Boolean(pendingCategoryDelete && !pendingCategoryDelete.isSystem && pendingCategoryDelete.count === 0)}
+              onOpenChange={(open) => {
+                if (!open) setPendingCategoryDelete(null);
+              }}
+              icon={Trash2}
+              title="Delete Category"
+              description={`Are you sure you want to delete "${formatCanonicalCategoryLabel(pendingCategoryDelete?.category)}"? This category has no associated templates.`}
+              warning="This category will be removed from category selection options."
+              warningTone="danger"
+              cancelLabel="Cancel"
+              confirmLabel="Delete Category"
+              confirmIcon={Trash2}
+              onConfirm={async () => {
+                const category = pendingCategoryDelete?.category;
+                if (!category) return;
+                try {
+                  await deleteAdminTemplateCategoryInSupabase(category);
+                  removeCustomTemplateCategory(category);
+                  if (templateCategoryDraft === category) setTemplateCategoryDraft("");
+                  toast({
+                    title: "Category deleted",
+                    description: `Category "${formatCanonicalCategoryLabel(category)}" was removed.`,
+                  });
+                  setPendingCategoryDelete(null);
+                } catch (error) {
+                  toast({
+                    title: "Category could not be deleted",
+                    description: error instanceof Error ? error.message : "The category could not be deleted.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            />
+            <TemplateFilePreviewDialog
+              open={Boolean(previewTemplate)}
+              onOpenChange={(open) => {
+                if (!open) setPreviewTemplate(null);
+              }}
+              template={previewTemplate}
+            />
+          </div>
+        );
+      case "administrators":
+        return (
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Administrators"
+              description="Manage administrator accounts, roles, and permissions."
+              action={
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={!filteredAdministrators.length}
+                    onClick={() => setAdministratorsExportDialogOpen(true)}
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                    Export
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetAdministratorForm();
+                      setAdministratorModalMode("create");
+                    }}
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                  >
+                    <UserPlus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                    Add Administrator
+                  </button>
+                </div>
+              }
+            />
+
+            <div className="flex h-[52px] w-fit items-center gap-1 rounded-md border border-segmented-control-border bg-segmented-control-bg p-1">
+              <button
+                type="button"
+                onClick={() => setAdministratorsViewTab("accounts")}
+                className={cn(
+                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-none transition-colors",
+                  administratorsViewTab === "accounts"
+                    ? "bg-admin-surface text-public-bg-brand"
+                    : "text-segmented-control-inactive-text",
+                )}
+              >
+                <Users className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                Accounts
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdministratorsViewTab("roles-permissions")}
+                className={cn(
+                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-none transition-colors",
+                  administratorsViewTab === "roles-permissions"
+                    ? "bg-admin-surface text-public-bg-brand"
+                    : "text-segmented-control-inactive-text",
+                )}
+              >
+                <Shield className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                Roles and Permissions
+              </button>
+            </div>
+
+            {administratorsViewTab === "roles-permissions" ? (
+              <RolesPermissionsPanel
+                administrators={administrators}
+                roles={administratorRoles}
+                onUpdateRolePermissions={handleUpdateRolePermissions}
+                configuringRoleCode={configuringRoleCode}
+                onConfiguringRoleChange={setConfiguringRoleCode}
+                subTab={rolesPermissionsSubTab}
+                onSubTabChange={setRolesPermissionsSubTab}
+              />
+            ) : administratorsLoading && administrators.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-md border border-slate-300 bg-admin-surface px-4 py-20 text-center shadow-sm">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-public-bg-section border-t-public-text-brand" />
+              </div>
+            ) : (
+              <AdministratorsTable
+                administrators={filteredAdministrators}
+                roleOptions={administratorRoles.map((role) => ({ code: role.code, label: role.label }))}
+                unitOptions={administratorUnits.map((unit) => ({ code: unit.code, label: unit.label }))}
+                searchValue={administratorSearch}
+                onSearchChange={setAdministratorSearch}
+                roleFilter={administratorRoleFilter}
+                onRoleFilterChange={setAdministratorRoleFilter}
+                unitFilter={administratorUnitFilter}
+                onUnitFilterChange={setAdministratorUnitFilter}
+                statusFilter={administratorStatusFilter}
+                onStatusFilterChange={setAdministratorStatusFilter}
+                currentAdminId={user?.id ?? null}
+                resendingInviteId={resendingInviteId}
+                canSendPasswordReset={Boolean(user?.roleCode === "super_admin")}
+                sendingPasswordResetId={sendingPasswordResetId}
+                onEdit={(administrator) => startEditingAdministrator(administrator)}
+                onToggleActive={(administrator) => setPendingToggleActiveAdministrator(administrator)}
+                onDelete={(administrator) => {
+                  const requireReauth = getEffectiveSystemSetting("security.reauth_delete_administrator");
+                  if (requireReauth) {
+                    setPendingDeleteAdministrator(administrator);
+                  } else {
+                    void handleDeleteAdministrator(administrator);
+                  }
+                }}
+                onResendInvite={(administrator) => void handleResendInvite(administrator)}
+                onSendPasswordReset={handleInitiateSendPasswordReset}
+              />
+            )}
+
+            <AdministratorFormDialog
+              mode={administratorModalMode}
+              displayName={administratorDisplayNameDraft}
+              onDisplayNameChange={setAdministratorDisplayNameDraft}
+              email={administratorEmailDraft}
+              onEmailChange={(value) => {
+                setAdministratorEmailDraft(value);
+                setAdministratorEmailError(null);
+              }}
+              emailError={administratorEmailError}
+              existingEmails={administrators.map((administrator) => administrator.email.toLowerCase())}
+              roleOptions={administratorRoles}
+              roleId={administratorRoleIdDraft}
+              onRoleIdChange={setAdministratorRoleIdDraft}
+              unitOptions={administratorUnits}
+              unitId={administratorUnitIdDraft}
+              onUnitIdChange={setAdministratorUnitIdDraft}
+              isActive={editingAdministrator?.isActive ?? true}
+              isPasswordSet={editingAdministrator?.isPasswordSet ?? true}
+              isSelf={Boolean(editingAdministrator && user?.id && editingAdministrator.id === user.id)}
+              onSuspendToggle={() => {
+                if (editingAdministrator) setPendingToggleActiveAdministrator(editingAdministrator);
+              }}
+              onDeleteAdministrator={() => {
+                if (editingAdministrator) {
+                  const requireReauth = getEffectiveSystemSetting("security.reauth_delete_administrator");
+                  if (requireReauth) {
+                    setPendingDeleteAdministrator(editingAdministrator);
+                  } else {
+                    void handleDeleteAdministrator(editingAdministrator);
+                    resetAdministratorForm();
+                  }
+                }
+              }}
+              saving={savingAdministrator}
+              onCancel={resetAdministratorForm}
+              onSave={() => void (administratorModalMode === "edit" ? handleUpdateAdministrator() : handleCreateAdministrator())}
+            />
+
+            <DangerConfirmDialog
+              variant={pendingToggleActiveAdministrator?.isActive ? "warning" : "success"}
+              open={Boolean(pendingToggleActiveAdministrator)}
+              onOpenChange={(open) => {
+                if (!open) setPendingToggleActiveAdministrator(null);
+              }}
+              icon={pendingToggleActiveAdministrator?.isActive ? UserX : UserCheck}
+              title={pendingToggleActiveAdministrator?.isActive ? "Suspend Administrator" : "Reactivate Administrator"}
+              description={
+                <>
+                  <span className="text-slate-500">
+                    Are you sure you want to {pendingToggleActiveAdministrator?.isActive ? "suspend" : "reactivate"} administrator{" "}
+                  </span>
+                  <span className="font-semibold text-text-default">{pendingToggleActiveAdministrator?.displayName ?? ""}</span>
+                  <span className="text-text-default underline"> ({pendingToggleActiveAdministrator?.email ?? ""})</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={
+                pendingToggleActiveAdministrator?.isActive ? (
+                  <>The account will be temporarily disabled and access to the Admin Portal will be suspended.</>
+                ) : (
+                  <>The account will be reactivated and access to the Admin Portal will be restored.</>
+                )
+              }
+              confirmLabel={pendingToggleActiveAdministrator?.isActive ? "Suspend Administrator" : "Reactivate Administrator"}
+              confirmIcon={pendingToggleActiveAdministrator?.isActive ? UserX : UserCheck}
+              onConfirm={async () => {
+                if (pendingToggleActiveAdministrator) await handleToggleAdministratorActive(pendingToggleActiveAdministrator);
+                setPendingToggleActiveAdministrator(null);
+              }}
+            />
+
+            <DangerConfirmDialog
+              open={Boolean(pendingDeleteAdministrator)}
+              onOpenChange={(open) => {
+                if (!open) setPendingDeleteAdministrator(null);
+              }}
+              icon={Trash2}
+              title="Delete Administrator"
+              description={
+                <>
+                  <span className="text-slate-500">Are you sure you want to delete administrator </span>
+                  <span className="font-semibold text-text-default">{pendingDeleteAdministrator?.displayName ?? ""}</span>
+                  <span className="text-text-default underline"> ({pendingDeleteAdministrator?.email ?? ""})</span>
+                  <span className="text-slate-500">?</span>
+                </>
+              }
+              warning={<>The account and its access rights will be permanently removed. This action cannot be undone.</>}
+              warningTone="danger"
+              confirmLabel="Delete Administrator"
+              confirmIcon={Trash2}
+              onConfirm={async () => {
+                if (pendingDeleteAdministrator) await handleDeleteAdministrator(pendingDeleteAdministrator);
+                if (pendingDeleteAdministrator && pendingDeleteAdministrator.id === editingAdministratorId) {
+                  resetAdministratorForm();
+                }
+                setPendingDeleteAdministrator(null);
+              }}
+            />
+
+            <AlertDialog
+              open={Boolean(pendingPasswordResetAdmin)}
+              onOpenChange={(open) => (!open ? setPendingPasswordResetAdmin(null) : undefined)}
+            >
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+                    Send Password Reset Link?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-xs text-slate-600 leading-relaxed space-y-2">
+                    <span>A password reset link will be sent to the administrator's registered email address:</span>
+                    <span className="block font-semibold text-slate-800 bg-slate-100 px-2.5 py-1 rounded">
+                      {pendingPasswordResetAdmin?.displayName} ({pendingPasswordResetAdmin?.email})
+                    </span>
+                    <span>The administrator will receive an email containing a secure link to create a new password.</span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="gap-2 sm:gap-0">
+                  <AlertDialogCancel
+                    disabled={Boolean(sendingPasswordResetId)}
+                    onClick={() => setPendingPasswordResetAdmin(null)}
+                    className="text-xs font-medium h-9"
+                  >
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={Boolean(sendingPasswordResetId)}
+                    onClick={() => {
+                      const target = pendingPasswordResetAdmin;
+                      setPendingPasswordResetAdmin(null);
+                      if (target) {
+                        void executeSendPasswordReset(target);
+                      }
+                    }}
+                    className="text-xs font-semibold h-9 bg-public-bg-brand text-white hover:bg-bg-brand-hover"
+                  >
+                    {sendingPasswordResetId ? "Sending..." : "Send Reset Link"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <ActivityLogsExportDialog
+              open={administratorsExportDialogOpen}
+              onOpenChange={setAdministratorsExportDialogOpen}
+              reportTitle="Administrators"
+              description="Export the current filtered list of administrator accounts."
+              onExport={handleExportAdministrators}
+            />
+          </div>
+        );
+      case "notifications":
+        return (
+          <div className="space-y-4">
+            <AdminPageHeader
+              title="Notifications"
+              description="Review recent activity and updates across the admin portal."
+              action={
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {unread > 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-md border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default hover:bg-slate-50"
+                      onClick={markAllAdminNotificationsRead}
+                      disabled={isMarkingAllNotificationsRead}
+                    >
+                      <CheckCircle2 className="mr-1.5 h-4 w-4 text-text-action" />
+                      {isMarkingAllNotificationsRead ? "Marking as read…" : "Mark all as read"}
+                    </Button>
+                  )}
+                  <BadgePanel count={unread} />
+                </div>
+              }
+            />
+
+            <section className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm" aria-label="Notification activity">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-slate-50/70 px-4 py-3 sm:px-5">
+                <div>
+                  <h2 className="font-segoe text-sm font-semibold text-text-default">Recent activity</h2>
+                  <p className="mt-0.5 font-segoe text-xs text-slate-500">Your latest administrative updates.</p>
+                </div>
+                <span className="font-segoe text-xs text-slate-500">
+                  {adminNotifications.length} {adminNotifications.length === 1 ? "notification" : "notifications"}
+                </span>
+              </div>
+
+              {adminNotifications.length ? (
+                <div className="divide-y divide-slate-200">
+                  {adminNotifications.map((notification) => (
+                    <button
+                      key={notification.id}
+                      type="button"
+                      className={`group flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600 sm:px-5 ${notification.isRead ? "bg-admin-surface hover:bg-slate-50" : "bg-blue-50/40 hover:bg-blue-50/75"}`}
+                      onClick={() => markAdminNotificationRead(notification.id)}
+                    >
+                      <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${notification.isRead ? "border-slate-200 bg-slate-50 text-slate-500" : "border-blue-200 bg-blue-50 text-blue-700"}`}>
+                        <Bell className="h-4 w-4" strokeWidth={1.7} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                          <span className={`min-w-0 break-words font-segoe text-sm leading-5 ${notification.isRead ? "font-medium text-slate-700" : "font-semibold text-text-default"}`}>
+                            {notification.title}
+                          </span>
+                          <span className="shrink-0 font-segoe text-xs tabular-nums text-slate-500">
+                            {new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(notification.createdAt))}
+                          </span>
+                        </span>
+                        <span className={`mt-0.5 block break-words font-segoe text-sm leading-5 ${notification.isRead ? "text-slate-500" : "text-slate-600"}`}>
+                          {notification.message}
+                        </span>
+                      </span>
+                      {!notification.isRead && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-blue-700" aria-label="Unread" />}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                  <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-500">
+                    <Bell className="h-5 w-5" strokeWidth={1.7} />
+                  </span>
+                  <p className="font-segoe text-sm font-semibold text-text-default">No notifications</p>
+                  <p className="mt-1 font-segoe text-sm text-slate-500">You&apos;re all caught up.</p>
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      case "activity-logs": {
+        const handleActivityExport = async (format: ExportFormat, pageConfig?: PdfPageConfig) => {
+          setActivityExporting(format);
+          try {
+            const exportLogs = await fetchAllAdminActivityLogs({
+              search: activitySearch,
+              category: activityLogFilter,
+              dateRange: activityDateFilter,
+              ...getAdminReportRange(activityReportPeriod),
+            });
+            if (!exportLogs.length) {
+              toast({
+                title: "No activity records found",
+                description: "Try changing the selected category or time range.",
+              });
+              return;
+            }
+            const rows = exportLogs.map((log) => {
+              const organizationName =
+                log.organizationName ?? state.organizationProfiles.find((organization) => organization.id === log.organizationId)?.organizationName ?? "";
+              return mapAuditLogToExportRow(log, {
+                actor: log.actorUserId ? "Administrator" : "System",
+                organization: organizationName,
+              });
+            });
+            await exportReport(
+              format,
+              {
+                config: withAdminReportPeriod(activityLogExportConfig, activityReportPeriod),
+                rows,
+                metadataLines: [
+                  "Generated by: Administrator",
+                  ...(activityReportPeriod.mode === "all" && activityDateFilter !== "all"
+                    ? [`Reporting Period: Last ${activityDateFilter.replace("d", "")} days`] : adminReportMetadata(activityReportPeriod)),
+                  `Records: ${rows.length}`,
+                ],
+                filterSummaryLines: [
+                  `Category: ${activityLogFilter === "all" ? "All" : getFriendlyAuditCategory(activityLogFilter)}`,
+                  `Time Range: ${activityReportPeriod.mode !== "all" ? getAdminReportPeriodLabel(activityReportPeriod) : activityDateFilter === "all"
+                    ? "All time"
+                    : `Last ${activityDateFilter.replace("d", "")} days`
+                  }`,
+                ],
+              },
+              pageConfig,
+            );
+            toast({
+              title: "Export Ready",
+              description: `The activity log ${format.toUpperCase()} export has been downloaded.`,
+            });
+          } catch (error) {
+            console.error("Unable to export activity logs:", error);
+            toast({
+              title: "Export Failed",
+              description: "Unable to export activity logs. Please try again.",
+              variant: "destructive",
+            });
+          } finally {
+            setActivityExporting(null);
+          }
+        };
+        return (
+          <div className="flex flex-col gap-4">
+            <AdminPageHeader
+              title="Activity Logs"
+              wrapActions
+              description="Review the system-wide history of admin actions."
+              action={
+                <div className="flex flex-wrap items-end gap-2">
+                  <AdminReportingPeriodSelector compact value={activityReportPeriod} years={reportYears} onChange={period => { setActivityDateFilter("all"); setAdminListPage(0); setActivityReportPeriod(period); }} />
+                <button
+                  type="button"
+                  disabled={!adminListResult?.totalCount || activityExporting !== null}
+                  onClick={() => setActivityExportDialogOpen(true)}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+                >
+                  <Download className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                  Export
+                </button>
+                </div>
+              }
+            />
+            <p className="text-xs text-text-secondary">Filtered by the date the action was recorded.</p>
+            <ActivityLogsTable
+              logs={adminListResult?.rows.filter((row): row is ActivityLog => "action" in row) ?? []}
+              searchValue={activitySearch}
+              onSearchChange={setActivitySearch}
+              categoryFilter={activityLogFilter}
+              onCategoryFilterChange={setActivityLogFilter}
+              dateFilter={activityDateFilter}
+              onDateFilterChange={value => { setActivityReportPeriod({ mode: "all" }); setActivityDateFilter(value); }}
+              adminAccountsById={adminAccountsById}
+              serverPagination={{
+                totalCount: adminListResult?.totalCount ?? 0,
+                onPageChange: setAdminListPage,
+              }}
+            />
+            {adminListLoading ? <p className="px-1 text-sm text-slate-500" role="status">Loading activity log page…</p> : null}
+            {adminListError ? <p className="px-1 text-sm text-red-600" role="alert">{adminListError}</p> : null}
+            <ActivityLogsExportDialog
+              open={activityExportDialogOpen}
+              onOpenChange={setActivityExportDialogOpen}
+              reportTitle="Activity Logs"
+              description="Export activity records matching the current category and time filters."
+              periodFilter={{ enabled: true, showSelector: false, value: activityReportPeriod, onChange: period => { setActivityDateFilter("all"); setActivityReportPeriod(period); }, years: reportYears }}
+              onExport={handleActivityExport}
+            />
+          </div>
+        );
+      }
+      case "ypop-validation": {
+        // ── VIEW 4: entry-review ────────────────────────────────────────────
+        if (ypopAdminView === "entry-review" && selectedYpopId) {
+          const reviewState = adminYpopEntryReviewQuery.data;
+          const entry = (reviewState?.ypopEntries ?? state.ypopEntries).find((e) => e.id === selectedYpopId);
+          if (!entry) {
+            if (adminYpopEntryReviewQuery.isFetching) return <p role="status" className="py-12 text-center text-sm text-slate-500">Loading YPOP review details…</p>;
+            setSelectedYpopId(null);
+            setYpopAdminView("period-detail");
+            return null;
+          }
+          const entryOrg = (reviewState?.organizationProfiles ?? state.organizationProfiles).find((o) => o.id === entry.organizationId);
+          const semesterActivities = (reviewState?.ypopCityActivities ?? state.ypopCityActivities).filter((a) => a.semesterKey === entry.semester);
+          const semesterActivityIds = new Set(semesterActivities.map((a) => a.id));
+          const orgEventParticipations = (reviewState?.ypopEventParticipations ?? state.ypopEventParticipations).filter(
+            (p) => p.organizationId === entry.organizationId && semesterActivityIds.has(p.activityId) && p.status !== "draft",
+          );
+          const orgActivities = (reviewState?.ypopOrgActivities ?? state.ypopOrgActivities).filter((a) => a.ypopEntryId === entry.id && a.status !== "draft");
+          const approvedCount =
+            orgActivities.filter((a) => a.status === "approved").length +
+            orgEventParticipations.filter((p) => p.status === "verified").length;
+          const requestRevisionCount =
+            orgActivities.filter((a) => a.status === "needs_revision" || a.status === "rejected").length +
+            orgEventParticipations.filter((p) => p.status === "needs_revision" || p.status === "rejected").length;
+          const unreviewedCount =
+            orgActivities.filter((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review").length +
+            orgEventParticipations.filter((p) => p.status === "pending_evaluation" || p.status === "pending_verification").length;
+          const period = (reviewState?.ypopPeriods ?? state.ypopPeriods).find((p) => p.semesterKey === entry.semester);
+          const approvedPpaCount = getApprovedYpopOrgActivityCount(
+            orgActivities,
+            entry.id,
+            entry.orgLedProjectCount ?? 0,
+          );
+          const verifiedAttendance = buildVerifiedYpopAttendance(
+            semesterActivities,
+            orgEventParticipations,
+            entry.cityLedAttendance,
+          );
+          const liveScore = computeYpopScore(
+            verifiedAttendance,
+            semesterActivities,
+            approvedPpaCount,
+            period?.orgLedTiers,
+          );
+          const rawScore = liveScore.totalScore ?? entry.pointsEarned ?? 0;
+          const displayScore = Math.max(0, rawScore);
+          const progressBarWidth = Math.max(0, Math.min(100, rawScore));
+          const overallQualificationStatus: YpopQualificationStatus =
+            deriveYpopQualificationStatus({
+              score: rawScore,
+              pointsRequired: entry.pointsRequired ?? YPOP_SCORE_THRESHOLD,
+              period,
+              entry,
+              participations: orgEventParticipations,
+              orgActivities,
+              unreviewedCount,
+              needsRevisionCount: requestRevisionCount,
+            });
+          const reviewableParticipationIds = new Set(
+            orgEventParticipations.filter((p) => p.status !== "draft").map((p) => p.id),
+          );
+          const eventFilesByParticipationId = new Map<string, YPOPEventFile[]>();
+          const reviewEventFiles = new Map<string, YPOPEventFile>();
+          [...state.ypopEventFiles, ...(reviewState?.ypopEventFiles ?? [])].forEach((file) => reviewEventFiles.set(file.id, file));
+          reviewEventFiles.forEach((file) => {
+            if (!reviewableParticipationIds.has(file.participationId)) return;
+            const existing = eventFilesByParticipationId.get(file.participationId) ?? [];
+            existing.push(file);
+            eventFilesByParticipationId.set(file.participationId, existing);
+          });
+          const orgActivityFilesByActivityId = new Map<string, YPOPOrgActivityFile[]>();
+          const reviewOrgActivityFiles = new Map<string, YPOPOrgActivityFile>();
+          [...state.ypopOrgActivityFiles, ...(reviewState?.ypopOrgActivityFiles ?? [])].forEach((file) => {
+            reviewOrgActivityFiles.set(file.id, file);
+          });
+          reviewOrgActivityFiles.forEach((file) => {
+            const existing = orgActivityFilesByActivityId.get(file.orgActivityId) ?? [];
+            existing.push(file);
+            orgActivityFilesByActivityId.set(file.orgActivityId, existing);
+          });
+
+          const entryReviewCategoryPillClasses: Record<YPOPCityActivityCategory, string> = {
+            mandatory: "border-border-mandatory-subtle bg-bg-mandatory-subtle text-text-mandatory",
+            invitational: "border-border-pink-subtle bg-bg-pink-subtle text-text-pink",
+            partnership: "border-border-partnership-subtle bg-bg-partnership-subtle text-text-partnership",
+          };
+
+          type EntryReviewGroup = {
+            id: string;
+            title: string;
+            categoryLabel?: string;
+            categoryPillClass?: string;
+            status: YPOPEventParticipationStatus | YPOPOrgActivityStatus;
+            isAwaiting?: boolean;
+            files: Array<{ id: string; fileName: string; fileUrl: string; uploadedAt: string }>;
+          };
+
+          const cityLedGroups: EntryReviewGroup[] = orgEventParticipations
+            .filter((p) => p.status !== "draft")
+            .map((participation) => {
+              const activity = semesterActivities.find((a) => a.id === participation.activityId);
+              const category = activity ? resolveYpopCityLedCategory(activity.category, activity.points) : undefined;
+              const files = (eventFilesByParticipationId.get(participation.id) ?? []).map((f) => ({
+                id: f.id,
+                fileName: f.fileName,
+                fileUrl: f.fileUrl,
+                uploadedAt: f.uploadedAt,
+              }));
+              const isAwaiting =
+                participation.status === "needs_revision" &&
+                isAwaitingResubmission({
+                  status: participation.status,
+                  revisionRequestedAt: participation.revisionRequestedAt,
+                  proofSubmittedAt: participation.proofSubmittedAt,
+                  files,
+                });
+              return {
+                id: participation.id,
+                title: activity?.name || participation.activityName,
+                categoryLabel: category ? YPOP_CITY_LED_CATEGORY_LABELS[category] : undefined,
+                categoryPillClass: category ? entryReviewCategoryPillClasses[category] : undefined,
+                status: participation.status,
+                isAwaiting,
+                files,
+              };
+            });
+
+          const orgLedGroups: EntryReviewGroup[] = orgActivities
+            .filter((activity) => activity.status !== "draft")
+            .map((activity) => {
+              const files = (orgActivityFilesByActivityId.get(activity.id) ?? []).map((f) => ({
+                id: f.id,
+                fileName: f.fileName,
+                fileUrl: f.fileUrl,
+                uploadedAt: f.uploadedAt,
+              }));
+              const isAwaiting =
+                activity.status === "needs_revision" &&
+                isAwaitingResubmission({
+                  status: activity.status,
+                  revisionRequestedAt: activity.revisionRequestedAt,
+                  submittedAt: activity.submittedAt,
+                  files,
+                });
+              return {
+                id: activity.id,
+                title: activity.activityName,
+                status: activity.status,
+                isAwaiting,
+                files,
+              };
+            });
+
+          const activeReviewGroups = entryReviewTab === "city_led" ? cityLedGroups : orgLedGroups;
+          const isSingleItemDecision = entryReviewBulkDecision === "needs_revision";
+
+          const effectiveActiveGroupId =
+            activeEntryReviewGroupId && selectedEntryReviewGroupIds.includes(activeEntryReviewGroupId)
+              ? activeEntryReviewGroupId
+              : selectedEntryReviewGroupIds.length > 0
+                ? selectedEntryReviewGroupIds[selectedEntryReviewGroupIds.length - 1]
+                : null;
+
+          const activeGroup = effectiveActiveGroupId
+            ? activeReviewGroups.find((g) => g.id === effectiveActiveGroupId) ?? null
+            : null;
+
+          const activeOrgActivity =
+            entryReviewTab === "org_led" && activeGroup
+              ? (orgActivities.find((a) => a.id === activeGroup.id) ?? null)
+              : null;
+
+          const activeGroupFiles = activeGroup ? activeGroup.files : [];
+          const activeReviewFile = activeGroupFiles.find((f) => f.id === activeEntryReviewFileId) ?? activeGroupFiles[0] ?? null;
+          const activeReviewFileIndex = activeReviewFile ? activeGroupFiles.findIndex((f) => f.id === activeReviewFile.id) : -1;
+
+          const selectedBulkGroups = activeReviewGroups.filter((g) => selectedEntryReviewGroupIds.includes(g.id));
+          const hasUnrevisedSelectedGroups = selectedBulkGroups.some((g) => g.isAwaiting);
+          const entryReviewDecisionRequiresRemark = entryReviewBulkDecision === "needs_revision";
+          const isEntryReviewConfirmDisabled =
+            selectedBulkGroups.length === 0 ||
+            entryReviewSubmitting ||
+            (entryReviewBulkDecision === "needs_revision" && (selectedBulkGroups.length !== 1 || !entryReviewBulkRemark.trim())) ||
+            (entryReviewBulkDecision === "approve" && (selectedBulkGroups.length === 0 || hasUnrevisedSelectedGroups));
+
+          const submitEntryReviewDecisions = async () => {
+            if (!selectedBulkGroups.length || entryReviewSubmitting) return;
+
+            if (entryReviewBulkDecision === "approve" && hasUnrevisedSelectedGroups) {
+              toast({
+                title: "Resubmission required",
+                description: "The organization must submit a revised file before this item can be approved.",
+                variant: "destructive",
+              });
+              setEntryReviewConfirmOpen(false);
+              return;
+            }
+
+            const targetStatus =
+              entryReviewBulkDecision === "approve"
+                ? entryReviewTab === "city_led" ? "verified" : "approved"
+                : "needs_revision";
+
+            const trimmedRemark = entryReviewBulkRemark.trim();
+
+            if (targetStatus === "needs_revision") {
+              if (selectedBulkGroups.length !== 1 || !trimmedRemark) {
+                toast({
+                  title: "Revision Remark Required",
+                  description: "Request Revision applies to exactly one submission and requires a non-empty admin remark.",
+                  variant: "destructive",
+                });
+                setEntryReviewConfirmOpen(false);
+                return;
+              }
+            }
+
+            setEntryReviewSubmitting(true);
+            const now = new Date().toISOString();
+            const remark = targetStatus === "needs_revision" ? trimmedRemark : "";
+            const savedParticipations: YPOPEventParticipation[] = [];
+            const savedOrgActivities: YPOPOrgActivity[] = [];
+            const failedTitles: string[] = [];
+            const failureErrors: string[] = [];
+            for (const group of selectedBulkGroups) {
+              try {
+                if (entryReviewTab === "city_led") {
+                  const participation = orgEventParticipations.find((p) => p.id === group.id);
+                  const patch = {
+                    status: targetStatus as YPOPEventParticipationStatus,
+                    adminRemarks: remark,
+                    verifiedAt: targetStatus === "verified" ? now : participation?.verifiedAt ?? "",
+                    revisionHistory: [...(participation?.revisionHistory ?? []), { action: targetStatus, adminRemarks: remark, changedAt: now }],
+                  };
+                  const saved = await adminUpdateYpopEventParticipationInSupabase(group.id, patch);
+                  updateYPOPEventParticipation(saved.id, saved);
+                  savedParticipations.push(saved);
+                } else {
+                  const activity = orgActivities.find((a) => a.id === group.id);
+                  const patch = {
+                    status: targetStatus as YPOPOrgActivityStatus,
+                    adminRemarks: remark,
+                    approvedAt: targetStatus === "approved" ? now : activity?.approvedAt ?? "",
+                    revisionHistory: [...(activity?.revisionHistory ?? []), { action: targetStatus, adminRemarks: remark, changedAt: now }],
+                  };
+                  const saved = await adminUpdateYpopOrgActivityInSupabase(group.id, patch);
+                  updateYPOPOrgActivity(saved.id, saved);
+                  savedOrgActivities.push(saved);
+                }
+              } catch (err) {
+                console.error("YPOP activity review error:", err);
+                failedTitles.push(group.title);
+                const errMsg = err instanceof Error ? err.message : String(err);
+                if (!failureErrors.includes(errMsg)) {
+                  failureErrors.push(errMsg);
+                }
+              }
+            }
+            if (failedTitles.length < selectedBulkGroups.length) {
+              if (entry) {
+                const semesterActivities = state.ypopCityActivities.filter((activity) => activity.semesterKey === entry.semester);
+                const period = state.ypopPeriods.find((item) => item.semesterKey === entry.semester) ?? null;
+
+                const savedPartMap = new Map(savedParticipations.map((p) => [p.id, p]));
+                const savedOrgMap = new Map(savedOrgActivities.map((a) => [a.id, a]));
+
+                const currentParticipations = state.ypopEventParticipations
+                  .filter((p) => p.organizationId === entry.organizationId)
+                  .map((p) => savedPartMap.get(p.id) ?? p);
+
+                const currentOrgActivities = state.ypopOrgActivities
+                  .filter((a) => a.ypopEntryId === entry.id)
+                  .map((a) => savedOrgMap.get(a.id) ?? a);
+
+                const updatedAttendance = buildVerifiedYpopAttendance(
+                  semesterActivities,
+                  currentParticipations,
+                  entry.cityLedAttendance ?? [],
+                );
+
+                const approvedCount = getApprovedYpopOrgActivityCount(currentOrgActivities, entry.id, entry.orgLedProjectCount ?? 0);
+                const updatedScore = computeYpopScore(
+                  updatedAttendance,
+                  semesterActivities,
+                  approvedCount,
+                  period?.orgLedTiers,
+                );
+
+                const hasNeedsRevision =
+                  targetStatus === "needs_revision" ||
+                  currentParticipations.some((p) => p.status === "needs_revision") ||
+                  currentOrgActivities.some((a) => a.status === "needs_revision");
+
+                const hasUnreviewed =
+                  currentParticipations.some((p) => p.status === "pending_evaluation" || p.status === "pending_verification") ||
+                  currentOrgActivities.some((a) => a.status === "pending_evaluation" || a.status === "submitted" || a.status === "under_review");
+
+                const nextEntryStatus: YPOPEntry["status"] =
+                  updatedScore.totalScore >= (entry.pointsRequired ?? YPOP_SCORE_THRESHOLD)
+                    ? "qualified"
+                    : hasNeedsRevision
+                      ? "needs_revision"
+                      : hasUnreviewed
+                        ? "under_review"
+                        : "not_qualified";
+
+                const effectiveRemark = hasNeedsRevision && remark ? remark : (entry.adminRemarks ?? "");
+
+                const entryPatch: Partial<YPOPEntry> = {
+                  cityLedAttendance: updatedAttendance,
+                  orgLedProjectCount: approvedCount,
+                  pointsEarned: updatedScore.totalScore,
+                  status: nextEntryStatus,
+                  adminRemarks: effectiveRemark,
+                  revisionHistory: hasNeedsRevision && remark
+                    ? [...(entry.revisionHistory ?? []), { action: "needs_revision", adminRemarks: remark, changedAt: now }]
+                    : (entry.revisionHistory ?? []),
+                };
+
+                try {
+                  const savedEntry = await adminUpdateYpopEntryInSupabase(entry.id, entryPatch);
+                  updateYPOPEntry(savedEntry.id, savedEntry);
+                } catch (err) {
+                  console.warn("adminUpdateYpopEntryInSupabase error; updating store locally:", err);
+                  updateYPOPEntry(entry.id, entryPatch);
+                }
+              }
+              await refreshAdminYpop();
+            }
+            setEntryReviewSubmitting(false);
+            setSelectedEntryReviewGroupIds([]);
+            setEntryReviewBulkRemark("");
+            setEntryReviewConfirmOpen(false);
+            if (failedTitles.length) {
+              const detail = failureErrors.length ? `: ${failureErrors.join("; ")}` : "";
+              toast({ title: "Some updates failed", description: `${failedTitles.join(", ")}${detail}`, variant: "destructive" });
+            } else {
+              toast({
+                title: "Review saved",
+                description: `${selectedBulkGroups.length} item${selectedBulkGroups.length === 1 ? "" : "s"} updated.`,
+              });
+            }
+          };
+
+          const getYpopActivityDayLabel = (iso: string) => {
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return "Recent";
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return "Today";
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return format(date, "d MMM yyyy");
+          };
+
+          const rawYpopLogs = state.activityLogs
+            .filter((log) => {
+              if (log.organizationId !== entry.organizationId) return false;
+              return (
+                log.relatedType === "ypop_entry" ||
+                log.relatedType === "ypop_event_participation" ||
+                log.relatedType === "ypop_org_activity" ||
+                log.relatedId === entry.id
+              );
+            })
+            .map((log) => {
+              const adminName = adminAccountsById[log.actorUserId]?.displayName ?? "Administrator";
+              return {
+                id: log.id,
+                adminName,
+                action: log.description || log.action,
+                createdAt: log.createdAt,
+                relatedType: log.relatedType,
+                relatedId: log.relatedId,
+              };
+            });
+
+          const entryRevisions = (entry.revisionHistory ?? []).map((rev, index) => {
+            const isDuplicate = rawYpopLogs.some((log) => {
+              if (log.relatedId !== entry.id && log.relatedType !== "ypop_entry") return false;
+              const timeDiff = Math.abs(new Date(log.createdAt).getTime() - new Date(rev.changedAt).getTime());
+              if (timeDiff < 60000) return true;
+              if (log.createdAt === rev.changedAt) return true;
+              const sameDay = new Date(log.createdAt).toDateString() === new Date(rev.changedAt).toDateString();
+              return sameDay && log.action.toLowerCase().includes(rev.action.toLowerCase());
+            });
+            if (isDuplicate) return null;
+
+            let actionText = `Updated YPOP validation status to ${rev.action}.`;
+            if (rev.action === "needs_revision") {
+              actionText = rev.adminRemarks
+                ? `Requested revisions for YPOP validation: "${rev.adminRemarks}".`
+                : "Requested revisions for YPOP validation.";
+            } else if (rev.action === "qualified") {
+              actionText = "Qualified organization for YPOP.";
+            } else if (rev.action === "not_qualified") {
+              actionText = "Marked organization not qualified for YPOP.";
+            } else if (rev.action === "under_review") {
+              actionText = "Moved YPOP validation under review.";
+            }
+
+            return {
+              id: `rev-entry-${entry.id}-${index}`,
+              adminName: "Administrator",
+              action: actionText,
+              createdAt: rev.changedAt,
+            };
+          });
+
+          const participationRevisions = orgEventParticipations.flatMap((participation) => {
+            const activity = semesterActivities.find((a) => a.id === participation.activityId);
+            const title = activity?.name || participation.activityName || "event proof";
+
+            return (participation.revisionHistory ?? []).map((rev, index) => {
+              const isDuplicate = rawYpopLogs.some((log) => {
+                if (log.relatedId !== participation.id && log.relatedType !== "ypop_event_participation") return false;
+                const timeDiff = Math.abs(new Date(log.createdAt).getTime() - new Date(rev.changedAt).getTime());
+                if (timeDiff < 60000) return true;
+                if (log.createdAt === rev.changedAt) return true;
+                const sameDay = new Date(log.createdAt).toDateString() === new Date(rev.changedAt).toDateString();
+                const normAction = rev.action.toLowerCase();
+                return (
+                  sameDay &&
+                  (log.action.toLowerCase().includes(normAction) ||
+                    (normAction === "verified" && log.action.toLowerCase().includes("verif")) ||
+                    (normAction === "needs_revision" && log.action.toLowerCase().includes("revis")) ||
+                    (normAction === "rejected" && log.action.toLowerCase().includes("reject")))
+                );
+              });
+              if (isDuplicate) return null;
+
+              let actionText = `Updated the YPOP event proof for "${title}".`;
+              if (rev.action === "verified") {
+                actionText = `Verified the YPOP event proof for "${title}".`;
+              } else if (rev.action === "needs_revision") {
+                actionText = `Requested revisions for the YPOP event proof "${title}".`;
+              } else if (rev.action === "rejected") {
+                actionText = `Rejected the YPOP event proof "${title}".`;
+              }
+
+              return {
+                id: `rev-part-${participation.id}-${index}`,
+                adminName: "Administrator",
+                action: actionText,
+                createdAt: rev.changedAt,
+              };
+            });
+          });
+
+          const orgActivityRevisions = orgActivities.flatMap((activity) => {
+            const title = activity.activityName || "organization-initiated activity";
+
+            return (activity.revisionHistory ?? []).map((rev, index) => {
+              const isDuplicate = rawYpopLogs.some((log) => {
+                if (log.relatedId !== activity.id && log.relatedType !== "ypop_org_activity") return false;
+                const timeDiff = Math.abs(new Date(log.createdAt).getTime() - new Date(rev.changedAt).getTime());
+                if (timeDiff < 60000) return true;
+                if (log.createdAt === rev.changedAt) return true;
+                const sameDay = new Date(log.createdAt).toDateString() === new Date(rev.changedAt).toDateString();
+                const normAction = rev.action.toLowerCase();
+                return (
+                  sameDay &&
+                  (log.action.toLowerCase().includes(normAction) ||
+                    (normAction === "approved" && log.action.toLowerCase().includes("approv")) ||
+                    (normAction === "needs_revision" && log.action.toLowerCase().includes("revis")) ||
+                    (normAction === "rejected" && log.action.toLowerCase().includes("reject")))
+                );
+              });
+              if (isDuplicate) return null;
+
+              let actionText = `Updated the organization-initiated activity "${title}".`;
+              if (rev.action === "approved") {
+                actionText = `Approved the organization-initiated activity "${title}".`;
+              } else if (rev.action === "needs_revision") {
+                actionText = `Requested revisions for the organization-initiated activity "${title}".`;
+              } else if (rev.action === "rejected") {
+                actionText = `Rejected the organization-initiated activity "${title}".`;
+              }
+
+              return {
+                id: `rev-orgact-${activity.id}-${index}`,
+                adminName: "Administrator",
+                action: actionText,
+                createdAt: rev.changedAt,
+              };
+            });
+          });
+
+          const ypopActivityEntries = [
+            ...rawYpopLogs.map((log) => ({
+              id: log.id,
+              adminName: log.adminName,
+              action: log.action,
+              createdAt: log.createdAt,
+            })),
+            ...[...entryRevisions, ...participationRevisions, ...orgActivityRevisions].filter(
+              (item): item is NonNullable<typeof item> => Boolean(item),
+            ),
+          ].sort((a, b) => {
+            const timeA = new Date(a.createdAt).getTime();
+            const timeB = new Date(b.createdAt).getTime();
+            const validA = !Number.isNaN(timeA);
+            const validB = !Number.isNaN(timeB);
+            if (!validA && !validB) return 0;
+            if (!validA) return 1;
+            if (!validB) return -1;
+            return timeB - timeA;
+          });
+
+          const visibleYpopActivityEntries = ypopActivityEntries.slice(0, ypopActivityVisibleCount);
+          const hasMoreYpopActivityEntries = ypopActivityEntries.length > visibleYpopActivityEntries.length;
+          const groupedYpopActivityEntries = visibleYpopActivityEntries.reduce<
+            { label: string; entries: typeof visibleYpopActivityEntries }[]
+          >((groups, item) => {
+            const label = getYpopActivityDayLabel(item.createdAt);
+            const existingGroup = groups.find((group) => group.label === label);
+            if (existingGroup) {
+              existingGroup.entries.push(item);
+            } else {
+              groups.push({ label, entries: [item] });
+            }
+            return groups;
+          }, []);
+
+          return (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedYpopId(null); setYpopAdminView("period-detail"); }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
+                  Back to Submissions
+                </button>
+                <StatusLabel status={overallQualificationStatus} />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-300 bg-admin-surface p-4">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
+                    <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
+                  </div>
+                  <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    {entryOrg?.organizationName ?? "Unknown organization"}
+                  </h1>
+                  <ReferenceCodeChip code={entryOrg?.referenceId || "—"} className="w-[120px] rounded" />
+                  {entryOrg?.majorClassification ? <CategoryChip category={entryOrg.majorClassification} /> : null}
+                </div>
+                <div className="relative shrink-0">
+                  <button
+                    ref={ypopActivityTriggerRef}
+                    type="button"
+                    aria-label="Decision history"
+                    onClick={() => setIsYpopActivityPopoverOpen((current) => !current)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
+                  >
+                    <History className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                  </button>
+                  {isYpopActivityPopoverOpen ? (
+                    <div
+                      ref={ypopActivityPanelRef}
+                      className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
+                    >
+                      <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
+                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                          Recent Activity
+                        </p>
+                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          A log of recent actions taken on this organization.
+                        </p>
+                      </div>
+
+                      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+                        {groupedYpopActivityEntries.length ? (
+                          groupedYpopActivityEntries.map((group) => (
+                            <div key={group.label} className="space-y-2">
+                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                {group.label}
+                              </p>
+                              <div className="space-y-0">
+                                {group.entries.map((item, index) => {
+                                  const entryDate = new Date(item.createdAt);
+                                  const isValidEntryDate = !Number.isNaN(entryDate.getTime());
+                                  return (
+                                    <div key={item.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                                      {index < group.entries.length - 1 ? (
+                                        <span className="absolute left-4 top-8 h-[calc(100%-16px)] w-px -translate-x-1/2 bg-slate-300/40" />
+                                      ) : null}
+                                      <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-info-secondary">
+                                        <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
+                                      </span>
+                                      <div className="min-w-0 flex-1 space-y-0.5">
+                                        <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                          <span className="font-semibold">{item.adminName}</span> {item.action}
+                                        </p>
+                                        <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                          {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="py-6 text-center font-segoe text-sm text-slate-500">
+                            No activity recorded yet.
+                          </p>
+                        )}
+                      </div>
+
+                      {hasMoreYpopActivityEntries ? (
+                        <div className="flex items-center justify-center border-t border-slate-300 p-4">
+                          <button
+                            type="button"
+                            onClick={() => setYpopActivityVisibleCount((current) => current + 4)}
+                            className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                          >
+                            Load older activity
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-md border border-slate-300 bg-admin-surface p-6 shadow-sm">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">Validation Summary</p>
+                      <YpopValidationComputationPopover
+                        entry={entry}
+                        organizationName={entryOrg?.organizationName}
+                        semesterLabel={entry.semesterLabel || period?.semesterLabel}
+                        semesterActivities={semesterActivities}
+                        orgEventParticipations={orgEventParticipations}
+                        orgActivities={orgActivities}
+                        verifiedAttendance={verifiedAttendance}
+                        liveScore={liveScore}
+                        displayScore={displayScore}
+                        overallQualificationStatus={overallQualificationStatus}
+                        period={period}
+                      />
+                    </div>
+                    <p className="mt-1 font-segoe text-[13px] leading-none text-slate-500">Current computed eligibility points.</p>
+                  </div>
+                  <div className="flex w-full max-w-[497px] flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-segoe text-lg font-semibold leading-none text-text-default">Qualification Progress</span>
+                      <span className="font-cascadia text-lg font-bold leading-none text-text-default">{displayScore}%</span>
+                    </div>
+                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-bg-progress-track">
+                      <div className="h-full rounded-l-full bg-bg-success-default transition-all" style={{ width: `${progressBarWidth}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px] items-stretch">
+                <div className="flex flex-1 flex-col gap-4">
+                  {!activeGroup ? (
+                    <div className="flex flex-1 min-h-[500px] lg:min-h-[560px] flex-col items-center justify-center rounded-md border border-slate-300 bg-admin-surface p-8 text-center shadow-sm">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
+                        <FolderOpen className="h-6 w-6" strokeWidth={1.5} />
+                      </div>
+                      <p className="font-segoe text-base font-semibold text-text-default">
+                        Select a Submission to view the details and file previews
+                      </p>
+                      <p className="mt-1 font-segoe text-sm text-slate-500 max-w-sm">
+                        Choose an item from the Document Queue on the right to inspect its activity information and preview uploaded documents.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {entryReviewTab === "org_led" && activeOrgActivity ? (
+                        <div className="space-y-4 rounded-md border border-slate-300 bg-admin-surface p-5 shadow-sm">
+                          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Organization-Led Activity Details
+                              </p>
+                              <h2 className="mt-1 truncate font-segoe text-lg font-bold text-text-default">
+                                {activeOrgActivity.activityName || "Untitled Activity"}
+                              </h2>
+                            </div>
+                            <YpopDocumentStatusPill status={activeOrgActivity.status} isAwaiting={activeGroup?.isAwaiting} />
+                          </div>
+
+                          {/* Details Grid: Date & Venue */}
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="flex items-start gap-2.5 rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-public-bg-brand/10 text-public-bg-brand">
+                                <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Date Conducted</p>
+                                <p className="mt-0.5 font-segoe text-sm font-semibold text-text-default">
+                                  {activeOrgActivity.activityDate
+                                    ? (() => {
+                                        const raw = activeOrgActivity.activityDate;
+                                        const parts = raw.split("T")[0].split("-");
+                                        if (parts.length === 3) {
+                                          const year = parseInt(parts[0], 10);
+                                          const month = parseInt(parts[1], 10) - 1;
+                                          const day = parseInt(parts[2], 10);
+                                          const d = new Date(year, month, day);
+                                          if (!Number.isNaN(d.getTime())) {
+                                            return format(d, "MMMM d, yyyy");
+                                          }
+                                        }
+                                        const d = new Date(raw);
+                                        return !Number.isNaN(d.getTime()) ? format(d, "MMMM d, yyyy") : raw;
+                                      })()
+                                    : "Not specified"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-2.5 rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-public-bg-brand/10 text-public-bg-brand">
+                                <MapPin className="h-4 w-4" strokeWidth={1.75} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Venue / Location</p>
+                                <p className="mt-0.5 font-segoe text-sm font-semibold text-text-default truncate">
+                                  {activeOrgActivity.venue || "Not specified"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Description / Narrative */}
+                          {(activeOrgActivity.narrativeReport || (activeOrgActivity as any).description) ? (
+                            <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3.5 space-y-1">
+                              <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Activity Description</p>
+                              <p className="font-segoe text-sm text-text-default leading-relaxed whitespace-pre-wrap">
+                                {activeOrgActivity.narrativeReport || (activeOrgActivity as any).description}
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {/* Attendance Section */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Attendance
+                              </p>
+                              {activeOrgActivity.totalAttendees != null &&
+                              activeOrgActivity.girlsAttendees != null &&
+                              activeOrgActivity.boysAttendees != null &&
+                              activeOrgActivity.girlsAttendees + activeOrgActivity.boysAttendees === activeOrgActivity.totalAttendees ? (
+                                <span className="font-segoe text-[11px] font-medium text-text-success-default flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Sum Verified
+                                </span>
+                              ) : null}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                              {/* Total */}
+                              <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Total</p>
+                                {activeOrgActivity.totalAttendees != null ? (
+                                  <>
+                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                      {activeOrgActivity.totalAttendees.toLocaleString()}
+                                    </p>
+                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                  </>
+                                ) : (
+                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                )}
+                              </div>
+
+                              {/* Girls */}
+                              <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Girls</p>
+                                {activeOrgActivity.girlsAttendees != null ? (
+                                  <>
+                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                      {activeOrgActivity.girlsAttendees.toLocaleString()}
+                                    </p>
+                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                  </>
+                                ) : (
+                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                )}
+                              </div>
+
+                              {/* Boys */}
+                              <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
+                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Boys</p>
+                                {activeOrgActivity.boysAttendees != null ? (
+                                  <>
+                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                      {activeOrgActivity.boysAttendees.toLocaleString()}
+                                    </p>
+                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                  </>
+                                ) : (
+                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm min-h-[520px] lg:min-h-0">
+                        <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
+                          <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                            {activeReviewFile?.fileName ?? "No document selected"}
+                          </p>
+                          <div className="flex shrink-0 items-center gap-2">
+                            {activeGroupFiles.length > 1 ? (
+                              <div className="flex shrink-0 items-center justify-between gap-2">
+                                <button
+                                  type="button"
+                                  disabled={activeReviewFileIndex <= 0}
+                                  onClick={() =>
+                                    setActiveEntryReviewFileId(
+                                      activeGroupFiles[Math.max(0, activeReviewFileIndex - 1)]?.id ?? null,
+                                    )
+                                  }
+                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                                >
+                                  <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
+                                  Previous
+                                </button>
+                                <div className="flex items-center gap-1">
+                                  {activeGroupFiles.slice(0, 5).map((file, index) => (
+                                    <button
+                                      key={file.id}
+                                      type="button"
+                                      onClick={() => setActiveEntryReviewFileId(file.id)}
+                                      className={cn(
+                                        "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                        activeReviewFile?.id === file.id
+                                          ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                                          : "text-text-default hover:bg-slate-50",
+                                      )}
+                                    >
+                                      {index + 1}
+                                    </button>
+                                  ))}
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={activeReviewFileIndex < 0 || activeReviewFileIndex >= activeGroupFiles.length - 1}
+                                  onClick={() =>
+                                    setActiveEntryReviewFileId(
+                                      activeGroupFiles[Math.min(activeGroupFiles.length - 1, activeReviewFileIndex + 1)]?.id ?? null,
+                                    )
+                                  }
+                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                                >
+                                  Next
+                                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
+                                </button>
+                              </div>
+                            ) : null}
+                            <button
+                              type="button"
+                              aria-label="Download documents"
+                              disabled={downloadDialogResolving || !activeGroupFiles.length}
+                              onClick={() =>
+                                void openDownloadDialog(
+                                  activeReviewFile ? { fileName: activeReviewFile.fileName, fileUrl: activeReviewFile.fileUrl } : null,
+                                  activeGroupFiles.map((file) => ({ fileName: file.fileName, fileUrl: file.fileUrl })),
+                                  "YPOP-Submission-Documents.zip",
+                                )
+                              }
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
+                            >
+                              <Download className="h-4 w-4 text-text-default" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="relative flex min-h-[500px] lg:min-h-[560px] flex-1 items-center justify-center overflow-hidden">
+                          {activeReviewFile && entryReviewPreviewUrl ? (
+                            entryReviewPreviewCanInline ? (
+                              isImagePreviewFile(activeReviewFile.fileName) || isImagePreviewFile(entryReviewPreviewUrl) ? (
+                                <img
+                                  src={entryReviewPreviewUrl}
+                                  alt={entryReviewPreviewTitle}
+                                  className="h-full w-full object-contain"
+                                />
+                              ) : (
+                                <iframe
+                                  src={withHiddenPdfToolbar(entryReviewPreviewUrl)}
+                                  title={entryReviewPreviewTitle}
+                                  className="h-full min-h-[500px] lg:min-h-[560px] w-full border-0"
+                                />
+                              )
+                            ) : (
+                              <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
+                                <p>This file cannot be previewed inline.</p>
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(entryReviewPreviewUrl, "_blank", "noopener,noreferrer")}
+                                  className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
+                                >
+                                  <Eye className="h-4 w-4" strokeWidth={1.6} />
+                                  Open File
+                                </button>
+                              </div>
+                            )
+                          ) : activeReviewFile && entryReviewPreviewLoading ? (
+                            <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
+                          ) : (
+                            <div
+                              className="flex h-full min-h-[500px] lg:min-h-[560px] w-full items-center justify-center"
+                              style={{ background: "linear-gradient(180deg, #0E2F66 0%, #1A5CA8 100%)" }}
+                            >
+                              <Megaphone className="h-16 w-16 text-white" strokeWidth={1.5} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex w-full items-center gap-0.5 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEntryReviewTab("city_led");
+                        setSelectedEntryReviewGroupIds([]);
+                        setActiveEntryReviewGroupId(null);
+                        setActiveEntryReviewFileId(null);
+                      }}
+                      className={cn(
+                        "flex-1 rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                        entryReviewTab === "city_led"
+                          ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                          : "bg-slate-50 text-text-default",
+                      )}
+                    >
+                      City-led
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEntryReviewTab("org_led");
+                        setSelectedEntryReviewGroupIds([]);
+                        setActiveEntryReviewGroupId(null);
+                        setActiveEntryReviewFileId(null);
+                      }}
+                      className={cn(
+                        "flex-1 rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                        entryReviewTab === "org_led"
+                          ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
+                          : "bg-slate-50 text-text-default",
+                      )}
+                    >
+                      Organization-led
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    {(() => {
+                      const isSingleItemDecision = entryReviewBulkDecision === "needs_revision" || entryReviewBulkDecision === "reject";
+                      const selectableEntryReviewGroups = activeReviewGroups.filter(
+                        (group) => group.status !== "verified" && group.status !== "approved",
+                      );
+                      const selectableEntryReviewGroupIds = selectableEntryReviewGroups.map((group) => group.id);
+                      const selectedEntryReviewCount = selectableEntryReviewGroupIds.filter((id) =>
+                        selectedEntryReviewGroupIds.includes(id),
+                      ).length;
+                      const isAllEntryReviewSelected =
+                        selectableEntryReviewGroupIds.length > 0 &&
+                        selectedEntryReviewCount === selectableEntryReviewGroupIds.length;
+                      const isEntryReviewIndeterminate =
+                        selectedEntryReviewCount > 0 &&
+                        selectedEntryReviewCount < selectableEntryReviewGroupIds.length;
+                      const handleToggleSelectAllEntryReview = () => {
+                        if (isSingleItemDecision) return;
+                        if (isAllEntryReviewSelected) {
+                          setSelectedEntryReviewGroupIds((current) =>
+                            current.filter((id) => !selectableEntryReviewGroupIds.includes(id)),
+                          );
+                          setActiveEntryReviewGroupId((current) =>
+                            selectableEntryReviewGroupIds.includes(current ?? "") ? null : current,
+                          );
+                          setActiveEntryReviewFileId(null);
+                        } else {
+                          setSelectedEntryReviewGroupIds((current) =>
+                            Array.from(new Set([...current, ...selectableEntryReviewGroupIds])),
+                          );
+                          setActiveEntryReviewGroupId((current) => {
+                            if (current && selectableEntryReviewGroupIds.includes(current)) return current;
+                            const firstGroup = selectableEntryReviewGroups[0];
+                            if (firstGroup) {
+                              setActiveEntryReviewFileId(firstGroup.files[0]?.id ?? null);
+                              return firstGroup.id;
+                            }
+                            return current;
+                          });
+                        }
+                      };
+
+                      return (
+                        <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                              <input
+                                type="checkbox"
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isEntryReviewIndeterminate && !isSingleItemDecision;
+                                }}
+                                checked={isAllEntryReviewSelected && !isSingleItemDecision}
+                                disabled={selectableEntryReviewGroupIds.length === 0 || isSingleItemDecision}
+                                onChange={handleToggleSelectAllEntryReview}
+                                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label="Select all"
+                              />
+                              Select all
+                            </label>
+                          </div>
+                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                            Review the organization&rsquo;s submitted documents and select a document to preview.
+                          </p>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="space-y-2 pt-2 max-h-[460px] lg:max-h-[520px] overflow-y-auto pr-1">
+                      {activeReviewGroups.length ? (
+                        activeReviewGroups.map((group) => {
+                          const isCollapsed = collapsedEntryReviewGroups.includes(group.id);
+                          const isGroupSelected = selectedEntryReviewGroupIds.includes(group.id);
+                          const isLocked = group.status === "verified" || group.status === "approved";
+                          const isSingleItemDecision = entryReviewBulkDecision === "needs_revision";
+                          const isSelectionDisabled = isLocked || (isSingleItemDecision && selectedEntryReviewGroupIds.length === 1 && !isGroupSelected);
+                          return (
+                            <div key={group.id} className="rounded-md border border-slate-200">
+                              <div className="flex items-center justify-between gap-2 p-3">
+                                <div className="flex min-w-0 flex-1 items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isGroupSelected}
+                                    disabled={isSelectionDisabled}
+                                    onChange={() => {
+                                      if (isGroupSelected) {
+                                        setSelectedEntryReviewGroupIds((current) =>
+                                          current.filter((id) => id !== group.id),
+                                        );
+                                        setActiveEntryReviewGroupId((current) => {
+                                          if (current === group.id) {
+                                            const remaining = selectedEntryReviewGroupIds.filter((id) => id !== group.id);
+                                            const nextId = remaining[remaining.length - 1] ?? null;
+                                            if (nextId) {
+                                              const nextGroup = activeReviewGroups.find((g) => g.id === nextId);
+                                              setActiveEntryReviewFileId(nextGroup?.files[0]?.id ?? null);
+                                            } else {
+                                              setActiveEntryReviewFileId(null);
+                                            }
+                                            return nextId;
+                                          }
+                                          return current;
+                                        });
+                                      } else {
+                                        setSelectedEntryReviewGroupIds((current) =>
+                                          isSingleItemDecision ? [group.id] : [...current, group.id],
+                                        );
+                                        setActiveEntryReviewGroupId(group.id);
+                                        setActiveEntryReviewFileId(group.files[0]?.id ?? null);
+                                      }
+                                    }}
+                                    className="h-4 w-4 shrink-0 rounded border-slate-300 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                                    aria-label={`Select ${group.title}`}
+                                  />
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => {
+                                      setSelectedEntryReviewGroupIds((current) =>
+                                        current.includes(group.id)
+                                          ? current
+                                          : isSingleItemDecision
+                                            ? [group.id]
+                                            : [...current, group.id],
+                                      );
+                                      setActiveEntryReviewGroupId(group.id);
+                                      setActiveEntryReviewFileId(group.files[0]?.id ?? null);
+                                    }}
+                                    onKeyDown={(event) => {
+                                      if (event.key !== "Enter" && event.key !== " ") return;
+                                      event.preventDefault();
+                                      setSelectedEntryReviewGroupIds((current) =>
+                                        current.includes(group.id)
+                                          ? current
+                                          : isSingleItemDecision
+                                            ? [group.id]
+                                            : [...current, group.id],
+                                      );
+                                      setActiveEntryReviewGroupId(group.id);
+                                      setActiveEntryReviewFileId(group.files[0]?.id ?? null);
+                                    }}
+                                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
+                                  >
+                                    <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default hover:underline">{group.title}</p>
+                                    {group.categoryLabel ? (
+                                      <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-segoe text-[10px] font-semibold uppercase leading-[140%]", group.categoryPillClass)}>
+                                        {group.categoryLabel}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  aria-label={isCollapsed ? "Expand" : "Collapse"}
+                                  onClick={() =>
+                                    setCollapsedEntryReviewGroups((current) =>
+                                      current.includes(group.id) ? current.filter((id) => id !== group.id) : [...current, group.id],
+                                    )
+                                  }
+                                  className="flex h-6 w-6 shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                                >
+                                  {isCollapsed ? <ChevronDown className="h-4 w-4" strokeWidth={1.6} /> : <ChevronUp className="h-4 w-4" strokeWidth={1.6} />}
+                                </button>
+                              </div>
+                              {!isCollapsed ? (
+                                <div className="space-y-0.5 border-t border-slate-200 p-2">
+                                  {group.files.length ? (
+                                    group.files.map((file) => {
+                                      const isActiveFile = activeReviewFile?.id === file.id;
+                                      const uploadedDate = new Date(file.uploadedAt);
+                                      const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
+                                      return (
+                                        <div
+                                          key={file.id}
+                                          role="button"
+                                          tabIndex={0}
+                                          onClick={() => {
+                                            setSelectedEntryReviewGroupIds((current) =>
+                                              current.includes(group.id)
+                                                ? current
+                                                : isSingleItemDecision
+                                                  ? [group.id]
+                                                  : [...current, group.id],
+                                            );
+                                            setActiveEntryReviewGroupId(group.id);
+                                            setActiveEntryReviewFileId(file.id);
+                                          }}
+                                          onKeyDown={(event) => {
+                                            if (event.key !== "Enter" && event.key !== " ") return;
+                                            event.preventDefault();
+                                            setSelectedEntryReviewGroupIds((current) =>
+                                              current.includes(group.id)
+                                                ? current
+                                                : isSingleItemDecision
+                                                  ? [group.id]
+                                                  : [...current, group.id],
+                                            );
+                                            setActiveEntryReviewGroupId(group.id);
+                                            setActiveEntryReviewFileId(file.id);
+                                          }}
+                                          className={cn(
+                                            "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-2.5 text-left transition-colors",
+                                            isActiveFile ? "bg-slate-50" : "hover:bg-slate-50",
+                                          )}
+                                        >
+                                          <div className="min-w-0 flex-1 space-y-1">
+                                            <div className="flex items-start justify-between gap-2">
+                                              <p className="truncate font-cascadia text-xs font-semibold leading-none text-text-default">{file.fileName}</p>
+                                              <YpopDocumentStatusPill status={group.status} isAwaiting={group.isAwaiting} />
+                                            </div>
+                                            <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                              Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  ) : isRefreshingYpop ? (
+                                    <p className="px-2 py-3 text-center font-segoe text-xs text-slate-500">Loading files...</p>
+                                  ) : (
+                                    <p className="px-2 py-3 text-center font-segoe text-xs text-slate-500">No files uploaded yet.</p>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                          No {entryReviewTab === "city_led" ? "city-led" : "organization-led"} activities yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                      <button
+                        type="button"
+                        ref={ypopDecisionHelpTriggerRef}
+                        onClick={() => setIsYpopDecisionHelpOpen((current) => !current)}
+                        aria-label="Review rules"
+                        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-500 transition-colors hover:text-text-default"
+                      >
+                        <CircleHelp className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                      </button>
+                      {isYpopDecisionHelpOpen ? (
+                        <div
+                          ref={ypopDecisionHelpPanelRef}
+                          className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
+                        >
+                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">{entryReviewTab === "city_led" ? "Verify" : "Approve"}</span> — multiple files can be selected.
+                          </p>
+                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <span className="font-semibold">Request Revision</span> — one file at a time, remarks required.
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-4">
+                      {selectedBulkGroups.length === 0 ? (
+                        <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">
+                            {entryReviewBulkDecision === "needs_revision"
+                              ? "No documents selected. Select one submission to request revision."
+                              : "No documents selected."}
+                          </p>
+                        </div>
+                      ) : selectedBulkGroups.length > 1 && entryReviewBulkDecision === "needs_revision" ? (
+                        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                            Request Revision is a single-submission action. Please select only one submission.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                          <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                            {selectedBulkGroups.length} document{selectedBulkGroups.length === 1 ? "" : "s"} selected.
+                          </p>
+                        </div>
+                      )}
+
+                      {entryReviewBulkDecision === "approve" && hasUnrevisedSelectedGroups && (
+                        <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800">
+                          <p className="font-semibold">Awaiting Resubmission</p>
+                          <p className="mt-0.5 text-[11px] text-amber-700">
+                            The organization must submit a revised file before this item can be {entryReviewTab === "city_led" ? "verified" : "approved"}.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                        <Select
+                          value={entryReviewBulkDecision}
+                          onValueChange={(value) => {
+                            const newDecision = value as "approve" | "needs_revision";
+                            if (newDecision === "needs_revision" && selectedEntryReviewGroupIds.length > 1) {
+                              setSelectedEntryReviewGroupIds([]);
+                              toast({
+                                title: "Single Item Action",
+                                description: "Request Revision applies to one submission at a time. Select one submission to continue.",
+                              });
+                            }
+                            setEntryReviewBulkDecision(newDecision);
+                          }}
+                          disabled={selectedBulkGroups.length === 0}
+                        >
+                          <SelectTrigger className="h-8 border-slate-300 text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="approve">{entryReviewTab === "city_led" ? "Verify" : "Approve"}</SelectItem>
+                            <SelectItem
+                              value="needs_revision"
+                              disabled={selectedBulkGroups.length > 1}
+                              className="data-[disabled]:text-text-disabled data-[disabled]:opacity-100"
+                            >
+                              Request Revision
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedBulkGroups.length === 1 && entryReviewDecisionRequiresRemark ? (
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">
+                            Remarks <span className="text-icon-danger-secondary">*</span>
+                          </label>
+                          <Textarea
+                            value={entryReviewBulkRemark}
+                            onChange={(event) => setEntryReviewBulkRemark(event.target.value)}
+                            placeholder="Explain what the organization needs to revise or provide..."
+                            rows={3}
+                            className="resize-none text-[13px]"
+                          />
+                          {!entryReviewBulkRemark.trim() && (
+                            <p className="text-[11px] text-icon-danger-secondary font-medium">
+                              Revision remark is required.
+                            </p>
+                          )}
+                        </div>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        disabled={isEntryReviewConfirmDisabled}
+                        onClick={() => setEntryReviewConfirmOpen(true)}
+                        className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+
+                  <DangerConfirmDialog
+                    open={entryReviewConfirmOpen}
+                    onOpenChange={setEntryReviewConfirmOpen}
+                    icon={CheckCircle}
+                    variant="info"
+                    title="Confirm Review Decision"
+                    description="Review your decisions and remarks before submitting. These will be applied below and shown to the organization in their portal."
+                    content={
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
+                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Activity</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {selectedBulkGroups.map((group) => {
+                            const isRevision = entryReviewBulkDecision === "needs_revision";
+                            const remarkText = (selectedBulkGroups.length === 1 && isRevision)
+                              ? entryReviewBulkRemark.trim() || (isRevision ? "[Remark required]" : "—")
+                              : "—";
+                            return (
+                              <div key={group.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
+                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={group.title}>
+                                  {group.title}
+                                </p>
+                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                  {entryReviewBulkDecision === "approve"
+                                    ? entryReviewTab === "city_led" ? "Verify" : "Approve"
+                                    : "Request Revision"}
+                                </p>
+                                <p className={cn(
+                                  "font-segoe text-[11px] leading-[140%] min-w-0 break-words [overflow-wrap:anywhere]",
+                                  remarkText === "[Remark required]" ? "font-bold text-icon-danger-secondary" : "font-semibold text-text-default"
+                                )} title={remarkText !== "—" ? remarkText : undefined}>
+                                  {remarkText}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    }
+                    warning="Once submitted, these decisions cannot be changed from this review."
+                    cancelLabel="Cancel"
+                    confirmLabel="Submit Review"
+                    confirmIcon={Send}
+                    onConfirm={submitEntryReviewDecisions}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // ── VIEW 3: period-detail (submissions only) ──────────────────────────
+        if (ypopAdminView === "period-detail" && selectedYpopPeriodId) {
+          const period = state.ypopPeriods.find((p) => p.id === selectedYpopPeriodId) as YPOPPeriod | undefined;
+          if (!period) {
+            setSelectedYpopPeriodId(null);
+            setYpopAdminView("periods");
+            return null;
+          }
+          const periodSubmissionPage = adminYpopSubmissionsQuery.data;
+          const serverSubmissionRows = periodSubmissionPage?.rows ?? [];
+          const submissionRows: YpopSubmissionRow[] = serverSubmissionRows.map((row) => ({
+            id: row.id, organizationId: row.organizationId, organizationName: row.organizationName,
+            referenceId: row.referenceId, majorClassification: row.majorClassification, status: row.status,
+          }));
+          const pendingEvaluationCount = periodSubmissionPage?.summary.pending_evaluation ?? 0;
+          const qualifiedCount = periodSubmissionPage?.summary.qualified ?? 0;
+          const notQualifiedCount = periodSubmissionPage?.summary.not_qualified ?? 0;
+
+          const handleValidateSubmission = async (row: YpopSubmissionRow) => {
+            let entry = state.ypopEntries.find((candidate) => candidate.id === row.id);
+            if (!entry) {
+              entry = {
+                id: row.id, organizationId: row.organizationId, submittedBy: "", semester: period.semesterKey,
+                semesterLabel: period.semesterLabel, pointsEarned: 0, pointsRequired: 70, totalPoints: 100,
+                status: "draft", adminRemarks: "", submissionNote: "", validationDeadline: period.validationDeadline,
+                submittedAt: "", validatedAt: "", revisionHistory: [], orgLedProjectCount: 0,
+                cityLedAttendance: [], createdAt: period.createdAt, updatedAt: period.updatedAt,
+              } as YPOPEntry;
+            }
+            const isVirtualEntry = "_isVirtual" in entry || !entry.id || entry.id.startsWith("virtual-") || entry.id.startsWith("ypop-");
+            let reviewEntry = entry;
+            if (isVirtualEntry) {
+              const newEntryPayload = {
+                organizationId: entry.organizationId,
+                submittedBy: "",
+                semester: entry.semester,
+                semesterLabel: entry.semesterLabel,
+                pointsEarned: 0,
+                pointsRequired: 70,
+                totalPoints: 100,
+                status: "under_review" as const,
+                adminRemarks: "",
+                submissionNote: "",
+                validationDeadline: entry.validationDeadline,
+                submittedAt: new Date().toISOString(),
+                validatedAt: "",
+                revisionHistory: [],
+                orgLedProjectCount: 0,
+                cityLedAttendance: [],
+              };
+              try {
+                const created = await adminCreateYpopEntryInSupabase(newEntryPayload);
+                reviewEntry = created;
+                createYPOPEntry(created);
+              } catch (err) {
+                console.error("Could not persist virtual entry to Supabase:", err);
+                toast({
+                  title: "Unable to Open Submission Review",
+                  description: err instanceof Error ? err.message : "Could not initialize the qualification entry in the database. Please try again.",
+                  variant: "destructive",
+                });
+                return;
+              }
+            }
+            setSelectedYpopId(reviewEntry.id);
+            setYpopAdminView("entry-review");
+            void refreshAdminYpop();
+          };
+
+          return (
+            <div className="space-y-6">
+              <button
+                type="button"
+                onClick={() => { setSelectedYpopPeriodId(null); setYpopAdminView("periods"); }}
+                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+              >
+                <ArrowLeft className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                Back to Semesters
+              </button>
+
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                <StatsCard title="PENDING EVALUATION" value={pendingEvaluationCount} icon={Clock} description="Submissions awaiting validation." />
+                <StatsCard title="QUALIFIED" value={qualifiedCount} icon={CheckCircle} description="Organizations qualified for YPOP." />
+                <StatsCard title="NOT QUALIFIED" value={notQualifiedCount} icon={XCircle} description="Organizations not qualified for YPOP." />
+              </div>
+
+              {adminYpopSubmissionsQuery.isError ? (
+                <div role="alert" className="flex flex-col items-center gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-10 text-center">
+                  <AlertCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
+                  <div>
+                    <p className="font-segoe text-sm font-semibold text-red-800">YPOP submissions could not be loaded</p>
+                    <p className="mt-1 max-w-2xl break-words font-segoe text-xs text-red-700">
+                      {adminYpopSubmissionsQuery.error instanceof Error
+                        ? adminYpopSubmissionsQuery.error.message
+                        : "The submission queue is temporarily unavailable."}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void adminYpopSubmissionsQuery.refetch()}
+                    disabled={adminYpopSubmissionsQuery.isFetching}
+                  >
+                    <RefreshCw className={cn("mr-2 h-3.5 w-3.5", adminYpopSubmissionsQuery.isFetching && "animate-spin")} />
+                    Retry
+                  </Button>
+                </div>
+              ) : adminYpopSubmissionsQuery.isFetching && !periodSubmissionPage ? (
+                <p role="status" className="rounded-md border border-slate-200 bg-admin-surface py-12 text-center font-segoe text-sm text-slate-500">
+                  Loading YPOP submissions…
+                </p>
+              ) : (
+                <YpopSubmissionsTable
+                  key={period.id}
+                  rows={submissionRows}
+                  searchValue={ypopSubmissionSearch}
+                  onSearchChange={setYpopSubmissionSearch}
+                  classificationFilter={ypopSubmissionClassificationFilter}
+                  onClassificationFilterChange={setYpopSubmissionClassificationFilter}
+                  statusFilter={ypopSubmissionFilter}
+                  onStatusFilterChange={setYpopSubmissionFilter}
+                  onValidate={handleValidateSubmission}
+                  selectedOrganizationIds={selectedYpopOrganizationIds}
+                  onSelectedOrganizationIdsChange={(ids) => {
+                    setSelectedYpopOrganizationIds(ids);
+                    ypopDeletionOperationRef.current = null;
+                  }}
+                  isDeleting={isDeletingYpopSubmissions}
+                  serverPage={{ page: ypopSubmissionPage, totalCount: periodSubmissionPage?.totalCount ?? 0, onPageChange: setYpopSubmissionPage }}
+                  onDeleteSelected={() => {
+                    const rows = submissionRows.filter((row) => selectedYpopOrganizationIds.has(row.organizationId));
+                    if (!rows.length) { setSelectedYpopOrganizationIds(new Set()); return; }
+                    ypopDeletionOperationRef.current ??= crypto.randomUUID();
+                    setYpopDeletionTarget({ periodId: period.id, semesterLabel: period.semesterLabel, rows });
+                  }}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // ── VIEW 2: create / edit semester ────────────────────────────────────
+        if (ypopAdminView === "create-period") {
+          const isEditMode = Boolean(editingPeriodId);
+          const editPeriod = isEditMode ? (state.ypopPeriods.find((p) => p.id === editingPeriodId) as YPOPPeriod | undefined) : undefined;
+          const editActivities = isEditMode && editPeriod
+            ? adminYpopPeriodCityActivitiesQuery.data ?? state.ypopCityActivities.filter((a) => a.semesterKey === editPeriod.semesterKey)
+            : [];
+
+          const generatedSemesterLabel = isEditMode
+            ? (editPeriod?.semesterLabel ?? createPeriodForm.semesterLabel)
+            : deriveSemesterLabelFromDate();
+          const generatedSemesterKey = isEditMode
+            ? (editPeriod?.semesterKey ?? "")
+            : buildSemesterKeyFromNow(state.ypopPeriods);
+          const canSubmit = generatedSemesterLabel.trim().length > 0 && createPeriodForm.validationDeadline.length > 0;
+
+          const resetForm = () => {
+            setCreatePeriodForm({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
+            setCreatePeriodActivities([]);
+            setCreateFormNewActivity(null);
+            setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS);
+            setEditingActivityId(null);
+            setEditingActivityData(null);
+            setEditingPeriodId(null);
+          };
+
+          const submitPeriod = async (statusOverride?: YPOPPeriodStatus) => {
+            const status = statusOverride ?? createPeriodForm.status;
+            setSubmittingPeriodStatus(statusOverride === "draft" ? "draft" : "publish");
+            try {
+              if (isEditMode && editingPeriodId) {
+                const deadline = createPeriodForm.validationDeadline.includes("T")
+                  ? createPeriodForm.validationDeadline
+                  : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+                const patch = {
+                  semesterLabel: generatedSemesterLabel,
+                  validationDeadline: deadline,
+                  status,
+                  orgLedTiers: createPeriodOrgLedTiers,
+                };
+                if (status === "closed") {
+                  try {
+                    const result = await adminCloseYpopSemesterInSupabase(editingPeriodId, patch);
+                    updateYPOPPeriod(result.period.id, result.period);
+                    result.evaluatedEntries.forEach((evaluatedEntry) => {
+                      updateYPOPEntry(evaluatedEntry.id, evaluatedEntry);
+                    });
+                    toast({
+                      title: "Semester closed & evaluated",
+                      description: `${generatedSemesterLabel} has been closed and participating organizations evaluated.`,
+                    });
+                  } catch {
+                    const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                    updateYPOPPeriod(saved.id, saved);
+                    toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
+                  }
+                } else {
+                  try {
+                    const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
+                    updateYPOPPeriod(saved.id, saved);
+                  } catch {
+                    updateYPOPPeriod(editingPeriodId, patch);
+                  }
+                  toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
+                }
+                resetForm();
+                setYpopAdminView("periods");
+              } else {
+                const now = new Date().toISOString();
+                const deadline = createPeriodForm.validationDeadline.includes("T")
+                  ? createPeriodForm.validationDeadline
+                  : `${createPeriodForm.validationDeadline}T00:00:00.000Z`;
+                const periodData = { semesterKey: generatedSemesterKey, semesterLabel: generatedSemesterLabel, validationDeadline: deadline, status, orgLedTiers: createPeriodOrgLedTiers };
+                let savedPeriodId: string;
+                try {
+                  const saved = await adminCreateYpopPeriodInSupabase(periodData);
+                  createYPOPPeriod({ ...saved });
+                  savedPeriodId = saved.id;
+                  for (let i = 0; i < createPeriodActivities.length; i++) {
+                    const act = createPeriodActivities[i];
+                    try {
+                      const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category) });
+                      createYPOPCityActivity({ ...savedAct });
+                    } catch {
+                      createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                    }
+                  }
+                } catch {
+                  const newId = `ypop-period-${Date.now()}`;
+                  createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
+                  createPeriodActivities.forEach((act, i) => {
+                    createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: generatedSemesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                  });
+                  savedPeriodId = newId;
+                }
+                toast({ title: "Semester created", description: `${generatedSemesterLabel} is ready.` });
+                setSelectedYpopPeriodId(savedPeriodId);
+                setYpopSubmissionFilter("all");
+                resetForm();
+                setYpopAdminView("period-detail");
+              }
+            } finally {
+              setSubmittingPeriodStatus(null);
+            }
+          };
+
+          const categoryPillClasses: Record<YPOPCityActivityCategory, string> = {
+            mandatory: "border-border-mandatory-subtle bg-bg-mandatory-subtle text-text-mandatory",
+            invitational: "border-border-pink-subtle bg-bg-pink-subtle text-text-pink",
+            partnership: "border-border-partnership-subtle bg-bg-partnership-subtle text-text-partnership",
+          };
+
+          const inlineInputClass = "flex h-8 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled";
+          const inlineLabelClass = "font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500";
+
+          const isEditingActivity = Boolean((editingActivityId || editingDraftTempId) && editingActivityData);
+          const activityModalData = isEditingActivity ? editingActivityData : createFormNewActivity;
+          const isActivityModalOpen = Boolean(activityModalData);
+
+          const closeActivityModal = () => {
+            setCreateFormNewActivity(null);
+            setEditingActivityId(null);
+            setEditingDraftTempId(null);
+            setEditingActivityData(null);
+          };
+
+          const updateActivityModalField = (
+            patch: Partial<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory }>,
+          ) => {
+            if (isEditingActivity && editingActivityData) {
+              setEditingActivityData({ ...editingActivityData, ...patch });
+            } else if (createFormNewActivity) {
+              setCreateFormNewActivity({ ...createFormNewActivity, ...patch });
+            }
+          };
+
+          const saveActivityModal = async () => {
+            if (!activityModalData) return;
+            const startDate = activityModalData.startDate.trim();
+            const endDate = (activityModalData.endDate || activityModalData.startDate).trim();
+            if (isEditingActivity && editingActivityId) {
+              const patch = {
+                name: activityModalData.name.trim(),
+                date: startDate,
+                startDate,
+                endDate,
+                venue: activityModalData.venue.trim(),
+                category: activityModalData.category,
+                points: getYpopCityLedPoints(activityModalData.category),
+              };
+              try {
+                const saved = await adminUpdateYpopCityActivityInSupabase(editingActivityId, patch);
+                updateYPOPCityActivity(saved.id, saved);
+              } catch {
+                updateYPOPCityActivity(editingActivityId, patch);
+              }
+            } else if (editingDraftTempId) {
+              setCreatePeriodActivities((prev) =>
+                prev.map((a) =>
+                  a.tempId === editingDraftTempId
+                    ? {
+                      ...a,
+                      name: activityModalData.name.trim(),
+                      startDate,
+                      endDate,
+                      venue: activityModalData.venue.trim(),
+                      category: activityModalData.category,
+                    }
+                    : a,
+                ),
+              );
+            } else if (isEditMode && editPeriod) {
+              const actData = {
+                semesterKey: editPeriod.semesterKey,
+                name: activityModalData.name.trim(),
+                date: startDate,
+                startDate,
+                endDate,
+                venue: activityModalData.venue.trim(),
+                category: activityModalData.category,
+                points: getYpopCityLedPoints(activityModalData.category),
+              };
+              try {
+                const saved = await adminCreateYpopCityActivityInSupabase(actData);
+                createYPOPCityActivity({ ...saved });
+              } catch {
+                createYPOPCityActivity({ id: `ypop-act-${Date.now()}`, ...actData, createdAt: new Date().toISOString() });
+              }
+            } else {
+              setCreatePeriodActivities((prev) => [
+                ...prev,
+                {
+                  tempId: `tmp-${Date.now()}`,
+                  name: activityModalData.name.trim(),
+                  startDate,
+                  endDate,
+                  venue: activityModalData.venue.trim(),
+                  category: activityModalData.category,
+                },
+              ]);
+            }
+            closeActivityModal();
+          };
+
+          return (
+            <div className="space-y-4 sm:space-y-6">
+              <button
+                type="button"
+                onClick={() => { resetForm(); setYpopAdminView("periods"); }}
+                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+              >
+                <ArrowLeft className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                Cancel &amp; Back
+              </button>
+
+              <AdminPageHeader
+                title={isEditMode ? "Edit YPOP Semester" : "New YPOP Semester"}
+                description="Configure cycle identification, city-led activities point table, and organization-initiated scoring bonus tiers."
+              />
+
+              <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
+                {/* Group 1: Semester Information */}
+                <div className="flex flex-col gap-4 border-b border-slate-300 p-6">
+                  <div>
+                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">1. Semester Information</p>
+                    <p className="mt-1.5 font-segoe text-[13px] text-slate-500">General identification and deadline configuration for this validation period.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-center justify-between gap-1.5 font-segoe text-[13px] text-text-default" htmlFor="cp-label">
+                        <span>
+                          Semester Label <span className="font-segoe text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
+                        </span>
+                        <span className="flex h-[19px] shrink-0 items-center gap-1 rounded-[4px] border-[0.6px] border-slate-300 bg-admin-surface px-1.5 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
+                          <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
+                          Read-Only
+                        </span>
+                      </label>
+                      <div className="flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-bg-neutral-subtle px-2.5">
+                        <span className="truncate font-segoe text-[13px] text-text-default">{generatedSemesterLabel}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-center justify-between gap-1.5 font-segoe text-[13px] text-text-default" htmlFor="cp-key">
+                        <span>
+                          Semester Key <span className="font-segoe text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
+                        </span>
+                        <span className="flex h-[19px] shrink-0 items-center gap-1 rounded-[4px] border-[0.6px] border-slate-300 bg-admin-surface px-1.5 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
+                          <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
+                          Read-Only
+                        </span>
+                      </label>
+                      <div className="flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-bg-neutral-subtle px-2.5">
+                        <span className="truncate font-cascadia text-[13px] text-text-default">{generatedSemesterKey || "—"}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="font-segoe text-[13px] text-text-default" htmlFor="cp-deadline">
+                        Validation Deadline <span className="text-icon-danger-secondary">*</span>
+                      </label>
+                      <Popover open={deadlineDateOpen} onOpenChange={setDeadlineDateOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            id="cp-deadline"
+                            type="button"
+                            className="flex h-8 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-2.5 font-segoe text-[13px] text-text-default outline-none"
+                          >
+                            <span className={createPeriodForm.validationDeadline ? "" : "text-text-disabled"}>
+                              {createPeriodForm.validationDeadline
+                                ? format(parse(createPeriodForm.validationDeadline, "yyyy-MM-dd", new Date()), "d MMM yyyy")
+                                : "Select date"}
+                            </span>
+                            <CalendarDays className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-auto rounded-md border-0 border-t border-slate-300 p-4">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              createPeriodForm.validationDeadline
+                                ? parse(createPeriodForm.validationDeadline, "yyyy-MM-dd", new Date())
+                                : undefined
+                            }
+                            onSelect={(date) => {
+                              if (date) {
+                                setCreatePeriodForm({ ...createPeriodForm, validationDeadline: format(date, "yyyy-MM-dd") });
+                                setDeadlineDateOpen(false);
+                              }
+                            }}
+                            components={{ Caption: CalendarCaption }}
+                            classNames={{
+                              day_selected:
+                                "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="font-segoe text-[13px] text-text-default" htmlFor="cp-status">
+                        {isEditMode ? "Status" : "Initial Status"}
+                      </label>
+                      <Select
+                        value={createPeriodForm.status}
+                        onValueChange={(v) => setCreatePeriodForm({ ...createPeriodForm, status: v as YPOPPeriodStatus })}
+                      >
+                        <SelectTrigger id="cp-status" className="h-8 border-slate-300 text-[13px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="draft" className="pl-3 [&>span:first-child]:hidden">Draft</SelectItem>
+                          <SelectItem value="open" className="pl-3 [&>span:first-child]:hidden">Open</SelectItem>
+                          {isEditMode ? <SelectItem value="closed" className="pl-3 [&>span:first-child]:hidden">Closed</SelectItem> : null}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Group 2: City-Led Activities */}
+                <div className="flex flex-col gap-4 border-b border-slate-300 p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">2. City-Led Activities</p>
+                      <p className="mt-1.5 font-segoe text-[13px] text-slate-500">
+                        Assign each city-led activity a type. Points are automatic:{" "}
+                        <span className="italic font-bold">Mandatory (4), Invitational (3), Partnership (2).</span>
+                      </p>
+                    </div>
+                    {!isActivityModalOpen ? (
+                      <button
+                        type="button"
+                        onClick={() => setCreateFormNewActivity({ name: "", startDate: "", endDate: "", venue: "", category: "mandatory" })}
+                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      >
+                        <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                        Add Activity
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-col">
+                    {(isEditMode ? editActivities : createPeriodActivities).length === 0 ? (
+                      <p className="py-6 text-center font-segoe text-xs text-slate-500">No activities added yet. Use "+ Add Activity" to start.</p>
+                    ) : isEditMode ? (
+                      editActivities.map((act: YPOPCityActivity) => (
+                        <div key={act.id} className="flex items-center justify-between gap-2 border-b border-slate-300 py-4 last:border-b-0">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
+                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]", categoryPillClasses[resolveYpopCityLedCategory(act.category, act.points)])}>
+                                {YPOP_CITY_LED_CATEGORY_LABELS[resolveYpopCityLedCategory(act.category, act.points)]}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-3">
+                              <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                {formatActivityDateRange(act.startDate, act.endDate)}
+                              </span>
+                              {act.venue ? (
+                                <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                  {act.venue}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                              {normalizeYpopCityLedPoints(act.points, act.category)} pts
+                            </span>
+                            {(() => {
+                              const announcementInfo = sentAnnouncementsByActivityId[act.id];
+                              return (
+                                <button
+                                  type="button"
+                                  aria-label="Send Announcement"
+                                  title={
+                                    announcementInfo
+                                      ? `Announced to ${announcementInfo.recipientCount} orgs`
+                                      : "Send announcement to verified active organizations"
+                                  }
+                                  onClick={() => {
+                                    setAnnouncementTargetActivity(act);
+                                    setAnnouncementDialogOpen(true);
+                                  }}
+                                  className={cn(
+                                    "flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-segoe text-xs font-semibold transition-colors",
+                                    announcementInfo
+                                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                      : "border-slate-300 bg-admin-surface text-text-default hover:bg-slate-50 hover:text-public-bg-brand"
+                                  )}
+                                >
+                                  <Megaphone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
+                                  <span>{announcementInfo ? "Announced" : "Send Announcement"}</span>
+                                </button>
+                              );
+                            })()}
+                            <button
+                              type="button"
+                              aria-label="Edit activity"
+                              onClick={() => { setEditingActivityId(act.id); setEditingActivityData({ name: act.name, startDate: act.startDate, endDate: act.endDate, venue: act.venue, category: resolveYpopCityLedCategory(act.category, act.points) }); }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50"
+                            >
+                              <Pencil className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Delete activity"
+                              onClick={() => setPendingDeleteConfirmation({ kind: "ypop_city_activity", id: act.id, title: act.name })}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50 hover:text-icon-danger-secondary"
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      createPeriodActivities.map((act, idx) => (
+                        <div key={act.tempId} className="flex items-center justify-between gap-2 border-b border-slate-300 py-4 last:border-b-0">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
+                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]", categoryPillClasses[act.category])}>
+                                {YPOP_CITY_LED_CATEGORY_LABELS[act.category]}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-3">
+                              <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                {formatActivityDateRange(act.startDate, act.endDate)}
+                              </span>
+                              {act.venue ? (
+                                <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                  {act.venue}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                              {getYpopCityLedPoints(act.category)} pts
+                            </span>
+                            <button
+                              type="button"
+                              aria-label="Edit activity"
+                              onClick={() => {
+                                setEditingDraftTempId(act.tempId);
+                                setEditingActivityData({ name: act.name, startDate: act.startDate, endDate: act.endDate, venue: act.venue, category: act.category });
+                              }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50"
+                            >
+                              <Pencil className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Delete activity"
+                              onClick={() => setCreatePeriodActivities((prev) => prev.filter((_, i) => i !== idx))}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface text-text-default transition-colors hover:bg-slate-50 hover:text-icon-danger-secondary"
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+
+                    {/* Total pts footer */}
+                    {(() => {
+                      const totalPts = isEditMode
+                        ? editActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0)
+                        : createPeriodActivities.reduce((s, a) => s + getYpopCityLedPoints(a.category), 0);
+                      return totalPts > 0 ? (
+                        <p className="pt-3 text-right font-segoe text-xs font-semibold text-slate-500">
+                          Total: <span className="text-text-default">{totalPts} pts</span>
+                        </p>
+                      ) : null;
+                    })()}
+                  </div>
+                </div>
+
+                <DangerConfirmDialog
+                  open={isActivityModalOpen}
+                  onOpenChange={(open) => { if (!open) closeActivityModal(); }}
+                  variant="info"
+                  icon={isEditingActivity ? Pencil : FileText}
+                  title={isEditingActivity ? "Edit City-Led Activity" : "Add City-Led Activity"}
+                  subtitle="Configure official city event parameters and automated scoring points."
+                  description=""
+                  className="w-[560px] sm:w-[560px]"
+                  confirmDisabled={!activityModalData?.name.trim() || !activityModalData?.venue.trim()}
+                  cancelLabel="Cancel"
+                  confirmLabel={isEditingActivity ? "Save Changes" : "Add Activity"}
+                  confirmIcon={isEditingActivity ? Save : Plus}
+                  onConfirm={saveActivityModal}
+                  content={
+                    activityModalData ? (
+                      <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-bg-panel-subtle p-6">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">
+                            Title <span className="text-icon-danger-secondary">*</span>
+                          </label>
+                          <input
+                            value={activityModalData.name}
+                            onChange={(e) => updateActivityModalField({ name: e.target.value })}
+                            placeholder="Enter activity title"
+                            className="flex h-9 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">
+                            Location <span className="text-icon-danger-secondary">*</span>
+                          </label>
+                          <div className="flex h-9 w-full items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3">
+                            <MapPin className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                            <input
+                              value={activityModalData.venue}
+                              onChange={(e) => updateActivityModalField({ venue: e.target.value })}
+                              placeholder="Enter location"
+                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">Start Date</label>
+                            <Popover open={activityStartDateOpen} onOpenChange={setActivityStartDateOpen}>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none"
+                                >
+                                  <span className={activityModalData.startDate ? "" : "text-text-disabled"}>
+                                    {activityModalData.startDate
+                                      ? format(parse(activityModalData.startDate, "yyyy-MM-dd", new Date()), "d MMM yyyy")
+                                      : "Select date"}
+                                  </span>
+                                  <CalendarDays className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-auto rounded-md border-0 border-t border-slate-300 p-4">
+                                <Calendar
+                                  mode="single"
+                                  selected={
+                                    activityModalData.startDate
+                                      ? parse(activityModalData.startDate, "yyyy-MM-dd", new Date())
+                                      : undefined
+                                  }
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      updateActivityModalField({ startDate: format(date, "yyyy-MM-dd") });
+                                      setActivityStartDateOpen(false);
+                                    }
+                                  }}
+                                  components={{ Caption: CalendarCaption }}
+                                  classNames={{
+                                    day_selected:
+                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-segoe text-[13px] text-text-default">End Date</label>
+                            <Popover open={activityEndDateOpen} onOpenChange={setActivityEndDateOpen}>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none"
+                                >
+                                  <span className={activityModalData.endDate ? "" : "text-text-disabled"}>
+                                    {activityModalData.endDate
+                                      ? format(parse(activityModalData.endDate, "yyyy-MM-dd", new Date()), "d MMM yyyy")
+                                      : "Select date"}
+                                  </span>
+                                  <CalendarDays className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-auto rounded-md border-0 border-t border-slate-300 p-4">
+                                <Calendar
+                                  mode="single"
+                                  selected={
+                                    activityModalData.endDate
+                                      ? parse(activityModalData.endDate, "yyyy-MM-dd", new Date())
+                                      : undefined
+                                  }
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      updateActivityModalField({ endDate: format(date, "yyyy-MM-dd") });
+                                      setActivityEndDateOpen(false);
+                                    }
+                                  }}
+                                  components={{ Caption: CalendarCaption }}
+                                  classNames={{
+                                    day_selected:
+                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="font-segoe text-[13px] text-text-default">Activity Type</label>
+                          <p className="text-justify font-segoe text-[11px] leading-none text-slate-500">
+                            Select the activity type that best fits. Points are assigned based on the selected type.
+                          </p>
+                          <div className="grid grid-cols-3 gap-2.5 pt-4 pb-2" role="radiogroup" aria-label="Activity Type">
+                            {(["mandatory", "invitational", "partnership"] as YPOPCityActivityCategory[]).map((cat) => {
+                              const selected = activityModalData.category === cat;
+                              return (
+                                <button
+                                  key={cat}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={selected}
+                                  onClick={() => updateActivityModalField({ category: cat })}
+                                  className="flex flex-col gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 text-left transition-colors hover:bg-slate-50"
+                                >
+                                  <div className="flex flex-col gap-3 border-b border-slate-300 pb-1.5">
+                                    <span className="flex items-center gap-1.5">
+                                      <span
+                                        className={cn(
+                                          "flex h-[13px] w-[13px] shrink-0 items-center justify-center rounded-full border",
+                                          selected ? "border-border-info-tertiary" : "border-public-border-neutral-tertiary",
+                                        )}
+                                      >
+                                        {selected ? <span className="h-1.5 w-1.5 rounded-full bg-border-info-tertiary" /> : null}
+                                      </span>
+                                      <span className="font-segoe text-xs font-semibold uppercase text-text-default">
+                                        {YPOP_CITY_LED_CATEGORY_LABELS[cat]}
+                                      </span>
+                                    </span>
+                                    <span className="ml-[19px] font-segoe text-[10px] font-normal capitalize leading-[140%] text-slate-500">
+                                      {cat === "mandatory"
+                                        ? "Required Participation."
+                                        : cat === "invitational"
+                                          ? "Voluntary Participation."
+                                          : "Collaborative Participation."}
+                                    </span>
+                                  </div>
+                                  <span className="mt-1 inline-flex w-fit items-center self-center rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-1.5 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                                    {YPOP_CITY_LED_CATEGORY_POINTS[cat]} pts
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null
+                  }
+                />
+
+                {/* Group 3: Organization-Initiated Activities */}
+                <div className="flex flex-col gap-4 p-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">3. Organization-Initiated Activities</p>
+                      <p className="mt-1.5 font-segoe text-[13px] text-slate-500">Set bonus percentages for organization-initiated activities. Default values are applied automatically.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS)}
+                      className="shrink-0 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand transition-colors hover:underline"
+                    >
+                      Reset to defaults
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5">
+                    {[...createPeriodOrgLedTiers]
+                      .sort((a, b) => b.minProjects - a.minProjects)
+                      .map((tier, displayIdx) => {
+                        const actualIdx = createPeriodOrgLedTiers.indexOf(tier);
+                        return (
+                          <div key={displayIdx} className="flex items-center gap-2 rounded-md border border-slate-300 bg-bg-panel-subtle px-4 py-3">
+                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">&#8805;</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={tier.minProjects}
+                              onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
+                                prev.map((t, i) => i === actualIdx ? { ...t, minProjects: Math.max(0, Number(e.target.value) || 0) } : t)
+                              )}
+                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-segoe text-[13px] text-text-default outline-none"
+                            />
+                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">projects &#8594; +</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={tier.bonus}
+                              onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
+                                prev.map((t, i) => i === actualIdx ? { ...t, bonus: Math.max(0, Number(e.target.value) || 0) } : t)
+                              )}
+                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-segoe text-[13px] text-text-default outline-none"
+                            />
+                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">% bonus</span>
+                            <button
+                              type="button"
+                              aria-label="Remove tier"
+                              onClick={() => setCreatePeriodOrgLedTiers((prev) => prev.filter((_, i) => i !== actualIdx))}
+                              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-icon-danger-secondary"
+                            >
+                              <X className="h-3.5 w-3.5" strokeWidth={1.6} />
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                    {createPeriodOrgLedTiers.length === 0 ? (
+                      <p className="py-3 text-center font-segoe text-xs text-slate-500">No tiers configured. Org-led activities will contribute 0 bonus points.</p>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => setCreatePeriodOrgLedTiers((prev) => [...prev, { minProjects: 0, bonus: 0 }])}
+                      className="flex items-center justify-center gap-3 rounded-md border border-dashed border-slate-300 bg-admin-surface px-4 py-4 font-segoe text-public-fs-body-sm text-public-bg-brand transition-colors hover:bg-bg-panel-subtle"
+                    >
+                      <Plus className="h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
+                      Add Tier
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <div className="flex items-center justify-end gap-2.5 border-t border-slate-300 p-6">
+                  <button
+                    type="button"
+                    disabled={submittingPeriodStatus !== null}
+                    onClick={() => { resetForm(); setYpopAdminView("periods"); }}
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-disabled transition-colors hover:text-slate-500 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      disabled={submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
+                      onClick={() => void submitPeriod("draft")}
+                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      {submittingPeriodStatus === "draft" ? <Loader className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.6} /> : null}
+                      Save as Draft
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canSubmit || submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
+                      onClick={() => void submitPeriod()}
+                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+                    >
+                      {submittingPeriodStatus === "publish" ? <Loader className="h-4 w-4 shrink-0 animate-spin text-public-text-neutral-on-neutral" strokeWidth={1.6} /> : null}
+                      {isEditMode ? "Save Changes" : "Create Semester"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // ── VIEW 1: YPOP Semesters list ───────────────────────────────────────
+        const periodRows = [...(adminYpopPeriodsQuery.data ?? [])]
+          .sort((a, b) => b.period.createdAt.localeCompare(a.period.createdAt))
+          .filter(({ period }) => {
+            const q = ypopPeriodSearch.trim().toLowerCase();
+            if (q && !period.semesterLabel.toLowerCase().includes(q) && !period.semesterKey.toLowerCase().includes(q)) {
+              return false;
+            }
+            if (ypopPeriodStatusFilter !== "all" && period.status !== ypopPeriodStatusFilter) return false;
+            return true;
+          });
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <AdminPageHeader
+              title="YPOP Validation"
+              description="Review YPOP grant eligibility submissions."
+              action={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreatePeriodForm({ semesterLabel: deriveSemesterLabelFromDate(), validationDeadline: "", status: "draft" });
+                    setCreatePeriodActivities([]);
+                    setCreateFormNewActivity(null);
+                    setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS);
+                    setEditingActivityId(null);
+                    setEditingActivityData(null);
+                    setEditingPeriodId(null);
+                    setYpopAdminView("create-period");
+                  }}
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                >
+                  <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
+                  New Semester
+                </button>
+              }
+            />
+
+            <YpopPeriodsTable
+              rows={periodRows}
+              searchValue={ypopPeriodSearch}
+              onSearchChange={setYpopPeriodSearch}
+              statusFilter={ypopPeriodStatusFilter}
+              onStatusFilterChange={setYpopPeriodStatusFilter}
+              onEdit={(period) => {
+                const deadlineDate = period.validationDeadline.includes("T")
+                  ? period.validationDeadline.split("T")[0]
+                  : period.validationDeadline;
+                setCreatePeriodForm({ semesterLabel: period.semesterLabel, validationDeadline: deadlineDate, status: period.status });
+                setCreatePeriodActivities([]);
+                setCreateFormNewActivity(null);
+                setCreatePeriodOrgLedTiers(period.orgLedTiers?.length ? period.orgLedTiers : DEFAULT_ORG_LED_TIERS);
+                setEditingActivityId(null);
+                setEditingActivityData(null);
+                setEditingPeriodId(period.id);
+                setYpopAdminView("create-period");
+              }}
+              onDelete={(period) => {
+                const activityCount = adminYpopPeriodsQuery.data?.find((item) => item.period.id === period.id)?.activityCount ?? 0;
+                setPendingDeleteConfirmation({ kind: "ypop_period", id: period.id, title: period.semesterLabel, activityCount });
+              }}
+              onViewSubmissions={(period) => {
+                setSelectedYpopPeriodId(period.id);
+                setYpopSubmissionFilter("all");
+                setYpopAdminView("period-detail");
+              }}
+            />
+          </div>
+        );
+      }
+      case "yorp-registry":
+        return <YorpRegistryPage />;
+      case "backup-recovery":
+        return <BackupRecoveryPage />;
+      case "settings":
+        return (
+          <AdminSettingsPage
+            onNavigateToBudgetConfig={() => navigate("/admin/budget-monitoring?tab=public-config")}
+          />
+        );
+      default:
+        return (
+          <PortalEmptyState
+            title="Section not found"
+            description="This admin section has not been configured yet."
+            action={
+              <Button variant="outline" onClick={() => navigate(routeMap.overview)}>
+                Go to overview
+              </Button>
+            }
+          />
+        );
+    }
+  }, [
+    selectedYpopOrganizationIds,
+    isDeletingYpopSubmissions,
+    activityLogFilter,
+    activityDateFilter,
+    activityReportPeriod,
+    activityExportDialogOpen,
+    budgetReportPeriod,
+    liquidationReportPeriod,
+    activityExporting,
+    activitySearch,
+    adminAccountsById,
+    createNotification,
+    selectedBudgetRequestId,
+    selectedLiquidationReportSnapshot,
+    selectedLiquidationReportId,
+    liquidationDetailsOpen,
+    selectedBudgetAllocation,
+    createNewsRelease,
+    createTemplate,
+    deleteNewsReleaseInSupabase,
+    editingTemplateId,
+    editingTransparencyPostId,
+    handleCreateTemplate,
+    handleDeleteTemplate,
+    handleDeleteNewsRelease,
+    handleDeleteTransparencyPost,
+    handleSaveNewsRelease,
+    handleSaveTransparencyPost,
+    mergeRemoteState,
+    markNotificationRead,
+    markAllNotificationsRead,
+    isMarkingAllNotificationsRead,
+    markAdminNotificationRead,
+    markAllAdminNotificationsRead,
+    navigate,
+    openFile,
+    openPreview,
+    overviewStats,
+    profile,
+    previewModalOpen,
+    previewTitle,
+    previewUrl,
+    newsDatePostedDraft,
+    newsDescriptionDraft,
+    newsFacebookPostUrlDraft,
+    newsModalMode,
+    newsPreviewImageFileDraft,
+    newsPreviewImageUrlDraft,
+    newsReleases,
+    newsTitleDraft,
+    newsVisibilityDraft,
+    section,
+    selectedRegistrationId,
+    state.activityLogs,
+    state.budgetRequests,
+    state.complianceRemarks,
+    state.documentSubmissionFiles,
+    state.liquidationReports,
+    state.notifications,
+    state.inquiries,
+    state.organizationProfiles,
+    state.templates,
+    state.transparencyPosts,
+    inquirySearch,
+    inquiryStatusFilter,
+    adminListError,
+    adminListLoading,
+    adminListResult,
+    activeTemplates,
+    otherTemplates,
+    selectedTemplate,
+    templateDescriptionDraft,
+    templateDocuments,
+    templateFileDraft,
+    templateNameDraft,
+    templateModalMode,
+    templateScopeDraft,
+    transparencyAttachmentUrlDraft,
+    transparencyCategoryDraft,
+    transparencyDescriptionDraft,
+    transparencyModalMode,
+    transparencyPostDateDraft,
+    transparencyPosts,
+    transparencyTitleDraft,
+    transparencyVisibilityDraft,
+    openAdminConfirmation,
+    pendingAdminConfirmation,
+    processingAdminConfirmation,
+    removeNewsRelease,
+    updateComplianceRemark,
+    updateNewsRelease,
+    updateTemplate,
+    updateTransparencyPost,
+    updateNewsReleaseInSupabase,
+    resetNewsReleaseForm,
+    resetTransparencyForm,
+    savingNewsRelease,
+    savingTransparencyPost,
+    startEditingNewsRelease,
+    startEditingTemplate,
+    startEditingTransparencyPost,
+    validDocumentTypeIds,
+    savingTemplate,
+    uploadingTemplateId,
+    selectedYpopId,
+    setSelectedYpopId,
+    ypopAdminView,
+    setYpopAdminView,
+    selectedYpopPeriodId,
+    setSelectedYpopPeriodId,
+    createPeriodForm,
+    setCreatePeriodForm,
+    ypopSubmissionFilter,
+    setYpopSubmissionFilter,
+    ypopSubmissionSearch,
+    setYpopSubmissionSearch,
+    ypopSubmissionClassificationFilter,
+    setYpopSubmissionClassificationFilter,
+    newActivityForm,
+    setNewActivityForm,
+    editingActivityId,
+    setEditingActivityId,
+    editingActivityData,
+    setEditingActivityData,
+    state.ypopEntries,
+    state.ypopFiles,
+    state.ypopEventParticipations,
+    state.ypopEventFiles,
+    state.ypopOrgActivities,
+    state.ypopOrgActivityFiles,
+    state.ypopCityActivities,
+    state.ypopPeriods,
+    createYPOPEntry,
+    updateYPOPEntry,
+    updateYPOPEventParticipation,
+    createYPOPOrgActivity,
+    updateYPOPOrgActivity,
+    createYPOPCityActivity,
+    updateYPOPCityActivity,
+    deleteYPOPCityActivity,
+    editingPeriodId,
+    setEditingPeriodId,
+    createPeriodActivities,
+    setCreatePeriodActivities,
+    createFormNewActivity,
+    setCreateFormNewActivity,
+    createPeriodOrgLedTiers,
+    setCreatePeriodOrgLedTiers,
+    createYPOPPeriod,
+    updateYPOPPeriod,
+    deleteYPOPPeriod,
+    adminCreateYpopPeriodInSupabase,
+    adminUpdateYpopPeriodInSupabase,
+    adminDeleteYpopPeriodFromSupabase,
+    adminCreateYpopCityActivityInSupabase,
+    adminUpdateYpopCityActivityInSupabase,
+    adminDeleteYpopCityActivityFromSupabase,
+    adminUpdateYpopEntryInSupabase,
+    adminUpdateYpopEventParticipationInSupabase,
+    adminUpdateYpopOrgActivityInSupabase,
+    user,
+    administrators,
+    administratorRoles,
+    administratorUnits,
+    filteredAdministrators,
+    editingAdministrator,
+    editingAdministratorId,
+    administratorsLoading,
+    administratorsViewTab,
+    rolesPermissionsSubTab,
+    configuringRoleCode,
+    administratorSearch,
+    administratorRoleFilter,
+    administratorUnitFilter,
+    administratorStatusFilter,
+    administratorModalMode,
+    administratorDisplayNameDraft,
+    administratorEmailDraft,
+    administratorRoleIdDraft,
+    administratorUnitIdDraft,
+    savingAdministrator,
+    pendingToggleActiveAdministrator,
+    pendingDeleteAdministrator,
+    resendingInviteId,
+    resetAdministratorForm,
+    handleCreateAdministrator,
+    handleUpdateAdministrator,
+    handleToggleAdministratorActive,
+    handleDeleteAdministrator,
+    handleExportAdministrators,
+    handleUpdateRolePermissions,
+    handleResendInvite,
+    startEditingAdministrator,
+    administratorsExportDialogOpen,
+    handleExportAdministrators,
+  ]);
+
+  const adminConfirmationCopy = getAdminConfirmationCopy();
+
+  return (
+    <>
+      <PortalShell
+        title="Admin Portal"
+        subtitle="PCYDO Admin"
+        groups={sidebarGroups}
+        activeId={section}
+        onNavigate={handleAdminSectionNavigate}
+        onSignOut={() => setSignOutConfirmOpen(true)}
+        userProfile={{ name: user?.displayName ?? "Administrator", role: "Administrator", email: user?.email ?? "" }}
+        notifications={adminNotifications}
+        notificationUnreadCount={unread}
+        onMarkAllRead={markAllAdminNotificationsRead}
+        isMarkingAllRead={isMarkingAllNotificationsRead}
+        onMarkRead={markAdminNotificationRead}
+      >
+        {activeContent}
+      </PortalShell>
+      {confirmationDialog}
+      <DangerConfirmDialog
+        open={Boolean(ypopDeletionTarget)}
+        onOpenChange={(open) => { if (!open && !ypopDeletionBusyRef.current) setYpopDeletionTarget(null); }}
+        icon={Trash2}
+        title={`Delete ${ypopDeletionTarget?.rows.length ?? 0} YPOP ${(ypopDeletionTarget?.rows.length ?? 0) === 1 ? "Submission" : "Submissions"}?`}
+        description={<>This removes the selected organizations' attendance proofs, PPA files, and validation results for <strong>{ypopDeletionTarget?.semesterLabel}</strong>. They can submit again while the semester is open.</>}
+        content={
+          <ul className="max-h-48 space-y-2 overflow-y-auto font-segoe text-sm text-text-default">
+            {ypopDeletionTarget?.rows.map((row) => <li key={row.organizationId}>{row.organizationName}</li>)}
+          </ul>
+        }
+        warning="The deleted submissions and files cannot be restored."
+        confirmLabel={isDeletingYpopSubmissions ? "Deleting..." : "Delete submissions"}
+        confirmDisabled={isDeletingYpopSubmissions || !ypopDeletionTarget?.rows.length}
+        onConfirm={handleConfirmYpopSubmissionDelete}
+      />
+      <Dialog open={recentActivityDialogOpen} onOpenChange={setRecentActivityDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{recentActivityDialogTitle}</DialogTitle>
+            <DialogDescription>
+              Full activity history for this record.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto pr-1">
+            <RecentActivityList
+              activities={recentActivityDialogEntries.map((entry) => ({
+                id: entry.key,
+                message: entry.title,
+                note: entry.note || undefined,
+                timestamp: entry.timestamp,
+                timestampLabel: entry.timestamp,
+              }))}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+      <InquiryDetailDrawer
+        inquiry={selectedInquiry}
+        referenceCode={selectedInquiry ? getInquiryReferenceCode(selectedInquiry, state.inquiries) : ""}
+        onOpenChange={(open) => {
+          if (!open && !savingInquiryStatus) setSelectedInquiry(null);
+        }}
+        onUpdateStatus={(status) => void handleSaveInquiryStatus(status)}
+        onReplyEmail={() => {
+          if (selectedInquiry && normalizeInquiryStatus(selectedInquiry.status) === "pending_review") {
+            setReplyDialogInquiry(selectedInquiry);
+          }
+          setSelectedInquiry(null);
+        }}
+        onDeleteInquiry={handleInitiateDeleteInquiry}
+        saving={savingInquiryStatus}
+      />
+      <ReplyEmailDialog
+        open={Boolean(replyDialogInquiry && normalizeInquiryStatus(replyDialogInquiry.status) === "pending_review")}
+        onOpenChange={(open) => {
+          if (!open) setReplyDialogInquiry(null);
+        }}
+        inquiryId={replyDialogInquiry?.id}
+        email={replyDialogInquiry?.email ?? ""}
+        subject={replyDialogInquiry?.subject ?? ""}
+        organizationName={
+          replyDialogInquiry
+            ? replyDialogInquiry.organizationName || replyDialogInquiry.submitterName || "Unknown"
+            : ""
+        }
+        inquiryStatus={replyDialogInquiry?.status}
+        onMarkReviewed={() => (replyDialogInquiry ? handleMarkInquiryReviewed(replyDialogInquiry) : undefined)}
+      />
+      <AlertDialog
+        open={Boolean(inquiryToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingInquiry) {
+            setInquiryToDelete(null);
+            setDeleteInquiryError(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden p-5 sm:p-6">
+          <AlertDialogHeader className="space-y-1.5 text-left">
+            <AlertDialogTitle className="font-segoe text-lg font-bold text-text-default">
+              Delete Inquiry
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-segoe text-sm text-slate-500">
+              Are you sure you want to delete this inquiry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {inquiryToDelete ? (
+            <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/80 p-3.5 sm:p-4 font-segoe text-xs min-w-0 overflow-hidden">
+              {/* Reference ID */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
+                <span className="font-semibold text-slate-500 shrink-0 sm:w-24">Reference ID</span>
+                <div className="min-w-0 flex-1">
+                  <ReferenceCodeChip code={getInquiryReferenceCode(inquiryToDelete, state.inquiries)} />
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 min-w-0">
+                <span className="font-semibold text-slate-500 shrink-0 sm:w-24 sm:pt-0.5">Subject</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-text-default text-xs sm:text-[13px] leading-relaxed break-words [overflow-wrap:anywhere] whitespace-normal">
+                    {inquiryToDelete.subject || "General Inquiry"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sender */}
+              {inquiryToDelete.organizationName || inquiryToDelete.submitterName || inquiryToDelete.email ? (
+                <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 min-w-0">
+                  <span className="font-semibold text-slate-500 shrink-0 sm:w-24 sm:pt-0.5">Sender</span>
+                  <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                    {inquiryToDelete.organizationName || inquiryToDelete.submitterName ? (
+                      <p className="font-medium text-text-default text-xs sm:text-[13px] leading-snug break-words [overflow-wrap:anywhere] whitespace-normal">
+                        {inquiryToDelete.organizationName || inquiryToDelete.submitterName}
+                      </p>
+                    ) : null}
+                    {inquiryToDelete.email ? (
+                      <p className="text-slate-500 text-xs break-all leading-normal">
+                        {inquiryToDelete.email}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {deleteInquiryError ? (
+            <div className="rounded-md border border-rose-200 bg-rose-50 p-3 font-segoe text-xs text-rose-700 break-words" role="alert">
+              {deleteInquiryError}
+            </div>
+          ) : null}
+
+          <AlertDialogFooter className="mt-2 flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-2">
+            <AlertDialogCancel
+              disabled={isDeletingInquiry}
+              onClick={() => {
+                setInquiryToDelete(null);
+                setDeleteInquiryError(null);
+              }}
+              className="mt-0 font-segoe text-sm"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeletingInquiry}
+              onClick={() => void handleConfirmDeleteInquiry()}
+              className="font-segoe text-sm active:scale-[0.98] transition-transform"
+            >
+              {isDeletingInquiry ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Delete Inquiry
+                </>
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Dialog open={Boolean(pendingAdminConfirmation)} onOpenChange={(open) => (!open ? closeAdminConfirmation() : undefined)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{adminConfirmationCopy.title}</DialogTitle>
+            <DialogDescription>{adminConfirmationCopy.description}</DialogDescription>
+          </DialogHeader>
+          <label htmlFor="admin-confirmation-checkbox" className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 text-sm">
+            <input
+              id="admin-confirmation-checkbox"
+              name="adminConfirmationAcknowledged"
+              type="checkbox"
+              checked={approvalAcknowledged}
+              onChange={(event) => setApprovalAcknowledged(event.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border text-primary"
+            />
+            <span>{adminConfirmationCopy.checkboxLabel}</span>
+          </label>
+          {adminConfirmationCopy.showCommentBox ? (
+            <div className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-foreground">{adminConfirmationCopy.commentLabel}</p>
+                <span className="text-xs text-muted-foreground">Required for revision or rejection</span>
+              </div>
+              <Textarea
+                value={statusChangeRemarkDraft}
+                onChange={(event) => setStatusChangeRemarkDraft(event.target.value)}
+                placeholder={adminConfirmationCopy.commentPlaceholder}
+                className="min-h-28"
+              />
+            </div>
+          ) : null}
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeAdminConfirmation} disabled={processingAdminConfirmation}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              onClick={() => void executeAdminConfirmation()}
+              disabled={!approvalAcknowledged || processingAdminConfirmation}
+            >
+              {processingAdminConfirmation ? "Updating..." : adminConfirmationCopy.confirmLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <AlertDialog
+        open={
+          Boolean(pendingDeleteConfirmation) &&
+          pendingDeleteConfirmation?.kind !== "news_release" &&
+          pendingDeleteConfirmation?.kind !== "ypop_period" &&
+          pendingDeleteConfirmation?.kind !== "ypop_city_activity"
+        }
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteConfirmation(null);
+        }}
+      >
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Transparency Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDeleteConfirmation
+                ? `Are you sure you want to delete "${pendingDeleteConfirmation.title}"? This action cannot be undone.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={processingAdminConfirmation}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void confirmDeleteRecord()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <DangerConfirmDialog
+        open={signOutConfirmOpen}
+        onOpenChange={setSignOutConfirmOpen}
+        icon={LogOut}
+        title="Sign Out Confirmation"
+        subtitle="Y-TRACE Admin Portal Session"
+        description="Are you sure you want to sign out of your active administrative session? Any unsaved form drafts will be discarded."
+        warning="You will need to re-authenticate with your admin credentials to access the system."
+        confirmLabel="Sign-out"
+        confirmIcon={LogOut}
+        onConfirm={() => void signOut()}
+      />
+      <DangerConfirmDialog
+        open={pendingDeleteConfirmation?.kind === "news_release"}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteConfirmation(null);
+        }}
+        icon={Trash2}
+        title="Delete News Release"
+        description={
+          <>
+            <span className="text-slate-500">Are you sure you want to delete </span>
+            <span className="font-semibold text-text-default">
+              {pendingDeleteConfirmation?.kind === "news_release" ? pendingDeleteConfirmation.title : ""}
+            </span>
+            <span className="text-slate-500">?</span>
+          </>
+        }
+        warning="This news release will be permanently removed from the system and cannot be recovered."
+        warningTone="danger"
+        confirmLabel="Delete News Release"
+        confirmIcon={Trash2}
+        onConfirm={() => void confirmDeleteRecord()}
+      />
+      <DangerConfirmDialog
+        open={pendingDeleteConfirmation?.kind === "ypop_period"}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteConfirmation(null);
+        }}
+        icon={Trash2}
+        title="Delete Semester"
+        description={
+          <>
+            <span className="text-slate-500">Are you sure you want to delete this semester period? </span>
+            <span className="text-slate-500">
+              Submissions linked to this cycle
+              {pendingDeleteConfirmation?.kind === "ypop_period"
+                ? ` and its ${pendingDeleteConfirmation.activityCount} configured activit${pendingDeleteConfirmation.activityCount !== 1 ? "ies" : "y"}`
+                : ""}{" "}
+              will be removed.
+            </span>
+          </>
+        }
+        warning="This activity will be permanently removed from the system and cannot be recovered."
+        warningTone="danger"
+        confirmLabel="Delete Semester"
+        confirmIcon={Trash2}
+        onConfirm={() => void confirmDeleteRecord()}
+      />
+      <DangerConfirmDialog
+        open={pendingDeleteConfirmation?.kind === "ypop_city_activity"}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteConfirmation(null);
+        }}
+        icon={Trash2}
+        title="Delete City-Led Activity"
+        description={
+          <>
+            <span className="text-slate-500">Are you sure you want to delete </span>
+            <span className="font-semibold text-text-default">
+              {pendingDeleteConfirmation?.kind === "ypop_city_activity" ? pendingDeleteConfirmation.title : ""}
+            </span>
+            <span className="text-slate-500">?</span>
+          </>
+        }
+        warning="This activity will be permanently removed from the system and cannot be recovered."
+        warningTone="danger"
+        confirmLabel="Delete Activity"
+        confirmIcon={Trash2}
+        onConfirm={() => void confirmDeleteRecord()}
+      />
+      <CityActivityAnnouncementDialog
+        open={announcementDialogOpen}
+        onOpenChange={setAnnouncementDialogOpen}
+        activity={announcementTargetActivity}
+        previousAnnouncement={
+          announcementTargetActivity
+            ? sentAnnouncementsByActivityId[announcementTargetActivity.id] ?? null
+            : null
+        }
+        onAnnouncementSuccess={(activityId, result) => {
+          setSentAnnouncementsByActivityId((prev) => ({
+            ...prev,
+            [activityId]: result,
+          }));
+        }}
+      />
+      <DangerConfirmDialog
+        variant="info"
+        open={Boolean(pendingNewsVisibilityConfirmation)}
+        onOpenChange={(open) => {
+          if (!open) setPendingNewsVisibilityConfirmation(null);
+        }}
+        icon={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? Globe : EyeOff}
+        title={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? "Publish News" : "Hide News"}
+        description={
+          <>
+            <span className="text-slate-500">
+              Are you sure you want to {pendingNewsVisibilityConfirmation?.nextStatus === "published" ? "publish" : "hide"}{" "}
+            </span>
+            <span className="font-semibold text-text-default">{pendingNewsVisibilityConfirmation?.title ?? ""}</span>
+            <span className="text-slate-500">?</span>
+          </>
+        }
+        warning={
+          pendingNewsVisibilityConfirmation?.nextStatus === "published"
+            ? "This news release will become visible on the Organization Portal once published."
+            : "This news release will no longer be visible on the Organization Portal. You can publish it again at any time."
+        }
+        confirmLabel={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? "Confirm Publish" : "Confirm Hide"}
+        confirmIcon={pendingNewsVisibilityConfirmation?.nextStatus === "published" ? Globe : EyeOff}
+        onConfirm={() => {
+          if (pendingNewsVisibilityConfirmation) void pendingNewsVisibilityConfirmation.onConfirm();
+          setPendingNewsVisibilityConfirmation(null);
+        }}
+      />
+      <ExportReportDialog
+        open={activeReportExport !== null}
+        onOpenChange={(open) => {
+          if (!open) setActiveReportExport(null);
+        }}
+        reportTitle={
+          activeReportExport === "allocation-by-barangay"
+            ? "Allocation by Barangay"
+            : activeReportExport === "budget-monitoring"
+              ? "Budget Monitoring"
+              : budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY
+                ? `Budget Requests (${selectedBudgetSemesterLabel})`
+                : "Budget Requests"
+        }
+        description={
+          activeReportExport === "allocation-by-barangay"
+            ? "Export all barangay allocation records matching the current filters."
+            : activeReportExport === "budget-monitoring"
+              ? "Export monitored budget activities, utilization rates, and liquidation statuses matching the current filters."
+              : budgetRequestsSemesterFilter !== ALL_SEMESTERS_KEY
+                ? `Export budget request records for ${selectedBudgetSemesterLabel} matching the current filters.`
+                : "Export budget request records matching the current filters."
+        }
+        periodFilter={activeReportExport === "budget-requests" ? { enabled: true, showSelector: false, value: budgetReportPeriod, onChange: period => { setBudgetReviewPage(0); setBudgetReportPeriod(period); }, years: reportYears } : undefined}
+        onExport={handleReportExport}
+      />
+      <DownloadDocumentsDialog
+        open={downloadDialogOpen}
+        onOpenChange={setDownloadDialogOpen}
+        currentFile={downloadDialogCurrentFile}
+        allFiles={downloadDialogAllFiles}
+        zipName={downloadDialogZipName}
+      />
+      <ConfigureAnnualBudgetModal
+        open={isConfigureAnnualBudgetModalOpen}
+        onOpenChange={setIsConfigureAnnualBudgetModalOpen}
+        fiscalYear={selectedFiscalYear}
+        existingAllocation={selectedFYAllocation}
+        onSaved={(saved) => {
+          setAnnualAllocations((prev) => {
+            const idx = prev.findIndex((a) => a.fiscalYear === saved.fiscalYear);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = saved;
+              return next;
+            }
+            return [saved, ...prev];
+          });
+        }}
+      />
+      <AlertDialog
+        open={registrationDeleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) closeRegistrationDeleteDialog();
+        }}
+      >
+        <AlertDialogContent
+          className="admin-organization-delete-dialog"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            registrationDeleteInputRef.current?.focus();
+          }}
+          onEscapeKeyDown={(event) => {
+            if (registrationDeleteLoading) event.preventDefault();
+          }}
+          onPointerDownOutside={(event) => event.preventDefault()}
+        >
+          {registrationDeleteTarget ? (
+            <>
+              <AlertDialogHeader>
+                <div className="admin-organization-delete-dialog__icon" aria-hidden="true">
+                  <AlertTriangle />
+                </div>
+                <AlertDialogTitle>
+                  {registrationDeleteTarget.profileStatus === "suspended_inactive"
+                    ? "Delete Suspended Registration?"
+                    : "Permanently delete this registration?"}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {registrationDeleteTarget.profileStatus === "suspended_inactive"
+                    ? "This will permanently remove the suspended registration and its associated registration data. The organization will no longer be able to continue this registration. After deletion, the organization may start a new registration from the beginning. This action cannot be undone."
+                    : "This will permanently delete the organization account, registration records, submitted documents, uploaded files, and other organization-owned records associated with this account. This action cannot be undone."}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              {registrationDeleteTarget.profileStatus === "suspended_inactive" ? (
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 space-y-1.5 font-segoe text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Organization:</span>
+                    <strong className="font-semibold text-text-default">{registrationDeleteTarget.organizationName}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Registration:</span>
+                    <span className="font-cascadia font-semibold text-text-default">{registrationDeleteTarget.referenceId || "—"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Status:</span>
+                    <span className="font-semibold text-red-600">Suspended</span>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="admin-organization-delete-dialog__summary">
+                <p className="admin-organization-delete-dialog__summary-title">
+                  The following will be permanently deleted:
+                </p>
+                {registrationDeletePreflightLoading ? (
+                  <div className="flex items-center gap-2 py-3 text-sm text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin text-public-bg-brand" />
+                    <span>Calculating deletion manifest…</span>
+                  </div>
+                ) : registrationDeleteCounts ? (
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-1 font-segoe text-xs text-text-default">
+                    <div>
+                      Documents: <strong className="font-semibold text-text-default">{registrationDeleteCounts.documentSubmissions}</strong>
+                    </div>
+                    <div>
+                      Uploaded files: <strong className="font-semibold text-text-default">{registrationDeleteCounts.documentFiles + registrationDeleteCounts.storageObjects}</strong>
+                    </div>
+                    <div>
+                      Budget requests: <strong className="font-semibold text-text-default">{registrationDeleteCounts.budgetRequests}</strong>
+                    </div>
+                    <div>
+                      Liquidation reports: <strong className="font-semibold text-text-default">{registrationDeleteCounts.liquidationReports}</strong>
+                    </div>
+                    <div>
+                      YPOP records: <strong className="font-semibold text-text-default">{registrationDeleteCounts.ypopEntries}</strong>
+                    </div>
+                    <div>
+                      Notifications: <strong className="font-semibold text-text-default">{registrationDeleteCounts.notifications}</strong>
+                    </div>
+                  </div>
+                ) : (
+                  <ul>
+                    {ORGANIZATION_DELETION_CATEGORIES.map((category) => (
+                      <li key={category}>{category}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="registration-delete-confirmation">
+                  Type the organization name to confirm
+                </Label>
+                <p
+                  id="registration-delete-instruction"
+                  className="admin-organization-delete-dialog__instruction"
+                >
+                  Enter “{registrationDeleteTarget.organizationName}” exactly as shown.
+                </p>
+                <Input
+                  ref={registrationDeleteInputRef}
+                  id="registration-delete-confirmation"
+                  value={registrationDeleteConfirmation}
+                  disabled={registrationDeleteLoading || registrationDeletePreflightLoading || Boolean(registrationDeleteError && !registrationDeleteCounts)}
+                  autoComplete="off"
+                  aria-invalid={Boolean(
+                    registrationDeleteConfirmation &&
+                    !organizationDeletionConfirmationMatches(
+                      registrationDeleteConfirmation,
+                      registrationDeleteTarget.organizationName,
+                    )
+                  )}
+                  aria-describedby="registration-delete-instruction registration-delete-mismatch"
+                  onChange={(event) => setRegistrationDeleteConfirmation(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      !registrationDeleteLoading &&
+                      !registrationDeletePreflightLoading &&
+                      !registrationDeleteError &&
+                      registrationDeleteTarget.id &&
+                      registrationDeleteTarget.organizationName &&
+                      organizationDeletionConfirmationMatches(
+                        registrationDeleteConfirmation,
+                        registrationDeleteTarget.organizationName,
+                      )
+                    ) {
+                      event.preventDefault();
+                      void confirmRegistrationPermanentDeletion();
+                    }
+                  }}
+                  placeholder={registrationDeleteTarget.organizationName}
+                />
+                {registrationDeleteConfirmation &&
+                  !organizationDeletionConfirmationMatches(
+                    registrationDeleteConfirmation,
+                    registrationDeleteTarget.organizationName,
+                  ) ? (
+                  <p id="registration-delete-mismatch" className="text-xs text-destructive" role="status">
+                    The organization name does not match.
+                  </p>
+                ) : (
+                  <span id="registration-delete-mismatch" className="sr-only">
+                    The entered organization name must match before deletion is enabled.
+                  </span>
+                )}
+              </div>
+
+              <div className="admin-organization-delete-dialog__warning-card" role="note">
+                <div className="admin-organization-delete-dialog__warning-icon-wrapper" aria-hidden="true">
+                  <AlertTriangle className="admin-organization-delete-dialog__warning-icon" />
+                </div>
+                <div className="admin-organization-delete-dialog__warning-content">
+                  <p className="admin-organization-delete-dialog__warning-title">
+                    This action is permanent and cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              {registrationDeleteError ? (
+                <div className="admin-organization-delete-dialog__error" role="alert">
+                  {registrationDeleteError}
+                </div>
+              ) : null}
+
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  disabled={registrationDeleteLoading}
+                  onClick={closeRegistrationDeleteDialog}
+                  className="font-segoe active:scale-[0.98] transition-transform"
+                >
+                  Cancel
+                </AlertDialogCancel>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={
+                    registrationDeleteLoading ||
+                    registrationDeletePreflightLoading ||
+                    Boolean(registrationDeleteError && !registrationDeleteCounts) ||
+                    !registrationDeleteTarget.id ||
+                    !registrationDeleteTarget.organizationName ||
+                    !organizationDeletionConfirmationMatches(
+                      registrationDeleteConfirmation,
+                      registrationDeleteTarget.organizationName,
+                    )
+                  }
+                  onClick={() => void confirmRegistrationPermanentDeletion()}
+                  className="font-segoe active:scale-[0.98] transition-transform"
+                >
+                  {registrationDeleteLoading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />Deleting registration account…</>
+                  ) : (
+                    <><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Permanently Delete Account</>
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </>
+          ) : null}
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+const pesoCurrencyFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatPesoAmount(value?: number | null) {
+  return pesoCurrencyFormatter.format(Number(value ?? 0));
+}
+
+function formatCompactPeso(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `₱${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `₱${(value / 1_000).toFixed(1)}K`;
+  return `₱${Math.round(value).toLocaleString()}`;
+}
+
+function DetailStatusChip({
+  label,
+  tone = "neutral",
+}: {
+  label: string;
+  tone?: "neutral" | "warning" | "success" | "danger";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : tone === "warning"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : tone === "danger"
+          ? "border-rose-200 bg-rose-50 text-rose-700"
+          : "border-border/70 bg-muted/30 text-muted-foreground";
+
+  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${toneClass}`}>{label}</span>;
+}
+
+function DetailInfoCard({
+  title,
+  icon,
+  children,
+  className = "",
+}: {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card className={`border-border/70 shadow-sm ${className}`}>
+      <CardHeader className="space-y-0 pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/5 text-primary">{icon}</span>
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5 pt-0">{children}</CardContent>
+    </Card>
+  );
+}
+
+function DetailSectionBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">{label}</p>
+      {children}
+    </div>
+  );
+
+}
+
+function DetailInfoRow({
+  label,
+  value,
+  children,
+  valueClassName = "",
+}: {
+  label: string;
+  value?: ReactNode;
+  children?: ReactNode;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="grid gap-1.5 border-b border-border/40 pb-3 last:border-b-0 last:pb-0 sm:grid-cols-[10.5rem_minmax(0,1fr)] sm:gap-3">
+      <p className="text-[12px] text-muted-foreground">{label}</p>
+      <div className={`min-w-0 text-sm font-medium text-foreground ${valueClassName}`}>{children ?? value}</div>
+    </div>
+  );
+}
+
+function DetailSubmittedBy({
+  title,
+  email,
+  subtitle,
+}: {
+  title: string;
+  email?: string | null;
+  subtitle?: string | null;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/10 p-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/5 text-primary">
+        <UserRound className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 space-y-1">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        {email ? (
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Mail className="h-3.5 w-3.5 shrink-0" />
+            <span className="break-all">{email}</span>
+          </div>
+        ) : null}
+        {subtitle ? (
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span className="break-words">{subtitle}</span>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function DetailFilePills({
+  items,
+  selectedId,
+  onSelect,
+}: {
+  items: Array<{ id: string; fileName: string }>;
+  selectedId?: string | null;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((file) => {
+        const isSelected = selectedId === file.id;
+        return (
+          <button
+            key={file.id}
+            type="button"
+            title={file.fileName}
+            onClick={() => onSelect(file.id)}
+            className={`inline-flex max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${isSelected
+              ? "border-primary bg-primary/5 text-primary shadow-sm"
+              : "border-border/70 bg-background text-foreground hover:border-primary/40 hover:bg-primary/5"
+              }`}
+          >
+            <FileText className="h-4 w-4 shrink-0 text-red-500" />
+            <span className="line-clamp-2 break-all text-sm font-medium leading-snug">{file.fileName}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ReviewActionToolbar({ children }: { children: ReactNode }) {
+  return <div className="flex flex-wrap gap-2.5">{children}</div>;
+}
+
+function SectionDivider() {
+  return <div className="border-t border-border/50" />;
+}
+
+function BadgePanel({ count }: { count: number }) {
+  return (
+    <div className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default">
+      <Bell className="h-4 w-4 text-text-action" />
+      <span>{count} unread</span>
+    </div>
+  );
+}

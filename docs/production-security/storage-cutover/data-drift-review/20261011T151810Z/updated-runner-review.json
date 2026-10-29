@@ -1,0 +1,16 @@
+{
+  "status": "BASELINE_BINDING_UPDATED_ONLY",
+  "oldBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+  "newBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+  "newManifestSha256": "3eedbeb5bf7ae0623bdbecfad23878caeac5d492246b21621ddf98094c0cc3a6",
+  "newRunnerSha256": "08d9bcc7843efe69ec0ef0ec9e606c92c79b546166bfc665c52b318357edc2bb",
+  "coreUnchanged": true,
+  "changedManifestInputs": [
+    "dataBaseline"
+  ],
+  "changedRunnerLogic": false,
+  "changedRunnerBinding": "dataBaseline:prior+'immediate-data-before.json' -> fixed reviewed baseline file",
+  "newBaselinePath": "docs/production-security/storage-cutover/data-drift-review/20261011T151810Z/protected-data-baseline.json",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "installationActivated": false
+}

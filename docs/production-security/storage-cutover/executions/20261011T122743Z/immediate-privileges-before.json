@@ -1,0 +1,119 @@
+{
+  "role": {
+    "inherit": true,
+    "createdb": true,
+    "bypassrls": true,
+    "superuser": false,
+    "createrole": true
+  },
+  "schemas": [
+    {
+      "owner": "supabase_admin",
+      "usage": true,
+      "create": false,
+      "schema": "auth"
+    },
+    {
+      "owner": "pg_database_owner",
+      "usage": true,
+      "create": true,
+      "schema": "public"
+    },
+    {
+      "owner": "supabase_admin",
+      "usage": true,
+      "create": false,
+      "schema": "storage"
+    },
+    {
+      "owner": "postgres",
+      "usage": true,
+      "create": true,
+      "schema": "ytrace_document_mutation"
+    },
+    {
+      "owner": "postgres",
+      "usage": true,
+      "create": true,
+      "schema": "ytrace_identity"
+    },
+    {
+      "owner": "postgres",
+      "usage": true,
+      "create": true,
+      "schema": "ytrace_production_containment"
+    }
+  ],
+  "database": "postgres",
+  "connection": {
+    "backend_pid": 2691768,
+    "server_port": 5432,
+    "database_oid": "5",
+    "server_address": "2406:da1c:4c7:f800:e263:668:14a1:4880"
+  },
+  "captured_at": "2026-10-11T12:35:15.182276+00:00",
+  "current_user": "postgres",
+  "session_user": "postgres",
+  "relevant_locks": [],
+  "required_roles": [
+    "anon",
+    "authenticated",
+    "postgres",
+    "service_role"
+  ],
+  "server_version": "17.6",
+  "database_create": true,
+  "environment_guard": false,
+  "competing_ddl_count": 0,
+  "trigger_permissions": [
+    {
+      "owner": "postgres",
+      "table": "public.budget_requests",
+      "select": true,
+      "trigger": true
+    },
+    {
+      "owner": "postgres",
+      "table": "public.liquidation_reports",
+      "select": true,
+      "trigger": true
+    },
+    {
+      "owner": "postgres",
+      "table": "public.move_applications",
+      "select": true,
+      "trigger": true
+    },
+    {
+      "owner": "postgres",
+      "table": "public.news_releases",
+      "select": true,
+      "trigger": true
+    },
+    {
+      "owner": "postgres",
+      "table": "public.required_document_types",
+      "select": true,
+      "trigger": true
+    },
+    {
+      "owner": "postgres",
+      "table": "public.ypop_entries",
+      "select": true,
+      "trigger": true
+    },
+    {
+      "owner": "postgres",
+      "table": "public.ypop_event_participations",
+      "select": true,
+      "trigger": true
+    },
+    {
+      "owner": "postgres",
+      "table": "public.ypop_org_activities",
+      "select": true,
+      "trigger": true
+    }
+  ],
+  "foundation_trigger_count": 0
+}

@@ -1,0 +1,29 @@
+{
+  "capturedAt": "2026-10-12T03:33:16.453Z",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "trackedDirtyEntries": 64,
+  "archives": [
+    {
+      "name": "admin-gateway-source-complete.zip",
+      "bytes": 15416255,
+      "sha256": "9c3f2747ccf9b5f3a6723decb3e3ec9f7ff7eff64a98957141578d57d95ca8e3",
+      "matches": true
+    },
+    {
+      "name": "admin-gateway-build.zip",
+      "bytes": 11957125,
+      "sha256": "197daaaf91c3bc9f0817e9d469c4e950df2e48f94a0fa477e3058cc352c9614b",
+      "matches": true
+    }
+  ],
+  "sourceRevision": "sha256:ffe95e19a23eb8f9db43bf6c6199de787b88a8106ec157e57192b468fd082e0c",
+  "sourceManifestConsistent": true,
+  "sourceFilesChecked": 557,
+  "sourceMismatches": 0,
+  "diffCheck": {
+    "exitCode": 0,
+    "diagnosticBytes": 4434
+  },
+  "noCandidateBuildOrTestsRerun": true
+}

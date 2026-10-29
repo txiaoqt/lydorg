@@ -1,0 +1,20 @@
+{
+  "status": "CONFIRMED_REPORTING_LIMITATION_FAIL_CLOSED",
+  "fixture": "Original function and original catalog remain; unrelated preservation drift simulated in memory",
+  "catalogRemainsOriginal": true,
+  "originalDefinitionMd5": "f6c36316ba941c9e0f76674754ac44ba",
+  "classificationWithDrift": {
+    "classification": "COMMITTED_WITH_DRIFT",
+    "stop": true
+  },
+  "classificationWithoutDrift": {
+    "classification": "NOT_INSTALLED_VERIFIED",
+    "stop": true
+  },
+  "commitProvenByDriftLabel": false,
+  "mutationOrRetryPermittedByResult": false,
+  "requiredOperatorMitigation": "Every drift label is a STOP. Determine old/new commit state from exact catalog and RPC fingerprints after the recorded writer backend is finished; never accept the label or exit code as proof.",
+  "scope": "New pure reporting-edge reproduction only; completed test suites not rerun",
+  "productionConnectionAttempted": false,
+  "installationActivated": false
+}

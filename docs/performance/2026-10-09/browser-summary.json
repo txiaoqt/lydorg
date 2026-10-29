@@ -1,0 +1,225 @@
+[
+  {
+    "build": "tmp/performance-baseline",
+    "route": "/",
+    "loadRequests": 21,
+    "idleRequests": 0,
+    "apiLoad": 6,
+    "settingsRpc": 2,
+    "totalEncodedBytes": 14582678,
+    "jsWireBytes": 5706110,
+    "apiResponses": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 827.219,
+        "encodedBytes": 1013
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 824.846,
+        "encodedBytes": 1109
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 820.487,
+        "encodedBytes": 1245
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 664.221,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 661.725,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 660.834,
+        "encodedBytes": 0
+      }
+    ],
+    "longTasks": [
+      {
+        "start": 285.79999999981374,
+        "duration": 226
+      }
+    ],
+    "failures": []
+  },
+  {
+    "build": "tmp/performance-baseline",
+    "route": "/public-templates",
+    "loadRequests": 15,
+    "idleRequests": 1,
+    "apiLoad": 2,
+    "settingsRpc": 1,
+    "totalEncodedBytes": 8150476,
+    "jsWireBytes": 5675611,
+    "apiResponses": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 419.996,
+        "encodedBytes": 1937
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 366.965,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 360.071,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 221.801,
+        "encodedBytes": 1219
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 219.646,
+        "encodedBytes": 2092
+      }
+    ],
+    "longTasks": [
+      {
+        "start": 238.89999999990687,
+        "duration": 205
+      }
+    ],
+    "failures": []
+  },
+  {
+    "build": "tmp/performance-final",
+    "route": "/",
+    "loadRequests": 28,
+    "idleRequests": 0,
+    "apiLoad": 5,
+    "settingsRpc": 1,
+    "totalEncodedBytes": 10664741,
+    "jsWireBytes": 1865082,
+    "apiResponses": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 832.253,
+        "encodedBytes": 1111
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 825.925,
+        "encodedBytes": 1244
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/news_releases",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 725.09,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 580.334,
+        "encodedBytes": 0
+      }
+    ],
+    "longTasks": [],
+    "failures": []
+  },
+  {
+    "build": "tmp/performance-final",
+    "route": "/public-templates",
+    "loadRequests": 24,
+    "idleRequests": 0,
+    "apiLoad": 2,
+    "settingsRpc": 1,
+    "totalEncodedBytes": 4371219,
+    "jsWireBytes": 1974170,
+    "apiResponses": [
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 375.918,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Preflight",
+        "responseMs": 375.384,
+        "encodedBytes": 0
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/rpc/get_public_system_settings",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 212.087,
+        "encodedBytes": 969
+      },
+      {
+        "host": "mqqaykksadotbrghbexz.supabase.co",
+        "path": "/rest/v1/required_document_types",
+        "status": 200,
+        "type": "Fetch",
+        "responseMs": 208.287,
+        "encodedBytes": 2363
+      }
+    ],
+    "longTasks": [
+      {
+        "start": 395.70000000018626,
+        "duration": 54
+      }
+    ],
+    "failures": []
+  }
+]

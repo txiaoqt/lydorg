@@ -1,0 +1,58 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "route": "native-pg-direct-tls",
+  "recordedAt": "2026-10-11T22:14:01.072Z",
+  "authorizationReference": "ytrace-foundation-native-20261012-controlled-one-attempt",
+  "authorizationRecordSha256": "61d907a15a07a3fff44c4f875f624312a5ccb7293d11e77f75c6dd484ef822ff",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "sqlBytes": 47407,
+  "runnerBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+  "baselineSha256": "60a25f959aa2e45ab384cb41702f5eb13b93bdfe9ef71049b99eeceb5bde5d9a",
+  "exclusiveWindowConfirmedByHuman": true,
+  "windowConfirmationRecordedAt": "2026-10-11T22:12:36.318Z",
+  "immediateReadOnlyPreflight": {
+    "status": "PASS",
+    "mode": "READ_ONLY_PREFLIGHT",
+    "project": "mqqaykksadotbrghbexz",
+    "host": "db.mqqaykksadotbrghbexz.supabase.co",
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "runnerBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+    "identity": {
+      "database": "postgres",
+      "current_user": "postgres",
+      "session_user": "postgres",
+      "server_version_num": 170006,
+      "backend_pid": 2730489,
+      "server_port": 5432,
+      "tls": true,
+      "tls_version": "TLSv1.3"
+    },
+    "tlsPeerFingerprint256": "6D:58:E8:D1:17:BE:04:F4:2A:59:0C:EE:98:3A:95:DA:A7:63:F7:D1:C9:C4:6E:75:5D:5A:72:28:14:83:6B:91",
+    "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "migrations": {
+      "count": 164,
+      "latest": "20261011230000",
+      "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+    },
+    "protectedRelations": 57,
+    "installationActivated": false
+  },
+  "targetedProcessInspection": {
+    "Status": "PASS",
+    "NodeProcesses": 12,
+    "CompetingFoundationProcesses": 0,
+    "UnclassifiedProcesses": 0,
+    "RawCommandLinesPrinted": false
+  },
+  "caTrustedSourceVerification": {
+    "status": "PASS",
+    "capturedAt": "2026-10-11T22:13:25.641Z",
+    "officialSource": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+    "configuredSha256Matches": true,
+    "officialHttpsBytesMatch": true,
+    "caSelfSignatureValid": true,
+    "caCurrentlyValid": true,
+    "httpsChainAndHostnameVerified": true
+  },
+  "installationAttempted": false
+}

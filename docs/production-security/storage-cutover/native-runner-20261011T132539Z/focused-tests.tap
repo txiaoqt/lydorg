@@ -1,0 +1,150 @@
+TAP version 13
+# Subtest: exact reviewed artifact bytes and atomic timeouts are retained
+ok 1 - exact reviewed artifact bytes and atomic timeouts are retained
+  ---
+  duration_ms: 5.9216
+  ...
+# Subtest: truncated and same-length changed artifacts are rejected
+ok 2 - truncated and same-length changed artifacts are rejected
+  ---
+  duration_ms: 2.106
+  ...
+# Subtest: wrong project, host, port and pooled route are rejected
+ok 3 - wrong project, host, port and pooled route are rejected
+  ---
+  duration_ms: 0.4532
+  ...
+# Subtest: missing credentials and CA stop before any connection
+ok 4 - missing credentials and CA stop before any connection
+  ---
+  duration_ms: 1.0693
+  ...
+# Subtest: wrong CA hash fails and verified config cannot disable hostname/chain validation
+ok 5 - wrong CA hash fails and verified config cannot disable hostname/chain validation
+  ---
+  duration_ms: 21.5147
+  ...
+# Subtest: Node TLS hostname verifier rejects a wrong certificate identity
+ok 6 - Node TLS hostname verifier rejects a wrong certificate identity
+  ---
+  duration_ms: 7.5904
+  ...
+# Subtest: TLS chain failure closes the sole fake client and cannot submit or retry
+ok 7 - TLS chain failure closes the sole fake client and cannot submit or retry
+  ---
+  duration_ms: 3.2227
+  ...
+# Subtest: native identity requires reviewed version, roles, privileges and read-only TLS
+ok 8 - native identity requires reviewed version, roles, privileges and read-only TLS
+  ---
+  duration_ms: 0.6147
+  ...
+# Subtest: unexpected compatibility, history, policy and protection drift stop preflight
+ok 9 - unexpected compatibility, history, policy and protection drift stop preflight
+  ---
+  duration_ms: 11.0582
+  ...
+# Subtest: all 57 protected data/object/reference fingerprints must match
+ok 10 - all 57 protected data/object/reference fingerprints must match
+  ---
+  duration_ms: 1.3157
+  ...
+# Subtest: control-plane proof must match the fixed endpoint and remain fresh
+ok 11 - control-plane proof must match the fixed endpoint and remain fresh
+  ---
+  duration_ms: 0.8335
+  ...
+# Subtest: future authorization is scoped to SQL, native route, code bundle, CA and exclusive window
+ok 12 - future authorization is scoped to SQL, native route, code bundle, CA and exclusive window
+  ---
+  duration_ms: 1.0122
+  ...
+# Subtest: read-only query result must include COMMIT acknowledgement
+ok 13 - read-only query result must include COMMIT acknowledgement
+  ---
+  duration_ms: 0.3041
+  ...
+# Subtest: same-machine lock is exclusive; stale locks are never auto-cleared
+ok 14 - same-machine lock is exclusive; stale locks are never auto-cleared
+  ---
+  duration_ms: 34.7905
+  ...
+# Subtest: a changed foreign lock cannot be released
+ok 15 - a changed foreign lock cannot be released
+  ---
+  duration_ms: 12.2745
+  ...
+# Subtest: single attempt sends the exact complete SQL once; durable marker prevents a second send
+ok 16 - single attempt sends the exact complete SQL once; durable marker prevents a second send
+  ---
+  duration_ms: 23.0611
+  ...
+# Subtest: ambiguous response is never retried; marker and lock remain, logs have no secrets
+ok 17 - ambiguous response is never retried; marker and lock remain, logs have no secrets
+  ---
+  duration_ms: 22.8214
+  ...
+# Subtest: missing COMMIT acknowledgement is uncertain and never triggers resubmission
+ok 18 - missing COMMIT acknowledgement is uncertain and never triggers resubmission
+  ---
+  duration_ms: 16.1115
+  ...
+# Subtest: server connection SQLSTATE remains ambiguous even with ERROR severity
+ok 19 - server connection SQLSTATE remains ambiguous even with ERROR severity
+  ---
+  duration_ms: 13.9495
+  ...
+# Subtest: known PostgreSQL error permits only ROLLBACK and still requires reconciliation
+ok 20 - known PostgreSQL error permits only ROLLBACK and still requires reconciliation
+  ---
+  duration_ms: 20.4913
+  ...
+# Subtest: failure after COMMIT is reported as committed; no rollback or reinstall
+ok 21 - failure after COMMIT is reported as committed; no rollback or reinstall
+  ---
+  duration_ms: 18.5935
+  ...
+# Subtest: postflight validates exact source/ACLs, trigger bindings, private tables and canonical assets
+ok 22 - postflight validates exact source/ACLs, trigger bindings, private tables and canonical assets
+  ---
+  duration_ms: 3.5198
+  ...
+# Subtest: default CLI mode reviews offline; installation stays inactive
+ok 23 - default CLI mode reviews offline; installation stays inactive
+  ---
+  duration_ms: 164.6383
+  ...
+# Subtest: CLI preflight with isolated empty environment stops before connecting
+ok 24 - CLI preflight with isolated empty environment stops before connecting
+  ---
+  duration_ms: 155.7433
+  ...
+# Subtest: CLI refuses arbitrary SQL, project and endpoint arguments
+ok 25 - CLI refuses arbitrary SQL, project and endpoint arguments
+  ---
+  duration_ms: 617.4164
+  ...
+# Subtest: isolated PostgreSQL commits a complete multi-statement transaction and enforces READ ONLY
+ok 26 - isolated PostgreSQL commits a complete multi-statement transaction and enforces READ ONLY
+  ---
+  duration_ms: 2890.6351
+  ...
+# Subtest: isolated PostgreSQL rolls back DDL and rows after an injected failure before COMMIT
+ok 27 - isolated PostgreSQL rolls back DDL and rows after an injected failure before COMMIT
+  ---
+  duration_ms: 1791.0526
+  ...
+# Subtest: untouched production candidate fails its real local catalog gate; runner rolls back without retry
+ok 28 - untouched production candidate fails its real local catalog gate; runner rolls back without retry
+  ---
+  duration_ms: 1729.0652
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6724.0581

@@ -1,0 +1,117 @@
+diff --git "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\native-budget-pause-runner.mjs" "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause-runner.mjs"
+index a537a40..beeb6c9 100644
+--- "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\native-budget-pause-runner.mjs"
++++ "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause-runner.mjs"
+@@ -10,7 +10,8 @@ import {
+   TARGET,SQL_PATH,SQL_SHA,SQL_BYTES,STATE_REL,STATE_FILES,
+   sha256,requireGuard,safeError,connectionConfiguration,connectClientOnce,
+   EXPECTED_FUNCTION,EXPECTED_PAUSED_FUNCTION,hashJson,
+-  verifyBudgetSql,verifyPinnedFile,validateVerifierResult,expectedRelationsFromSql,
++  verifyBudgetSql,verifyPinnedFile,validateReadOnlyVerifierResult,expectedRelationsFromSql,
++  BUDGET_INVENTORY_PATH,ORIGINAL_INVENTORY_PATH,verifyReadOnlyInputContracts,
+   protectedDataDigest,verifyBudgetState,stableFoundation,foundationStructure,
+   verifyFoundationReceipt,comparePreservation,verifyNativeIdentity,
+   verifyControlPlaneProof,verifyAuthorization,validateBudgetStateShape,canonicalJson,durableCreateJson,durableAppendJsonLine,
+@@ -31,7 +32,8 @@ const inputPaths=Object.freeze({
+   sql:SQL_PATH,
+   preSql:'docs/production-security/budget-deletion-pause/20261012T165000Z/pre-install-readonly.sql',
+   postSql:'docs/production-security/budget-deletion-pause/20261012T165000Z/post-install-readonly.sql',
+-  protectedDataSql:'docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql',
++  protectedDataSql:BUDGET_INVENTORY_PATH,
++  originalProtectedDataSql:ORIGINAL_INVENTORY_PATH,
+   foundationSql:'docs/production-security/storage-cutover/final-readiness-20261012T160633Z/foundation-readonly.sql',
+   foundationReceipt:'docs/production-security/storage-cutover/native-executions/20261011T221428755Z/independent-postflight.json',
+   identitySql:'docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-identity-readonly.sql',
+@@ -135,6 +137,7 @@ async function loadReviewedInputs(){
+     loaded.inputs[name]=await verifyPinnedFile(root,pin);
+   }
+   loaded.sqlText=verifyBudgetSql(loaded.inputs.sql);
++  loaded.readOnlyContracts=verifyReadOnlyInputContracts(loaded.inputs);
+   loaded.relations=expectedRelationsFromSql(loaded.inputs.protectedDataSql);
+   loaded.foundationReceipt=JSON.parse(loaded.inputs.foundationReceipt.toString('utf8'));
+   loaded.foundationExpected=verifyFoundationReceipt(loaded.foundationReceipt);
+@@ -215,16 +218,16 @@ async function connectOnce(readOnly,applicationName){
+   return {...connection,tls};
+ }
+ 
+-function verifierRow(result,key){return validateVerifierResult(result,key,'ROLLBACK');}
++function verifierRow(result,inputName){return validateReadOnlyVerifierResult(result,inputName);}
+ 
+ async function captureSnapshot(client,loaded,{applicationName,readOnly,caSha256,peerTls,controlPlaneSha256}){
+-  const identity=verifierRow(await client.query(loaded.inputs.identitySql.toString('utf8')),'native_identity');
++  const identity=verifierRow(await client.query(loaded.inputs.identitySql.toString('utf8')),'identitySql');
+   verifyNativeIdentity(identity,{applicationName,readOnly});
+   requireGuard(Number(identity.active_budget_deletion_calls)===0&&Number(identity.other_budget_install_sessions)===0,'BUDGET_OPERATION_NOT_QUIESCENT');
+-  const budget=verifyBudgetState(verifierRow(await client.query(loaded.inputs.preSql.toString('utf8')),'verification'),'pre');
+-  const dataRaw=verifierRow(await client.query(loaded.inputs.protectedDataSql.toString('utf8')),'preserved_data');
++  const budget=verifyBudgetState(verifierRow(await client.query(loaded.inputs.preSql.toString('utf8')),'preSql'),'pre');
++  const dataRaw=verifierRow(await client.query(loaded.inputs.protectedDataSql.toString('utf8')),'protectedDataSql');
+   const data=protectedDataDigest(dataRaw,loaded.relations);
+-  const foundationRaw=verifierRow(await client.query(loaded.inputs.foundationSql.toString('utf8')),'foundation_verification');
++  const foundationRaw=verifierRow(await client.query(loaded.inputs.foundationSql.toString('utf8')),'foundationSql');
+   const foundationStable=stableFoundation(foundationRaw);
+   const structure=foundationStructure(foundationRaw);
+   const foundationSha=hashJson(foundationStable);
+@@ -291,7 +294,7 @@ async function runPreflight(loaded){
+ }
+ 
+ async function verifyInstallQuiescence(client,loaded,applicationName){
+-  const identity=verifierRow(await client.query(loaded.inputs.identitySql.toString('utf8')),'native_identity');
++  const identity=verifierRow(await client.query(loaded.inputs.identitySql.toString('utf8')),'identitySql');
+   verifyNativeIdentity(identity,{applicationName,readOnly:false});
+   requireGuard(Number(identity.active_budget_deletion_calls)===0&&Number(identity.other_budget_install_sessions)===0,'BUDGET_OPERATION_NOT_QUIESCENT');
+   return identity;
+@@ -346,11 +349,11 @@ async function runInstall(loaded){
+       verifyStatePath:path=>invokeAcl('Verify',path),
+       write:async(file,event)=>{scrubReceiptValue(event);await durableAppendJsonLine(file,event);await invokeAcl('Verify',file);},
+       postflight:async pre=>{
+-        const budget=verifyBudgetState(verifierRow(await client.query(loaded.inputs.postSql.toString('utf8')),'verification'),'post');
++        const budget=verifyBudgetState(verifierRow(await client.query(loaded.inputs.postSql.toString('utf8')),'postSql'),'post');
+         requireGuard(budget.function.oid===pre.budget.function.oid,'POSTFLIGHT_FUNCTION_OID_CHANGED');
+-        const protectedData=verifierRow(await client.query(loaded.inputs.protectedDataSql.toString('utf8')),'preserved_data');
++        const protectedData=verifierRow(await client.query(loaded.inputs.protectedDataSql.toString('utf8')),'protectedDataSql');
+         const protectedDigest=protectedDataDigest(protectedData,loaded.relations);
+-        const foundationRaw=verifierRow(await client.query(loaded.inputs.foundationSql.toString('utf8')),'foundation_verification');
++        const foundationRaw=verifierRow(await client.query(loaded.inputs.foundationSql.toString('utf8')),'foundationSql');
+         const post={budget,protectedData:{read_only:'on',preserved_data:protectedDigest.rows,sha256:protectedDigest.sha256},foundation:{value:foundationRaw,sha256:hashJson(stableFoundation(foundationRaw))}};
+         const preserve=comparePreservation({budget:pre.budget,protectedData:pre.protectedData,foundation:pre.foundation.value},post,loaded.relations,loaded.foundationExpected);
+         const finalIdentity=await verifyInstallQuiescence(client,loaded,applicationIdentity.applicationName);
+@@ -389,7 +392,7 @@ async function runReconcile(loaded){
+   const appName=readOnlyApplicationName();
+   const connection=await connectOnce(true,appName);
+   try{
+-    const readIdentity=verifierRow(await connection.client.query(loaded.inputs.identitySql.toString('utf8')),'native_identity');
++    const readIdentity=verifierRow(await connection.client.query(loaded.inputs.identitySql.toString('utf8')),'identitySql');
+     verifyNativeIdentity(readIdentity,{applicationName:appName,readOnly:true});
+     const finished=await verifyOriginalBackendFinished(connection.client,{backendPid:marker.backendPid,backendStart:marker.backendStart,applicationName:marker.applicationName});
+     if(!finished.finished){
+@@ -399,16 +402,16 @@ async function runReconcile(loaded){
+       await durableCreateJson(path,evidence);await verifyStateAcl([path]);
+       return {status:'UNRESOLVED',project:TARGET.project,priorBackendFinished:false,sqlResubmitted:false,evidenceFile:relative(stateDir,path)};
+     }
+-    const currentPre=verifierRow(await connection.client.query(loaded.inputs.preSql.toString('utf8')),'verification');
+-    const currentPost=verifierRow(await connection.client.query(loaded.inputs.postSql.toString('utf8')),'verification');
++    const currentPre=verifierRow(await connection.client.query(loaded.inputs.preSql.toString('utf8')),'preSql');
++    const currentPost=verifierRow(await connection.client.query(loaded.inputs.postSql.toString('utf8')),'postSql');
+     for(const state of [currentPre,currentPost]){
+       validateBudgetStateShape(state,state.phase);
+       requireGuard(state.function.oid===pre.budget.function.oid&&canonicalJson(state.migration_history)===canonicalJson(pre.budget.migration_history),'RECONCILIATION_VERIFIER_IDENTITY_MISMATCH');
+     }
+     requireGuard(currentPre.compatibility_sha256===currentPost.compatibility_sha256&&currentPre.function.definition_md5===currentPost.function.definition_md5&&currentPre.function.source_md5===currentPost.function.source_md5,'RECONCILIATION_SNAPSHOT_CHANGED');
+-    const currentData=verifierRow(await connection.client.query(loaded.inputs.protectedDataSql.toString('utf8')),'preserved_data');
++    const currentData=verifierRow(await connection.client.query(loaded.inputs.protectedDataSql.toString('utf8')),'protectedDataSql');
+     const currentDigest=protectedDataDigest(currentData,loaded.relations);
+-    const currentFoundation=verifierRow(await connection.client.query(loaded.inputs.foundationSql.toString('utf8')),'foundation_verification');
++    const currentFoundation=verifierRow(await connection.client.query(loaded.inputs.foundationSql.toString('utf8')),'foundationSql');
+     const snapshot={budget:currentPre,protectedData:{read_only:'on',preserved_data:currentDigest.rows,sha256:currentDigest.sha256},foundation:{value:currentFoundation}};
+     let preservation=true;
+     try{comparePreservation({budget:pre.budget,protectedData:pre.protectedData,foundation:pre.foundation.value},snapshot,loaded.relations,loaded.foundationExpected);}catch{preservation=false;}
+@@ -427,7 +430,7 @@ async function main(){
+   const mode=args[0]??'--review';
+   const loaded=await loadReviewedInputs();
+   await ensureDriverAndInputs(loaded);
+-  if(mode==='--review')return {status:'PASS',mode:'OFFLINE_REVIEW',project:TARGET.project,host:TARGET.host,sqlBytes:SQL_BYTES,sqlSha256:SQL_SHA,runnerBundleSha256:loaded.bundleSha256,driverVersion:loaded.manifest.driverVersion,driverRuntimeFiles:loaded.driver.files.length,protectedInventoryRelations:loaded.relations.length,foundationStructureSha256:loaded.foundationExpected.sha256,connectionAttempted:false,installationActivated:false};
++  if(mode==='--review')return {status:'PASS',mode:'OFFLINE_REVIEW',project:TARGET.project,host:TARGET.host,sqlBytes:SQL_BYTES,sqlSha256:SQL_SHA,runnerBundleSha256:loaded.bundleSha256,driverVersion:loaded.manifest.driverVersion,driverRuntimeFiles:loaded.driver.files.length,protectedInventoryRelations:loaded.relations.length,readOnlyContracts:loaded.readOnlyContracts,foundationStructureSha256:loaded.foundationExpected.sha256,connectionAttempted:false,installationActivated:false};
+   if(mode==='--preflight')return await runPreflight(loaded);
+   if(mode==='--install')return await runInstall(loaded);
+   return await runReconcile(loaded);

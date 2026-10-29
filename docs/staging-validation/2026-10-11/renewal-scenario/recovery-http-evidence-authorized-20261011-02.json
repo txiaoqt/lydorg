@@ -1,0 +1,1483 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T18:26:42.554Z",
+  "results": [
+    {
+      "check": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "status": "PASS",
+      "existingRenewals": 1,
+      "existingDocuments": 6,
+      "flaggedDocuments": 1,
+      "preservedDocuments": 5,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/auth/v1/admin/users",
+          "status": 200,
+          "durationMs": 933
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/auth/v1/admin/users/:id",
+          "status": 200,
+          "durationMs": 342
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 148
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/admin_accounts",
+          "status": 200,
+          "durationMs": 131
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/roles",
+          "status": 200,
+          "durationMs": 126
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 136
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 131
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 121
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 121
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 135
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/rest/v1/activity_logs",
+          "status": 200,
+          "durationMs": 134
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 364
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 148
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 133
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 145
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 144
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 140
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 142
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 134
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 145
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 135
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 136
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 130
+        }
+      ]
+    },
+    {
+      "check": "Normal existing owner Auth login",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Dedicated renewal owner",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 206
+        }
+      ]
+    },
+    {
+      "check": "Original six owner downloads match recorded SHA-256",
+      "status": "PASS",
+      "downloadedFiles": 6,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original six owner downloads match recorded SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 1165
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original six owner downloads match recorded SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 1310
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original six owner downloads match recorded SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 1048
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original six owner downloads match recorded SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 1186
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original six owner downloads match recorded SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 888
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original six owner downloads match recorded SHA-256",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 1214
+        }
+      ]
+    },
+    {
+      "check": "Upload exactly one corrected PDF with genuine owner JWT",
+      "status": "PASS",
+      "uploadedFiles": 1,
+      "sha256": "67bba8968f41f97923e82f9fcfcf2d90871de9605d1b897ff336d452652a4f0d",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Upload exactly one corrected PDF with genuine owner JWT",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 267
+        }
+      ]
+    },
+    {
+      "check": "Replace only flagged document through existing revision RPC",
+      "status": "PASS",
+      "unchangedOtherDocuments": 5,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Replace only flagged document through existing revision RPC",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+          "status": 200,
+          "durationMs": 167
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Replace only flagged document through existing revision RPC",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 148
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Replace only flagged document through existing revision RPC",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 127
+        }
+      ]
+    },
+    {
+      "check": "Original and corrected hashes; five unchanged PDFs intact",
+      "status": "PASS",
+      "verifiedDownloads": 7,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original and corrected hashes; five unchanged PDFs intact",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 52
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original and corrected hashes; five unchanged PDFs intact",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 38
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original and corrected hashes; five unchanged PDFs intact",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 61
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original and corrected hashes; five unchanged PDFs intact",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 38
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original and corrected hashes; five unchanged PDFs intact",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 76
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original and corrected hashes; five unchanged PDFs intact",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 36
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Original and corrected hashes; five unchanged PDFs intact",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 871
+        }
+      ]
+    },
+    {
+      "check": "Normal owner resubmission",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Normal owner resubmission",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_resubmit_renewal",
+          "status": 200,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Normal Super Admin login and scoped renewal review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Normal Super Admin login and scoped renewal review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+          "status": 200,
+          "durationMs": 136
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Normal Super Admin login and scoped renewal review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+          "status": 200,
+          "durationMs": 136
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Normal Super Admin login and scoped renewal review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_get_renewal_review_context",
+          "status": 200,
+          "durationMs": 146
+        }
+      ]
+    },
+    {
+      "check": "Approve pending documents through normal Admin review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Approve pending documents through normal Admin review",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 135
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Approve pending documents through normal Admin review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 139
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Approve pending documents through normal Admin review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 146
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Approve pending documents through normal Admin review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 140
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Approve pending documents through normal Admin review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 129
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Approve pending documents through normal Admin review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 129
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Approve pending documents through normal Admin review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Final cycle 2 approval through normal Admin RPC",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Final cycle 2 approval through normal Admin RPC",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_approve_renewal",
+          "status": 200,
+          "durationMs": 163
+        }
+      ]
+    },
+    {
+      "check": "Cycle 2 terminal approval and authoritative three-year term transition",
+      "status": "PASS",
+      "renewalStatus": "approved",
+      "termNumber": 2,
+      "startDate": "2026-11-09",
+      "endDate": "2029-11-09",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Cycle 2 terminal approval and authoritative three-year term transition",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 121
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Cycle 2 terminal approval and authoritative three-year term transition",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 130
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Cycle 2 terminal approval and authoritative three-year term transition",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 124
+        }
+      ]
+    },
+    {
+      "check": "Owner terminal download and signed URL hashes",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Owner terminal download and signed URL hashes",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 39
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Owner terminal download and signed URL hashes",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 146
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Owner terminal download and signed URL hashes",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 340
+        }
+      ]
+    },
+    {
+      "check": "Cross-organization denied private download",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Cross-organization denied private download",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 400,
+          "durationMs": 316
+        }
+      ]
+    },
+    {
+      "check": "Cross-organization denied private signing",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Cross-organization denied private signing",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 151
+        }
+      ]
+    },
+    {
+      "check": "Anonymous denied private download",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Anonymous denied private download",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 400,
+          "durationMs": 336
+        }
+      ]
+    },
+    {
+      "check": "Anonymous denied private signing",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Anonymous denied private signing",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 148
+        }
+      ]
+    },
+    {
+      "check": "Authorized Admin signing and downloaded hash",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Authorized Admin signing and downloaded hash",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 782
+        },
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Authorized Admin signing and downloaded hash",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 366
+        }
+      ]
+    },
+    {
+      "check": "Privileged expiry setup changes only newly created genuine test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Privileged expiry setup changes only newly created genuine test session",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/admin_sessions",
+          "status": 200,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Zero-permission Admin denied renewal gateway signing",
+      "status": "PASS",
+      "denialStatus": 403,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Zero-permission Admin denied renewal gateway signing",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 245
+        }
+      ]
+    },
+    {
+      "check": "Revoked Admin denied renewal gateway signing",
+      "status": "PASS",
+      "denialStatus": 403,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Revoked Admin denied renewal gateway signing",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 223
+        }
+      ]
+    },
+    {
+      "check": "Expired Admin denied renewal gateway signing",
+      "status": "PASS",
+      "denialStatus": 403,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Expired Admin denied renewal gateway signing",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 238
+        }
+      ]
+    },
+    {
+      "check": "Forged organization parent and path denied",
+      "status": "PASS",
+      "denialStatus": 403,
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Forged organization parent and path denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 260
+        }
+      ]
+    },
+    {
+      "check": "Terminal metadata revision denied and corrected reference preserved",
+      "status": "FAIL",
+      "code": null,
+      "reason": "Expected",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Terminal metadata revision denied and corrected reference preserved",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+          "status": 200,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "Recovery stopped",
+      "status": "BLOCKED",
+      "code": null,
+      "reason": "Expected"
+    },
+    {
+      "check": "Revoke only recovery test Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Revoke only recovery test Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "check": "Revoke only recovery test Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Revoke only recovery test Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Revoke only recovery test Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Revoke only recovery test Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "Revoke only recovery test Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Revoke only recovery test Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 137
+        }
+      ]
+    },
+    {
+      "check": "Close only recovery test Auth session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Close only recovery test Auth session",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 150
+        }
+      ]
+    },
+    {
+      "check": "Close only recovery test Auth session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Close only recovery test Auth session",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 138
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 933
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 342
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 364
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 144
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 142
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Dedicated renewal owner",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 206
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original six owner downloads match recorded SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 1165
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original six owner downloads match recorded SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 1310
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original six owner downloads match recorded SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 1048
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original six owner downloads match recorded SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 1186
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original six owner downloads match recorded SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 888
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original six owner downloads match recorded SHA-256",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 1214
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Upload exactly one corrected PDF with genuine owner JWT",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 267
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Replace only flagged document through existing revision RPC",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+      "status": 200,
+      "durationMs": 167
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Replace only flagged document through existing revision RPC",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Replace only flagged document through existing revision RPC",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original and corrected hashes; five unchanged PDFs intact",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 52
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original and corrected hashes; five unchanged PDFs intact",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 38
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original and corrected hashes; five unchanged PDFs intact",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 61
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original and corrected hashes; five unchanged PDFs intact",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 38
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original and corrected hashes; five unchanged PDFs intact",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 76
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original and corrected hashes; five unchanged PDFs intact",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 36
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Original and corrected hashes; five unchanged PDFs intact",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 871
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Normal owner resubmission",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_resubmit_renewal",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Normal Super Admin login and scoped renewal review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Normal Super Admin login and scoped renewal review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Normal Super Admin login and scoped renewal review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_renewal_review_context",
+      "status": 200,
+      "durationMs": 146
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Approve pending documents through normal Admin review",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Approve pending documents through normal Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Approve pending documents through normal Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 146
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Approve pending documents through normal Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Approve pending documents through normal Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Approve pending documents through normal Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Approve pending documents through normal Admin review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Final cycle 2 approval through normal Admin RPC",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_approve_renewal",
+      "status": 200,
+      "durationMs": 163
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Cycle 2 terminal approval and authoritative three-year term transition",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Cycle 2 terminal approval and authoritative three-year term transition",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Cycle 2 terminal approval and authoritative three-year term transition",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Other organization JWT",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 204
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Owner terminal download and signed URL hashes",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 39
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Owner terminal download and signed URL hashes",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 146
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Owner terminal download and signed URL hashes",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 340
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Cross-organization denied private download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 400,
+      "durationMs": 316
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Cross-organization denied private signing",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 151
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Anonymous denied private download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 400,
+      "durationMs": 336
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Anonymous denied private signing",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 148
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Authorized Admin signing and downloaded hash",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 782
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Authorized Admin signing and downloaded hash",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 366
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Authorized Admin signing and downloaded hash",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Authorized Admin signing and downloaded hash",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Authorized Admin signing and downloaded hash",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 140
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Authorized Admin signing and downloaded hash",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 152
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Privileged expiry setup changes only newly created genuine test session",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/admin_sessions",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Zero-permission Admin denied renewal gateway signing",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 245
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Revoked Admin denied renewal gateway signing",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 223
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Expired Admin denied renewal gateway signing",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 238
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Forged organization parent and path denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 260
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Terminal metadata revision denied and corrected reference preserved",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Revoke only recovery test Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 134
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Revoke only recovery test Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Revoke only recovery test Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 133
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Revoke only recovery test Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 137
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Close only recovery test Auth session",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 150
+    },
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Close only recovery test Auth session",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 138
+    }
+  ]
+}

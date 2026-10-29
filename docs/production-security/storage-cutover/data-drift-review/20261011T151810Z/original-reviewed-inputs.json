@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "driverVersion": "8.23.0",
+  "target": {
+    "project": "mqqaykksadotbrghbexz",
+    "host": "db.mqqaykksadotbrghbexz.supabase.co",
+    "port": 5432,
+    "database": "postgres",
+    "user": "postgres",
+    "route": "native-pg-direct-tls"
+  },
+  "inputs": {
+    "sql": {
+      "file": "docs/production-security/storage-cutover/20261011T113322Z/production_storage_foundation_review.sql",
+      "bytes": 47407,
+      "sha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2"
+    },
+    "catalog": {
+      "file": "docs/production-security/storage-cutover/20261011T113322Z/compatibility-fingerprint-readonly.sql",
+      "bytes": 4007,
+      "sha256": "e5d4cef474f18359e0df0acbd0e05320fca0ef1f661a57198c7e315175d4ea59"
+    },
+    "data": {
+      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql",
+      "bytes": 13900,
+      "sha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d"
+    },
+    "absence": {
+      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/final-recovery-readonly.sql",
+      "bytes": 2039,
+      "sha256": "dabeb467fc783a9bf317b9ca01d3bcb6f9ef41e4d0b6378bae38870c455d3d58"
+    },
+    "post": {
+      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/post-install-readonly.sql",
+      "bytes": 5921,
+      "sha256": "4342f32734f2e260523c9b5666e63250f5087e5ad98d0465ab3ea33b28ecf6c6"
+    },
+    "dataBaseline": {
+      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/immediate-data-before.json",
+      "bytes": 8427,
+      "sha256": "36a039bb6455aeea0d31c2e9920c7279f5ad3144b9a132071fa8218b4249a771"
+    },
+    "expectedFunctions": {
+      "file": "docs/production-security/storage-cutover/20261011T113322Z/expected-foundation-functions.json",
+      "bytes": 4579,
+      "sha256": "f8544a5aadc468007768a92bacfe1f5dbc6e1833dd95a2e0fccd199a3eb7aeb2"
+    },
+    "identity": {
+      "file": "docs/production-security/storage-cutover/native-runner-20261011T132539Z/native-identity-privileges-readonly.sql",
+      "bytes": 2052,
+      "sha256": "f95ea7f81b3f72c99b2a1197dff2c38b3dc1239ff3246b119a7af6bc127401a6"
+    }
+  }
+}

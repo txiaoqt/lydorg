@@ -1,0 +1,11 @@
+# Separate production authorization proposal — server pause only
+
+Prepared on October 13, 2026 (Asia/Manila). No execution is authorized by this document.
+
+> I authorize ONE controlled production installation of `docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql` on Supabase project `mqqaykksadotbrghbexz` through the independently verified fixed native PostgreSQL direct TLS endpoint `db.mqqaykksadotbrghbexz.supabase.co` only. Require exact SHA-256 `a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a` and 11,945 bytes, fresh read-only catalog/privilege/project checks, an exclusive low-traffic window with existing deletion requests drained, and durable one-attempt evidence. Execute the exact existing BEGIN/COMMIT transaction once with its 1-second lock and 30-second statement timeouts. Stop on drift or uncertain outcome; no automatic retry. Verify the expected function/OID/owner/grants/catalog and all immediate protected-data fingerprints read-only afterward. Preserve the pause if forward remediation is required. This authorization is for the server-side Admin budget-deletion pause only: no frontend deployment/promotion, Storage cutover, Auth operation, historical reconciliation, business mutation, gateway modification, grants, unrelated migration or Git push is included. Do not invoke production deletion RPCs as acceptance tests without separate explicit scope.
+
+The operator must separately review the execution adapter before submission; this task does not activate an installation runner or create an authorization record. Retain the original `operator-checklist.md` from the preparation folder, including fixed connection/CA verification and before/after read-only verifiers.
+
+The current production RPC is still the original permissive definition. A UI-only pause cannot protect older clients; server installation should be the first independently authorized release. Current wide EXECUTE ACL is preserved by this one-function pause; all callers encounter the same unconditional exception.
+
+Frontend deployment remains a separate release with its own isolated source inventory/version, candidate-only deployment, hosted acceptance and promotion approvals. Do not push shared main or replace the Organization/PWA release.

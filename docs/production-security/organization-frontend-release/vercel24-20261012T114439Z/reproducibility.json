@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "node": "v24.21.0",
+  "npm": "11.19.0",
+  "platform": "win32-x64",
+  "independentFreshInstalls": 2,
+  "independentBuilds": 2,
+  "files": 53,
+  "totalBytes": 19518681,
+  "firstInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+  "secondInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+  "differences": [],
+  "firstBuildInjectedCanaries": true,
+  "secondBuildInjectedCanaries": false,
+  "linuxHostedCompatibility": "NOT TESTED"
+}

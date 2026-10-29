@@ -1,0 +1,148 @@
+{
+  "read_only": "on",
+  "captured_at": "2026-10-12T16:20:13.513975+00:00",
+  "budget_delete_rpc": {
+    "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "owner": "postgres",
+    "signature": "admin_bulk_delete_budget_requests(text,uuid[])",
+    "source_md5": "eb7b756964fd31efebfb39749f5c9e5b",
+    "security_definer": true
+  },
+  "historical_parent_audits": [
+    {
+      "audits": [
+        {
+          "action": "reviewed_liquidation_report",
+          "created_at": "2026-10-03T05:24:03.138196+00:00",
+          "related_type": "liquidation_report",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "reviewed_liquidation_report",
+          "created_at": "2026-10-03T05:24:49.72912+00:00",
+          "related_type": "liquidation_report",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "admin_notification_dispatched",
+          "created_at": "2026-10-03T05:24:52.844332+00:00",
+          "related_type": "liquidation_report",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "reviewed_liquidation_report",
+          "created_at": "2026-10-03T05:25:07.880039+00:00",
+          "related_type": "liquidation_report",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "Approved liquidation report",
+          "created_at": "2026-10-03T05:25:11.809609+00:00",
+          "related_type": "liquidation_report",
+          "metadata_keys": [
+            "user_agent"
+          ],
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "reviewed_liquidation_report",
+          "created_at": "2026-10-03T05:25:39.093336+00:00",
+          "related_type": "liquidation_report",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "Completed liquidation report",
+          "created_at": "2026-10-03T05:25:43.010173+00:00",
+          "related_type": "liquidation_report",
+          "metadata_keys": [
+            "user_agent"
+          ],
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        }
+      ],
+      "object_id": "4530c287-76ed-4ae3-8bf2-db54e6f38660"
+    },
+    {
+      "audits": [
+        {
+          "action": "admin_notification_dispatched",
+          "created_at": "2026-10-03T05:22:16.788274+00:00",
+          "related_type": "budget_request",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "reviewed_budget_request",
+          "created_at": "2026-10-03T05:23:30.864035+00:00",
+          "related_type": "budget_request",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "Approved budget request",
+          "created_at": "2026-10-03T05:23:34.564479+00:00",
+          "related_type": "budget_request",
+          "metadata_keys": [
+            "user_agent"
+          ],
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "reviewed_budget_request",
+          "created_at": "2026-10-03T05:24:03.138196+00:00",
+          "related_type": "budget_request",
+          "metadata_keys": null,
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "Budget cash released",
+          "created_at": "2026-10-03T05:24:07.886261+00:00",
+          "related_type": "budget_request",
+          "metadata_keys": [
+            "user_agent"
+          ],
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        },
+        {
+          "action": "deleted_budget_request",
+          "created_at": "2026-10-04T09:28:37.1012+00:00",
+          "related_type": "budget_request",
+          "metadata_keys": [
+            "user_agent"
+          ],
+          "audit_organization_matches_current_owner": true,
+          "metadata_references_other_priority_parent": false
+        }
+      ],
+      "object_id": "59b986c9-4292-4f60-b3f9-ce6245bced5f"
+    }
+  ],
+  "findings": {
+    "validActiveAdminSessionRequired": true,
+    "budgetRoleOrResourcePermissionCheckPresent": false,
+    "returnsBudgetFilePaths": false,
+    "returnsLiquidationFilePaths": false,
+    "returnsDeletedIds": true,
+    "deletedRequestIdsClientFieldMatches": false,
+    "auditConditionalOnDeletionLoggingSetting": true,
+    "liveMutationTestPerformed": false
+  }
+}
+

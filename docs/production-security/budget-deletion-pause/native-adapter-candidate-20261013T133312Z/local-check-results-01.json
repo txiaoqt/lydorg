@@ -1,0 +1,25 @@
+{
+  "nodeVersion": "v24.21.0",
+  "syntax": [
+    {
+      "file": "budget-runner-core.mjs",
+      "exitCode": 0
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "exitCode": 0
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "exitCode": 0
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "exitCode": 0
+    }
+  ],
+  "focusedTestExitCode": 0,
+  "productionConnectionAttempted": false,
+  "historicalSuitesRerun": false,
+  "operationStateWritten": false
+}

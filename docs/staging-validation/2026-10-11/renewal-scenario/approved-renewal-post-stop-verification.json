@@ -1,0 +1,32 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "checkedAt": "2026-10-10T18:27:57.342Z",
+  "renewalStatus": "approved",
+  "cycle": 2,
+  "submissionStatus": "approved_green",
+  "documentRecords": 6,
+  "terminalTargetStatus": "submitted",
+  "terminalTargetReferencesOriginal": true,
+  "terminalTargetReferencesCorrected": false,
+  "targetHistoryEntries": 2,
+  "correctedReferencePreservedInHistory": true,
+  "fiveUnchangedReferences": true,
+  "allRecordedObjectsPresent": true,
+  "originalProfilesPreserved": true,
+  "terms": [
+    {
+      "term_number": 1,
+      "status": "superseded",
+      "start_date": "2023-11-09",
+      "end_date": "2026-11-09"
+    },
+    {
+      "term_number": 2,
+      "status": "active",
+      "start_date": "2026-11-09",
+      "end_date": "2029-11-09"
+    }
+  ],
+  "approvalAuditPresent": true,
+  "resubmissionAuditPresent": true
+}

@@ -1,0 +1,23 @@
+{
+  "node": [
+    {
+      "file": "budget-runner-core.mjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native-budget-pause.test.mjs",
+      "status": "PASS"
+    },
+    {
+      "file": "inventory-contract-correction-20261013T091309Z/repin-reviewed-inputs.mjs",
+      "status": "PASS"
+    }
+  ],
+  "powerShellParser": "PASS",
+  "aclHelperChanged": false,
+  "databaseConnectionAttempted": false
+}

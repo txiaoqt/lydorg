@@ -1,0 +1,8 @@
+{
+  "path": "docs/production-security/storage-cutover/20261011T113322Z/production_storage_foundation_review.sql",
+  "sha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "bytes": 47407,
+  "attemptsAllowed": 1,
+  "scope": "FOUNDATION ONLY",
+  "externalReceiptOnly": true
+}

@@ -1,0 +1,1726 @@
+TAP version 13
+# Subtest: synthetic protocol succeeds only after ordered gates and complete evidence
+ok 1 - synthetic protocol succeeds only after ordered gates and complete evidence
+  ---
+  duration_ms: 7.701
+  type: 'test'
+  ...
+# Subtest: validity start/end and five-minute exact completion boundaries are inclusive
+ok 2 - validity start/end and five-minute exact completion boundaries are inclusive
+  ---
+  duration_ms: 2.1581
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: missing time
+ok 3 - context rejected before any I/O: missing time
+  ---
+  duration_ms: 0.352
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: timezone-free
+ok 4 - context rejected before any I/O: timezone-free
+  ---
+  duration_ms: 0.2188
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: numeric coercion
+ok 5 - context rejected before any I/O: numeric coercion
+  ---
+  duration_ms: 0.2471
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: reversed
+ok 6 - context rejected before any I/O: reversed
+  ---
+  duration_ms: 0.2152
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: not yet valid
+ok 7 - context rejected before any I/O: not yet valid
+  ---
+  duration_ms: 0.2503
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: expired window
+ok 8 - context rejected before any I/O: expired window
+  ---
+  duration_ms: 0.269
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: future approval
+ok 9 - context rejected before any I/O: future approval
+  ---
+  duration_ms: 1.0051
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: old authorization
+ok 10 - context rejected before any I/O: old authorization
+  ---
+  duration_ms: 0.3254
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous verifyArtifacts stops without retry
+ok 11 - approval expiry during asynchronous verifyArtifacts stops without retry
+  ---
+  duration_ms: 0.3692
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous verifyLocalSecurity stops without retry
+ok 12 - approval expiry during asynchronous verifyLocalSecurity stops without retry
+  ---
+  duration_ms: 0.2345
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous inspectProof stops without retry
+ok 13 - approval expiry during asynchronous inspectProof stops without retry
+  ---
+  duration_ms: 0.2447
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous getProject stops without retry
+ok 14 - approval expiry during asynchronous getProject stops without retry
+  ---
+  duration_ms: 0.3956
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous archiveProof stops without retry
+ok 15 - approval expiry during asynchronous archiveProof stops without retry
+  ---
+  duration_ms: 0.4871
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous createProof stops without retry
+ok 16 - approval expiry during asynchronous createProof stops without retry
+  ---
+  duration_ms: 0.5129
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous readNewProof stops without retry
+ok 17 - approval expiry during asynchronous readNewProof stops without retry
+  ---
+  duration_ms: 0.5643
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous launchNative stops without retry
+ok 18 - approval expiry during asynchronous launchNative stops without retry
+  ---
+  duration_ms: 0.6819
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous verifyEvidenceAcl stops without retry
+ok 19 - approval expiry during asynchronous verifyEvidenceAcl stops without retry
+  ---
+  duration_ms: 0.8069
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous readEvidence stops without retry
+ok 20 - approval expiry during asynchronous readEvidence stops without retry
+  ---
+  duration_ms: 0.8319
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous getProject stops and retains
+ok 21 - five-minute crossing during asynchronous getProject stops and retains
+  ---
+  duration_ms: 0.5252
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous inspectProof stops and retains
+ok 22 - five-minute crossing during asynchronous inspectProof stops and retains
+  ---
+  duration_ms: 0.3622
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous archiveProof stops and retains
+ok 23 - five-minute crossing during asynchronous archiveProof stops and retains
+  ---
+  duration_ms: 0.4139
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous createProof stops and retains
+ok 24 - five-minute crossing during asynchronous createProof stops and retains
+  ---
+  duration_ms: 0.3998
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous readNewProof stops and retains
+ok 25 - five-minute crossing during asynchronous readNewProof stops and retains
+  ---
+  duration_ms: 1.0789
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous launchNative stops and retains
+ok 26 - five-minute crossing during asynchronous launchNative stops and retains
+  ---
+  duration_ms: 0.4971
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous verifyEvidenceAcl stops and retains
+ok 27 - five-minute crossing during asynchronous verifyEvidenceAcl stops and retains
+  ---
+  duration_ms: 0.5612
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous readEvidence stops and retains
+ok 28 - five-minute crossing during asynchronous readEvidence stops and retains
+  ---
+  duration_ms: 0.6168
+  type: 'test'
+  ...
+# Subtest: later evidence read and ACL checkpoints are individually guarded
+ok 29 - later evidence read and ACL checkpoints are individually guarded
+  ---
+  duration_ms: 1.4526
+  type: 'test'
+  ...
+# Subtest: wrong project, host, status, scope or future observation cannot archive
+ok 30 - wrong project, host, status, scope or future observation cannot archive
+  ---
+  duration_ms: 2.0458
+  type: 'test'
+  ...
+# Subtest: unavailable scoped observation fails without an alternative or refresh
+ok 31 - unavailable scoped observation fails without an alternative or refresh
+  ---
+  duration_ms: 0.3283
+  type: 'test'
+  ...
+# Subtest: artifact drift, CA/TLS/loader/root failures stop before control-plane
+ok 32 - artifact drift, CA/TLS/loader/root failures stop before control-plane
+  ---
+  duration_ms: 1.0417
+  type: 'test'
+  ...
+# Subtest: proof hash/metadata/state/destination recheck must pass immediately before rename
+ok 33 - proof hash/metadata/state/destination recheck must pass immediately before rename
+  ---
+  duration_ms: 2.2322
+  type: 'test'
+  ...
+# Subtest: initial malformed or nonstale proof stops before scoped observation
+ok 34 - initial malformed or nonstale proof stops before scoped observation
+  ---
+  duration_ms: 0.6866
+  type: 'test'
+  ...
+# Subtest: archive receipt uncertainty retains actual synthetic rename and never creates new proof
+ok 35 - archive receipt uncertainty retains actual synthetic rename and never creates new proof
+  ---
+  duration_ms: 0.4067
+  type: 'test'
+  ...
+# Subtest: create-new failure retains archive and any partial synthetic proof
+ok 36 - create-new failure retains archive and any partial synthetic proof
+  ---
+  duration_ms: 0.4073
+  type: 'test'
+  ...
+# Subtest: new proof must be read back exactly; observation timestamp cannot be reset
+ok 37 - new proof must be read back exactly; observation timestamp cannot be reset
+  ---
+  duration_ms: 0.4801
+  type: 'test'
+  ...
+# Subtest: native timeout is blocked, retained and not relaunched
+ok 38 - native timeout is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.6056
+  type: 'test'
+  ...
+# Subtest: native cancellation is blocked, retained and not relaunched
+ok 39 - native cancellation is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.4976
+  type: 'test'
+  ...
+# Subtest: native process-error is blocked, retained and not relaunched
+ok 40 - native process-error is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.4363
+  type: 'test'
+  ...
+# Subtest: native unknown-outcome is blocked, retained and not relaunched
+ok 41 - native unknown-outcome is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.5408
+  type: 'test'
+  ...
+# Subtest: zero exit, stopped label, nonzero exit or signal cannot imply success
+ok 42 - zero exit, stopped label, nonzero exit or signal cannot imply success
+  ---
+  duration_ms: 4.3625
+  type: 'test'
+  ...
+# Subtest: incomplete, corrupt, missing or unstable synthetic evidence never passes
+ok 43 - incomplete, corrupt, missing or unstable synthetic evidence never passes
+  ---
+  duration_ms: 1.5991
+  type: 'test'
+  ...
+# Subtest: PASS label without a launch or complete evidence is rejected by coordinator
+ok 44 - PASS label without a launch or complete evidence is rejected by coordinator
+  ---
+  duration_ms: 0.4754
+  type: 'test'
+  ...
+# Subtest: wrong wrapper evidence hash or incomplete preservation receipt is rejected
+ok 45 - wrong wrapper evidence hash or incomplete preservation receipt is rejected
+  ---
+  duration_ms: 0.8193
+  type: 'test'
+  ...
+# Subtest: wall and monotonic clock changes fail closed between asynchronous stages
+ok 46 - wall and monotonic clock changes fail closed between asynchronous stages
+  ---
+  duration_ms: 0.3667
+  type: 'test'
+  ...
+# Subtest: one-use guard also prevents a concurrent second call of the same integration
+ok 47 - one-use guard also prevents a concurrent second call of the same integration
+  ---
+  duration_ms: 0.6698
+  type: 'test'
+  ...
+# Subtest: atomic archive CAS model permits one preflight across two modeled invocations
+ok 48 - atomic archive CAS model permits one preflight across two modeled invocations
+  ---
+  duration_ms: 0.8513
+  type: 'test'
+  ...
+# Subtest: public integration cannot replace the reviewed wrapper or validator
+ok 49 - public integration cannot replace the reviewed wrapper or validator
+  ---
+  duration_ms: 0.3876
+  type: 'test'
+  ...
+# Subtest: cleanup/reset/alternate-provider capabilities are excluded from the port set
+ok 50 - cleanup/reset/alternate-provider capabilities are excluded from the port set
+  ---
+  duration_ms: 0.1737
+  type: 'test'
+  ...
+# Subtest: fixed launch request is immutable and contains only reviewed native --preflight route
+ok 51 - fixed launch request is immutable and contains only reviewed native --preflight route
+  ---
+  duration_ms: 0.086
+  type: 'test'
+  ...
+# Subtest: a second native launch request is blocked before provider dispatch and counted once
+ok 52 - a second native launch request is blocked before provider dispatch and counted once
+  ---
+  duration_ms: 1.1228
+  type: 'test'
+  ...
+# Subtest: an extra evidence read is denied before provider dispatch
+ok 53 - an extra evidence read is denied before provider dispatch
+  ---
+  duration_ms: 0.6713
+  type: 'test'
+  ...
+# Subtest: changed native scope cannot reach the provider
+ok 54 - changed native scope cannot reach the provider
+  ---
+  duration_ms: 1.1834
+  type: 'test'
+  ...
+# Subtest: deadline crossing during final wrapper validation cannot report PASS
+ok 55 - deadline crossing during final wrapper validation cannot report PASS
+  ---
+  duration_ms: 0.7246
+  type: 'test'
+  ...
+# Subtest: invalid wall/monotonic clocks fail before I/O instead of numeric coercion
+ok 56 - invalid wall/monotonic clocks fail before I/O instead of numeric coercion
+  ---
+  duration_ms: 0.6011
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: ARCHIVE_VERIFICATION_FAILED
+ok 57 - fixed safe typed code: ARCHIVE_VERIFICATION_FAILED
+  ---
+  duration_ms: 2.1162
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: ARTIFACT_DRIFT
+ok 58 - fixed safe typed code: ARTIFACT_DRIFT
+  ---
+  duration_ms: 0.1106
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: BUSINESS_OR_MIGRATION_DRIFT
+ok 59 - fixed safe typed code: BUSINESS_OR_MIGRATION_DRIFT
+  ---
+  duration_ms: 0.1014
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: CHILD_RESULT_INVALID
+ok 60 - fixed safe typed code: CHILD_RESULT_INVALID
+  ---
+  duration_ms: 0.1062
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: CLOCK_INVALID
+ok 61 - fixed safe typed code: CLOCK_INVALID
+  ---
+  duration_ms: 0.1256
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: CONTEXT_SCOPE_INVALID
+ok 62 - fixed safe typed code: CONTEXT_SCOPE_INVALID
+  ---
+  duration_ms: 0.0982
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: DEADLINE_CROSSED
+ok 63 - fixed safe typed code: DEADLINE_CROSSED
+  ---
+  duration_ms: 0.0996
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: EVIDENCE_BYTES_INVALID
+ok 64 - fixed safe typed code: EVIDENCE_BYTES_INVALID
+  ---
+  duration_ms: 0.0937
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: EVIDENCE_CHANGED_BETWEEN_READS
+ok 65 - fixed safe typed code: EVIDENCE_CHANGED_BETWEEN_READS
+  ---
+  duration_ms: 0.1285
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: EVIDENCE_ENCODING_INVALID
+ok 66 - fixed safe typed code: EVIDENCE_ENCODING_INVALID
+  ---
+  duration_ms: 0.1822
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: EVIDENCE_NAME_INVALID
+ok 67 - fixed safe typed code: EVIDENCE_NAME_INVALID
+  ---
+  duration_ms: 0.0974
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: EVIDENCE_NOT_RAW_BYTES
+ok 68 - fixed safe typed code: EVIDENCE_NOT_RAW_BYTES
+  ---
+  duration_ms: 0.1
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: EXPECTED_PROOF_NOT_STALE
+ok 69 - fixed safe typed code: EXPECTED_PROOF_NOT_STALE
+  ---
+  duration_ms: 0.0727
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: FOUNDATION_STATE_DRIFT
+ok 70 - fixed safe typed code: FOUNDATION_STATE_DRIFT
+  ---
+  duration_ms: 0.0681
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: FOUNDATION_STRUCTURE_DRIFT
+ok 71 - fixed safe typed code: FOUNDATION_STRUCTURE_DRIFT
+  ---
+  duration_ms: 0.0725
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: FRESH_HUMAN_CONTEXT_REQUIRED
+ok 72 - fixed safe typed code: FRESH_HUMAN_CONTEXT_REQUIRED
+  ---
+  duration_ms: 0.0739
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: HISTORICAL_AUTHORIZATION_FORBIDDEN
+ok 73 - fixed safe typed code: HISTORICAL_AUTHORIZATION_FORBIDDEN
+  ---
+  duration_ms: 0.0688
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: INVENTORY_COUNT_SHAPE_INVALID
+ok 74 - fixed safe typed code: INVENTORY_COUNT_SHAPE_INVALID
+  ---
+  duration_ms: 0.0675
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: INVENTORY_ROW_COUNT_TYPE_INVALID
+ok 75 - fixed safe typed code: INVENTORY_ROW_COUNT_TYPE_INVALID
+  ---
+  duration_ms: 0.0671
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: MONOTONIC_CLOCK_INVALID
+ok 76 - fixed safe typed code: MONOTONIC_CLOCK_INVALID
+  ---
+  duration_ms: 0.0727
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: MONOTONIC_CLOCK_REGRESSED
+ok 77 - fixed safe typed code: MONOTONIC_CLOCK_REGRESSED
+  ---
+  duration_ms: 0.073
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: MONOTONIC_DURATION_INVALID
+ok 78 - fixed safe typed code: MONOTONIC_DURATION_INVALID
+  ---
+  duration_ms: 0.0915
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: NATIVE_BACKEND_PID_INVALID
+ok 79 - fixed safe typed code: NATIVE_BACKEND_PID_INVALID
+  ---
+  duration_ms: 0.0807
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: NATIVE_COUNTER_TYPE_INVALID
+ok 80 - fixed safe typed code: NATIVE_COUNTER_TYPE_INVALID
+  ---
+  duration_ms: 0.0624
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: NEW_PROOF_CREATION_UNVERIFIED
+ok 81 - fixed safe typed code: NEW_PROOF_CREATION_UNVERIFIED
+  ---
+  duration_ms: 0.062
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: NEW_PROOF_REREAD_MISMATCH
+ok 82 - fixed safe typed code: NEW_PROOF_REREAD_MISMATCH
+  ---
+  duration_ms: 0.1029
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: OBSERVATION_TIMESTAMP_UNTRUSTED
+ok 83 - fixed safe typed code: OBSERVATION_TIMESTAMP_UNTRUSTED
+  ---
+  duration_ms: 0.0623
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: OUTSIDE_APPROVED_VALIDITY
+ok 84 - fixed safe typed code: OUTSIDE_APPROVED_VALIDITY
+  ---
+  duration_ms: 0.0707
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PORT_CALL_BOUNDARY_EXCEEDED
+ok 85 - fixed safe typed code: PORT_CALL_BOUNDARY_EXCEEDED
+  ---
+  duration_ms: 0.0678
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROOF_EXPIRED
+ok 86 - fixed safe typed code: PROOF_EXPIRED
+  ---
+  duration_ms: 0.066
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROOF_EXPIRED_OR_FUTURE
+ok 87 - fixed safe typed code: PROOF_EXPIRED_OR_FUTURE
+  ---
+  duration_ms: 0.0869
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROOF_IDENTITY_INVALID
+ok 88 - fixed safe typed code: PROOF_IDENTITY_INVALID
+  ---
+  duration_ms: 0.076
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROOF_JSON_AMBIGUOUS
+ok 89 - fixed safe typed code: PROOF_JSON_AMBIGUOUS
+  ---
+  duration_ms: 0.06
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROOF_PROJECT_INVALID
+ok 90 - fixed safe typed code: PROOF_PROJECT_INVALID
+  ---
+  duration_ms: 0.0701
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROOF_SCHEMA_INVALID
+ok 91 - fixed safe typed code: PROOF_SCHEMA_INVALID
+  ---
+  duration_ms: 0.1089
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROOF_TIMESTAMP_FUTURE
+ok 92 - fixed safe typed code: PROOF_TIMESTAMP_FUTURE
+  ---
+  duration_ms: 0.0828
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: PROTECTED_INVENTORY_DRIFT
+ok 93 - fixed safe typed code: PROTECTED_INVENTORY_DRIFT
+  ---
+  duration_ms: 0.1097
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: RESULT_EVIDENCE_MISMATCH
+ok 94 - fixed safe typed code: RESULT_EVIDENCE_MISMATCH
+  ---
+  duration_ms: 0.0628
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: REVIEWED_PREFLIGHT_NOT_PASS
+ok 95 - fixed safe typed code: REVIEWED_PREFLIGHT_NOT_PASS
+  ---
+  duration_ms: 0.0597
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: REVIEWED_REFERENCE_PIN_MISMATCH
+ok 96 - fixed safe typed code: REVIEWED_REFERENCE_PIN_MISMATCH
+  ---
+  duration_ms: 0.0597
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: REVIEWED_RESULT_OR_EVIDENCE_INCOMPLETE
+ok 97 - fixed safe typed code: REVIEWED_RESULT_OR_EVIDENCE_INCOMPLETE
+  ---
+  duration_ms: 0.0923
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SCOPED_OBSERVATION_INVALID
+ok 98 - fixed safe typed code: SCOPED_OBSERVATION_INVALID
+  ---
+  duration_ms: 0.0563
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SNAPSHOT_APPLICATION_INVALID
+ok 99 - fixed safe typed code: SNAPSHOT_APPLICATION_INVALID
+  ---
+  duration_ms: 0.054
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SNAPSHOT_CAPTURE_TIME_MISMATCH
+ok 100 - fixed safe typed code: SNAPSHOT_CAPTURE_TIME_MISMATCH
+  ---
+  duration_ms: 0.0564
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SNAPSHOT_FINGERPRINT_INVALID
+ok 101 - fixed safe typed code: SNAPSHOT_FINGERPRINT_INVALID
+  ---
+  duration_ms: 0.0549
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SNAPSHOT_NOT_QUIESCENT
+ok 102 - fixed safe typed code: SNAPSHOT_NOT_QUIESCENT
+  ---
+  duration_ms: 0.0653
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SNAPSHOT_SCOPE_MISMATCH
+ok 103 - fixed safe typed code: SNAPSHOT_SCOPE_MISMATCH
+  ---
+  duration_ms: 0.0574
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SNAPSHOT_STATUS_INVALID
+ok 104 - fixed safe typed code: SNAPSHOT_STATUS_INVALID
+  ---
+  duration_ms: 0.0544
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: SNAPSHOT_TLS_INVALID
+ok 105 - fixed safe typed code: SNAPSHOT_TLS_INVALID
+  ---
+  duration_ms: 0.0569
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: STALE_BINDING_INVALID
+ok 106 - fixed safe typed code: STALE_BINDING_INVALID
+  ---
+  duration_ms: 0.053
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: STALE_METADATA_BINDING_INVALID
+ok 107 - fixed safe typed code: STALE_METADATA_BINDING_INVALID
+  ---
+  duration_ms: 0.0535
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: STALE_PROOF_OR_STATE_MISMATCH
+ok 108 - fixed safe typed code: STALE_PROOF_OR_STATE_MISMATCH
+  ---
+  duration_ms: 0.055
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: STALE_PROOF_REUSE_FORBIDDEN
+ok 109 - fixed safe typed code: STALE_PROOF_REUSE_FORBIDDEN
+  ---
+  duration_ms: 0.0552
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: STORAGE_OBJECT_COUNT_MISMATCH
+ok 110 - fixed safe typed code: STORAGE_OBJECT_COUNT_MISMATCH
+  ---
+  duration_ms: 0.0543
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TIME_CALENDAR_INVALID
+ok 111 - fixed safe typed code: TIME_CALENDAR_INVALID
+  ---
+  duration_ms: 0.0777
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TIME_COMPONENT_INVALID
+ok 112 - fixed safe typed code: TIME_COMPONENT_INVALID
+  ---
+  duration_ms: 0.0863
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TIME_EXPLICIT_OFFSET_REQUIRED
+ok 113 - fixed safe typed code: TIME_EXPLICIT_OFFSET_REQUIRED
+  ---
+  duration_ms: 0.0583
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TIME_MISSING_OR_INVALID
+ok 114 - fixed safe typed code: TIME_MISSING_OR_INVALID
+  ---
+  duration_ms: 0.0579
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TIME_OFFSET_INVALID
+ok 115 - fixed safe typed code: TIME_OFFSET_INVALID
+  ---
+  duration_ms: 0.0587
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TIME_UNKNOWN_OFFSET
+ok 116 - fixed safe typed code: TIME_UNKNOWN_OFFSET
+  ---
+  duration_ms: 0.0543
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TLS_PROTOCOL_EVIDENCE_MISMATCH
+ok 117 - fixed safe typed code: TLS_PROTOCOL_EVIDENCE_MISMATCH
+  ---
+  duration_ms: 0.0546
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TRUSTED_IO_FAILED
+ok 118 - fixed safe typed code: TRUSTED_IO_FAILED
+  ---
+  duration_ms: 0.0529
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TRUSTED_LOCAL_PREREQUISITE_FAILED
+ok 119 - fixed safe typed code: TRUSTED_LOCAL_PREREQUISITE_FAILED
+  ---
+  duration_ms: 0.0552
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: TRUSTED_PROVIDER_SET_INVALID
+ok 120 - fixed safe typed code: TRUSTED_PROVIDER_SET_INVALID
+  ---
+  duration_ms: 0.0851
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: VALIDITY_INTERVAL_NOT_ORDERED
+ok 121 - fixed safe typed code: VALIDITY_INTERVAL_NOT_ORDERED
+  ---
+  duration_ms: 0.0562
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: VALIDITY_MUST_BE_UTC
+ok 122 - fixed safe typed code: VALIDITY_MUST_BE_UTC
+  ---
+  duration_ms: 0.0669
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: WALL_CLOCK_REGRESSED
+ok 123 - fixed safe typed code: WALL_CLOCK_REGRESSED
+  ---
+  duration_ms: 0.063
+  type: 'test'
+  ...
+# Subtest: fixed safe typed code: WRAPPER_LAUNCH_SCOPE_CHANGED
+ok 124 - fixed safe typed code: WRAPPER_LAUNCH_SCOPE_CHANGED
+  ---
+  duration_ms: 0.0941
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: unknown
+ok 125 - unsafe typed code suppressed: unknown
+  ---
+  duration_ms: 0.1739
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: url
+ok 126 - unsafe typed code suppressed: url
+  ---
+  duration_ms: 0.0738
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: newline
+ok 127 - unsafe typed code suppressed: newline
+  ---
+  duration_ms: 0.0561
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: oversize
+ok 128 - unsafe typed code suppressed: oversize
+  ---
+  duration_ms: 0.0543
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: number
+ok 129 - unsafe typed code suppressed: number
+  ---
+  duration_ms: 0.0562
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: null
+ok 130 - unsafe typed code suppressed: null
+  ---
+  duration_ms: 0.0541
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: undefined
+ok 131 - unsafe typed code suppressed: undefined
+  ---
+  duration_ms: 0.0541
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: object
+ok 132 - unsafe typed code suppressed: object
+  ---
+  duration_ms: 0.0599
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: array
+ok 133 - unsafe typed code suppressed: array
+  ---
+  duration_ms: 0.0568
+  type: 'test'
+  ...
+# Subtest: unsafe typed code suppressed: symbol
+ok 134 - unsafe typed code suppressed: symbol
+  ---
+  duration_ms: 0.061
+  type: 'test'
+  ...
+# Subtest: plain, foreign and untyped errors never confer safe-code trust
+ok 135 - plain, foreign and untyped errors never confer safe-code trust
+  ---
+  duration_ms: 0.133
+  type: 'test'
+  ...
+# Subtest: code accessors and inherited code are not evaluated or accepted
+ok 136 - code accessors and inherited code are not evaluated or accepted
+  ---
+  duration_ms: 0.1294
+  type: 'test'
+  ...
+# Subtest: hostile descriptor trap fails closed and cannot escape the sanitizer
+ok 137 - hostile descriptor trap fails closed and cannot escape the sanitizer
+  ---
+  duration_ms: 0.1463
+  type: 'test'
+  ...
+# Subtest: non-string code is never string-coerced
+ok 138 - non-string code is never string-coerced
+  ---
+  duration_ms: 0.1057
+  type: 'test'
+  ...
+# Subtest: allowlist is immutable and has no PASS or arbitrary identifier escape
+ok 139 - allowlist is immutable and has no PASS or arbitrary identifier escape
+  ---
+  duration_ms: 0.3365
+  type: 'test'
+  ...
+# Subtest: coordinator provider boundary: ordinary
+ok 140 - coordinator provider boundary: ordinary
+  ---
+  duration_ms: 1.5324
+  type: 'test'
+  ...
+# Subtest: coordinator provider boundary: typed arbitrary
+ok 141 - coordinator provider boundary: typed arbitrary
+  ---
+  duration_ms: 0.24
+  type: 'test'
+  ...
+# Subtest: coordinator provider boundary: typed safe
+ok 142 - coordinator provider boundary: typed safe
+  ---
+  duration_ms: 0.1976
+  type: 'test'
+  ...
+# Subtest: final catch also sanitizes a typed clock exception without provider calls
+ok 143 - final catch also sanitizes a typed clock exception without provider calls
+  ---
+  duration_ms: 0.2698
+  type: 'test'
+  ...
+# Subtest: complete generated positive evidence reaches the unchanged fixed validator
+ok 144 - complete generated positive evidence reaches the unchanged fixed validator
+  ---
+  duration_ms: 12.7339
+  type: 'test'
+  ...
+# Subtest: explicit offset and inclusive capture bounds are accepted by the unchanged validator
+ok 145 - explicit offset and inclusive capture bounds are accepted by the unchanged validator
+  ---
+  duration_ms: 16.329
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong project
+ok 146 - fixed validator rejects: wrong project
+  ---
+  duration_ms: 3.5847
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong host
+ok 147 - fixed validator rejects: wrong host
+  ---
+  duration_ms: 2.4991
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong port
+ok 148 - fixed validator rejects: wrong port
+  ---
+  duration_ms: 2.9463
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong route
+ok 149 - fixed validator rejects: wrong route
+  ---
+  duration_ms: 2.609
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong native bundle
+ok 150 - fixed validator rejects: wrong native bundle
+  ---
+  duration_ms: 2.9331
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong SQL hash
+ok 151 - fixed validator rejects: wrong SQL hash
+  ---
+  duration_ms: 2.5262
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong SQL size
+ok 152 - fixed validator rejects: wrong SQL size
+  ---
+  duration_ms: 2.9699
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong proof binding
+ok 153 - fixed validator rejects: wrong proof binding
+  ---
+  duration_ms: 2.5609
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: capture before launch
+ok 154 - fixed validator rejects: capture before launch
+  ---
+  duration_ms: 2.8312
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: capture after completion
+ok 155 - fixed validator rejects: capture after completion
+  ---
+  duration_ms: 2.7353
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: capture missing offset
+ok 156 - fixed validator rejects: capture missing offset
+  ---
+  duration_ms: 2.9631
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: TLS chain unverified
+ok 157 - fixed validator rejects: TLS chain unverified
+  ---
+  duration_ms: 2.4781
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: TLS hostname unverified
+ok 158 - fixed validator rejects: TLS hostname unverified
+  ---
+  duration_ms: 2.8126
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong CA fingerprint
+ok 159 - fixed validator rejects: wrong CA fingerprint
+  ---
+  duration_ms: 2.3807
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: bad peer fingerprint
+ok 160 - fixed validator rejects: bad peer fingerprint
+  ---
+  duration_ms: 2.8239
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: protocol disagreement
+ok 161 - fixed validator rejects: protocol disagreement
+  ---
+  duration_ms: 2.7755
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong PostgreSQL version
+ok 162 - fixed validator rejects: wrong PostgreSQL version
+  ---
+  duration_ms: 2.9689
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: missing privilege
+ok 163 - fixed validator rejects: missing privilege
+  ---
+  duration_ms: 2.447
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: read-write identity
+ok 164 - fixed validator rejects: read-write identity
+  ---
+  duration_ms: 2.9198
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: string PID
+ok 165 - fixed validator rejects: string PID
+  ---
+  duration_ms: 2.4754
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: nonzero competing activity
+ok 166 - fixed validator rejects: nonzero competing activity
+  ---
+  duration_ms: 2.7519
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: string activity count
+ok 167 - fixed validator rejects: string activity count
+  ---
+  duration_ms: 2.7054
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong catalog
+ok 168 - fixed validator rejects: wrong catalog
+  ---
+  duration_ms: 2.8579
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed function owner
+ok 169 - fixed validator rejects: changed function owner
+  ---
+  duration_ms: 2.8571
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed function grants
+ok 170 - fixed validator rejects: changed function grants
+  ---
+  duration_ms: 3.4975
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed function definition
+ok 171 - fixed validator rejects: changed function definition
+  ---
+  duration_ms: 3.1337
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: containment guard bypass
+ok 172 - fixed validator rejects: containment guard bypass
+  ---
+  duration_ms: 2.6076
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed migration count
+ok 173 - fixed validator rejects: changed migration count
+  ---
+  duration_ms: 3.2126
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed migration history
+ok 174 - fixed validator rejects: changed migration history
+  ---
+  duration_ms: 2.8502
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed policy count
+ok 175 - fixed validator rejects: changed policy count
+  ---
+  duration_ms: 3.2796
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed object count
+ok 176 - fixed validator rejects: changed object count
+  ---
+  duration_ms: 2.9468
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: changed business count
+ok 177 - fixed validator rejects: changed business count
+  ---
+  duration_ms: 3.4488
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: missing inventory row
+ok 178 - fixed validator rejects: missing inventory row
+  ---
+  duration_ms: 2.97
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: duplicate inventory row
+ok 179 - fixed validator rejects: duplicate inventory row
+  ---
+  duration_ms: 2.4318
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: negative inventory count
+ok 180 - fixed validator rejects: negative inventory count
+  ---
+  duration_ms: 2.7818
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: string inventory count
+ok 181 - fixed validator rejects: string inventory count
+  ---
+  duration_ms: 2.4552
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong inventory digest
+ok 182 - fixed validator rejects: wrong inventory digest
+  ---
+  duration_ms: 3.0684
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: foundation state changed
+ok 183 - fixed validator rejects: foundation state changed
+  ---
+  duration_ms: 4.2534
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong trusted origin
+ok 184 - fixed validator rejects: wrong trusted origin
+  ---
+  duration_ms: 3.2269
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong foundation digest
+ok 185 - fixed validator rejects: wrong foundation digest
+  ---
+  duration_ms: 3.6004
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: wrong state fingerprint
+ok 186 - fixed validator rejects: wrong state fingerprint
+  ---
+  duration_ms: 3.918
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: result digest disagreement
+ok 187 - fixed validator rejects: result digest disagreement
+  ---
+  duration_ms: 3.7862
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: result structure disagreement
+ok 188 - fixed validator rejects: result structure disagreement
+  ---
+  duration_ms: 5.1172
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: result state disagreement
+ok 189 - fixed validator rejects: result state disagreement
+  ---
+  duration_ms: 3.9435
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: result inventory count
+ok 190 - fixed validator rejects: result inventory count
+  ---
+  duration_ms: 3.944
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: result evidence traversal
+ok 191 - fixed validator rejects: result evidence traversal
+  ---
+  duration_ms: 1.4443
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: result PASS alone
+ok 192 - fixed validator rejects: result PASS alone
+  ---
+  duration_ms: 1.4113
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: result stopped
+ok 193 - fixed validator rejects: result stopped
+  ---
+  duration_ms: 2.1738
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: installation activated
+ok 194 - fixed validator rejects: installation activated
+  ---
+  duration_ms: 1.5255
+  type: 'test'
+  ...
+# Subtest: fixed validator rejects: secret-like synthetic field
+ok 195 - fixed validator rejects: secret-like synthetic field
+  ---
+  duration_ms: 3.0454
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 0
+ok 196 - pinned inventory drift rejected after self-consistent rehash: row 0
+  ---
+  duration_ms: 3.7916
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 1
+ok 197 - pinned inventory drift rejected after self-consistent rehash: row 1
+  ---
+  duration_ms: 3.6902
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 2
+ok 198 - pinned inventory drift rejected after self-consistent rehash: row 2
+  ---
+  duration_ms: 3.729
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 3
+ok 199 - pinned inventory drift rejected after self-consistent rehash: row 3
+  ---
+  duration_ms: 3.6121
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 4
+ok 200 - pinned inventory drift rejected after self-consistent rehash: row 4
+  ---
+  duration_ms: 3.8858
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 5
+ok 201 - pinned inventory drift rejected after self-consistent rehash: row 5
+  ---
+  duration_ms: 3.1716
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 6
+ok 202 - pinned inventory drift rejected after self-consistent rehash: row 6
+  ---
+  duration_ms: 3.2174
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 7
+ok 203 - pinned inventory drift rejected after self-consistent rehash: row 7
+  ---
+  duration_ms: 3.6852
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 8
+ok 204 - pinned inventory drift rejected after self-consistent rehash: row 8
+  ---
+  duration_ms: 2.9588
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 9
+ok 205 - pinned inventory drift rejected after self-consistent rehash: row 9
+  ---
+  duration_ms: 3.5284
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 10
+ok 206 - pinned inventory drift rejected after self-consistent rehash: row 10
+  ---
+  duration_ms: 3.1032
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 11
+ok 207 - pinned inventory drift rejected after self-consistent rehash: row 11
+  ---
+  duration_ms: 3.475
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 12
+ok 208 - pinned inventory drift rejected after self-consistent rehash: row 12
+  ---
+  duration_ms: 3.9001
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 13
+ok 209 - pinned inventory drift rejected after self-consistent rehash: row 13
+  ---
+  duration_ms: 3.3138
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 14
+ok 210 - pinned inventory drift rejected after self-consistent rehash: row 14
+  ---
+  duration_ms: 3.3515
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 15
+ok 211 - pinned inventory drift rejected after self-consistent rehash: row 15
+  ---
+  duration_ms: 3.5297
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 16
+ok 212 - pinned inventory drift rejected after self-consistent rehash: row 16
+  ---
+  duration_ms: 2.9779
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 17
+ok 213 - pinned inventory drift rejected after self-consistent rehash: row 17
+  ---
+  duration_ms: 3.0873
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 18
+ok 214 - pinned inventory drift rejected after self-consistent rehash: row 18
+  ---
+  duration_ms: 3.371
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 19
+ok 215 - pinned inventory drift rejected after self-consistent rehash: row 19
+  ---
+  duration_ms: 2.943
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 20
+ok 216 - pinned inventory drift rejected after self-consistent rehash: row 20
+  ---
+  duration_ms: 2.8768
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 21
+ok 217 - pinned inventory drift rejected after self-consistent rehash: row 21
+  ---
+  duration_ms: 3.3473
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 22
+ok 218 - pinned inventory drift rejected after self-consistent rehash: row 22
+  ---
+  duration_ms: 3.0331
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 23
+ok 219 - pinned inventory drift rejected after self-consistent rehash: row 23
+  ---
+  duration_ms: 3.0256
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 24
+ok 220 - pinned inventory drift rejected after self-consistent rehash: row 24
+  ---
+  duration_ms: 3.4427
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 25
+ok 221 - pinned inventory drift rejected after self-consistent rehash: row 25
+  ---
+  duration_ms: 2.8925
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 26
+ok 222 - pinned inventory drift rejected after self-consistent rehash: row 26
+  ---
+  duration_ms: 3.054
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 27
+ok 223 - pinned inventory drift rejected after self-consistent rehash: row 27
+  ---
+  duration_ms: 3.6623
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 28
+ok 224 - pinned inventory drift rejected after self-consistent rehash: row 28
+  ---
+  duration_ms: 2.9518
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 29
+ok 225 - pinned inventory drift rejected after self-consistent rehash: row 29
+  ---
+  duration_ms: 2.884
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 30
+ok 226 - pinned inventory drift rejected after self-consistent rehash: row 30
+  ---
+  duration_ms: 3.3853
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 31
+ok 227 - pinned inventory drift rejected after self-consistent rehash: row 31
+  ---
+  duration_ms: 2.9405
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 32
+ok 228 - pinned inventory drift rejected after self-consistent rehash: row 32
+  ---
+  duration_ms: 2.8768
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 33
+ok 229 - pinned inventory drift rejected after self-consistent rehash: row 33
+  ---
+  duration_ms: 4.1066
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 34
+ok 230 - pinned inventory drift rejected after self-consistent rehash: row 34
+  ---
+  duration_ms: 2.9441
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 35
+ok 231 - pinned inventory drift rejected after self-consistent rehash: row 35
+  ---
+  duration_ms: 2.9285
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 36
+ok 232 - pinned inventory drift rejected after self-consistent rehash: row 36
+  ---
+  duration_ms: 3.384
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 37
+ok 233 - pinned inventory drift rejected after self-consistent rehash: row 37
+  ---
+  duration_ms: 2.8773
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 38
+ok 234 - pinned inventory drift rejected after self-consistent rehash: row 38
+  ---
+  duration_ms: 2.9997
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 39
+ok 235 - pinned inventory drift rejected after self-consistent rehash: row 39
+  ---
+  duration_ms: 3.3297
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 40
+ok 236 - pinned inventory drift rejected after self-consistent rehash: row 40
+  ---
+  duration_ms: 3.0006
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 41
+ok 237 - pinned inventory drift rejected after self-consistent rehash: row 41
+  ---
+  duration_ms: 2.8886
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 42
+ok 238 - pinned inventory drift rejected after self-consistent rehash: row 42
+  ---
+  duration_ms: 3.4429
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 43
+ok 239 - pinned inventory drift rejected after self-consistent rehash: row 43
+  ---
+  duration_ms: 3.1342
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 44
+ok 240 - pinned inventory drift rejected after self-consistent rehash: row 44
+  ---
+  duration_ms: 3.0348
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 45
+ok 241 - pinned inventory drift rejected after self-consistent rehash: row 45
+  ---
+  duration_ms: 3.4931
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 46
+ok 242 - pinned inventory drift rejected after self-consistent rehash: row 46
+  ---
+  duration_ms: 2.9157
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 47
+ok 243 - pinned inventory drift rejected after self-consistent rehash: row 47
+  ---
+  duration_ms: 2.8584
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 48
+ok 244 - pinned inventory drift rejected after self-consistent rehash: row 48
+  ---
+  duration_ms: 3.5044
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 49
+ok 245 - pinned inventory drift rejected after self-consistent rehash: row 49
+  ---
+  duration_ms: 2.9186
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 50
+ok 246 - pinned inventory drift rejected after self-consistent rehash: row 50
+  ---
+  duration_ms: 2.854
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 51
+ok 247 - pinned inventory drift rejected after self-consistent rehash: row 51
+  ---
+  duration_ms: 3.3546
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 52
+ok 248 - pinned inventory drift rejected after self-consistent rehash: row 52
+  ---
+  duration_ms: 2.9669
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 53
+ok 249 - pinned inventory drift rejected after self-consistent rehash: row 53
+  ---
+  duration_ms: 2.8825
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 54
+ok 250 - pinned inventory drift rejected after self-consistent rehash: row 54
+  ---
+  duration_ms: 3.8845
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 55
+ok 251 - pinned inventory drift rejected after self-consistent rehash: row 55
+  ---
+  duration_ms: 3.0336
+  type: 'test'
+  ...
+# Subtest: pinned inventory drift rejected after self-consistent rehash: row 56
+ok 252 - pinned inventory drift rejected after self-consistent rehash: row 56
+  ---
+  duration_ms: 2.9348
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 0
+ok 253 - foundation function owner drift: index 0
+  ---
+  duration_ms: 4.0254
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 1
+ok 254 - foundation function owner drift: index 1
+  ---
+  duration_ms: 3.375
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 2
+ok 255 - foundation function owner drift: index 2
+  ---
+  duration_ms: 3.766
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 3
+ok 256 - foundation function owner drift: index 3
+  ---
+  duration_ms: 3.2055
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 4
+ok 257 - foundation function owner drift: index 4
+  ---
+  duration_ms: 3.215
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 5
+ok 258 - foundation function owner drift: index 5
+  ---
+  duration_ms: 3.7987
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 6
+ok 259 - foundation function owner drift: index 6
+  ---
+  duration_ms: 3.45
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 7
+ok 260 - foundation function owner drift: index 7
+  ---
+  duration_ms: 3.7172
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 8
+ok 261 - foundation function owner drift: index 8
+  ---
+  duration_ms: 3.2367
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 9
+ok 262 - foundation function owner drift: index 9
+  ---
+  duration_ms: 3.2216
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 10
+ok 263 - foundation function owner drift: index 10
+  ---
+  duration_ms: 3.9399
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 11
+ok 264 - foundation function owner drift: index 11
+  ---
+  duration_ms: 3.4666
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 12
+ok 265 - foundation function owner drift: index 12
+  ---
+  duration_ms: 3.8225
+  type: 'test'
+  ...
+# Subtest: foundation function owner drift: index 13
+ok 266 - foundation function owner drift: index 13
+  ---
+  duration_ms: 3.2989
+  type: 'test'
+  ...
+# Subtest: foundation table RLS drift: index 0
+ok 267 - foundation table RLS drift: index 0
+  ---
+  duration_ms: 3.3554
+  type: 'test'
+  ...
+# Subtest: foundation table RLS drift: index 1
+ok 268 - foundation table RLS drift: index 1
+  ---
+  duration_ms: 3.8374
+  type: 'test'
+  ...
+# Subtest: foundation table RLS drift: index 2
+ok 269 - foundation table RLS drift: index 2
+  ---
+  duration_ms: 3.5927
+  type: 'test'
+  ...
+# Subtest: foundation table RLS drift: index 3
+ok 270 - foundation table RLS drift: index 3
+  ---
+  duration_ms: 3.7312
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 0
+ok 271 - foundation trigger state drift: index 0
+  ---
+  duration_ms: 3.348
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 1
+ok 272 - foundation trigger state drift: index 1
+  ---
+  duration_ms: 3.305
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 2
+ok 273 - foundation trigger state drift: index 2
+  ---
+  duration_ms: 4.0942
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 3
+ok 274 - foundation trigger state drift: index 3
+  ---
+  duration_ms: 3.3138
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 4
+ok 275 - foundation trigger state drift: index 4
+  ---
+  duration_ms: 3.7591
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 5
+ok 276 - foundation trigger state drift: index 5
+  ---
+  duration_ms: 3.288
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 6
+ok 277 - foundation trigger state drift: index 6
+  ---
+  duration_ms: 3.2653
+  type: 'test'
+  ...
+# Subtest: foundation trigger state drift: index 7
+ok 278 - foundation trigger state drift: index 7
+  ---
+  duration_ms: 3.9328
+  type: 'test'
+  ...
+# Subtest: reference pin cannot be substituted: inventorySql
+ok 279 - reference pin cannot be substituted: inventorySql
+  ---
+  duration_ms: 1.5624
+  type: 'test'
+  ...
+# Subtest: reference pin cannot be substituted: baselineData
+ok 280 - reference pin cannot be substituted: baselineData
+  ---
+  duration_ms: 1.4004
+  type: 'test'
+  ...
+# Subtest: reference pin cannot be substituted: baselineSnapshot
+ok 281 - reference pin cannot be substituted: baselineSnapshot
+  ---
+  duration_ms: 1.4124
+  type: 'test'
+  ...
+# Subtest: reference pin cannot be substituted: foundationReceipt
+ok 282 - reference pin cannot be substituted: foundationReceipt
+  ---
+  duration_ms: 1.4607
+  type: 'test'
+  ...
+# Subtest: malformed evidence rejected: empty
+ok 283 - malformed evidence rejected: empty
+  ---
+  duration_ms: 2.7416
+  type: 'test'
+  ...
+# Subtest: malformed evidence rejected: invalid JSON
+ok 284 - malformed evidence rejected: invalid JSON
+  ---
+  duration_ms: 2.1801
+  type: 'test'
+  ...
+# Subtest: malformed evidence rejected: invalid UTF8
+ok 285 - malformed evidence rejected: invalid UTF8
+  ---
+  duration_ms: 2.1769
+  type: 'test'
+  ...
+# Subtest: malformed evidence rejected: oversized
+ok 286 - malformed evidence rejected: oversized
+  ---
+  duration_ms: 2.4727
+  type: 'test'
+  ...
+1..286
+# tests 286
+# suites 0
+# pass 286
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 980.8332

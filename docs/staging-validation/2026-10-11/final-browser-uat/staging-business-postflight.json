@@ -1,0 +1,38 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "inspectedAt": "2026-10-11T02:40:36.459Z",
+  "before": {
+    "files": "863385a72c6fdf778969b1bac6e2bdbb",
+    "terms": "da367dd3011994703d9444a9aa19934e",
+    "objects": "17929367fb66171e51f88faa6e3c693d",
+    "profiles": "c73afc62c9ad7d1bae03bcf8116a3efb",
+    "renewals": "6b5c311705e539f22186c69a8aab5853",
+    "submissions": "55054daef4d3c9361db5fb32e8be4b9d"
+  },
+  "after": {
+    "files": "863385a72c6fdf778969b1bac6e2bdbb",
+    "terms": "da367dd3011994703d9444a9aa19934e",
+    "objects": "17929367fb66171e51f88faa6e3c693d",
+    "profiles": "c73afc62c9ad7d1bae03bcf8116a3efb",
+    "renewals": "6b5c311705e539f22186c69a8aab5853",
+    "submissions": "55054daef4d3c9361db5fb32e8be4b9d"
+  },
+  "unchanged": true,
+  "objectHashExcludes": "last_accessed_at",
+  "active_admin_sessions": 0,
+  "inventory": {
+    "auth_users": 6,
+    "organizations": 5,
+    "admins": 2,
+    "buckets": 10,
+    "objects": 32,
+    "terms": 3,
+    "renewals": [
+      {
+        "cycle": 2,
+        "status": "approved"
+      }
+    ],
+    "storage_policy_hash": "cc25b6f3c44d3fd7550b24facaa52196"
+  }
+}

@@ -1,0 +1,33 @@
+// Final review only: no database connections, env loading, lock or authorization creation.
+import {readFile,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+const dir='docs/production-security/budget-deletion-pause/execution-review-20261013T024629Z';
+const prior='docs/production-security/budget-deletion-pause/20261012T165000Z';
+const sha=b=>createHash('sha256').update(b).digest('hex');
+const inputs={sql:`${prior}/budget_deletion_pause_production.sql`,pre:`${prior}/pre-install-readonly.sql`,post:`${prior}/post-install-readonly.sql`,data:'docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql',foundationRunner:'docs/production-security/storage-cutover/native-runner-20261011T132539Z/native-foundation-runner.mjs',foundationCore:'docs/production-security/storage-cutover/native-runner-20261011T132539Z/runner-core.mjs',environmentVerifier:'scripts/security/verify-foundation-environment.mjs',foundationCatalog:'docs/production-security/storage-cutover/final-readiness-20261012T160633Z/foundation-readonly.sql'};
+const files={};const text={};
+for(const [key,path]of Object.entries(inputs)){const bytes=await readFile(path);files[key]={path,bytes:bytes.length,sha256:sha(bytes)};text[key]=bytes.toString('utf8');}
+assert.equal(files.sql.sha256,'a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a');assert.equal(files.sql.bytes,11945);
+const body=text.sql.split('-- BEGIN reviewed pause body\n')[1]?.split('-- END reviewed pause body')[0];assert.ok(body);
+assert.equal((text.sql.match(/CREATE OR REPLACE FUNCTION/g)||[]).length,1);
+assert.doesNotMatch(body,/\b(?:DELETE|UPDATE|INSERT|GRANT|REVOKE|EXECUTE|validate_admin_session_token)\b/i);
+assert.match(body,/RAISE SQLSTATE 'PT409'/);
+assert.match(text.sql,/\nBEGIN;\nSET LOCAL lock_timeout='1s';\nSET LOCAL statement_timeout='30s';/);
+assert.match(text.sql,/COMMIT;\s*$/);
+assert.match(text.sql,/ytrace_budget_pause\.original_oid/);assert.match(text.sql,/ytrace_budget_pause\.preserved_data/);
+assert.equal((text.data.match(/ AS relation/g)||[]).length,57);
+assert.match(text.data,/REPEATABLE READ READ ONLY/);
+assert.match(text.pre,/ROLLBACK;\s*$/);assert.match(text.post,/ROLLBACK;\s*$/);
+assert.match(text.foundationCore,/READ_ONLY_TRANSACTION_NOT_COMMITTED/);
+assert.match(text.foundationCore,/e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2/);
+const current=JSON.parse(await readFile(`${dir}/protected-inventories-readonly.json`,'utf8'));
+const old=JSON.parse(await readFile(`${prior}/protected-data-readonly.json`,'utf8'));
+assert.equal(current.read_only,'on');assert.equal(current.preserved_data.length,57);
+assert.equal(new Set(current.preserved_data.map(r=>r.relation)).size,57);
+const normalize=rows=>rows.map(({relation,row_count,content_fingerprint})=>({relation,row_count,content_fingerprint})).sort((a,b)=>a.relation<b.relation?-1:a.relation>b.relation?1:0);
+const rows=normalize(current.preserved_data),oldRows=normalize(old.preserved_data);
+const changes=rows.filter(r=>JSON.stringify(r)!==JSON.stringify(oldRows.find(x=>x.relation===r.relation)));
+const result={status:'SQL_REVIEW_PASS_EXECUTION_NO_GO',files,sqlChecks:{hash:true,bytes:true,oneFunctionReplacement:true,noDestructiveBody:true,lockTimeout:'1s',statementTimeout:'30s',originalTransactionPreserved:true,contractAndDataGuards:true},adapter:{status:'BLOCKED',path:null,bundleSha256:null,operatorConfirmedNoSeparateAdapter:true,existingFoundationRunnerIsIncompatible:true,foundationRunnerModified:false},tls:{requirementsReviewed:true,expectedHost:'db.mqqaykksadotbrghbexz.supabase.co',freshNativeHandshakePerformed:false,privateEnvironmentLoaded:false,certificateRead:false},preservation:{inventories:57,inventorySha256:sha(JSON.stringify(rows)),canonicalization:'JSON.stringify of objects with ordered keys relation,row_count,content_fingerprint, sorted by relation code-point order',reviewSnapshotOnly:true,baselineAdopted:false,changedSincePriorSnapshot:changes,foundationCatalogExcludedFromMainHash:true,supplementalFoundationVerificationRequired:true},productionWrites:0,stagingWrites:0,installationActivated:false,completedTestsRepeated:false};
+await writeFile(`${dir}/artifact-and-mechanism-review.json`,JSON.stringify(result,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({status:result.status,sqlHash:files.sql.sha256,sqlBytes:files.sql.bytes,protectedInventories:57,changedSincePriorSnapshot:changes.map(x=>x.relation),adapter:'MISSING'}));

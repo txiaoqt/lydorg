@@ -1,0 +1,455 @@
+{
+  "readOnlyPreparation": true,
+  "sqlSha256": "3f98f268be5a0815873802f6c4f284cd9acf381c65140fb904b9c0c0255a432c",
+  "current": [
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "budget_request_files_manage_own",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'budget-request-files'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "budget_request_files_read_portal",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "liquidation_report_files_manage_own",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'liquidation-report-files'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "liquidation_report_files_read_portal",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "move_files_manage_own",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'move-files'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "move_files_read_portal",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(bucket_id = 'news-release-images'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "news_release_images_admin_manage",
+      "schemaname": "storage",
+      "with_check": "(bucket_id = 'news-release-images'::text)"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "organization_documents_manage_own",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'organization-documents'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "organization_documents_read_portal",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(bucket_id = 'template-files'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "template_files_admin_manage",
+      "schemaname": "storage",
+      "with_check": "(bucket_id = 'template-files'::text)"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_admin_manage",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_read_public",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "yorp_sample_seed_assets_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ypop_files_manage_own",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'ypop-files'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ypop_files_read_portal",
+      "schemaname": "storage",
+      "with_check": null
+    }
+  ],
+  "exactExpectedPreflight": [
+    {
+      "policyname": "budget_request_files_manage_own",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "budget_request_files_read_portal",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'budget-request-files'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "liquidation_report_files_manage_own",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "liquidation_report_files_read_portal",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'liquidation-report-files'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "move_files_manage_own",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "move_files_read_portal",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'move-files'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "news_release_images_admin_manage",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'news-release-images'::text)",
+      "with_check": "(bucket_id = 'news-release-images'::text)"
+    },
+    {
+      "policyname": "organization_documents_manage_own",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "organization_documents_read_portal",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'organization-documents'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "template_files_admin_manage",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'template-files'::text)",
+      "with_check": "(bucket_id = 'template-files'::text)"
+    },
+    {
+      "policyname": "transparency_attachments_admin_manage",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "with_check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "policyname": "transparency_attachments_read_public",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "yorp_sample_seed_assets_read",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "with_check": null
+    },
+    {
+      "policyname": "ypop_files_manage_own",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "ypop_files_read_portal",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'ypop-files'::text)",
+      "with_check": null
+    }
+  ],
+  "proposed": [
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_admin_manage",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_read_public",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "yorp_sample_seed_assets_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'template-files'::text) AND ytrace_storage_private.is_active_template(name))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_active_templates_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'news-release-images'::text) AND ytrace_storage_private.is_published_news_image(name))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_news_images_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'delete'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_delete",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_insert",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'insert'::text))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'read'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "ytrace_storage_private.is_public_avatar(bucket_id, name, (metadata ->> 'mimetype'::text), COALESCE(owner_id, (owner)::text))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_published_profile_avatar_read",
+      "schemaname": "storage",
+      "with_check": null
+    }
+  ],
+  "sqlModified": false
+}

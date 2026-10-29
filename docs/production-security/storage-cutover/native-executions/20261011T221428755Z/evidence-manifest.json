@@ -1,0 +1,38 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "route": "native-pg-direct-tls",
+  "recordedAt": "2026-10-11T22:18:11.925Z",
+  "result": "PASS",
+  "transactionAcknowledgement": "COMMIT",
+  "sqlBytes": 47407,
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "runnerBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+  "preservationBaselineSha256": "60a25f959aa2e45ab384cb41702f5eb13b93bdfe9ef71049b99eeceb5bde5d9a",
+  "attempts": 1,
+  "automaticRetries": 0,
+  "committed": true,
+  "independentVerification": "PASS",
+  "executionReceiptSha256": "eb76652902c04eaf1b19de003622fc9fd8271ec507f71f0d0c78856bb8916e55",
+  "files": [
+    {
+      "file": "preflight.json",
+      "bytes": 10258,
+      "sha256": "e2c43a5bd4540b12963b71db092c95a8335832efcb5c18b60cbb40a6b2dfec66"
+    },
+    {
+      "file": "execution-receipt.json",
+      "bytes": 303,
+      "sha256": "eb76652902c04eaf1b19de003622fc9fd8271ec507f71f0d0c78856bb8916e55"
+    },
+    {
+      "file": "postflight.json",
+      "bytes": 32592,
+      "sha256": "c9c36078f3ff41f05b0f72740bf7e711c374d5dceb40b3e493072fdefba27bc5"
+    },
+    {
+      "file": "independent-postflight.json",
+      "bytes": 36906,
+      "sha256": "a549cf9bb3e8cd3c95d07ff71bf2d7417e9509f2d1ddcbd3e2f8572cf5c63b37"
+    }
+  ]
+}

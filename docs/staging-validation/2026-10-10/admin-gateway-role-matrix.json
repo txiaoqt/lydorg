@@ -1,0 +1,155 @@
+{
+  "scope": "Isolated PGlite: actual foundation RPC + captured live validate_admin_session_token, synthetic rows, noncryptographic digest. Not a deployed Edge Function/Storage API test.",
+  "liveRoleRegistryNote": "Live roles carry no renewals_manage and no MOVE permission code; renewal signing requires registrations_management, MOVE requires super_admin.",
+  "signingMatrix": [
+    {
+      "admin": "Super Admin",
+      "registration": 1,
+      "renewal": 1,
+      "draftRegistration": 0,
+      "budget": 1,
+      "liquidation": 1,
+      "ypopEntry": 1,
+      "ypopCity": 1,
+      "ypopActivity": 1,
+      "move": 1
+    },
+    {
+      "admin": "Registration reviewer",
+      "registration": 1,
+      "renewal": 1,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "Renewal reviewer (registrations_management)",
+      "registration": 1,
+      "renewal": 1,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "YORP registry viewer",
+      "registration": 1,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "Budget reviewer",
+      "registration": 0,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 1,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "Liquidation reviewer",
+      "registration": 0,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 1,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "YPOP reviewer",
+      "registration": 0,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 1,
+      "ypopCity": 1,
+      "ypopActivity": 1,
+      "move": 0
+    },
+    {
+      "admin": "Unauthorized Admin",
+      "registration": 0,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "Expired session",
+      "registration": 0,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "Revoked session",
+      "registration": 0,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    },
+    {
+      "admin": "Inactive account",
+      "registration": 0,
+      "renewal": 0,
+      "draftRegistration": 0,
+      "budget": 0,
+      "liquidation": 0,
+      "ypopEntry": 0,
+      "ypopCity": 0,
+      "ypopActivity": 0,
+      "move": 0
+    }
+  ],
+  "revocationChecks": {
+    "permissionRemovedAfterLogin": "denied",
+    "accountDeactivatedAfterLogin": "denied"
+  },
+  "negativeCases": {
+    "unreferencedObject": "denied",
+    "ownerMismatch": "denied",
+    "missingObject": "denied",
+    "ambiguousCrossOrg": "denied",
+    "liquidationBudgetOrgMismatch": "denied",
+    "ypopRedundantOrgMismatch": "denied",
+    "traversal": "denied",
+    "wrongBucket": "denied",
+    "unsupportedBucket": "denied",
+    "draftBudget": "denied",
+    "draftMove": "denied"
+  }
+}

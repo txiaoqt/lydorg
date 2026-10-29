@@ -1,0 +1,186 @@
+TAP version 13
+# Subtest: wrong environment or missing control-plane credential stops before network
+ok 1 - wrong environment or missing control-plane credential stops before network
+  ---
+  duration_ms: 1.6885
+  ...
+# Subtest: project identity mismatch refuses catalog request and DDL
+ok 2 - project identity mismatch refuses catalog request and DDL
+  ---
+  duration_ms: 6.446
+  ...
+# Subtest: read-only default checks exact catalog without installing
+ok 3 - read-only default checks exact catalog without installing
+  ---
+  duration_ms: 4.4745
+  ...
+# Subtest: changed function, role, column, constraint, index, trigger, policy or grant stops install
+ok 4 - changed function, role, column, constraint, index, trigger, policy or grant stops install
+  ---
+  duration_ms: 26.4468
+  ...
+# Subtest: unreviewed SQL cannot execute
+ok 5 - unreviewed SQL cannot execute
+  ---
+  duration_ms: 1.3585
+  ...
+# Subtest: explicit reviewed installation or disable is staging-only and single request
+ok 6 - explicit reviewed installation or disable is staging-only and single request
+  ---
+  duration_ms: 10.0698
+  ...
+# Subtest: current missing-ledger/profile-expiry mismatch is reproducible in isolated PostgreSQL
+ok 7 - current missing-ledger/profile-expiry mismatch is reproducible in isolated PostgreSQL
+  ---
+  duration_ms: 2402.8005
+  ...
+# Subtest: actual current B-shaped state without ledger or projection denies preview and creation
+ok 8 - actual current B-shaped state without ledger or projection denies preview and creation
+  ---
+  duration_ms: 1432.6843
+  ...
+# Subtest: current revoked and suspended preview discrepancies; draft safeguards remain enforced
+ok 9 - current revoked and suspended preview discrepancies; draft safeguards remain enforced
+  ---
+  duration_ms: 1362.9068
+  ...
+# Subtest: review-only proposal rejects projected-only history, revoked and suspended prerequisites
+ok 10 - review-only proposal rejects projected-only history, revoked and suspended prerequisites
+  ---
+  duration_ms: 1359.1958
+  ...
+# Subtest: review-only proposal preserves 90-day early and 180-day late boundaries with genuine local ledger
+ok 11 - review-only proposal preserves 90-day early and 180-day late boundaries with genuine local ledger
+  ---
+  duration_ms: 1374.5394
+  ...
+# Subtest: proposal is not a complete draft guarantee: terminal cycle and cross-owner guards still reject
+ok 12 - proposal is not a complete draft guarantee: terminal cycle and cross-owner guards still reject
+  ---
+  duration_ms: 1350.2684
+  ...
+# Subtest: review-only renewal scenario SQL security and preservation matrix
+    # Subtest: missing or production project context denied
+    ok 1 - missing or production project context denied
+      ---
+      duration_ms: 8.0033
+      ...
+    # Subtest: same-project authenticated JWT issuer accepted; opaque or wrong issuer denied
+    ok 2 - same-project authenticated JWT issuer accepted; opaque or wrong issuer denied
+      ---
+      duration_ms: 10.3853
+      ...
+    # Subtest: missing reviewed binding is fail closed; no implicit Auth creation
+    ok 3 - missing reviewed binding is fail closed; no implicit Auth creation
+      ---
+      duration_ms: 5.2478
+      ...
+    # Subtest: ordinary, invalid, revoked, expired and inactive Admin sessions denied
+    ok 4 - ordinary, invalid, revoked, expired and inactive Admin sessions denied
+      ---
+      duration_ms: 13.0662
+      ...
+    # Subtest: existing account RPC binds only one reviewed fixture with the exact Auth marker
+    ok 5 - existing account RPC binds only one reviewed fixture with the exact Auth marker
+      ---
+      duration_ms: 14.593
+      ...
+    # Subtest: private binding and mutation helper inaccessible to ordinary roles
+    ok 6 - private binding and mutation helper inaccessible to ordinary roles
+      ---
+      duration_ms: 2.6559
+      ...
+    # Subtest: only dates change; provenance and other organization stay intact
+    ok 7 - only dates change; provenance and other organization stay intact
+      ---
+      duration_ms: 16.5765
+      ...
+    # Subtest: 30/60/90 ahead and ten days expired preserve normal eligibility windows
+    ok 8 - 30/60/90 ahead and ten days expired preserve normal eligibility windows
+      ---
+      duration_ms: 20.1751
+      ...
+    # Subtest: custom date bounded and unsupported dates rejected
+    ok 9 - custom date bounded and unsupported dates rejected
+      ---
+      duration_ms: 10.314
+      ...
+    # Subtest: account state returns no password; seed does not copy assets
+    ok 10 - account state returns no password; seed does not copy assets
+      ---
+      duration_ms: 5.7936
+      ...
+    # Subtest: spoofed flag/GUC cannot bypass accreditation immutability
+    ok 11 - spoofed flag/GUC cannot bypass accreditation immutability
+      ---
+      duration_ms: 5.3117
+      ...
+    # Subtest: transaction permit is cleared and cannot change status or provenance
+    ok 12 - transaction permit is cleared and cannot change status or provenance
+      ---
+      duration_ms: 3.8565
+      ...
+    # Subtest: permit is volatile, exact term/org/backend/transaction scoped
+    ok 13 - permit is volatile, exact term/org/backend/transaction scoped
+      ---
+      duration_ms: 7.6431
+      ...
+    # Subtest: zero, duplicate active terms and wrong projection fail closed
+    ok 14 - zero, duplicate active terms and wrong projection fail closed
+      ---
+      duration_ms: 12.3307
+      ...
+    # Subtest: restore restores exact pre-test dates and is idempotent
+    ok 15 - restore restores exact pre-test dates and is idempotent
+      ---
+      duration_ms: 5.3599
+      ...
+    # Subtest: all in-progress states prevent destructive reset and restore
+    ok 16 - all in-progress states prevent destructive reset and restore
+      ---
+      duration_ms: 16.9498
+      ...
+    # Subtest: completed lifecycle evidence prevents unsafe restoration
+    ok 17 - completed lifecycle evidence prevents unsafe restoration
+      ---
+      duration_ms: 1.9803
+      ...
+    # Subtest: completed history retained when resetting next active synthetic term
+    ok 18 - completed history retained when resetting next active synthetic term
+      ---
+      duration_ms: 5.9163
+      ...
+    # Subtest: Auth marker drift fails closed even for Super Admin
+    ok 19 - Auth marker drift fails closed even for Super Admin
+      ---
+      duration_ms: 2.281
+      ...
+    # Subtest: audit failure atomically rolls back simulation and private permit
+    ok 20 - audit failure atomically rolls back simulation and private permit
+      ---
+      duration_ms: 4.7157
+      ...
+    # Subtest: authenticated public wrapper works with valid Admin; missing Admin denied
+    ok 21 - authenticated public wrapper works with valid Admin; missing Admin denied
+      ---
+      duration_ms: 3.4805
+      ...
+    # Subtest: disable twice preserves evidence and denies all scenario actions and date writes
+    ok 22 - disable twice preserves evidence and denies all scenario actions and date writes
+      ---
+      duration_ms: 40.8734
+      ...
+    1..22
+ok 13 - review-only renewal scenario SQL security and preservation matrix
+  ---
+  duration_ms: 2815.1758
+  ...
+1..13
+# tests 35
+# suites 0
+# pass 35
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9475.7587

@@ -1,0 +1,46 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "generatedAt": "2026-10-12T01:09:54.373Z",
+  "artifacts": [
+    {
+      "path": "docs/production-security/storage-cutover/gateway-positive-acceptance/20261012T010649Z/completion-receipt.json",
+      "bytes": 1709,
+      "sha256": "e12f2abd86552255ac409cc69fe258c7cd35438fe3ba87e2150c3e09a7908190"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/gateway-positive-acceptance/20261012T010649Z/execution-report.md",
+      "bytes": 6891,
+      "sha256": "b492690f12389535340c95e64aec20ff6b90305f3b6493e6e9d9c821334ecd3b"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/gateway-positive-acceptance/20261012T010649Z/independent-control-plane.json",
+      "bytes": 2125,
+      "sha256": "44264ea749eaaefc5230bd2a922bf1b0db58c234223266920ff68aadca2d2872"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/gateway-positive-acceptance/20261012T010649Z/independent-production-postcheck.json",
+      "bytes": 1409,
+      "sha256": "efcf813de168220fb315cbc925257e70110d5a488494df077995e69b75dafe2e"
+    },
+    {
+      "path": "docs/production-security/storage-cutover/gateway-positive-acceptance/20261012T010649Z/operator-execution-receipt.json",
+      "bytes": 1934,
+      "sha256": "606922311eb09ec21214c6a355ae66bbce65c261443fbb137d043b5e84d5636f"
+    },
+    {
+      "path": "scripts/security/run-production-gateway-acceptance.mjs",
+      "bytes": 19357,
+      "sha256": "0e62842f0365614e8a6d5e450da8023c973e2811a17dd23fa3236a6198458724"
+    },
+    {
+      "path": "scripts/security/invoke-production-gateway-acceptance.ps1",
+      "bytes": 6679,
+      "sha256": "342782816955c49a22f6a8e09712022ff72d5f2fdc7c12a32ecc8111476ee37e"
+    },
+    {
+      "path": "scripts/security/production-gateway-acceptance-inputs.mjs",
+      "bytes": 10987,
+      "sha256": "c0662200c7f6d94bd477500eb3e25dd8174312fe97bace837dc3cd3bcf733e71"
+    }
+  ]
+}

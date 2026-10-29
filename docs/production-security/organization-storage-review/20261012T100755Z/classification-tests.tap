@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: canonical paths are exact and URL query/fragment never become object names
+ok 1 - canonical paths are exact and URL query/fragment never become object names
+  ---
+  duration_ms: 6.1259
+  ...
+# Subtest: foreign hosts, URL userinfo and malformed UTF-8 are rejected
+ok 2 - foreign hosts, URL userinfo and malformed UTF-8 are rejected
+  ---
+  duration_ms: 0.6819
+  ...
+# Subtest: exact current and historical references require preservation
+ok 3 - exact current and historical references require preservation
+  ---
+  duration_ms: 1.8318
+  ...
+# Subtest: test ownership and reset/deletion correlation never prove an object unused
+ok 4 - test ownership and reset/deletion correlation never prove an object unused
+  ---
+  duration_ms: 0.4831
+  ...
+# Subtest: missing owner, old age and a surviving parent prefix are not authorization evidence
+ok 5 - missing owner, old age and a surviving parent prefix are not authorization evidence
+  ---
+  duration_ms: 0.6459
+  ...
+# Subtest: unreferenced template versions are not labelled inactive or unused
+ok 6 - unreferenced template versions are not labelled inactive or unused
+  ---
+  duration_ms: 0.4992
+  ...
+# Subtest: other archived references and exact audit strings require review rather than automatic relinking
+ok 7 - other archived references and exact audit strings require review rather than automatic relinking
+  ---
+  duration_ms: 0.3982
+  ...
+# Subtest: redacted output contains no original path, filename, organization ID, or audit payload
+ok 8 - redacted output contains no original path, filename, organization ID, or audit payload
+  ---
+  duration_ms: 0.9355
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 257.6474

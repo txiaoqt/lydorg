@@ -1,0 +1,174 @@
+{
+  "scope": "Actual PGlite PostgreSQL; synthetic schema and Admin validator, captured RLS/RPCs. Not live HTTP or multi-session concurrency.",
+  "results": [
+    {
+      "check": "Captured original terminal and anonymous vulnerability reproduced locally",
+      "status": "PASS"
+    },
+    {
+      "check": "Catalog drift rejects installation atomically",
+      "status": "PASS"
+    },
+    {
+      "check": "valid renewal revision updates one file and retains history/audit",
+      "status": "PASS"
+    },
+    {
+      "check": "approved renewal rejects replacement with all fields unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "rejected renewal rejects replacement with all fields unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "terminal registration rejects both replacement entry points",
+      "status": "PASS"
+    },
+    {
+      "check": "cross-organization owner is denied without mutation",
+      "status": "PASS"
+    },
+    {
+      "check": "anonymous null identity fails closed and PUBLIC execute is revoked",
+      "status": "PASS"
+    },
+    {
+      "check": "suspended organization denied",
+      "status": "PASS"
+    },
+    {
+      "check": "file revision_locked enforced",
+      "status": "PASS"
+    },
+    {
+      "check": "file revision_due_at enforced",
+      "status": "PASS"
+    },
+    {
+      "check": "file revision_locked_at enforced",
+      "status": "PASS"
+    },
+    {
+      "check": "document_submissions deadline enforced",
+      "status": "PASS"
+    },
+    {
+      "check": "organization_renewals deadline enforced",
+      "status": "PASS"
+    },
+    {
+      "check": "late accreditation cutoff enforced",
+      "status": "PASS"
+    },
+    {
+      "check": "missing parent and inconsistent renewal owner denied",
+      "status": "PASS"
+    },
+    {
+      "check": "Storage relationship missing denied",
+      "status": "PASS"
+    },
+    {
+      "check": "Storage relationship wrong-owner denied",
+      "status": "PASS"
+    },
+    {
+      "check": "Storage relationship wrong-path denied",
+      "status": "PASS"
+    },
+    {
+      "check": "Storage relationship wrong-size denied",
+      "status": "PASS"
+    },
+    {
+      "check": "Storage relationship wrong-mime denied",
+      "status": "PASS"
+    },
+    {
+      "check": "Storage relationship old-upload denied",
+      "status": "PASS"
+    },
+    {
+      "check": "approved individual file cannot be demoted by owner direct UPDATE",
+      "status": "PASS"
+    },
+    {
+      "check": "direct owner cannot reparent or forge review history/approval",
+      "status": "PASS"
+    },
+    {
+      "check": "direct draft upload/update remains available to owner",
+      "status": "PASS"
+    },
+    {
+      "check": "direct client cannot clear deadline then overwrite draft",
+      "status": "PASS"
+    },
+    {
+      "check": "suspended owner cannot delete or change draft review status directly",
+      "status": "PASS"
+    },
+    {
+      "check": "missing file parent fails closed",
+      "status": "PASS"
+    },
+    {
+      "check": "terminal owner DELETE and universal INSERT/UPDATE rejected",
+      "status": "PASS"
+    },
+    {
+      "check": "direct parent cannot demote terminal status or unlock revision",
+      "status": "PASS"
+    },
+    {
+      "check": "legitimate registration replacement preserves original RPC history/notification",
+      "status": "PASS"
+    },
+    {
+      "check": "stale registration optimistic timestamp denied without mutation",
+      "status": "PASS"
+    },
+    {
+      "check": "audit failure rolls back replacement metadata/history atomically",
+      "status": "PASS"
+    },
+    {
+      "check": "Admin review works before terminal; late review cannot reopen terminal",
+      "status": "PASS"
+    },
+    {
+      "check": "custom Admin anon-role review remains usable without an organization JWT",
+      "status": "PASS"
+    },
+    {
+      "check": "actual captured Admin approval commits term transition then rejects replacement",
+      "status": "PASS"
+    },
+    {
+      "check": "resubmission works after correction; terminal resubmission fails",
+      "status": "PASS"
+    },
+    {
+      "check": "private helper cannot be invoked directly by authenticated role",
+      "status": "PASS"
+    },
+    {
+      "check": "anonymous/suspended resubmission cannot alter a corrected packet",
+      "status": "PASS"
+    },
+    {
+      "check": "owner cannot use catalog unlink to mutate an approved file",
+      "status": "PASS"
+    },
+    {
+      "check": "actual validated Admin template deletion preserves terminal file content/review/history",
+      "status": "PASS"
+    },
+    {
+      "check": "backend deletion semantics remain available; direct terminal parent deletion denied",
+      "status": "PASS"
+    }
+  ],
+  "concurrency": "BLOCKED: no multi-connection PostgreSQL server available"
+}

@@ -1,0 +1,181 @@
+{
+  "capturedAt": "2026-10-12T06:27:39.402Z",
+  "status": "PASS_LOCAL_PREPARATION",
+  "files": [
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/admin-build.log",
+      "bytes": 875,
+      "sha256": "6879036ddd86c0e49c1ad2e904329487e7781cc04c4194aa581c717c75c3410e"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/admin-gateway-vercel24-source.zip",
+      "bytes": 15424104,
+      "sha256": "a6ba0e4e9dc4684a45dc8c86bdaf448311db571bc7156ea73dbf3cf62d36d465"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/admin-gateway-vercel24-static-build.zip",
+      "bytes": 11957132,
+      "sha256": "56a44b576db1b7db0e47e6131e15770943be2ff9e0cf55b200709a14f91e2abe"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/artifact-verification.json",
+      "bytes": 10634,
+      "sha256": "9f4d589013a004d1fcc3118a54cf900d93e9afd92ba36be225da1ed0762d61e9"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/build-public-parity.json",
+      "bytes": 846,
+      "sha256": "7882aa4b0f0405184e40591624e9acc57fdb998cdf815ae80b9ecab3f184b5be"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/check-diff-exit-codes.mjs",
+      "bytes": 1185,
+      "sha256": "b6fec606da51ec72062f0b9d43cea97ac25bce0bcc4bf9b6067b82fd5e0c121e"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/diff-exit-evidence.json",
+      "bytes": 695,
+      "sha256": "6e7a7daeb41b06c39e0c7f7e006483f93676114837f8e52ee40a5ca51f64b728"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/empty-global.npmrc",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/empty-user.npmrc",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/focused-tests.json",
+      "bytes": 27475,
+      "sha256": "fc47033d09c83b571807be32fddb2da96bc1c9b61f4b39fa9048fd4f522d4bd2"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/focused-tests.log",
+      "bytes": 151,
+      "sha256": "be3a5fbc6e712a2227de3e1411894462cdfcdf2c815a39bced494222ebb2fa9c"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/npm-ci.log",
+      "bytes": 2468,
+      "sha256": "abb56d1b14c199fd66a6462ad5c47163f5081785d46ab6a4f53bd3948a6145e0"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/package-source.mjs",
+      "bytes": 3178,
+      "sha256": "d693fee76af2ddade25d5db59e03b64a8c5377116078aa761427b3c5b1718c14"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/packaging-tests.log",
+      "bytes": 3113,
+      "sha256": "18761866a3602441c1c38f1fc92bfa8b5847bef495336abfd31631966c432723"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/preparation-baseline.json",
+      "bytes": 729767,
+      "sha256": "994844d9e5454e2e467d58997635abad71c18ac7f2810db84185b4f42852f6cf"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/prepare.mjs",
+      "bytes": 7657,
+      "sha256": "a6ebfd48d2b15f1f1f6f6126759dbca468dbcacb2bfb772cd869ed7bf2024c0a"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/python-check.log",
+      "bytes": 31,
+      "sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/python-packaging.json",
+      "bytes": 380,
+      "sha256": "e95533382eb55fbfc8112b3daab56e0ccb8752bff875721c0dac10368f9ee3ef"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/python-tests.log",
+      "bytes": 797,
+      "sha256": "6fe2a19f08bdb33d338566a0c7eaa4fc554fa4a8ef892cffd2c71a1aae2ce426"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduce-build.mjs",
+      "bytes": 2284,
+      "sha256": "4151339447be535276a7f6981d3abbf92ba2f27d1c95ab707a1d8e4a4709e11a"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduction-build.log",
+      "bytes": 875,
+      "sha256": "6879036ddd86c0e49c1ad2e904329487e7781cc04c4194aa581c717c75c3410e"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduction-npm-ci.log",
+      "bytes": 2468,
+      "sha256": "70d8a497e0f983329a05fd6e1b8376a743d6f30be9cba1e0a6e8277f39d8e397"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduction-public-parity.json",
+      "bytes": 846,
+      "sha256": "71518a8e4df82a2b86b044246e1beeab4b49e5d98ca91f546a684b88e356ef4d"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/source-manifest.json",
+      "bytes": 98634,
+      "sha256": "c0cf57ef27437f59e8cc354085c95e7b7a55783264b8edd5bd140c87ed7ca0d2"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/test-python-packaging.py",
+      "bytes": 3644,
+      "sha256": "af4085638b833e256368a3081991cee7ce77aeb87b4586db57fbe05b5dd38507"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/typescript.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/validate-python.mjs",
+      "bytes": 2237,
+      "sha256": "3257535219efe336036732dcf99936b30460161d4ab8ef47cd52969a4874ee0b"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/validate-variant.mjs",
+      "bytes": 4598,
+      "sha256": "0b13db939ade2954583df83f3290209455ff99a8a7c0d4134132b4afc76725be"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/verify-artifacts.mjs",
+      "bytes": 9077,
+      "sha256": "f8744ad3c1d5a3a3ccccb2901423ad851022150cb22aeb2726df346c0537f7d1"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/write-review.mjs",
+      "bytes": 21653,
+      "sha256": "84abec26574be349aaaa4f2e1a3ab1a02353e9bc9e3209ef50329be5be384daf"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/build-inventory.json",
+      "bytes": 8660,
+      "sha256": "353eff4a8df9bf9aca3a15522ff7fe9f7bacb108869b613fbd69cbe7045b4cd0"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/packaging-changes.diff",
+      "bytes": 12712,
+      "sha256": "2d7b671739b4aa3d7e1c3e2afc16f69d28eaa56aa6b73fe10748af66a1c2a75d"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/review.md",
+      "bytes": 14003,
+      "sha256": "be1a0da808112731677d22f84ef1d19c09b572450f15d3e00da4183f17e7450c"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/source-manifest.json",
+      "bytes": 98634,
+      "sha256": "c0cf57ef27437f59e8cc354085c95e7b7a55783264b8edd5bd140c87ed7ca0d2"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/validation-summary.json",
+      "bytes": 3810,
+      "sha256": "09e06ecbf4fde825995617d35c7d57d4ced704462dae72d465135e80437b98c6"
+    }
+  ]
+}

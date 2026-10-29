@@ -1,0 +1,59 @@
+{
+  "capturedAt": "2026-10-12T13:53:45.838Z",
+  "status": "PASS",
+  "checkerSha256": "02f37c21c749a846eca2fb96912641600204204b6802d41f80e7478de52bfde0",
+  "checkerUnmodified": true,
+  "staticInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+  "inventoryEntries": 53,
+  "inventoryMatchesApprovedManifest": true,
+  "expectedHeadersMatchReviewedVercelConfig": true,
+  "reviewType": "Source inspection and offline browser mocks only; no hosted requests or application workflows executed",
+  "maximumRequests": 62,
+  "methods": [
+    "GET",
+    "OPTIONS"
+  ],
+  "timeoutMs": 30000,
+  "maximumDefaultResponseBytes": 12000000,
+  "credentialHandling": "No browser credential reads. Existing same-origin browser cookies accompany requests automatically; never inspected or exported.",
+  "publicSamplePdf": "Only the versioned public templates/pcydo-move-application-form.pdf build artifact is fetched; no private documents.",
+  "offlineChecks": [
+    {
+      "check": "fixed request scope",
+      "status": "PASS",
+      "mockRequests": 62,
+      "meaning": "All requests stay in the bounded read-only allowlist; mock artifact mismatch remains FAIL."
+    },
+    {
+      "check": "wrong origin",
+      "status": "PASS",
+      "mockRequests": 0
+    },
+    {
+      "check": "changed inventory",
+      "status": "PASS",
+      "mockRequests": 0
+    },
+    {
+      "check": "redirect blocked",
+      "status": "PASS",
+      "mockRequests": 1
+    },
+    {
+      "check": "public canary stops without disclosing contents",
+      "status": "PASS",
+      "mockRequests": 1
+    },
+    {
+      "check": "worker limitation retained",
+      "status": "PASS",
+      "mockRequests": 62
+    }
+  ],
+  "limitations": [
+    "No independent proof of service-worker bypass; operator must report DevTools Bypass for network.",
+    "Counters cover requests initiated by the checker only. Existing application background activity is outside scope.",
+    "The bounded literal/canary scan is not an exhaustive secrets audit.",
+    "No hosted or owner-smoke result can be inferred from these mocks."
+  ]
+}

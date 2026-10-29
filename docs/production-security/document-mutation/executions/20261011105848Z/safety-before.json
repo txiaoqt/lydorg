@@ -1,0 +1,62 @@
+{
+  "safety_verification": {
+    "database": "postgres",
+    "read_only": "on",
+    "server_port": 5432,
+    "verified_at": "2026-10-11T10:56:35.88409+00:00",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "server_address": "2406:da1c:4c7:f800:e263:668:14a1:4880",
+    "server_version": "17.6",
+    "active_sessions": {
+      "ddl_candidates": 0,
+      "ddl_lock_waiters": 0,
+      "active_other_sessions": 0,
+      "open_other_transactions": 0
+    },
+    "schema_grants_md5": "bf20f44d6ac1985675351dae9be6bee3",
+    "default_privileges": [
+      {
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+        "owner": "postgres",
+        "schema": "public",
+        "object_type": "S"
+      },
+      {
+        "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "schema": "public",
+        "object_type": "f"
+      },
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "owner": "postgres",
+        "schema": "public",
+        "object_type": "r"
+      },
+      {
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+        "owner": "postgres",
+        "schema": "storage",
+        "object_type": "S"
+      },
+      {
+        "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "schema": "storage",
+        "object_type": "f"
+      },
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "owner": "postgres",
+        "schema": "storage",
+        "object_type": "r"
+      }
+    ],
+    "all_rls_policies_md5": "dcd94dd5098884fdf36e086a281a4825",
+    "existing_triggers_md5": "49ec58979964fc37520f88b9f1a41f4c",
+    "unrelated_functions_md5": "4d907c217217a7cbdfe654c10b9b57f5",
+    "table_security_and_structure_md5": "4bec8f408bb97952615161df762e9e9b"
+  }
+}
+

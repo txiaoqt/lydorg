@@ -1,0 +1,15 @@
+ M src/App.tsx
+ M src/components/public/PublicTemplatesCatalog.tsx
+ M src/lib/admin-system-settings.ts
+ M src/lib/lydo-connect-supabase.ts
+ M src/lib/renewal-realtime.test.ts
+ M src/user/UserPortalEntry.tsx
+?? docs/performance/
+?? scripts/performance-browser-audit.mjs
+?? scripts/performance-bundle-sizes.mjs
+?? src/components/public/PublicTemplatesCatalog.performance.test.tsx
+?? src/lib/public-system-settings.performance.test.ts
+?? src/user/UserPortalEntry.performance.test.tsx
+?? supabase/migrations/20261009114340_performance_auth_uid_initplans.sql
+?? supabase/tests/performance_auth_uid.local.test.mjs
+?? tmp/

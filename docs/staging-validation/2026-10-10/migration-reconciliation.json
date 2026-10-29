@@ -1,0 +1,251 @@
+{
+  "scope": "Production read-only (read-only transactions via supabase db query --linked): supabase_migrations.schema_migrations statements, pg_catalog counts. No history modified; no repair executed.",
+  "capturedAt": "2026-10-09T17:22:22.793Z",
+  "counts": {
+    "localVersionedFiles": 166,
+    "liveHistoryRows": 163,
+    "localOnlyVersions": 19,
+    "liveOnlyVersions": 16
+  },
+  "renamedNamingOnly": {
+    "summary": "All 16 local-only/live-only same-name pairs have byte-equivalent SQL after whitespace/comment normalization. Differences are timestamp-only (files were committed with a local timestamp; the MCP/CLI apply recorded a different one).",
+    "pairs": [
+      {
+        "liveVersion": "20261005082646",
+        "localFile": "20261005200000_include_org_activity_files_in_admin_ypop_review.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2708
+      },
+      {
+        "liveVersion": "20261005090731",
+        "localFile": "20261005190000_admin_backup_control_permissions.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2716
+      },
+      {
+        "liveVersion": "20261005220220",
+        "localFile": "20261005215904_guard_budget_revision_approval.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2540
+      },
+      {
+        "liveVersion": "20261005220921",
+        "localFile": "20261005220545_admin_sidebar_counts_realtime.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2920
+      },
+      {
+        "liveVersion": "20261005221916",
+        "localFile": "20261005221435_hide_unsubmitted_liquidation_drafts.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 5331
+      },
+      {
+        "liveVersion": "20261005222047",
+        "localFile": "20261005221819_qualify_liquidation_draft_review_guard.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 803
+      },
+      {
+        "liveVersion": "20261005222451",
+        "localFile": "20261005222222_lock_submitted_registration_document_edits.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 983
+      },
+      {
+        "liveVersion": "20261005223241",
+        "localFile": "20261005223009_repair_registration_revision_lock_columns.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 128
+      },
+      {
+        "liveVersion": "20261005223415",
+        "localFile": "20261005223134_fix_registration_replacement_audit_actor.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 1054
+      },
+      {
+        "liveVersion": "20261005223454",
+        "localFile": "20261005223229_fix_registration_replacement_notification_type.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 383
+      },
+      {
+        "liveVersion": "20261007211022",
+        "localFile": "20261007203541_admin_quarterly_export_filters.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2999
+      },
+      {
+        "liveVersion": "20261007212512",
+        "localFile": "20261007212327_admin_independent_year_quarter_filters.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2428
+      },
+      {
+        "liveVersion": "20261007213515",
+        "localFile": "20261007213208_admin_monitoring_all_years.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2046
+      },
+      {
+        "liveVersion": "20261007214250",
+        "localFile": "20261007214053_admin_budget_period_summary.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 2068
+      },
+      {
+        "liveVersion": "20261007215151",
+        "localFile": "20261007214552_rebalance_yorp_seed_reporting_quarters.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 7153
+      },
+      {
+        "liveVersion": "20261007215950",
+        "localFile": "20261007215640_diversify_yorp_seed_projects_and_budgets.sql",
+        "bodyEquivalent": true,
+        "normalizedLength": 9815
+      }
+    ]
+  },
+  "sameVersionDifferentName": {
+    "version": "20260905",
+    "live": "admin_ypop_sync_rpcs (duplicate history row; SQL body equivalent to 20260905200000_admin_ypop_sync_rpcs)",
+    "local": "20260905_ypop_workflow_closure_evaluation.sql",
+    "finding": "No history row mentions admin_close_ypop_semester_and_evaluate, but the live function exists and its body is identical to the local file. It was applied out-of-band. Because version 20260905 is already recorded, db push would skip it."
+  },
+  "genuinelyUnapplied": [
+    "20261009114340_performance_auth_uid_initplans (separate 33-policy proposal; must stay out of this rollout)",
+    "20261009145634_storage_authorization_remediation",
+    "20261009150110_storage_authorization_cutover"
+  ],
+  "storageMigrationsNeverApplied": {
+    "liveHistoryContains": false,
+    "ytraceStoragePrivateSchemaExistsLive": false,
+    "note": "Revised in place only after confirming they were never applied in production. lydooo (inactive) and EHR-Capstone (unrelated) were not touched."
+  },
+  "safeToReplayInIsolation": "The 16 renamed migrations and 20260905 closure function are already reflected in production. Replaying the versioned chain on an empty database is NOT possible (see bootstrap).",
+  "bootstrap": {
+    "fullSchemaOnlyBaselineRequired": true,
+    "liveCatalog": {
+      "tables": 53,
+      "enums": 21,
+      "publicFunctions": 287,
+      "publicPolicies": 67,
+      "storagePolicies": 15,
+      "authTriggers": 1,
+      "extensions": [
+        "citext",
+        "pg_stat_statements",
+        "pg_trgm",
+        "pgcrypto",
+        "plpgsql",
+        "supabase_vault",
+        "uuid-ossp"
+      ]
+    },
+    "tablesCreatedByVersionedMigrations": 15,
+    "tablesCreatedOnlyByStandaloneScripts": [
+      "units"
+    ],
+    "tablesWithNoCreateStatementInRepo": [
+      "activity_logs",
+      "admin_accounts",
+      "admin_sessions",
+      "barangays",
+      "budget_request_files",
+      "budget_requests",
+      "compliance_remarks",
+      "disclosure_documents",
+      "document_submission_files",
+      "document_submissions",
+      "events",
+      "inquiries",
+      "liquidation_report_files",
+      "liquidation_reports",
+      "move_applications",
+      "move_files",
+      "news_releases",
+      "notifications",
+      "organization_profiles",
+      "organizations",
+      "policy_versions",
+      "programs",
+      "required_document_types",
+      "roles",
+      "transparency_posts",
+      "urn_review_history",
+      "user_policy_acceptance",
+      "user_profiles",
+      "user_roles",
+      "ypop_city_activities",
+      "ypop_entries",
+      "ypop_event_files",
+      "ypop_event_participations",
+      "ypop_files",
+      "ypop_org_activities",
+      "ypop_org_activity_files",
+      "ypop_periods"
+    ],
+    "enumsWithNoCreateStatementInRepo": [
+      "activity_action",
+      "app_role_code",
+      "budget_request_status",
+      "compliance_remark_status",
+      "document_file_validation_status",
+      "document_submission_status",
+      "inquiry_status",
+      "liquidation_report_status",
+      "move_application_status",
+      "notification_type",
+      "ocr_status",
+      "profile_status",
+      "registration_type",
+      "urn_review_status",
+      "verification_method",
+      "visibility_status",
+      "ypop_entry_status",
+      "ypop_event_participation_status",
+      "ypop_org_activity_status",
+      "ypop_period_status"
+    ],
+    "standaloneScripts": [
+      "20260803_auto_generate_urn.sql",
+      "20260804_harden_document_submission_workflow.sql",
+      "20260807_remove_global_submission_lock_triggers.sql",
+      "20260812_enforce_urn_uniqueness.sql",
+      "20260816_check_signup_email_status.sql",
+      "20260822_privacy_preserving_email_handling.sql",
+      "add_admin_ypop_read_rpcs.sql",
+      "add_budget_request_file_review_status.sql",
+      "add_liquidation_report_file_review_status.sql",
+      "add_public_budget_snapshot_config.sql",
+      "add_registration_reference_id.sql",
+      "add_role_to_admin_accounts_lookup.sql",
+      "add_ypop_city_activity_date_range.sql",
+      "fix_activity_log_actor_fk_target.sql",
+      "fix_activity_log_actor_not_recorded.sql",
+      "fix_admin_account_pgcrypto_search_path.sql",
+      "fix_ambiguous_role_id_column.sql",
+      "lock_admin_account_email.sql",
+      "repair_admin_accounts_lookup.sql",
+      "repair_admin_portal_dynamic_sync.sql",
+      "repair_admin_portal_snapshot_and_news.sql",
+      "repair_budget_requests_schema.sql",
+      "repair_organization_profiles_schema.sql",
+      "repair_template_archive_and_category.sql",
+      "seed_ypop_test_submissions.sql",
+      "setup_administrators_page.sql",
+      "setup_admin_invite_flow.sql",
+      "setup_permission_session_context.sql",
+      "setup_role_permissions.sql",
+      "update_admin_rpcs_for_permission_codes.sql"
+    ],
+    "note": "Standalone scripts under supabase/*.sql have no recorded order and alter tables they do not create; they cannot fill the gap."
+  },
+  "doNot": [
+    "supabase db push against production",
+    "supabase migration repair",
+    "supabase migration fetch into this checkout (would overwrite local files)"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "capturedAt": "2026-10-12T07:02:34.585Z",
+  "readOnly": true,
+  "existingProviderAssignedAlias": {
+    "alias": "lydorg-toffs-projects-81b2ce10.vercel.app",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "deploymentUrl": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app"
+  },
+  "http": 302,
+  "bytes": 263,
+  "sha256": "078d44efe538819a52deef2d03cc221b5b81ea1ae1f577dc80710db061c3766f",
+  "redirectOrigin": "https://vercel.com",
+  "authenticationHeadersSupplied": false,
+  "configurationChanges": 0,
+  "status": "BLOCKED"
+}

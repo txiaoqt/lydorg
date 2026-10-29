@@ -1,0 +1,67 @@
+{
+  "preparedAt": "2026-10-12T05:37:41.291Z",
+  "scope": "local Admin build metadata correction; no deployment",
+  "baseCommit": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "sourceRevision": "sha256:51a18dbc3a799b39d074834edcfe6a9c88de1dd9d115277061e071f9f38c1959",
+  "previousSourceRevision": "sha256:e8ffe3241f7529f4440e8e4cc427254d2cd29da5e1bbcd0d689395431cd5aa8d",
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "sourceArchive": {
+    "name": "admin-gateway-vercel24-source.zip",
+    "bytes": 15422629,
+    "sha256": "324ea22858359d71c4cd94f7da2ee7a658d98327a2bca4e9b7d9facfc10e7984",
+    "path": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T052118Z\\admin-gateway-vercel24-source.zip"
+  },
+  "buildArchive": {
+    "name": "admin-gateway-vercel24-static-build.zip",
+    "bytes": 11957132,
+    "sha256": "a5c2417acf8e3bf5b5e69dadd2ed204e37a7e6a95b81b47c124875c568993199",
+    "format": "ordinary Vite static output, NOT Vercel Build Output API",
+    "path": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T052118Z\\admin-gateway-vercel24-static-build.zip"
+  },
+  "artifactInventorySha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d",
+  "changedFromPrevious": [
+    "scripts/build-admin-release.mjs",
+    "scripts/build-admin-release.test.mjs"
+  ],
+  "runtimeFilesUnchanged": true,
+  "fixedApplicationVersion": "1.0.0-admin-storage-rc+20261012035933.vercel24",
+  "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+  "publicValuesPersistedInReport": false,
+  "toolchain": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "python": "Python 3.14.3",
+    "platform": "Windows x64",
+    "nodeExecutableSha256": "ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32",
+    "freshNpmCiCount": 2,
+    "linuxOrProviderReproduction": "NOT TESTED",
+    "python312Execution": "NOT TESTED"
+  },
+  "testResults": {
+    "focused": 91,
+    "packaging": 26,
+    "python": 7,
+    "failed": 0,
+    "typescript": "PASS",
+    "build": "PASS",
+    "reproducibility": "PASS",
+    "previousStaticInventory": "PASS",
+    "diffCheck": "PASS"
+  },
+  "preservation": {
+    "trackedDirtyPaths": 64,
+    "rootStatusUnchanged": true,
+    "rootApplicationChanges": 0,
+    "historicalDeploymentEvidenceFiles": 18,
+    "historicalDeploymentEvidenceUnchanged": true
+  },
+  "decisions": {
+    "localPreparation": "GO",
+    "candidateDeployment": "CONDITIONAL GO",
+    "productionPromotion": "NO-GO",
+    "storageCutover": "NO-GO"
+  },
+  "deploymentAttempted": false,
+  "promotionAttempted": false
+}

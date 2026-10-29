@@ -1,0 +1,15 @@
+{
+  "capturedAt": "2026-10-12T12:27:46.620Z",
+  "status": "PASS",
+  "files": 562,
+  "sourceRevision": "0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+  "inventorySha256": "0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+  "isolatedSource": true,
+  "cliMetadata": [
+    ".vercel/project.json"
+  ],
+  "archiveSha256": "e7d43c8aa7d0d0a2cc42130eafd34ad9b1b5147aeb416aba55349353f7fa33c8",
+  "archiveBytes": 15424325,
+  "sevenRuntimeHashesUnchanged": true,
+  "publicConfigWrapperSha256": "c509f43cad4cff6f1c937ad54ca44de9775fc8e2bfb15f1f0d5e0e9f2b7d99e7"
+}

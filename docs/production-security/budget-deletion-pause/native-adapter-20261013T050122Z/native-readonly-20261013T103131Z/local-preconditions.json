@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "project": "mqqaykksadotbrghbexz",
+  "approvedBundleMatches": true,
+  "approvedManifestMatches": true,
+  "approvedInventoryMatches": true,
+  "approvedSqlMatches": true,
+  "approvedSqlBytes": 11945,
+  "environmentExists": true,
+  "environmentGitIgnored": true,
+  "environmentTracked": false,
+  "environmentAclRestricted": true,
+  "environmentValuesExposed": false,
+  "productionConnectionAttempted": false,
+  "recordedAt": "2026-10-13T10:34:29.8808280Z"
+}

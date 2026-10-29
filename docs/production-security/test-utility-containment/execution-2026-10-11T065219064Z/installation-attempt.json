@@ -1,0 +1,9 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "authorizedSha256": "abd2ea82587c9bbb0c18af68851faa7f83fd5a64bca113014c500b00abec8c65",
+  "migrationReceipt": "20261011230000",
+  "attemptNumber": 1,
+  "submittedAt": "2026-10-11T06:53:18.631Z",
+  "state": "SUBMITTING_ONE_ATOMIC_TRANSACTION_NO_AUTOMATIC_RETRY",
+  "prewritePassed": true
+}

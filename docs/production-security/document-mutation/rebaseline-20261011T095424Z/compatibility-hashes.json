@@ -1,0 +1,7 @@
+{
+  "rpc_acl_hash": "e45685fb8b158e7b039a6bf39b2b8973",
+  "trigger_hash": "42b3e24219b2dd719f0cff11c57adc3a",
+  "table_policy_hash": "be6cd95840181dc1dc6124af9cfa6912",
+  "storage_policy_hash": "c5debe81f16c612c63a6b83ffdb90531",
+  "trigger_hash_without_marker": "aed1b3f4417ad04716197a353c7259bf"
+}

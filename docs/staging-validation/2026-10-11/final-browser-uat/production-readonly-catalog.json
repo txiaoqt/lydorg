@@ -1,0 +1,102 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "inspectedAt": "2026-10-11T02:20:54.188Z",
+  "scope": "READ ONLY catalog and aggregate counts; no private file content",
+  "rls": [
+    {
+      "table": "document_submission_files",
+      "enabled": true
+    },
+    {
+      "table": "document_submissions",
+      "enabled": true
+    },
+    {
+      "table": "organization_accreditations",
+      "enabled": true
+    },
+    {
+      "table": "organization_profiles",
+      "enabled": true
+    },
+    {
+      "table": "organization_renewals",
+      "enabled": true
+    }
+  ],
+  "history": {
+    "count": 163,
+    "latest": "20261008174154"
+  },
+  "functions": [
+    {
+      "owner": "postgres",
+      "signature": "admin_approve_renewal(text,uuid,text,text)",
+      "fingerprint": "33ba7c606820f771e4ed79709bcd188b",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "delete_organization_account_canonical(text,uuid)",
+      "fingerprint": "5c1f0179b9f279eb7a99ff9ee8627c3f",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "guard_submitted_registration_document_edits()",
+      "fingerprint": "c6265ae36e8db8678de7a4e69691008e",
+      "security_definer": false
+    },
+    {
+      "owner": "postgres",
+      "signature": "hard_delete_admin_template_document(text,uuid)",
+      "fingerprint": "36de9fc3fb6c5ad090579f3261f77bbf",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "promote_renewal_submission_files_for_review()",
+      "fingerprint": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+      "fingerprint": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+      "fingerprint": "252754fd75505948c26afe27f6b0b760",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+      "fingerprint": "59370b100efed37d5975dc16983d786a",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "user_resubmit_renewal(uuid)",
+      "fingerprint": "d19a1d0415f3eb900bab7dea241f0b21",
+      "security_definer": true
+    },
+    {
+      "owner": "postgres",
+      "signature": "user_submit_renewal(uuid)",
+      "fingerprint": "d41b680681db2323aba2c62693f59131",
+      "security_definer": true
+    }
+  ],
+  "rpc_acl_hash": "e45685fb8b158e7b039a6bf39b2b8973",
+  "trigger_hash": "aed1b3f4417ad04716197a353c7259bf",
+  "renewal_count": 0,
+  "missing_objects": 0,
+  "table_policy_hash": "be6cd95840181dc1dc6124af9cfa6912",
+  "trigger_collision": 0,
+  "canonical_file_refs": 37,
+  "storage_policy_hash": "c5debe81f16c612c63a6b83ffdb90531",
+  "patch_namespace_exists": false
+}

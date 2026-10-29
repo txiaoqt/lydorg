@@ -1,0 +1,26 @@
+# Actual Windows NTFS disposable-fixture suite; no production I/O
+not ok 1 - actual same-directory Win32 rename preserves file ID, bytes and timestamps # ARCHIVE_NOT_VERIFIED_87
+not ok 2 - two concurrent kernel contenders / unique fixture 0 # NOT_EXACTLY_ONE_WINNER
+not ok 3 - two concurrent kernel contenders / unique fixture 1 # NOT_EXACTLY_ONE_WINNER
+not ok 4 - two concurrent kernel contenders / unique fixture 2 # NOT_EXACTLY_ONE_WINNER
+not ok 5 - two concurrent kernel contenders / unique fixture 3 # NOT_EXACTLY_ONE_WINNER
+not ok 6 - two concurrent kernel contenders / unique fixture 4 # NOT_EXACTLY_ONE_WINNER
+not ok 7 - two concurrent kernel contenders / unique fixture 5 # NOT_EXACTLY_ONE_WINNER
+not ok 8 - two concurrent kernel contenders / unique fixture 6 # NOT_EXACTLY_ONE_WINNER
+not ok 9 - two concurrent kernel contenders / unique fixture 7 # NOT_EXACTLY_ONE_WINNER
+not ok 10 - two concurrent kernel contenders / unique fixture 8 # NOT_EXACTLY_ONE_WINNER
+not ok 11 - two concurrent kernel contenders / unique fixture 9 # NOT_EXACTLY_ONE_WINNER
+not ok 12 - two concurrent kernel contenders / unique fixture 10 # NOT_EXACTLY_ONE_WINNER
+not ok 13 - two concurrent kernel contenders / unique fixture 11 # NOT_EXACTLY_ONE_WINNER
+not ok 14 - two concurrent kernel contenders / unique fixture 12 # NOT_EXACTLY_ONE_WINNER
+not ok 15 - two concurrent kernel contenders / unique fixture 13 # NOT_EXACTLY_ONE_WINNER
+not ok 16 - two concurrent kernel contenders / unique fixture 14 # NOT_EXACTLY_ONE_WINNER
+not ok 17 - two concurrent kernel contenders / unique fixture 15 # NOT_EXACTLY_ONE_WINNER
+not ok 18 - preexisting destination rejected and both file identities/bytes retained # DESTINATION_OVERWRITE_NOT_REJECTED
+not ok 19 - destination appearing after handle preparation is rejected by kernel # LATE_DESTINATION_OVERWRITTEN
+ok 20 - source pathname replacement after capture rejects changed identity
+ok 21 - directory pathname replacement after capture rejects changed identity
+ok 22 - same-file content change after capture rejects changed bytes
+not ok 23 - held parent/source handles reject move and write interference # ARCHIVE_NOT_VERIFIED_87
+not ok 24 - one prepared operation cannot submit twice, including after rejection # FIRST_RESULT
+not ok 25 - fixture root, traversal, alternate stream and same-leaf inputs fail before rename # SOURCE_OPEN_FAILED

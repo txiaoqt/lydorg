@@ -1,0 +1,25 @@
+{
+  "capturedAt": "2026-10-12T10:33:43.846Z",
+  "readOnly": true,
+  "status": "PASS",
+  "aliases": {
+    "admin": {
+      "alias": "y-trace-admin.vercel.app",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "deploymentUrl": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app"
+    },
+    "organization": {
+      "alias": "ytrace.app",
+      "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+    }
+  },
+  "projectProductionTargets": {
+    "admin": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "organization": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV"
+  },
+  "activeDeployments": [],
+  "claim": "Point-in-time preservation check; not an exclusive operator window"
+}

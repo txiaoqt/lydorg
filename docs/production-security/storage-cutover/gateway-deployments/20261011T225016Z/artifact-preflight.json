@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-11T22:52:55.796Z",
+  "pins": [
+    {
+      "path": "docs/production-security/storage-cutover/gateway-readiness-20261011T222225859Z/reviewed-deployment-payload.json",
+      "bytes": 6048,
+      "sha256": "3fe07c6f768703c23a4ad2fe36884fb9832c23826ae6712b159f189ffcb129b0",
+      "pass": true
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/index.ts",
+      "bytes": 1479,
+      "sha256": "97fba3f9c7a271860080b89f3f1c8710bdda3dccbe76961175d19d1154346248",
+      "pass": true
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/control.ts",
+      "bytes": 4182,
+      "sha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21",
+      "pass": true
+    }
+  ],
+  "normalizedStagingFiles": [
+    {
+      "name": "index.ts",
+      "normalizedSha256": "07a286f51ac557ec7f9a7bebfdc0c9a36d47d74bd5e8bc26fa296f0f5e897f44",
+      "matches": true
+    },
+    {
+      "name": "control.ts",
+      "normalizedSha256": "bbb62f96aec44c74beccdd5e1e8efc278dacce3cad84d59215fff2fd391bf3fd",
+      "matches": true
+    }
+  ],
+  "stagingVersion": 1,
+  "stagingBundleSha256": "564d0b5ceab9a63e8b81a824382fe565f045f1f794d3d9120b2fb5e9dc67fc8e",
+  "exactPayloadTarget": true,
+  "privateFoundationEnvIgnoredAndUntracked": true,
+  "noSourceOrPayloadEdits": true,
+  "positiveCheckInputs": {
+    "existingAdminSessionProvided": false,
+    "operatorDesignatedFileRecordProvided": false
+  }
+}

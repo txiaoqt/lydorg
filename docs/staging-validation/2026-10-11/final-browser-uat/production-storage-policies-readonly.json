@@ -1,0 +1,111 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "scope": "READ ONLY catalog; no object retrieval or authorization probe",
+  "policies": [
+    {
+      "policyname": "budget_request_files_manage_own",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "budget_request_files_read_portal",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'budget-request-files'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "liquidation_report_files_manage_own",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "liquidation_report_files_read_portal",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'liquidation-report-files'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "move_files_manage_own",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "move_files_read_portal",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'move-files'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "news_release_images_admin_manage",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'news-release-images'::text)",
+      "with_check": "(bucket_id = 'news-release-images'::text)"
+    },
+    {
+      "policyname": "organization_documents_manage_own",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "organization_documents_read_portal",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'organization-documents'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "template_files_admin_manage",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'template-files'::text)",
+      "with_check": "(bucket_id = 'template-files'::text)"
+    },
+    {
+      "policyname": "transparency_attachments_admin_manage",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "with_check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "policyname": "transparency_attachments_read_public",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "with_check": null
+    },
+    {
+      "policyname": "yorp_sample_seed_assets_read",
+      "cmd": "SELECT",
+      "roles": "{anon,authenticated}",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "with_check": null
+    },
+    {
+      "policyname": "ypop_files_manage_own",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "policyname": "ypop_files_read_portal",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'ypop-files'::text)",
+      "with_check": null
+    }
+  ]
+}

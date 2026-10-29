@@ -1,0 +1,33 @@
+{
+  "baseline": {
+    "passed": 2211,
+    "failed": 150
+  },
+  "focused": {
+    "passed": 95,
+    "failed": 4,
+    "newFailureIdentities": 0
+  },
+  "failures": [
+    {
+      "file": "lib/admin-inactivity.test.ts",
+      "name": "Admin Session Inactivity Timeout Mechanics records user activity, throttles rapid writes, and extends session expiration",
+      "error": "AssertionError: expected '2026-10-10T17:13:29.098Z' to be '2023-11-14T22:43:23.000Z' // Object.is equality     at C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\src\\lib\\admin-inactivity.test.ts:118:32"
+    },
+    {
+      "file": "lib/admin-inactivity.test.ts",
+      "name": "Admin Session Inactivity Timeout Mechanics detects continuous inactivity and expires session when timeout threshold is exceeded",
+      "error": "AssertionError: expected '{\"id\":\"admin-uuid-1\",\"username\":\"pasi…' to be null     at C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\src\\lib\\admin-inactivity.test.ts:159:61"
+    },
+    {
+      "file": "lib/organization-renewal-phase3e.test.ts",
+      "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4. Exactly 6 renewal documents are required in the renewal packet",
+      "error": "AssertionError: expected 5 to be 6 // Object.is equality     at C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\src\\lib\\organization-renewal-phase3e.test.ts:177:32"
+    },
+    {
+      "file": "lib/organization-renewal-phase3e.test.ts",
+      "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4b. Reconciles canonical document identifiers with prompt shorthand aliases",
+      "error": "AssertionError: expected [ { …(17) }, …(4) ] to have a length of 6 but got 5     at Proxy.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/node_modules/@vitest/expect/dist/index.js:1257:20)"
+    }
+  ]
+}

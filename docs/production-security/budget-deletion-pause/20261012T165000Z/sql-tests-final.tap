@@ -1,0 +1,196 @@
+TAP version 13
+# Subtest: reviewed artifact, exact contract and future cutover predicate preservation
+ok 1 - reviewed artifact, exact contract and future cutover predicate preservation
+  ---
+  duration_ms: 7.3658
+  ...
+# Subtest: unmodified production artifact rejects a synthetic catalog before installation
+ok 2 - unmodified production artifact rejects a synthetic catalog before installation
+  ---
+  duration_ms: 2261.4187
+  ...
+# Subtest: atomic installer, unconditional role/session denial and unchanged protected rows
+    # Subtest: postgres: valid-super is paused
+    ok 1 - postgres: valid-super is paused
+      ---
+      duration_ms: 13.0662
+      ...
+    # Subtest: postgres: valid-reviewer is paused
+    ok 2 - postgres: valid-reviewer is paused
+      ---
+      duration_ms: 8.9675
+      ...
+    # Subtest: postgres: valid-zero is paused
+    ok 3 - postgres: valid-zero is paused
+      ---
+      duration_ms: 9.3023
+      ...
+    # Subtest: postgres: invalid is paused
+    ok 4 - postgres: invalid is paused
+      ---
+      duration_ms: 8.8874
+      ...
+    # Subtest: postgres: expired is paused
+    ok 5 - postgres: expired is paused
+      ---
+      duration_ms: 9.1318
+      ...
+    # Subtest: postgres: revoked is paused
+    ok 6 - postgres: revoked is paused
+      ---
+      duration_ms: 12.2948
+      ...
+    # Subtest: postgres: inactive-admin is paused
+    ok 7 - postgres: inactive-admin is paused
+      ---
+      duration_ms: 8.9069
+      ...
+    # Subtest: postgres: null is paused
+    ok 8 - postgres: null is paused
+      ---
+      duration_ms: 8.0742
+      ...
+    # Subtest: anon: valid-super is paused
+    ok 9 - anon: valid-super is paused
+      ---
+      duration_ms: 9.2022
+      ...
+    # Subtest: anon: valid-reviewer is paused
+    ok 10 - anon: valid-reviewer is paused
+      ---
+      duration_ms: 8.1188
+      ...
+    # Subtest: anon: valid-zero is paused
+    ok 11 - anon: valid-zero is paused
+      ---
+      duration_ms: 8.1127
+      ...
+    # Subtest: anon: invalid is paused
+    ok 12 - anon: invalid is paused
+      ---
+      duration_ms: 8.5171
+      ...
+    # Subtest: anon: expired is paused
+    ok 13 - anon: expired is paused
+      ---
+      duration_ms: 9.4854
+      ...
+    # Subtest: anon: revoked is paused
+    ok 14 - anon: revoked is paused
+      ---
+      duration_ms: 13.2528
+      ...
+    # Subtest: anon: inactive-admin is paused
+    ok 15 - anon: inactive-admin is paused
+      ---
+      duration_ms: 7.602
+      ...
+    # Subtest: anon: null is paused
+    ok 16 - anon: null is paused
+      ---
+      duration_ms: 8.1203
+      ...
+    # Subtest: authenticated: valid-super is paused
+    ok 17 - authenticated: valid-super is paused
+      ---
+      duration_ms: 7.8764
+      ...
+    # Subtest: authenticated: valid-reviewer is paused
+    ok 18 - authenticated: valid-reviewer is paused
+      ---
+      duration_ms: 7.992
+      ...
+    # Subtest: authenticated: valid-zero is paused
+    ok 19 - authenticated: valid-zero is paused
+      ---
+      duration_ms: 7.5311
+      ...
+    # Subtest: authenticated: invalid is paused
+    ok 20 - authenticated: invalid is paused
+      ---
+      duration_ms: 8.1889
+      ...
+    # Subtest: authenticated: expired is paused
+    ok 21 - authenticated: expired is paused
+      ---
+      duration_ms: 10.2106
+      ...
+    # Subtest: authenticated: revoked is paused
+    ok 22 - authenticated: revoked is paused
+      ---
+      duration_ms: 7.9271
+      ...
+    # Subtest: authenticated: inactive-admin is paused
+    ok 23 - authenticated: inactive-admin is paused
+      ---
+      duration_ms: 8.2537
+      ...
+    # Subtest: authenticated: null is paused
+    ok 24 - authenticated: null is paused
+      ---
+      duration_ms: 8.3105
+      ...
+    # Subtest: service_role: valid-super is paused
+    ok 25 - service_role: valid-super is paused
+      ---
+      duration_ms: 7.9233
+      ...
+    # Subtest: service_role: valid-reviewer is paused
+    ok 26 - service_role: valid-reviewer is paused
+      ---
+      duration_ms: 8.505
+      ...
+    # Subtest: service_role: valid-zero is paused
+    ok 27 - service_role: valid-zero is paused
+      ---
+      duration_ms: 7.924
+      ...
+    # Subtest: service_role: invalid is paused
+    ok 28 - service_role: invalid is paused
+      ---
+      duration_ms: 8.4148
+      ...
+    # Subtest: service_role: expired is paused
+    ok 29 - service_role: expired is paused
+      ---
+      duration_ms: 10.066
+      ...
+    # Subtest: service_role: revoked is paused
+    ok 30 - service_role: revoked is paused
+      ---
+      duration_ms: 7.8859
+      ...
+    # Subtest: service_role: inactive-admin is paused
+    ok 31 - service_role: inactive-admin is paused
+      ---
+      duration_ms: 7.5944
+      ...
+    # Subtest: service_role: null is paused
+    ok 32 - service_role: null is paused
+      ---
+      duration_ms: 8.7024
+      ...
+    1..32
+ok 3 - atomic installer, unconditional role/session denial and unchanged protected rows
+  ---
+  duration_ms: 1948.5252
+  ...
+# Subtest: unrelated actual captured viewing, review and release SQL remains functional
+ok 4 - unrelated actual captured viewing, review and release SQL remains functional
+  ---
+  duration_ms: 1555.1739
+  ...
+# Subtest: unexpected contract, origin and catalog drift fail closed; injected failure rolls back
+ok 5 - unexpected contract, origin and catalog drift fail closed; injected failure rolls back
+  ---
+  duration_ms: 1563.5497
+  ...
+1..5
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7525.2565

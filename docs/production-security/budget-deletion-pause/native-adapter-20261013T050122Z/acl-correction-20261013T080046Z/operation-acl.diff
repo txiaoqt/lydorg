@@ -1,0 +1,114 @@
+diff --git "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\acl-correction-20261013T080046Z\\prior-artifacts\\operation-acl.ps1" "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\operation-acl.ps1"
+index 1dbc7a4..0b40915 100644
+--- "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\acl-correction-20261013T080046Z\\prior-artifacts\\operation-acl.ps1"
++++ "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\operation-acl.ps1"
+@@ -33,6 +33,7 @@ function Assert-NoReparse([string]$TargetPath) {
+ }
+ 
+ function Set-ProtectedDirectoryAcl([string]$TargetPath) {
++  Assert-NoReparse $TargetPath
+   [System.IO.Directory]::CreateDirectory($TargetPath) | Out-Null
+   Assert-NoReparse $TargetPath
+   $currentSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+@@ -60,12 +61,17 @@ function Assert-ProtectedPath([string]$TargetPath, [string]$ProtectedRoot, [swit
+   if (-not (Test-Path -LiteralPath $TargetPath)) { throw 'STATE_PATH_MISSING' }
+   $script:aclCheckStage = 'target-no-reparse'
+   Assert-NoReparse $TargetPath
+-  $rootFull = [System.IO.Path]::GetFullPath($ProtectedRoot).TrimEnd('\')
+-  $pathFull = [System.IO.Path]::GetFullPath($TargetPath)
++  $rootFull = Get-CanonicalStatePath $ProtectedRoot
++  $pathFull = Get-CanonicalStatePath $TargetPath
++  $sameRoot = [string]::Equals($pathFull, $rootFull, [System.StringComparison]::OrdinalIgnoreCase)
+   $script:aclCheckStage = 'target-contained'
+-  if ($pathFull -ne $rootFull -and -not $pathFull.StartsWith($rootFull + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
++  if (-not $sameRoot -and -not $pathFull.StartsWith($rootFull + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+     throw 'STATE_PATH_OUTSIDE_PROTECTED_ROOT'
+   }
++  if (-not (Get-Item -LiteralPath $rootFull -Force).PSIsContainer) { throw 'STATE_ROOT_NOT_DIRECTORY' }
++  if (-not $sameRoot -and (Get-Item -LiteralPath $pathFull -Force).PSIsContainer) {
++    throw 'STATE_ARTIFACT_NOT_FILE'
++  }
+   $script:aclCheckStage = 'get-root-acl'
+   $rootAcl = Get-Acl -LiteralPath $rootFull
+   $script:aclCheckStage = 'root-dacl-protected'
+@@ -76,10 +82,12 @@ function Assert-ProtectedPath([string]$TargetPath, [string]$ProtectedRoot, [swit
+   if ($rootOwner -ne $currentSid) { throw 'STATE_DIRECTORY_OWNER_MISMATCH' }
+   if (-not $SkipAncestorSafetyForSelfTest) { Assert-NoUntrustedAncestorMutation $rootFull }
+   $allowed = Get-AllowedSids
+-  foreach ($checkPath in @($rootFull, $pathFull | Where-Object { $_ -ne $rootFull })) {
++  $checkPaths = @($rootFull)
++  if (-not $sameRoot) { $checkPaths += $pathFull }
++  foreach ($checkPath in $checkPaths) {
+     $script:aclCheckStage = 'get-access-rules'
+     $acl = Get-Acl -LiteralPath $checkPath
+-    if ($checkPath -ne $rootFull) {
++    if (-not [string]::Equals($checkPath, $rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+       $artifactOwner = Get-SidValue ($acl.GetOwner([System.Security.Principal.SecurityIdentifier]))
+       if ($artifactOwner -ne $currentSid) { throw 'STATE_ARTIFACT_OWNER_MISMATCH' }
+     }
+@@ -131,10 +139,46 @@ function Assert-NoUntrustedMutationOnDirectory([string]$DirectoryPath) {
+   }
+ }
+ 
++function Get-CanonicalStatePath([string]$TargetPath) {
++  # Reject aliases that Windows may normalize before opening a different target.
++  if ([string]::IsNullOrWhiteSpace($TargetPath) -or $TargetPath -notmatch '^[A-Za-z]:[\\/]') { throw 'STATE_PATH_MUST_BE_ABSOLUTE_LOCAL' }
++  $windowsPath = $TargetPath.Replace('/', '\')
++  if ($windowsPath -match '(^|\\)\.{1,2}(\\|$)') { throw 'STATE_PATH_TRAVERSAL_NOT_ALLOWED' }
++  if ($windowsPath.Substring(2).Contains(':')) { throw 'STATE_PATH_STREAM_NOT_ALLOWED' }
++  foreach ($segment in $windowsPath.Substring(3).Split('\', [System.StringSplitOptions]::RemoveEmptyEntries)) {
++    if ($segment.EndsWith('.') -or $segment.EndsWith(' ')) { throw 'STATE_PATH_AMBIGUOUS_SEGMENT' }
++  }
++  return [System.IO.Path]::GetFullPath($windowsPath).TrimEnd('\')
++}
++
+ function Assert-TargetIsFixed([string]$TargetPath, [string]$StateRoot) {
+-  if ([System.IO.Path]::GetFullPath($TargetPath) -ne [System.IO.Path]::GetFullPath($StateRoot)) {
++  $targetFull = Get-CanonicalStatePath $TargetPath
++  $rootFull = Get-CanonicalStatePath $StateRoot
++  if (-not [string]::Equals($targetFull, $rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+     throw 'ONLY_FIXED_BUDGET_STATE_PATH_ALLOWED'
+   }
++  return $targetFull
++}
++
++function Assert-VerifyTargetIsApproved([string]$TargetPath, [string]$StateRoot) {
++  $targetFull = Get-CanonicalStatePath $TargetPath
++  $rootFull = Get-CanonicalStatePath $StateRoot
++  if ([string]::Equals($targetFull, $rootFull, [System.StringComparison]::OrdinalIgnoreCase)) { return $targetFull }
++  if (-not [string]::Equals([System.IO.Path]::GetDirectoryName($targetFull), $rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
++    throw 'STATE_PATH_OUTSIDE_PROTECTED_ROOT'
++  }
++  $leaf = [System.IO.Path]::GetFileName($targetFull)
++  $fixedNames = @('control-plane-proof.json', 'authorization.json', 'approved-preflight.json', 'budget-deletion-pause.operation.lock.json', 'budget-deletion-pause.attempt.json')
++  $fixedAllowed = $false
++  foreach ($name in $fixedNames) {
++    if ([string]::Equals($leaf, $name, [System.StringComparison]::OrdinalIgnoreCase)) { $fixedAllowed = $true; break }
++  }
++  $uuid = '[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
++  $generated = '^(?:control-plane-proof-history-[0-9a-f]{64}\.json|preflight-[0-9]{8}T[0-9]{9}Z-' + $uuid + '\.json|install-preflight-' + $uuid + '\.json|execution-' + $uuid + '\.jsonl|reconciliation-[0-9]{8}T[0-9]{9}Z-' + $uuid + '\.json)$'
++  if (-not $fixedAllowed -and -not [regex]::IsMatch($leaf, $generated, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::CultureInvariant)) {
++    throw 'STATE_ARTIFACT_NAME_NOT_ALLOWED'
++  }
++  return $targetFull
+ }
+ 
+ try {
+@@ -184,12 +228,13 @@ try {
+     exit 0
+   }
+   if (-not $Path) { throw 'FIXED_STATE_PATH_REQUIRED' }
+-  Assert-TargetIsFixed $Path $stateRoot
+   if ($Action -eq 'Protect') {
+-    Set-ProtectedDirectoryAcl $stateRoot
+-    Assert-ProtectedPath $stateRoot $stateRoot | Out-Null
++    $approvedPath = Assert-TargetIsFixed $Path $stateRoot
++    Set-ProtectedDirectoryAcl $approvedPath
++    Assert-ProtectedPath $approvedPath $stateRoot | Out-Null
+   } else {
+-    Assert-ProtectedPath $Path $stateRoot | Out-Null
++    $approvedPath = Assert-VerifyTargetIsApproved $Path $stateRoot
++    Assert-ProtectedPath $approvedPath $stateRoot | Out-Null
+   }
+   [pscustomobject]@{status='PASS';action=$Action;effectiveAclVerified=$true;secretValuesRead=$false} | ConvertTo-Json -Compress
+   exit 0

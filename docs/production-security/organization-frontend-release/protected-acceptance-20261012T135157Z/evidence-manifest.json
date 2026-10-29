@@ -1,0 +1,41 @@
+{
+  "capturedAt": "2026-10-12T13:59:52.233Z",
+  "files": [
+    {
+      "path": "acceptance-report.md",
+      "bytes": 8904,
+      "sha256": "66bb0a6a1122a85f10b44a3043743a8352435da5761d1d544318550e68da46f0"
+    },
+    {
+      "path": "checker-security-review.json",
+      "bytes": 2105,
+      "sha256": "5739b679a06af716204ac0405cf8545063bb03214f0ef623962d03d01b8022cc"
+    },
+    {
+      "path": "operator-steps.md",
+      "bytes": 5334,
+      "sha256": "6d22f44382071ce4b4e65df16428da6dbd0d9de5c4549e772f513db7b8d68931"
+    },
+    {
+      "path": "provider-blocker.json",
+      "bytes": 128,
+      "sha256": "407e5569fbc0b1260e98a879b02d42257f74059c503b5c792513743865e17f65"
+    },
+    {
+      "path": "provider-preservation.json",
+      "bytes": 5118,
+      "sha256": "3dbd8f28cf3dc1fcc5c3e10476c5239f772ad3fbdf7e62a56b289070467705c7"
+    },
+    {
+      "path": "review-checker.mjs",
+      "bytes": 6760,
+      "sha256": "3395303b704b74c3db2f2209616ede6404c6f5825c2b5f1655b9e145e697218c"
+    },
+    {
+      "path": "verify-provider-readonly.mjs",
+      "bytes": 3460,
+      "sha256": "f9daac9491c75e97b8c4431b4323cf76f8ebf1ef37a597cb90ab0d75a5f398c6"
+    }
+  ],
+  "scope": "Local checker review and read-only provider preservation; hosted/operator evidence pending"
+}

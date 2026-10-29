@@ -1,0 +1,10 @@
+-- Isolated staging only. The public schema uses reviewed bounded phases:
+-- extensions, structure, routines safe 01-34, public RLS, privileges 01-10,
+-- public policies, triggers, Realtime, Auth hook, and synthetic reference config.
+-- All are applied only to zroudsvpswqsjlyttkjf and recorded in staging migration history.
+--
+-- reviewed-public-security.sql is a reference snapshot, not a one-shot migration.
+-- reviewed-storage-policies.sql was applied to isolated staging only after explicit
+-- user authorization as staging_legacy_storage_policies_20261010. These 15 legacy
+-- policies are intentionally vulnerable. No buckets or objects are present; do not
+-- create buckets/upload files before secure Storage cutover. See execution-order.md.

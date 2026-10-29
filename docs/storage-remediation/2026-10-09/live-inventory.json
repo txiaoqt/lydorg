@@ -1,0 +1,873 @@
+{
+  "capturedAt": "2026-10-09 15:11:33 UTC",
+  "scope": "Read-only catalogs and aggregate counts. No private object names, binaries or credentials.",
+  "buckets": [
+    {
+      "id": "brand-logo",
+      "public": true,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 1,
+      "uuid_prefixed_objects": 0
+    },
+    {
+      "id": "budget-request-files",
+      "public": false,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 37,
+      "uuid_prefixed_objects": 37
+    },
+    {
+      "id": "liquidation-report-files",
+      "public": false,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 21,
+      "uuid_prefixed_objects": 21
+    },
+    {
+      "id": "move-files",
+      "public": false,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 1,
+      "uuid_prefixed_objects": 0
+    },
+    {
+      "id": "news-release-images",
+      "public": true,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 15,
+      "uuid_prefixed_objects": 0
+    },
+    {
+      "id": "organization-documents",
+      "public": false,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 189,
+      "uuid_prefixed_objects": 189
+    },
+    {
+      "id": "registration-seed-file",
+      "public": true,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 6,
+      "uuid_prefixed_objects": 0
+    },
+    {
+      "id": "template-files",
+      "public": false,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 69,
+      "uuid_prefixed_objects": 69
+    },
+    {
+      "id": "transparency-attachments",
+      "public": true,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 1,
+      "uuid_prefixed_objects": 0
+    },
+    {
+      "id": "ypop-files",
+      "public": false,
+      "file_size_limit": null,
+      "allowed_mime_types": null,
+      "objects": 38,
+      "uuid_prefixed_objects": 38
+    }
+  ],
+  "grants": [
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "anon",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "anon",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "anon",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "anon",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "service_role",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "service_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "anon",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "anon",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "anon",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "anon",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "service_role",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "service_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_analytics",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_vectors",
+      "grantee": "anon",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_vectors",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "buckets_vectors",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "anon",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "anon",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "anon",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "anon",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "service_role",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "service_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "objects",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "anon",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "service_role",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "service_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "anon",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "service_role",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "service_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "s3_multipart_uploads_parts",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "vector_indexes",
+      "grantee": "anon",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "vector_indexes",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_schema": "storage",
+      "table_name": "vector_indexes",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "budget_request_files_manage_own",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'budget-request-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "budget_request_files_read_portal",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'budget-request-files'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "liquidation_report_files_manage_own",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'liquidation-report-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "liquidation_report_files_read_portal",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'liquidation-report-files'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "move_files_manage_own",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'move-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "move_files_read_portal",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'move-files'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "news_release_images_admin_manage",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'news-release-images'::text)",
+      "with_check": "(bucket_id = 'news-release-images'::text)"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "organization_documents_manage_own",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'organization-documents'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "organization_documents_read_portal",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'organization-documents'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "template_files_admin_manage",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'template-files'::text)",
+      "with_check": "(bucket_id = 'template-files'::text)"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "transparency_attachments_admin_manage",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "with_check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "transparency_attachments_read_public",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "yorp_sample_seed_assets_read",
+      "roles": "{anon,authenticated}",
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "ypop_files_manage_own",
+      "roles": "{public}",
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))",
+      "with_check": "((bucket_id = 'ypop-files'::text) AND (current_user_is_admin() OR (owner = auth.uid())))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "ypop_files_read_portal",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "qual": "(bucket_id = 'ypop-files'::text)",
+      "with_check": null
+    }
+  ],
+  "metadataPathAssociations": [
+    {
+      "resource": "registration",
+      "canonical": 37,
+      "matching_parent": 37
+    },
+    {
+      "resource": "budget",
+      "canonical": 6,
+      "matching_parent": 6
+    },
+    {
+      "resource": "liquidation",
+      "canonical": 5,
+      "matching_parent": 5
+    },
+    {
+      "resource": "ypop-event",
+      "canonical": 17,
+      "matching_parent": 17
+    },
+    {
+      "resource": "ypop-activity",
+      "canonical": 4,
+      "matching_parent": 4
+    }
+  ]
+}

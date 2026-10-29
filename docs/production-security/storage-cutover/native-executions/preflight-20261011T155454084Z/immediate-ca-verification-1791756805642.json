@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-11T22:13:25.641Z",
+  "officialSource": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+  "configuredSha256Matches": true,
+  "officialHttpsBytesMatch": true,
+  "caSelfSignatureValid": true,
+  "caCurrentlyValid": true,
+  "httpsChainAndHostnameVerified": true
+}

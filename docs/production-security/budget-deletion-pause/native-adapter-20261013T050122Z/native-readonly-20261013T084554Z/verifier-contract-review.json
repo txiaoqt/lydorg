@@ -1,0 +1,39 @@
+{
+  "status": "CONFIRMED_LOCAL_INPUT_CONTRACT_MISMATCH",
+  "contracts": [
+    {
+      "input": "identitySql",
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-identity-readonly.sql",
+      "sha256": "c36f888e263ee0f14676416eca0ce586527dbd2ff580422cf52795161ab9f2e3",
+      "readOnlyBegin": true,
+      "actualTerminal": "ROLLBACK",
+      "adapterExpectedTerminal": "ROLLBACK"
+    },
+    {
+      "input": "preSql",
+      "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/pre-install-readonly.sql",
+      "sha256": "0feb7b7510621ec3c06e2ee12e751bd1982ef9d5070d5a3be70aceaecba66384",
+      "readOnlyBegin": true,
+      "actualTerminal": "ROLLBACK",
+      "adapterExpectedTerminal": "ROLLBACK"
+    },
+    {
+      "input": "protectedDataSql",
+      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql",
+      "sha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d",
+      "readOnlyBegin": true,
+      "actualTerminal": "COMMIT",
+      "adapterExpectedTerminal": "ROLLBACK"
+    },
+    {
+      "input": "foundationSql",
+      "file": "docs/production-security/storage-cutover/final-readiness-20261012T160633Z/foundation-readonly.sql",
+      "sha256": "61c81752a121232734465e9cd3f4f0078d6bd1457ea4cd4d5ed981096bde4639",
+      "readOnlyBegin": true,
+      "actualTerminal": "ROLLBACK",
+      "adapterExpectedTerminal": "ROLLBACK"
+    }
+  ],
+  "actualResponseStageNotRecorded": true,
+  "sourceModified": false
+}

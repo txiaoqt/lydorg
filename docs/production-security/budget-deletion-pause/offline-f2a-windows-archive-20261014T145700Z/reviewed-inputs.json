@@ -1,0 +1,99 @@
+{
+  "format": "YTRACE_OFFLINE_F2A_WINDOWS_ARCHIVE_FIXTURES_V1",
+  "classification": "NON-RUNNABLE FOR PRODUCTION - NOT AUTHORIZED",
+  "productionIntegration": false,
+  "fixtureRoot": "candidate hard-coded fixtures tree only",
+  "codeIdentities": [
+    {
+      "file": "windows-archive-fixture.cs",
+      "bytes": 15437,
+      "sha256": "86f5ec628164a2497be37b83fc9bf1ab64fc99d80ebe559220709655e71b3753"
+    },
+    {
+      "file": "windows-archive-fixture.tests.cs",
+      "bytes": 19152,
+      "sha256": "4d6e48eb6f3eb98878cd4e85e936b0ec826640911af76de8c786931a69edabca"
+    },
+    {
+      "file": "invoke-fixture-tests.ps1",
+      "bytes": 4426,
+      "sha256": "6cc37401f6217562313fe223af46b1fa45658fbe01824161b9961004bb768799"
+    }
+  ],
+  "evidenceIdentities": [
+    {
+      "file": "README.md",
+      "bytes": 6308,
+      "sha256": "2232fddb39d54f05d24c0024f6dd888d2c4c15e45c0b762b7d73399596338ea3"
+    },
+    {
+      "file": "actual-tests.stdout.tap",
+      "bytes": 3290,
+      "sha256": "a696737a5de0de4e6e4dd615b15bbd8ce650061ab185a4a67c2d94f263ce64ad"
+    },
+    {
+      "file": "actual-tests.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "test-command-and-result.json",
+      "bytes": 935,
+      "sha256": "99da9f23d094046042fcefa1430486dbd4a810f813fa3e2db3c3430f12839ef3"
+    },
+    {
+      "file": "reviewed-inputs-preservation.json",
+      "bytes": 84946,
+      "sha256": "cef446488b7b391d66ef3bda5fc44778467fcbfc03645462a7de137594b7c6a0"
+    },
+    {
+      "file": "source-additions.patch",
+      "bytes": 40889,
+      "sha256": "861a0cff2e643aad0a76789cdf9252b8c284186e3b110bc82d79f3db300a9587"
+    },
+    {
+      "file": "revision-01-to-02.patch",
+      "bytes": 17768,
+      "sha256": "2da0edd7b7ec9733690ec52f372a80573a9cf49fdaa79ebfeb73749599f11a3f"
+    },
+    {
+      "file": "revision-02-to-03.patch",
+      "bytes": 6851,
+      "sha256": "89ba923009af31d6f64ae97ff3bb41c3487ed5aa1cf14dceb2304a26c1db9e23"
+    }
+  ],
+  "priorF2": {
+    "directory": "docs/production-security/budget-deletion-pause/trusted-io-integration-candidate-20261014T083531Z",
+    "bundleSha256": "a52dd7ebdfa1b99bcbc5915992025e2f906fe59fe22febd80e40b681b15aa47a",
+    "manifestSha256": "c4dcd431e0eba49ff0df4014902c4cb3a3451d50b4eedca36f1351ebef2c567f"
+  },
+  "actualTests": {
+    "pass": 28,
+    "fail": 0,
+    "blockedProperties": [
+      "actual junction/redirection fixture",
+      "actual hardlink fixture"
+    ],
+    "threadRaces": 16,
+    "independentProcessRaces": 1,
+    "abruptChildExits": 1,
+    "automaticRetries": 0,
+    "cleanupOperations": 0,
+    "platform": "Windows 10.0.26300 x64 NTFS",
+    "PowerShell": "7.6.5",
+    "DotNet": "10.0.11"
+  },
+  "remainingF2Gaps": [
+    "Owner/effective ACL validation and preservation",
+    "Power-loss and directory-entry durability",
+    "Direct reparse/junction/hardlink race evidence",
+    "Other Windows boundary/OS/filesystem variants",
+    "Trusted scoped get_project provider and proof I/O"
+  ],
+  "separateBlockers": [
+    "F1 authoritative consumption",
+    "F3 real fixed preflight child boundary"
+  ],
+  "bundleDerivation": "SHA256 UTF8 compact JSON {manifestSha256,codeHashes}; actual code entries in codeIdentities order",
+  "inventoryExcludesSelf": true
+}

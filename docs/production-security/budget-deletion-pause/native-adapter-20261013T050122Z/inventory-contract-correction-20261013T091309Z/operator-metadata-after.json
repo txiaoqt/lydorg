@@ -1,0 +1,44 @@
+{
+  "mode": "METADATA_ONLY_NO_PROOF_CONTENT_READ",
+  "stateFiles": [
+    "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+    "control-plane-proof.json"
+  ],
+  "properties": [
+    {
+      "name": ".ytrace-production-budget-deletion-pause",
+      "directory": true,
+      "bytes": null,
+      "createdAt": "2026-10-13T07:52:10.7953315Z",
+      "lastWriteAt": "2026-10-13T08:48:48.8892004Z",
+      "lastAccessAt": "2026-10-13T09:28:31.3186235Z",
+      "attributes": "Directory",
+      "aclSha256": "f2b0d1128543ced61766e73d2d34374be2571800e9627a43bfe9a00e058a13b5"
+    },
+    {
+      "name": "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+      "directory": false,
+      "bytes": 200,
+      "createdAt": "2026-10-13T07:53:03.1472310Z",
+      "lastWriteAt": "2026-10-13T07:53:03.1547868Z",
+      "lastAccessAt": "2026-10-13T08:52:30.3855117Z",
+      "attributes": "Archive",
+      "aclSha256": "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1"
+    },
+    {
+      "name": "control-plane-proof.json",
+      "directory": false,
+      "bytes": 200,
+      "createdAt": "2026-10-13T08:48:48.8892004Z",
+      "lastWriteAt": "2026-10-13T08:48:48.8962340Z",
+      "lastAccessAt": "2026-10-13T08:52:30.3877606Z",
+      "attributes": "Archive",
+      "aclSha256": "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1"
+    }
+  ],
+  "knownProofHashesFromPriorReceipts": {
+    "archive": "0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd",
+    "active": "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf"
+  },
+  "hashesRecomputedInThisTask": false
+}

@@ -1,0 +1,10 @@
+diff --git a/docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\budget-protected-data-readonly.sql"
+index 79d4c73..6dab862 100644
+--- a/docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql
++++ "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\budget-protected-data-readonly.sql"
+@@ -115,4 +115,4 @@ SELECT 'auth.users_inventory' AS relation,count(*) AS row_count,md5(coalesce(str
+ UNION ALL
+ SELECT 'auth.identities_inventory' AS relation,count(*) AS row_count,md5(coalesce(string_agg(jsonb_build_object('id',id,'user_id',user_id,'provider',provider,'provider_id_md5',md5(provider_id),'created_at',created_at,'updated_at',updated_at,'identity_data_md5',md5(identity_data::text))::text,E'\n' ORDER BY id),'')) AS content_fingerprint FROM auth.identities
+ ) x;
+-COMMIT;
++ROLLBACK;

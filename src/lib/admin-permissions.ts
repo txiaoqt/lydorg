@@ -21,6 +21,11 @@ export const ADMIN_PERMISSION_GROUPS: AdminPermissionGroup[] = [
         description: "Review and process incoming YORP accreditation submissions.",
       },
       {
+        code: "renewals_manage",
+        label: "Renewals Management",
+        description: "Request revisions, reject, and approve organization renewal applications.",
+      },
+      {
         code: "yorp_registry_view",
         label: "YORP Registry View",
         description: "View organizations that have completed YORP accreditation.",

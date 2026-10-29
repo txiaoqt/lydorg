@@ -1,0 +1,70 @@
+{
+  "format": "YTRACE_OFFLINE_F1_AUTHORITY_DESIGN_INVENTORY_V1",
+  "classification": "NON-RUNNABLE — NOT AUTHORIZED",
+  "decision": "BLOCKED",
+  "bundleSha256": "ae6f04fc9927e527702540364e524f4815db0d6d862141f770a5f230231c0974",
+  "manifestSha256": "a8462f64bf40ed88f2f45f7d4a0064132dc978d709f2e23b4d1e624ff7541e4b",
+  "selfExcluded": true,
+  "files": [
+    {
+      "file": "authoritative-model.mjs",
+      "bytes": 9999,
+      "sha256": "8076201eac31ee614c2410ffc3c29dbda12d8b43bc14105a5779f2bb51ffd454"
+    },
+    {
+      "file": "conditional-regressions-asia-manila.tap",
+      "bytes": 8781,
+      "sha256": "b55f29becbe03fcde8f7ec18b9235114a48ba676e059137106bd352e01e2a2a3"
+    },
+    {
+      "file": "conditional-regressions-utc.tap",
+      "bytes": 8778,
+      "sha256": "eff0cdec49bf474f18678758c40feb54387f27b47eec8e3bf383e098a9917818"
+    },
+    {
+      "file": "conditional-regressions.test.mjs",
+      "bytes": 8075,
+      "sha256": "9867084c58a80bb43ad03da4109334f65787f3c21163b866c7b6c9b63f033fab"
+    },
+    {
+      "file": "design-decision.md",
+      "bytes": 10720,
+      "sha256": "7db50a78a7903e4edb591e160b375891baf4d92e1b84cb2d9a5fb196c8670fa5"
+    },
+    {
+      "file": "failure-model.md",
+      "bytes": 8218,
+      "sha256": "a7a24f71ea450b2119463db20c2fb09ddeffbddaf96d25ab34af746514935deb"
+    },
+    {
+      "file": "readme.md",
+      "bytes": 2108,
+      "sha256": "b3487e3797d4378a7b2fe38b5cac1caf9e001a994179f51ce355f3c23b8fddd3"
+    },
+    {
+      "file": "remediation-report.md",
+      "bytes": 12778,
+      "sha256": "e67b27c8d4feaebd53c7750b5dbab9d26fa9bbe60b340de7a42f7aff3ea59961"
+    },
+    {
+      "file": "required-total-loss-asia-manila.tap",
+      "bytes": 1175,
+      "sha256": "ce93109d5f9c11c4a8d6fdd8d6b1082c2323c9063d984cbf65e89f2ff29e307d"
+    },
+    {
+      "file": "required-total-loss-utc.tap",
+      "bytes": 1175,
+      "sha256": "10f1066623ef7dda88165143f7276b9cb601f1cd1b26b4a645128288a4963724"
+    },
+    {
+      "file": "required-total-loss.test.mjs",
+      "bytes": 902,
+      "sha256": "67c28a740e7198902566e77bfdc0dac9a8ad8a0317f5c268af3fbce0c5428dd8"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 55719,
+      "sha256": "a8462f64bf40ed88f2f45f7d4a0064132dc978d709f2e23b4d1e624ff7541e4b"
+    }
+  ]
+}

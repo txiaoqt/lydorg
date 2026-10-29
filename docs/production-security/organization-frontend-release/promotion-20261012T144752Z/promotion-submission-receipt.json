@@ -1,0 +1,33 @@
+{
+  "capturedAt": "2026-10-12T15:11:25.087Z",
+  "status": "PROMOTION_ACKNOWLEDGED_PENDING_READONLY_VERIFICATION",
+  "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "attempts": 1,
+  "automaticRetries": 0,
+  "exitCode": 0,
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSha256": "f51ab51f563f13888cfab91e7d33d2ba8baa80414ff7662907c41f26786267a1",
+  "timeout": false,
+  "overflow": false,
+  "spawnError": false,
+  "transport": {
+    "recordedAt": "2026-10-12T15:11:25.059Z",
+    "cliVersion": "63.1.2",
+    "clientModuleSha256": "d09cbde148f869762f51b35b7cf0fd5defdd450094e288b81cefa93e6cd40914",
+    "commandsModuleSha256": "a7f2f57caf3f42d10c370ea36efca693948e5fa04856ef040784558f44a01cf5",
+    "credentialsReadByLocalGuard": false,
+    "cliAuthentication": "Existing official CLI credential handling; no manual token extraction",
+    "promotionFetchInvocations": 1,
+    "promotionRequestsDispatched": 1,
+    "blockedMutationCalls": 0,
+    "automaticRetriesConfigured": 0,
+    "promotionHttp": 201
+  },
+  "productionAliasesRequested": [
+    "www.ytrace.app",
+    "ytrace.app"
+  ],
+  "newDeploymentRequested": false
+}

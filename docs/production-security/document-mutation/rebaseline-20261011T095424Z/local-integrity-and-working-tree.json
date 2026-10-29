@@ -1,0 +1,86 @@
+{
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "initialChangedPaths": 2912,
+  "initialStatusLinesMissing": [],
+  "unexpectedChangedPaths": [],
+  "newScopePaths": [
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/candidate-metadata.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/captured-function-roundtrip.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/catalog-manifest-readonly.sql",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/compatibility-hashes.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/compatibility-readonly-verification.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/containment-readonly-verification.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/control-plane-verification.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/default-privileges-readonly.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/document_mutation_lifecycle_guard_production_rebaselined.sql",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/expected-post-install-functions.local.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/expected-production-manifest.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/final-readonly-compatibility.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/final-readonly-permissions.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/final-readonly-project.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/final-readonly-protected_data.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/generated-columns-readonly.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-extra-functions.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-integrity-and-working-tree.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-schema-inputs.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-results.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-01.tap",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-02.tap",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-03.tap",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-04.tap",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-05.tap",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-06.tap",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-07.tap",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/operator-checklist.md",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/permissions-baseline.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/post-install-verifier.local.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/post-install-verify-readonly.sql",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/preflight-verify-readonly.sql",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/production-baseline-readonly.sql",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/production-baseline.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/protected-data-baseline.json",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/review.md",
+    "docs/production-security/document-mutation/rebaseline-20261011T095424Z/working-tree-baseline.json",
+    "scripts/rebaseline-production-document-mutation-candidate.mjs",
+    "supabase/tests/production_document_mutation_rebaseline.local.test.mjs"
+  ],
+  "historicalSha256": "86aec2c915f622bf343f2d4437c2e3f5e1cc8a8df9bdaf052719505dec95a785",
+  "candidateSha256": "bd06efbc326146cabf00ef005401a5bb7aa4a060927d7bffb63eafcf0f35f567",
+  "sourceMigrationSha256": "b19e93c19454a9012e85eb9dce81ba152b4f93d0eaa0fa475f78ab8d30a4d7a0",
+  "sourceWhitespaceFindings": [],
+  "rawHistoricalEvidenceWhitespace": [
+    {
+      "path": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-03.tap",
+      "line": 41,
+      "rawEvidence": true
+    },
+    {
+      "path": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-03.tap",
+      "line": 43,
+      "rawEvidence": true
+    },
+    {
+      "path": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-03.tap",
+      "line": 79,
+      "rawEvidence": true
+    },
+    {
+      "path": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-03.tap",
+      "line": 81,
+      "rawEvidence": true
+    },
+    {
+      "path": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-03.tap",
+      "line": 172,
+      "rawEvidence": true
+    },
+    {
+      "path": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/local-sql-run-03.tap",
+      "line": 174,
+      "rawEvidence": true
+    }
+  ],
+  "rawEvidencePreserved": true,
+  "passed": true
+}

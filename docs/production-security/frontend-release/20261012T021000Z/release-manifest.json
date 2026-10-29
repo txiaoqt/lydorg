@@ -1,0 +1,243 @@
+{
+  "baseCommit": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "sourceRevision": "sha256:ffe95e19a23eb8f9db43bf6c6199de787b88a8106ec157e57192b468fd082e0c",
+  "identityType": "content-addressed isolated source directory; no Git commit created",
+  "target": {
+    "project": "toffs-projects-81b2ce10/lydorg",
+    "domain": "https://y-trace-admin.vercel.app",
+    "supabase": "mqqaykksadotbrghbexz",
+    "surface": "admin"
+  },
+  "previousDeployment": {
+    "operatorDesignatedId": "3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+    "immutableHost": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app",
+    "providerAliasAssignmentAndRollbackEligibility": "BLOCKED; no authenticated provider access"
+  },
+  "sourceArchive": {
+    "name": "admin-gateway-source-complete.zip",
+    "bytes": 15416255,
+    "sha256": "9c3f2747ccf9b5f3a6723decb3e3ec9f7ff7eff64a98957141578d57d95ca8e3"
+  },
+  "buildArchive": {
+    "name": "admin-gateway-build.zip",
+    "bytes": 11957125,
+    "sha256": "197daaaf91c3bc9f0817e9d469c4e950df2e48f94a0fa477e3058cc352c9614b"
+  },
+  "artifactInventorySha256": "07e27da65490430b6b1f59098eb92b773215b1ccc3e26ae837913ec23a1a29c9",
+  "fixedVersion": "1.0.0-admin-storage-rc+20261012021000.src-ffe95e19a23e",
+  "runtimeFiles": [
+    {
+      "path": "src/lib/admin-storage-access.ts",
+      "bytes": 2008,
+      "sha256": "c7b5eee5076ad8a4095ed0afbeefc5f42c85ba462200dc14cae8b8c08e198fdb",
+      "scope": "runtime"
+    },
+    {
+      "path": "src/lib/lydo-connect-store.tsx",
+      "bytes": 73446,
+      "sha256": "0e25a810735f13daccc1d5733c44894dc81b2a1f21a390fd1f99e40728d60e8c",
+      "scope": "runtime"
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "bytes": 436172,
+      "sha256": "4add5f7330483335a6b6a34fe6bc70da8f46906540d52ca1a1d318a48f35814f",
+      "scope": "runtime"
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "bytes": 3571,
+      "sha256": "1c4a0e885e83172550fa4a1ef0a47278eaeb19c7aa23b12ea9a51a62a7422b63",
+      "scope": "runtime"
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.ts",
+      "bytes": 2935,
+      "sha256": "961d9786467553ef0f7b14972db12523f6ac9609b07d610978f734d7d992f883",
+      "scope": "runtime"
+    }
+  ],
+  "qaFiles": [
+    {
+      "path": "src/lib/admin-storage-access.test.ts",
+      "bytes": 5252,
+      "sha256": "285399103e42ba28e04ca66fb11021f1f9126f9342be599584147a8ab98273b1",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/lib/admin-storage-resolver.integration.test.ts",
+      "bytes": 15343,
+      "sha256": "41b19a45bf381e5a26dd7ba8ed4e1bbd799bb1c2cd432228b560a4fabce79482",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/lib/private-query-cache.test.ts",
+      "bytes": 1403,
+      "sha256": "ede36f8b507245fda7e8b4f0a5f6c84ad2f68a05dfaed30a3f401516ee30302b",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.test.ts",
+      "bytes": 6046,
+      "sha256": "7d252f99b68748ba792a9785d1c14f448ff070f24203d76eb88241aa5e67584e",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/lib/signed-storage-url.integration.test.ts",
+      "bytes": 3866,
+      "sha256": "473920af39260f35368035aca43aaf5e2f5912f5500510ec53ce2277ccfe3203",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/test/env/.env.test",
+      "bytes": 93,
+      "sha256": "4aaae65672f37456a92f599291d481d8254e209db1d3835b17c74b12400300ce",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/test/production-supabase-network-guard.test.ts",
+      "bytes": 1679,
+      "sha256": "48b21109364bb455db5ca2d00b91a693c240620bb6657e9707122b81d868c982",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/test/production-supabase-network-guard.ts",
+      "bytes": 781,
+      "sha256": "283ed213f5aeb5baaec78f380948ecf03b49b377d64d04f4346377dd8402633b",
+      "scope": "QA only"
+    },
+    {
+      "path": "src/test/setup.ts",
+      "bytes": 1772,
+      "sha256": "f8167f71d45378270c991a6e060ba87b2170c42382d79cd291ee962d01889962",
+      "scope": "QA only"
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/control.ts",
+      "bytes": 4182,
+      "sha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21",
+      "scope": "QA only"
+    },
+    {
+      "path": "vitest.config.ts",
+      "bytes": 855,
+      "sha256": "7e552d3e24bb2f565c8df04f6aec4ad7f8437ab27d4f3e165e95ead2f564fb46",
+      "scope": "QA only"
+    }
+  ],
+  "selectedServiceHunks": [
+    {
+      "oldStart": 57,
+      "reviewedHeader": "@@ -57,12 +57,13 @@ import {",
+      "candidateHeader": "@@ -57,12 +57,13 @@ import {",
+      "currentWorktreeHunkSha256": "63a331e44b9fc0cedc4f96744d976547e12b9f78e18a86d085e418dce1ddae33",
+      "candidateHunkSha256": "63a331e44b9fc0cedc4f96744d976547e12b9f78e18a86d085e418dce1ddae33",
+      "newlyCorrectedResolver": false
+    },
+    {
+      "oldStart": 5124,
+      "reviewedHeader": "@@ -5124,9 +5151,12 @@ export const deleteBudgetRequestInSupabase = async (budgetRequestId: string) =>",
+      "candidateHeader": "@@ -5124,9 +5125,12 @@ export const deleteBudgetRequestInSupabase = async (budgetRequestId: string) =>",
+      "currentWorktreeHunkSha256": "3487d35a427434b30f94b8820bd1c79fee65c0962d941751b0b2ad1bad289bff",
+      "candidateHunkSha256": "aadbeebf2e0ce779867e622430878ba4842914d7b5581f1149b6d03e750fc474",
+      "newlyCorrectedResolver": false
+    },
+    {
+      "oldStart": 5146,
+      "reviewedHeader": "@@ -5146,14 +5176,8 @@ export const uploadNewsReleasePreviewImageToSupabase = async (file: File) => {",
+      "candidateHeader": "@@ -5146,14 +5150,8 @@ export const uploadNewsReleasePreviewImageToSupabase = async (file: File) => {",
+      "currentWorktreeHunkSha256": "b3f0d4cd7cbaf1e19a9bee07a40a31571b9b9b1f8a637d0477d2b2053fb2773c",
+      "candidateHunkSha256": "a1155ac0722e7a0ae1fa38b910a09d2806dbe7763c0b527445eb27fd18119ce9",
+      "newlyCorrectedResolver": false
+    },
+    {
+      "oldStart": 5165,
+      "reviewedHeader": "@@ -5165,12 +5189,12 @@ export const deleteNewsReleasePreviewImageFromSupabase = async (value: string) =",
+      "candidateHeader": "@@ -5165,12 +5163,12 @@ export const deleteNewsReleasePreviewImageFromSupabase = async (value: string) =",
+      "currentWorktreeHunkSha256": "0c0e8c0c435e0d68a4a664f45cbdf27cdfcaafa33aed3c66642375b315baef53",
+      "candidateHunkSha256": "d30b1a526e39c222e5153411f8e7bedd5211521b0451b971a320db0a78a02816",
+      "newlyCorrectedResolver": false
+    },
+    {
+      "oldStart": 6128,
+      "reviewedHeader": "@@ -6128,17 +6152,8 @@ export const uploadTemplateDocumentToSupabase = async (params: {",
+      "candidateHeader": "@@ -6128,17 +6126,8 @@ export const uploadTemplateDocumentToSupabase = async (params: {",
+      "currentWorktreeHunkSha256": "0f60129544d7effa4fe782844223c0f2cbbc3e8aaf81f1cb291af5d787b58714",
+      "candidateHunkSha256": "caff653464c25934f87b334cbcd742a593a848cf1bcd09aa377e6ebeac037a04",
+      "newlyCorrectedResolver": false
+    },
+    {
+      "oldStart": 6345,
+      "reviewedHeader": "@@ -6345,86 +6360,95 @@ export const permanentlyDeleteTemplateRecordInSupabase = async (databaseId: stri",
+      "candidateHeader": "@@ -6345,86 +6334,95 @@ export const permanentlyDeleteTemplateRecordInSupabase = async (databaseId: stri",
+      "currentWorktreeHunkSha256": "0ff62adfdb4f4e32a7bcf97e7a6a139dc472ca8ee8c6c59f413e3b29f07b6f36",
+      "candidateHunkSha256": "eb050c679e2fd4ef1ad63fd2e20772f6cb161838b228c47db4cbbd641afaf989",
+      "newlyCorrectedResolver": true
+    }
+  ],
+  "unchangedBasePackagingDependencies": [
+    "scripts/patch-radix-select.cjs",
+    "worker/__init__.py",
+    "worker/gform_sync_worker.py",
+    "api/sync-run-once.py"
+  ],
+  "excludedServiceHunkStarts": [
+    3137,
+    4740,
+    8745,
+    8768,
+    8830
+  ],
+  "deploymentReadiness": "NO-GO / BLOCKED pending authenticated Vercel project, configuration, build route and rollback verification",
+  "onlyOriginalRootFilesChanged": [
+    "src/lib/admin-storage-resolver.integration.test.ts",
+    "src/lib/lydo-connect-supabase.ts"
+  ],
+  "evidence": [
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/prepare-complete-candidate.mjs",
+      "bytes": 7973,
+      "sha256": "4fa8291edd11b7dbf4ff297996dd1e6914e7284dfa6e2602bf07196c3747a2a2"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/build-complete-admin.mjs",
+      "bytes": 7285,
+      "sha256": "5aa47c7950f9fdf35ce0785c9917e812ca5e41b900a2a53f542fb31823f5be18"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/verify-release-artifacts.mjs",
+      "bytes": 7293,
+      "sha256": "3322ddccd6dd221af3de37ba673f755150c0b0a0aaee5d463adb98af47f8e212"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-isolated-tests.json",
+      "bytes": 27537,
+      "sha256": "fb1da210e48c26b6b2bcc7b474f5d48332426bab481a2f6cf86f9f6fc66cc5d2"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-build.log",
+      "bytes": 775,
+      "sha256": "c4dabbe299d3374084948af32ddd16a6d9be888dc379cd6e8785430cccae7a7c"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-reproduction-build.log",
+      "bytes": 774,
+      "sha256": "5d404d3d9e58b034edd24bcc64ef9cb069af63f1eb36c3e05218ef44622baaae"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/complete-diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/vercel-access.log",
+      "bytes": 158,
+      "sha256": "0f8bdc17c56d85b36dc6af3e7633337f66c3cee1bc62782763af6187b6c01415"
+    },
+    {
+      "path": ".agent/admin-storage-release-20261012T021000Z/initial-worktree.json",
+      "bytes": 806230,
+      "sha256": "b0d24e9554106c399d23fde4a7b665e083a02d7e1bbe30a91e4175a59bf27c37"
+    }
+  ]
+}

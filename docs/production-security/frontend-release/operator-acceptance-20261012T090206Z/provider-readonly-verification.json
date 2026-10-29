@@ -1,0 +1,30 @@
+{
+  "capturedAt": "2026-10-12T09:04:04.639Z",
+  "status": "PASS",
+  "candidate": {
+    "id": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "url": "https://lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+    "readyState": "READY",
+    "createdAt": 1791787673913,
+    "ready": 1791787763579
+  },
+  "productionAdminAlias": {
+    "alias": "y-trace-admin.vercel.app",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "deploymentId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+    "deploymentUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app"
+  },
+  "productionOrganizationAlias": {
+    "alias": "ytrace.app",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+  },
+  "organizationProjectAndDeploymentListUnchanged": true,
+  "competingDeployments": 0,
+  "readOnly": true,
+  "promotionsPerformed": 0,
+  "deploymentsPerformed": 0
+}

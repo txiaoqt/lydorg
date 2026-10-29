@@ -1,0 +1,190 @@
+TAP version 13
+# Subtest: historical baseline and archived original bundle remain byte-for-byte intact
+ok 1 - historical baseline and archived original bundle remain byte-for-byte intact
+  ---
+  duration_ms: 13.773
+  ...
+# Subtest: foundation SQL and every non-baseline manifest input are unchanged
+ok 2 - foundation SQL and every non-baseline manifest input are unchanged
+  ---
+  duration_ms: 15.8815
+  ...
+# Subtest: executable change is exactly one fixed baseline binding; core and all guards are unchanged
+ok 3 - executable change is exactly one fixed baseline binding; core and all guards are unchanged
+  ---
+  duration_ms: 6.7937
+  ...
+# Subtest: fresh baseline contains exactly the seven reviewed appends and 50 unchanged relations
+ok 4 - fresh baseline contains exactly the seven reviewed appends and 50 unchanged relations
+  ---
+  duration_ms: 1.2581
+  ...
+# Subtest: legitimacy evidence separates Google signup/owner consent from the existing Admin login
+ok 5 - legitimacy evidence separates Google signup/owner consent from the existing Admin login
+  ---
+  duration_ms: 0.6126
+  ...
+# Subtest: all 57 future fingerprints remain enforced and the old snapshot still rejects the additions
+ok 6 - all 57 future fingerprints remain enforced and the old snapshot still rejects the additions
+  ---
+  duration_ms: 12.8093
+  ...
+# Subtest: offline CLI reviews the exact refreshed bundle without connecting or activating installation
+ok 7 - offline CLI reviews the exact refreshed bundle without connecting or activating installation
+  ---
+  duration_ms: 145.6508
+  ...
+# Subtest: saved review evidence contains no raw UUIDs, email addresses, passwords or session tokens
+ok 8 - saved review evidence contains no raw UUIDs, email addresses, passwords or session tokens
+  ---
+  duration_ms: 10.2039
+  ...
+# Subtest: exact reviewed artifact bytes and atomic timeouts are retained
+ok 9 - exact reviewed artifact bytes and atomic timeouts are retained
+  ---
+  duration_ms: 4.3893
+  ...
+# Subtest: truncated and same-length changed artifacts are rejected
+ok 10 - truncated and same-length changed artifacts are rejected
+  ---
+  duration_ms: 1.8381
+  ...
+# Subtest: wrong project, host, port and pooled route are rejected
+ok 11 - wrong project, host, port and pooled route are rejected
+  ---
+  duration_ms: 0.6451
+  ...
+# Subtest: missing credentials and CA stop before any connection
+ok 12 - missing credentials and CA stop before any connection
+  ---
+  duration_ms: 1.1822
+  ...
+# Subtest: wrong CA hash fails and verified config cannot disable hostname/chain validation
+ok 13 - wrong CA hash fails and verified config cannot disable hostname/chain validation
+  ---
+  duration_ms: 18.6776
+  ...
+# Subtest: Node TLS hostname verifier rejects a wrong certificate identity
+ok 14 - Node TLS hostname verifier rejects a wrong certificate identity
+  ---
+  duration_ms: 6.0268
+  ...
+# Subtest: TLS chain failure closes the sole fake client and cannot submit or retry
+ok 15 - TLS chain failure closes the sole fake client and cannot submit or retry
+  ---
+  duration_ms: 2.0279
+  ...
+# Subtest: native identity requires reviewed version, roles, privileges and read-only TLS
+ok 16 - native identity requires reviewed version, roles, privileges and read-only TLS
+  ---
+  duration_ms: 0.7389
+  ...
+# Subtest: unexpected compatibility, history, policy and protection drift stop preflight
+ok 17 - unexpected compatibility, history, policy and protection drift stop preflight
+  ---
+  duration_ms: 9.1898
+  ...
+# Subtest: all 57 protected data/object/reference fingerprints must match
+ok 18 - all 57 protected data/object/reference fingerprints must match
+  ---
+  duration_ms: 0.9528
+  ...
+# Subtest: control-plane proof must match the fixed endpoint and remain fresh
+ok 19 - control-plane proof must match the fixed endpoint and remain fresh
+  ---
+  duration_ms: 0.6084
+  ...
+# Subtest: future authorization is scoped to SQL, native route, code bundle, CA and exclusive window
+ok 20 - future authorization is scoped to SQL, native route, code bundle, CA and exclusive window
+  ---
+  duration_ms: 0.7238
+  ...
+# Subtest: read-only query result must include COMMIT acknowledgement
+ok 21 - read-only query result must include COMMIT acknowledgement
+  ---
+  duration_ms: 0.2293
+  ...
+# Subtest: same-machine lock is exclusive; stale locks are never auto-cleared
+ok 22 - same-machine lock is exclusive; stale locks are never auto-cleared
+  ---
+  duration_ms: 26.9621
+  ...
+# Subtest: a changed foreign lock cannot be released
+ok 23 - a changed foreign lock cannot be released
+  ---
+  duration_ms: 9.2903
+  ...
+# Subtest: single attempt sends the exact complete SQL once; durable marker prevents a second send
+ok 24 - single attempt sends the exact complete SQL once; durable marker prevents a second send
+  ---
+  duration_ms: 18.4368
+  ...
+# Subtest: ambiguous response is never retried; marker and lock remain, logs have no secrets
+ok 25 - ambiguous response is never retried; marker and lock remain, logs have no secrets
+  ---
+  duration_ms: 18.3395
+  ...
+# Subtest: missing COMMIT acknowledgement is uncertain and never triggers resubmission
+ok 26 - missing COMMIT acknowledgement is uncertain and never triggers resubmission
+  ---
+  duration_ms: 11.5688
+  ...
+# Subtest: server connection SQLSTATE remains ambiguous even with ERROR severity
+ok 27 - server connection SQLSTATE remains ambiguous even with ERROR severity
+  ---
+  duration_ms: 11.6446
+  ...
+# Subtest: known PostgreSQL error permits only ROLLBACK and still requires reconciliation
+ok 28 - known PostgreSQL error permits only ROLLBACK and still requires reconciliation
+  ---
+  duration_ms: 16.2747
+  ...
+# Subtest: failure after COMMIT is reported as committed; no rollback or reinstall
+ok 29 - failure after COMMIT is reported as committed; no rollback or reinstall
+  ---
+  duration_ms: 14.3662
+  ...
+# Subtest: postflight validates exact source/ACLs, trigger bindings, private tables and canonical assets
+ok 30 - postflight validates exact source/ACLs, trigger bindings, private tables and canonical assets
+  ---
+  duration_ms: 3.1388
+  ...
+# Subtest: default CLI mode reviews offline; installation stays inactive
+ok 31 - default CLI mode reviews offline; installation stays inactive
+  ---
+  duration_ms: 147.3322
+  ...
+# Subtest: CLI preflight with isolated empty environment stops before connecting
+ok 32 - CLI preflight with isolated empty environment stops before connecting
+  ---
+  duration_ms: 228.062
+  ...
+# Subtest: CLI refuses arbitrary SQL, project and endpoint arguments
+ok 33 - CLI refuses arbitrary SQL, project and endpoint arguments
+  ---
+  duration_ms: 578.6695
+  ...
+# Subtest: isolated PostgreSQL commits a complete multi-statement transaction and enforces READ ONLY
+ok 34 - isolated PostgreSQL commits a complete multi-statement transaction and enforces READ ONLY
+  ---
+  duration_ms: 2483.0484
+  ...
+# Subtest: isolated PostgreSQL rolls back DDL and rows after an injected failure before COMMIT
+ok 35 - isolated PostgreSQL rolls back DDL and rows after an injected failure before COMMIT
+  ---
+  duration_ms: 1507.0521
+  ...
+# Subtest: untouched production candidate fails its real local catalog gate; runner rolls back without retry
+ok 36 - untouched production candidate fails its real local catalog gate; runner rolls back without retry
+  ---
+  duration_ms: 1425.1004
+  ...
+1..36
+# tests 36
+# suites 0
+# pass 36
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5963.6999

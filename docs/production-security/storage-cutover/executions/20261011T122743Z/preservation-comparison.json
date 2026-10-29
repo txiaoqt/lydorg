@@ -1,0 +1,12 @@
+{
+  "catalogSha256Unchanged": true,
+  "foundationPresent": false,
+  "gatewayRpcPresent": false,
+  "protectedRelations": 57,
+  "changedRelations": [],
+  "objectAndReferenceChanges": [],
+  "objectsBefore": 378,
+  "objectsAfter": 378,
+  "storagePoliciesBefore": 15,
+  "storagePoliciesAfter": 15
+}

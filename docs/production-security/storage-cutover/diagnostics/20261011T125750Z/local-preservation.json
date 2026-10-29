@@ -1,0 +1,7 @@
+{
+  "sqlBytes": 47407,
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "sqlUnchanged": true,
+  "workingTreeStatusUnchanged": true,
+  "qualification": "Porcelain status comparison plus scoped diagnostic edits; this is not a byte-level snapshot of every pre-existing untracked file."
+}

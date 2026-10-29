@@ -1,0 +1,654 @@
+[
+  {
+    "version": "20260905",
+    "name": "admin_ypop_sync_rpcs"
+  },
+  {
+    "version": "20260905200000",
+    "name": "admin_ypop_sync_rpcs"
+  },
+  {
+    "version": "20260905203000",
+    "name": "add_draft_to_ypop_event_participation_status"
+  },
+  {
+    "version": "20260907140000",
+    "name": "phase1_accreditation_renewal_schema"
+  },
+  {
+    "version": "20260907160000",
+    "name": "phase2_renewal_workflow_rpcs"
+  },
+  {
+    "version": "20260907170000",
+    "name": "phase2_1_hardening"
+  },
+  {
+    "version": "20260907180000",
+    "name": "phase2_2_corrective_hardening"
+  },
+  {
+    "version": "20260907190000",
+    "name": "phase2_3_expiration_event_idempotency"
+  },
+  {
+    "version": "20260910143000",
+    "name": "ypop_reliability_fixes"
+  },
+  {
+    "version": "20260910150000",
+    "name": "ypop_resolve_rpc_overload_ambiguity"
+  },
+  {
+    "version": "20260911200000",
+    "name": "remove_legacy_ocr"
+  },
+  {
+    "version": "20260913000000",
+    "name": "fix_document_submissions_reviewed_by_fk"
+  },
+  {
+    "version": "20260913010000",
+    "name": "fix_budget_and_liquidation_trigger_actor_fk"
+  },
+  {
+    "version": "20260913020000",
+    "name": "annual_budget_allocations_and_fiscal_year"
+  },
+  {
+    "version": "20260914010000",
+    "name": "public_budget_transparency_summary"
+  },
+  {
+    "version": "20260914020000",
+    "name": "admin_bulk_delete_budget_requests"
+  },
+  {
+    "version": "20260914030000",
+    "name": "allow_all_status_budget_request_deletion"
+  },
+  {
+    "version": "20260916160000",
+    "name": "admin_portal_snapshot_include_archived_templates"
+  },
+  {
+    "version": "20260917050000",
+    "name": "fix_registration_reference_and_urn_lifecycle"
+  },
+  {
+    "version": "20260917120000",
+    "name": "fix_admin_portal_snapshot_remove_legacy_ocr"
+  },
+  {
+    "version": "20260918000000",
+    "name": "pydo_deterministic_urn_redesign"
+  },
+  {
+    "version": "20260918010000",
+    "name": "preserve_document_submissions_first_submitted_at"
+  },
+  {
+    "version": "20260918020000",
+    "name": "add_accreditation_revocation_history"
+  },
+  {
+    "version": "20260918030000",
+    "name": "yorp_section35_reporting"
+  },
+  {
+    "version": "20260918040000",
+    "name": "yorp_section35_metric_b_hardening"
+  },
+  {
+    "version": "20260918050000",
+    "name": "auto_verify_registration_on_required_docs_approved"
+  },
+  {
+    "version": "20260919000000",
+    "name": "allow_template_deletion_with_submissions"
+  },
+  {
+    "version": "20260919010000",
+    "name": "fix_organization_reference_counter_security_definer"
+  },
+  {
+    "version": "20260919020000",
+    "name": "fix_auto_verify_activity_logs_schema"
+  },
+  {
+    "version": "20260919030000",
+    "name": "exclude_draft_budget_requests_from_admin_snapshot"
+  },
+  {
+    "version": "20260920010000",
+    "name": "create_activity_announcements"
+  },
+  {
+    "version": "20260920020000",
+    "name": "canonical_organization_account_deletion"
+  },
+  {
+    "version": "20260920021000",
+    "name": "fix_canonical_deletion_rpc_admin_table"
+  },
+  {
+    "version": "20260920022000",
+    "name": "fix_user_profiles_column_in_canonical_deletion"
+  },
+  {
+    "version": "20260920030000",
+    "name": "registration_account_deletion"
+  },
+  {
+    "version": "20260920040000",
+    "name": "persistent_news_categories"
+  },
+  {
+    "version": "20260920050000",
+    "name": "admin_delete_inquiry"
+  },
+  {
+    "version": "20260920060000",
+    "name": "exclude_draft_ypop_from_admin_sync_rpcs"
+  },
+  {
+    "version": "20260920070000",
+    "name": "add_pending_evaluation_to_ypop_enums"
+  },
+  {
+    "version": "20260922150000",
+    "name": "inquiry_notification_trigger"
+  },
+  {
+    "version": "20260923000000",
+    "name": "allow_email_admin_authentication"
+  },
+  {
+    "version": "20260923010000",
+    "name": "admin_system_settings"
+  },
+  {
+    "version": "20260923020000",
+    "name": "wire_system_settings_triggers"
+  },
+  {
+    "version": "20260925000000",
+    "name": "admin_create_ypop_entry"
+  },
+  {
+    "version": "20260925010000",
+    "name": "add_ypop_entries_org_semester_unique_index"
+  },
+  {
+    "version": "20260925020000",
+    "name": "fix_admin_save_system_settings_ambiguity"
+  },
+  {
+    "version": "20260925030000",
+    "name": "revision_deadline_5days_enforcement"
+  },
+  {
+    "version": "20260925040000",
+    "name": "revision_admin_unlock_mechanism"
+  },
+  {
+    "version": "20260925050000",
+    "name": "ypop_notification_triggers"
+  },
+  {
+    "version": "20260925060000",
+    "name": "ypop_notification_triggers_fix"
+  },
+  {
+    "version": "20260925070000",
+    "name": "ypop_activity_logs_actor_attribution"
+  },
+  {
+    "version": "20260925080000",
+    "name": "audit_records_hardening"
+  },
+  {
+    "version": "20260925090000",
+    "name": "set_default_reply_to_email"
+  },
+  {
+    "version": "20260925100000",
+    "name": "update_general_system_settings_rules"
+  },
+  {
+    "version": "20260925110000",
+    "name": "functionalize_workflow_settings"
+  },
+  {
+    "version": "20260925120000",
+    "name": "public_system_settings_access"
+  },
+  {
+    "version": "20260925130000",
+    "name": "fix_authenticate_admin_account_email_verified"
+  },
+  {
+    "version": "20260926000000",
+    "name": "harden_delete_admin_account_and_session_cleanup"
+  },
+  {
+    "version": "20260927000000",
+    "name": "add_attendees_to_ypop_org_activities"
+  },
+  {
+    "version": "20260927180000",
+    "name": "renewal_authoritative_urn_lifecycle"
+  },
+  {
+    "version": "20260927190000",
+    "name": "budget_request_awaiting_release_lifecycle"
+  },
+  {
+    "version": "20260927210000",
+    "name": "add_inquiry_reply_email_setting"
+  },
+  {
+    "version": "20260927220000",
+    "name": "remove_inquiry_reply_email_setting"
+  },
+  {
+    "version": "20260928000000",
+    "name": "organization_rejection_suspension"
+  },
+  {
+    "version": "20260928010000",
+    "name": "wire_status_change_notifications"
+  },
+  {
+    "version": "20260928020000",
+    "name": "fix_registration_rejection_schema_and_suspension"
+  },
+  {
+    "version": "20260928030000",
+    "name": "enforce_authoritative_inquiry_email"
+  },
+  {
+    "version": "20260928040000",
+    "name": "enforce_resubmission_before_approval"
+  },
+  {
+    "version": "20260928050000",
+    "name": "harden_update_admin_budget_request"
+  },
+  {
+    "version": "20260928060000",
+    "name": "fix_budget_request_status_enum_mapping"
+  },
+  {
+    "version": "20260928070000",
+    "name": "audit_and_fix_budget_request_db_rpcs"
+  },
+  {
+    "version": "20260928080000",
+    "name": "super_admin_delete_suspended_registration"
+  },
+  {
+    "version": "20260929000000",
+    "name": "restore_budget_request_awaiting_release_lifecycle"
+  },
+  {
+    "version": "20260929010000",
+    "name": "fix_budget_request_files_updated_at_and_rpc"
+  },
+  {
+    "version": "20260929020000",
+    "name": "renewal_test_environment_rpcs"
+  },
+  {
+    "version": "20260929030000",
+    "name": "fix_renewal_test_environment_registration_type"
+  },
+  {
+    "version": "20260929040000",
+    "name": "fix_renewal_test_activity_logs_related_id"
+  },
+  {
+    "version": "20260929050000",
+    "name": "fix_submission_id_record_assignment"
+  },
+  {
+    "version": "20260929060000",
+    "name": "fix_auth_identities_for_test_user"
+  },
+  {
+    "version": "20260929070000",
+    "name": "fix_identities_id_uuid"
+  },
+  {
+    "version": "20260929080000",
+    "name": "canonical_renewal_test_environment_rpcs"
+  },
+  {
+    "version": "20260929090000",
+    "name": "fix_renewal_rpcs_activity_log_uuid"
+  },
+  {
+    "version": "20260929100000",
+    "name": "security_definer_renewal_user_rpcs"
+  },
+  {
+    "version": "20260929110000",
+    "name": "fix_user_renewal_activity_logs_actor_null"
+  },
+  {
+    "version": "20260929120000",
+    "name": "fix_renewal_application_status_type"
+  },
+  {
+    "version": "20260929130000",
+    "name": "fix_admin_approve_renewal_schema"
+  },
+  {
+    "version": "20260929140000",
+    "name": "fix_admin_approve_renewal_valid_until"
+  },
+  {
+    "version": "20260929150000",
+    "name": "fix_admin_approve_renewal_org_name"
+  },
+  {
+    "version": "20260929160000",
+    "name": "fix_admin_prepare_renewal_test_scenario_param"
+  },
+  {
+    "version": "20260929170000",
+    "name": "complete_renewal_test_account_profile"
+  },
+  {
+    "version": "20260929180000",
+    "name": "standardize_person_and_address_structure"
+  },
+  {
+    "version": "20260929200000",
+    "name": "organization_multi_contacts"
+  },
+  {
+    "version": "20260929210000",
+    "name": "yorp_sample_data_seeding_system"
+  },
+  {
+    "version": "20260929213000",
+    "name": "fix_admin_seed_yorp_accreditations_schema"
+  },
+  {
+    "version": "20260929214000",
+    "name": "fix_admin_seed_yorp_released_amount"
+  },
+  {
+    "version": "20260929215000",
+    "name": "fix_admin_seed_yorp_liquidation_conflict"
+  },
+  {
+    "version": "20260929216000",
+    "name": "fix_admin_cleanup_yorp_accreditation_bypass"
+  },
+  {
+    "version": "20260929220000",
+    "name": "fix_get_admin_portal_snapshot_column_references"
+  },
+  {
+    "version": "20260929221000",
+    "name": "fix_get_admin_portal_snapshot_ypop_files"
+  },
+  {
+    "version": "20260929230000",
+    "name": "standardize_seeded_budget_request_amounts"
+  },
+  {
+    "version": "20260930010000",
+    "name": "budget_released_terminal_lifecycle"
+  },
+  {
+    "version": "20260930120000",
+    "name": "align_budget_purpose_with_youth_centers"
+  },
+  {
+    "version": "20260930130000",
+    "name": "enforce_organization_profile_headquarters_location"
+  },
+  {
+    "version": "20260930140000",
+    "name": "fix_public_budget_transparency_aggregations"
+  },
+  {
+    "version": "20260930150000",
+    "name": "reconstructable_yorp_sample_dataset"
+  },
+  {
+    "version": "20260930160000",
+    "name": "backfill_yorp_seed_child_markers"
+  },
+  {
+    "version": "20260930170000",
+    "name": "grant_anon_execute_yorp_sample_status_rpc"
+  },
+  {
+    "version": "20260930171000",
+    "name": "grant_anon_execute_yorp_sample_cleanup_rpc"
+  },
+  {
+    "version": "20260930180000",
+    "name": "fix_yorp_seed_category_update"
+  },
+  {
+    "version": "20260930190000",
+    "name": "fix_yorp_seed_liquidation_markers"
+  },
+  {
+    "version": "20260930200000",
+    "name": "allow_read_yorp_seed_preview_assets"
+  },
+  {
+    "version": "20260930210000",
+    "name": "mark_unliquidated_yorp_seed_reports_overdue"
+  },
+  {
+    "version": "20260930220000",
+    "name": "fix_yorp_seed_overdue_branch_record_alias"
+  },
+  {
+    "version": "20260930230000",
+    "name": "fix_yorp_seed_overdue_cleanup_alias"
+  },
+  {
+    "version": "20260930240000",
+    "name": "normalize_seed_completed_budget_state"
+  },
+  {
+    "version": "20260930250000",
+    "name": "preserve_seeded_overdue_liquidations"
+  },
+  {
+    "version": "20261001090000",
+    "name": "allow_owner_headquarters_location_updates"
+  },
+  {
+    "version": "20261002010000",
+    "name": "allow_saving_renewal_revisions_as_draft"
+  },
+  {
+    "version": "20261002130000",
+    "name": "public_budget_barangay_map"
+  },
+  {
+    "version": "20261002150000",
+    "name": "align_public_budget_barangay_map_with_admin"
+  },
+  {
+    "version": "20261002160000",
+    "name": "fix_public_budget_map_status_enum"
+  },
+  {
+    "version": "20261002170000",
+    "name": "admin_get_organization_renewals"
+  },
+  {
+    "version": "20261002180000",
+    "name": "fix_admin_get_organization_renewals_auth"
+  },
+  {
+    "version": "20261002190000",
+    "name": "publish_renewal_files_for_admin_review"
+  },
+  {
+    "version": "20261002200000",
+    "name": "scope_yorp_data_request_to_registration"
+  },
+  {
+    "version": "20261002210000",
+    "name": "seed_renewal_test_registration_documents"
+  },
+  {
+    "version": "20261003100000",
+    "name": "allow_partial_renewal_document_submissions"
+  },
+  {
+    "version": "20261003110000",
+    "name": "fix_renewal_revision_status_enum_cast"
+  },
+  {
+    "version": "20261003120000",
+    "name": "admin_delete_ypop_submissions"
+  },
+  {
+    "version": "20261003130000",
+    "name": "admin_portal_paged_queries"
+  },
+  {
+    "version": "20261004100000",
+    "name": "fix_admin_portal_list_aggregate"
+  },
+  {
+    "version": "20261004110000",
+    "name": "admin_portal_section_state"
+  },
+  {
+    "version": "20261004120000",
+    "name": "organization_portal_dashboard_summary"
+  },
+  {
+    "version": "20261005082646",
+    "name": "include_org_activity_files_in_admin_ypop_review"
+  },
+  {
+    "version": "20261005090731",
+    "name": "admin_backup_control_permissions"
+  },
+  {
+    "version": "20261005100000",
+    "name": "admin_template_category_registry"
+  },
+  {
+    "version": "20261005110000",
+    "name": "targeted_portal_status_sync"
+  },
+  {
+    "version": "20261005120000",
+    "name": "admin_renewal_review_packet"
+  },
+  {
+    "version": "20261005130000",
+    "name": "fix_ypop_period_submission_uuid_coalesce"
+  },
+  {
+    "version": "20261005140000",
+    "name": "admin_ypop_entry_review_file_metadata"
+  },
+  {
+    "version": "20261005150000",
+    "name": "admin_budget_review_release_date"
+  },
+  {
+    "version": "20261005160000",
+    "name": "admin_activity_session_renewal"
+  },
+  {
+    "version": "20261005170000",
+    "name": "scoped_budget_monitoring_page"
+  },
+  {
+    "version": "20261005180000",
+    "name": "yorp_registry_registration_documents"
+  },
+  {
+    "version": "20261005214045",
+    "name": "inquiry_status_realtime"
+  },
+  {
+    "version": "20261005214804",
+    "name": "admin_get_yorp_registry_ypop_detail"
+  },
+  {
+    "version": "20261005215355",
+    "name": "admin_notification_read_status"
+  },
+  {
+    "version": "20261005220220",
+    "name": "guard_budget_revision_approval"
+  },
+  {
+    "version": "20261005220921",
+    "name": "admin_sidebar_counts_realtime"
+  },
+  {
+    "version": "20261005221916",
+    "name": "hide_unsubmitted_liquidation_drafts"
+  },
+  {
+    "version": "20261005222047",
+    "name": "qualify_liquidation_draft_review_guard"
+  },
+  {
+    "version": "20261005222451",
+    "name": "lock_submitted_registration_document_edits"
+  },
+  {
+    "version": "20261005223241",
+    "name": "repair_registration_revision_lock_columns"
+  },
+  {
+    "version": "20261005223415",
+    "name": "fix_registration_replacement_audit_actor"
+  },
+  {
+    "version": "20261005223454",
+    "name": "fix_registration_replacement_notification_type"
+  },
+  {
+    "version": "20261006051309",
+    "name": "allow_registration_draft_uploads_during_review"
+  },
+  {
+    "version": "20261007211022",
+    "name": "admin_quarterly_export_filters"
+  },
+  {
+    "version": "20261007212512",
+    "name": "admin_independent_year_quarter_filters"
+  },
+  {
+    "version": "20261007213515",
+    "name": "admin_monitoring_all_years"
+  },
+  {
+    "version": "20261007214250",
+    "name": "admin_budget_period_summary"
+  },
+  {
+    "version": "20261007215151",
+    "name": "rebalance_yorp_seed_reporting_quarters"
+  },
+  {
+    "version": "20261007215950",
+    "name": "diversify_yorp_seed_projects_and_budgets"
+  },
+  {
+    "version": "20261008174154",
+    "name": "organization_identity_review"
+  }
+]

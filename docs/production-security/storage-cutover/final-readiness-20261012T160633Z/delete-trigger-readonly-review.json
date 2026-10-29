@@ -1,0 +1,13 @@
+[
+  {
+    "signature": "admin_track_budget_version()",
+    "source_md5": "495815995c6bd4c33a31db1cc7f48d87",
+    "behavior": "Bumps the appropriate Admin portal change version and returns OLD on DELETE; no per-Admin budget permission check."
+  },
+  {
+    "signature": "admin_track_liquidation_version()",
+    "source_md5": "d10813bbe9e7a4c2e2ec343faef57f01",
+    "behavior": "Bumps the appropriate Admin portal change version and returns OLD on DELETE; no per-Admin budget permission check."
+  }
+]
+

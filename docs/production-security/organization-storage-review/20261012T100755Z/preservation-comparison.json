@@ -1,0 +1,30 @@
+{
+  "capturedAt": "2026-10-12T10:38:18.290331+00:00",
+  "readOnly": true,
+  "status": "PASS",
+  "objects": 378,
+  "allObjectMetadataUnchanged": true,
+  "storagePolicies": 15,
+  "storagePoliciesUnchanged": true,
+  "migrationCount": 164,
+  "businessFingerprintsUnchanged": true,
+  "businessTables": [
+    {
+      "table": "document_submission_files",
+      "count": 547
+    },
+    {
+      "table": "document_submissions",
+      "count": 92
+    },
+    {
+      "table": "organization_accreditations",
+      "count": 89
+    },
+    {
+      "table": "organization_renewals",
+      "count": 0
+    }
+  ],
+  "scope": "Four document/accreditation/renewal business inventories plus all Storage metadata; no claim of a fresh 57-inventory audit"
+}

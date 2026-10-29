@@ -1,0 +1,45 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "route": "native-pg-direct-tls",
+  "sql": "budget_deletion_pause_production.sql",
+  "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "bytes": 11945,
+  "bodySha256": "6cf0eeb22303d1c9d9b59596cb28c2845370d960f06b6e7d4ca66df13a97c24a",
+  "before": {
+    "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "owner": "postgres",
+    "config": [
+      "search_path=public"
+    ],
+    "signature": "admin_bulk_delete_budget_requests(text,uuid[])",
+    "source_md5": "eb7b756964fd31efebfb39749f5c9e5b",
+    "volatility": "v",
+    "definition_md5": "f6c36316ba941c9e0f76674754ac44ba",
+    "security_definer": true
+  },
+  "after": {
+    "signature": "admin_bulk_delete_budget_requests(text,uuid[])",
+    "definition_md5": "3da7c71f32e4f2a9164efbbac6cda448",
+    "source_md5": "0e4e1f3cb102a26d08ab10161a23e682",
+    "owner": "postgres",
+    "security_definer": true,
+    "volatility": "v",
+    "config": [
+      "search_path=public"
+    ],
+    "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+  },
+  "beforeCatalogSha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "projectedAfterCatalogSha256": "e189e64d9291386c8c90cb885ec283f92b1fa582b92717dac477fce2cfdebc1f",
+  "projectedOnly": true,
+  "signature": "admin_bulk_delete_budget_requests(text,uuid[])",
+  "changes": [
+    "One existing RPC definition only; preserved OID, owner, grants, signature, security mode, search_path and cost"
+  ],
+  "migrationHistory": {
+    "count": 164,
+    "latest": "20261011230000",
+    "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+  },
+  "locallyMeasuredVersion": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+}

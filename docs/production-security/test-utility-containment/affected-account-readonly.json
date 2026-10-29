@@ -1,0 +1,24 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "capturedDate": "2026-10-11",
+  "scope": "Read-only identifier/state verification only. No password/hash retrieval, password comparison, login or Auth mutation. Review account identifiers as operational evidence; do not publish this file externally.",
+  "targets": [
+    {
+      "marked": true,
+      "renewals": 0,
+      "auth_user_id": "9c02f317-700e-4903-888d-c62e5d941f85",
+      "email_confirmed": true,
+      "last_sign_in_at": "2026-10-07T12:03:52.440787+00:00",
+      "organization_id": "8170959f-2bb8-40ea-8ce8-31deb514de17",
+      "currently_banned": null,
+      "accreditation_terms": 1,
+      "auth_account_exists": true,
+      "provider_identity_count": 1,
+      "email_matches_designation": true,
+      "organization_associations": 1,
+      "active_refresh_session_rows": 0
+    }
+  ],
+  "marked_profiles": 1,
+  "legacy_email_profiles": 1
+}

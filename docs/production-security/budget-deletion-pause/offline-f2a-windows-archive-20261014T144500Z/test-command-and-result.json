@@ -1,0 +1,26 @@
+{
+  "classification": "OFFLINE F2-A FIXTURE TEST ONLY",
+  "executable": "C:\\Users\\Christopher x Angel\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe",
+  "arguments": [
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-File",
+    "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f2a-windows-archive-20261014T144500Z\\invoke-fixture-tests.ps1"
+  ],
+  "workingDirectory": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused",
+  "environmentNames": [
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP"
+  ],
+  "inheritedEnvironment": false,
+  "startedAt": "2026-10-14T14:50:10.3475479+00:00",
+  "completedAt": "2026-10-14T14:50:13.7364640+00:00",
+  "exitCode": 1,
+  "timeout": false,
+  "launchCount": 1,
+  "automaticRetries": 0,
+  "fixturesRetained": true
+}

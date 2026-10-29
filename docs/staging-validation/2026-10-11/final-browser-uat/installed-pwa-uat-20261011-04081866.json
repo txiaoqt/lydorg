@@ -1,0 +1,846 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "runLabel": "installed-pwa-uat-20261011-04081866",
+  "environment": "isolated-local-production-build",
+  "installedPwa": {
+    "browserVersion": "155.0.8059.39",
+    "localProductionBuild": true,
+    "serviceWorkerInitially": {
+      "controlled": true,
+      "active": true,
+      "scopeIsAppRoot": true,
+      "scriptHasVersionQuery": true
+    },
+    "manifestLinked": true,
+    "appIdDerivedFromManifest": true,
+    "installedViaChromePwaProtocol": true,
+    "standaloneLaunch": true,
+    "appWindowServiceWorkerControlled": true,
+    "startPath": "/app-start",
+    "testProfileIsolated": true,
+    "uninstalledAfterTest": true
+  },
+  "networkIsolation": {
+    "serviceWorkerProbeBlocked": true,
+    "egressProxyDeniedProbe": true,
+    "proxy": {
+      "allowedStagingTls": 10,
+      "blockedTotal": 65,
+      "blockedProduction": 0,
+      "blockedUnrelated": 65
+    },
+    "productionAttemptsBlocked": 0,
+    "productionRequestsObservedByHarness": 0
+  },
+  "checks": [
+    {
+      "name": "Production build registers and controls the installed PWA origin with the application service worker",
+      "status": "PASS",
+      "controlled": true,
+      "active": true,
+      "scopeIsAppRoot": true,
+      "scriptHasVersionQuery": true
+    },
+    {
+      "name": "Service-worker-originated unrelated request is blocked below Playwright routing",
+      "status": "PASS",
+      "workerFetchRejected": true,
+      "allowlistProxyDeniedRequest": true
+    },
+    {
+      "name": "Chrome installed and launched the local app in standalone mode with the real service worker",
+      "status": "PASS",
+      "standalone": true,
+      "serviceWorkerControlled": true,
+      "manifestLinked": true
+    },
+    {
+      "name": "Existing synthetic renewal owner login through installed PWA",
+      "status": "PASS",
+      "route": "/app",
+      "authSessionPresent": true,
+      "identityMatchesFixture": true
+    },
+    {
+      "name": "Owner-scoped read confirms the exact corrected PDF belongs to the approved renewal packet",
+      "status": "PASS",
+      "httpStatus": 200,
+      "rowCount": 1,
+      "expectedParentMatches": true,
+      "filenameMatchesExpected": true,
+      "documentTypeResolved": true
+    },
+    {
+      "name": "Installed PWA preview renders the approved renewal PDF with its safe filename",
+      "status": "PASS",
+      "filenameVisible": true,
+      "renderedPdfCanvas": true,
+      "failureVisible": false,
+      "signedMaterialInTitle": false
+    },
+    {
+      "name": "Installed PWA Download is a genuine Chrome download with the expected bytes and filename",
+      "status": "PASS",
+      "browserDownloadEvent": true,
+      "size": 674,
+      "sha256": "67bba8968f41f97923e82f9fcfcf2d90871de9605d1b897ff336d452652a4f0d",
+      "hashMatchesPriorVerifiedPDF": true,
+      "filenameMatchesExpected": true,
+      "filenameContainsSignedQueryTraits": false
+    },
+    {
+      "name": "Installed PWA Open in browser opens the staging PDF in a distinct window without token-derived title",
+      "status": "PASS",
+      "distinctWindow": true,
+      "stagingPdfTarget": true,
+      "titleContainsQueryValue": false,
+      "titleLooksLikeJwt": false,
+      "titlePresent": false,
+      "existingPreviewCount": 1
+    },
+    {
+      "name": "Service-worker CacheStorage contains no external documents or signed-query references",
+      "status": "PASS",
+      "cacheNames": [
+        "y-trace-v12"
+      ],
+      "entries": 23,
+      "externalEntries": 0,
+      "signedQueryEntries": 0
+    },
+    {
+      "name": "Mobile-sized standalone app window keeps preview and download controls usable without horizontal overflow",
+      "status": "PASS",
+      "viewport": 390,
+      "documentWidth": 380,
+      "previewVisible": true,
+      "downloadVisible": true
+    },
+    {
+      "name": "Installed-app close and relaunch restores the same owner session and renewal data",
+      "status": "PASS",
+      "standalone": true,
+      "serviceWorkerControlled": true,
+      "sessionPresent": true,
+      "sameSyntheticAccount": true,
+      "renewalAttachedActionCount": 6,
+      "approvedLockStateVisible": true,
+      "route": "/app/renewals"
+    },
+    {
+      "name": "Simulated expired local access-token metadata recovered through staging Auth refresh",
+      "status": "PASS",
+      "simulatedClientExpiry": true,
+      "refreshEndpointReturnedSuccess": true,
+      "serverSideSessionRevocationSimulated": false
+    },
+    {
+      "name": "Installed app reports transition to offline while remaining open",
+      "status": "FAIL",
+      "browserReportsOffline": true,
+      "offlineBannerVisible": false,
+      "appContentMounted": true
+    },
+    {
+      "name": "Cold installed-app reload works offline from the service-worker cache",
+      "status": "FAIL",
+      "reloadCompleted": true,
+      "rootMounted": false,
+      "appContentVisible": false,
+      "serviceWorkerControlled": true,
+      "browserReportsOffline": true
+    },
+    {
+      "name": "Installed app recovers to renewal data after network connectivity returns",
+      "status": "FAIL",
+      "online": true,
+      "sessionPresent": true,
+      "route": "/app/renewals",
+      "renewalRecordVisible": false
+    },
+    {
+      "name": "Service-worker update activates new cache and removes the prior app-shell cache",
+      "status": "FAIL",
+      "v13CachePresent": true,
+      "v12CacheRemoved": false,
+      "workerActivated": true,
+      "controllerPresent": true
+    }
+  ],
+  "http": [
+    {
+      "phase": "service-worker-registration",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "service-worker-registration",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_public_system_settings",
+      "status": 200
+    },
+    {
+      "phase": "pwa-install",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_public_system_settings",
+      "status": 200
+    },
+    {
+      "phase": "pwa-install",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_public_system_settings",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "organization-login",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "renewal-preview-download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "open-document-in-browser",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "open-document-in-browser",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "open-document-in-browser",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "open-document-in-browser",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/[redacted]",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_periods",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/budget_requests",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/liquidation_reports",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_organization_portal_dashboard_summary",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/notifications",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_categories",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/inquiries",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/transparency_posts",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/ypop_entries",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "installed-app-restart",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    },
+    {
+      "phase": "client-session-expiry",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_roles",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/user_profiles",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/policy_versions",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200
+    },
+    {
+      "phase": "offline-online-recovery",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200
+    }
+  ],
+  "blocked": [
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/news-releases/:idSYNTHETIC-news-pixel.png",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "pwa-install",
+      "endpoint": "/news-releases/:idSYNTHETIC-news-pixel.png",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "pwa-install",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "organization-login",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "organization-login",
+      "endpoint": "/news-releases/:idSYNTHETIC-news-pixel.png",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "renewal-preview-download",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "installed-app-restart",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "installed-app-restart",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "client-session-expiry",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "offline-online-recovery",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    }
+  ],
+  "errors": [],
+  "operationErrors": [
+    {
+      "name": "Error",
+      "reason": "Service worker update or online recovery failed."
+    }
+  ],
+  "console": {
+    "error": 27,
+    "warning": 0,
+    "sanitizedSamples": [
+      {
+        "phase": "pwa-install",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "organization-login",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "renewal-preview-download",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "installed-app-restart",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "installed-app-restart",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "client-session-expiry",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "offline-online-recovery",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+      },
+      {
+        "phase": "offline-online-recovery",
+        "type": "error",
+        "message": "Failed to load organization profile bootstrap: Error: TypeError: Failed to fetch\n    at hr ([REDACTED_URL]\n    at async wp ([REDACTED_URL]\n    at async hU ([REDACTED_URL]\n    at as"
+      },
+      {
+        "phase": "offline-online-recovery",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+      },
+      {
+        "phase": "offline-online-recovery",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+      },
+      {
+        "phase": "offline-online-recovery",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "offline-online-recovery",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      }
+    ]
+  },
+  "websockets": [
+    {
+      "phase": "organization-login",
+      "staging": true
+    },
+    {
+      "phase": "renewal-preview-download",
+      "staging": true
+    },
+    {
+      "phase": "installed-app-restart",
+      "staging": true
+    },
+    {
+      "phase": "installed-app-restart",
+      "staging": true
+    },
+    {
+      "phase": "offline-online-recovery",
+      "staging": true
+    }
+  ],
+  "finishedAt": "2026-10-11T04:08:55.493Z"
+}

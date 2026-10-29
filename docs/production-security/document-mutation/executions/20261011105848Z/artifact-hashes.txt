@@ -1,0 +1,6 @@
+{"file":"document_mutation_lifecycle_guard_production_rebaselined.sql","bytes":170636,"sha256":"bd06efbc326146cabf00ef005401a5bb7aa4a060927d7bffb63eafcf0f35f567"}
+{"file":"preflight-verify-readonly.sql","bytes":123194,"sha256":"3f7c3fb52603186ef7971d9f0d62d8a32a9fa0e310788b25c1639289558e4fc8"}
+{"file":"post-install-verify-readonly.sql","bytes":23311,"sha256":"4ef1d1222a75890dab0bba330c3d947d6a9d0092b5d19d1e9f3cd928b0782d80"}
+{"file":"operator-checklist.md","bytes":7284,"sha256":"4b9784bcd7b5fcde4ef1229ab0d6e8002efa07f3ea183ca8a7fc805325fe4451"}
+{"file":"expected-production-manifest.json","bytes":162648,"sha256":"2c9a3f81e5066e2cba22ad3beb757d271fc200851eccf25bfc7d6d5524d15b9e"}
+

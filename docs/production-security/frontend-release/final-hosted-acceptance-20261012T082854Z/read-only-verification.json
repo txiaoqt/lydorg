@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-10-12T08:31:41.446Z",
+  "readOnly": true,
+  "status": "PASS",
+  "candidate": {
+    "id": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "url": "https://lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+    "readyState": "READY",
+    "createdAt": 1791787673913,
+    "ready": 1791787763579,
+    "projectSettings": {
+      "nodeVersion": "24.x",
+      "installCommand": "npm ci --include=dev --no-audit --no-fund",
+      "buildCommand": "npm run build"
+    }
+  },
+  "productionAdminAlias": {
+    "alias": "y-trace-admin.vercel.app",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "deploymentId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+    "deploymentUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app"
+  },
+  "productionOrganizationAlias": {
+    "alias": "ytrace.app",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+  },
+  "organizationProjectAndDeploymentListUnchanged": true,
+  "concurrentDeployments": 0,
+  "approvedStaticInventory": {
+    "status": "PASS",
+    "files": 53,
+    "sha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d"
+  },
+  "anonymousCandidateRoot": {
+    "http": 302,
+    "bytes": 263,
+    "sha256": "078d44efe538819a52deef2d03cc221b5b81ea1ae1f577dc80710db061c3766f",
+    "redirectOrigin": "https://vercel.com",
+    "authenticationSupplied": false
+  },
+  "hostedAutomation": "BLOCKED_BY_VERCEL_AUTHENTICATION",
+  "applicationSecurityHeaders": "BLOCKED",
+  "servedStaticIntegrity": "NOT TESTED",
+  "pythonGetOptions": "NOT TESTED",
+  "operatorBrowserAccessAvailableToAutomation": false,
+  "credentialExports": 0,
+  "applicationMutations": 0,
+  "externalSyncPostRequests": 0
+}

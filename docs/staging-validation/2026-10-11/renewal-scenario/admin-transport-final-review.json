@@ -1,0 +1,21 @@
+{
+  "project": "zroudsvpswqsjlyttkjf",
+  "keyType": "legacy JWT",
+  "decodedRefMatches": true,
+  "decodedRoleAnon": true,
+  "decodedClaimsAreNotProofOfSignature": true,
+  "http": [
+    {
+      "test": "normal SDK anonymous Admin transport to disabled RPC",
+      "status": 400
+    },
+    {
+      "test": "tampered signed project claim",
+      "status": 401
+    }
+  ],
+  "sdkUsesLegacyKeyAsBearerWithoutAuthSession": true,
+  "currentStagingKeyAcceptedByPostgREST": true,
+  "signatureValidationObserved": true,
+  "superAdminAuthorizationAfterNewSQL": "NOT TESTED"
+}

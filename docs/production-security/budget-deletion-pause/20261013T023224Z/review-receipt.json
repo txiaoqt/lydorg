@@ -1,0 +1,111 @@
+{
+  "recordedAt": "2026-10-13T02:42:04.080Z",
+  "reportTimezone": "Asia/Manila",
+  "scope": "LOCAL_IMPLEMENTATION_VALIDATION_AND_READ_ONLY_PRODUCTION_REVIEW",
+  "requestSha256": "5c208dd2ac23429e68923fd9db85f9a08fe07de18b49c3e3e334ee7fc30f975b",
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "sqlBytes": 11945,
+  "sqlChanged": false,
+  "sqlInstalled": false,
+  "previousArtifactsPreserved": 58,
+  "frontendRuntimeChangedThisTask": false,
+  "productionWrites": 0,
+  "stagingWrites": 0,
+  "deployments": 0,
+  "productionMutationRpcInvocations": 0,
+  "sqlTests": {
+    "status": "PASS",
+    "passed": 38,
+    "failed": 0,
+    "engine": "PostgreSQL 18.3 / PGlite",
+    "liveHTTP": false
+  },
+  "frontendTests": {
+    "status": "PASS",
+    "passed": 18,
+    "failed": 0,
+    "type": "MOCKED_CLIENT_AND_DOM"
+  },
+  "appTypecheck": {
+    "status": "FAIL",
+    "evidence": "REUSED_UNCHANGED_ISOLATED_SOURCE",
+    "current": 647,
+    "baseline": 651,
+    "newDiagnosticIdentities": 0
+  },
+  "profileAttribution": "BLOCKED_PENDING_PRIVATE_OPERATOR_IDENTITY_MATCH",
+  "baselineAdopted": false,
+  "harnessSha256": "3bb112ff89da2fa707213b372893eba4e9608226b7152c069576ca5d837475f6",
+  "artifacts": [
+    {
+      "path": "authorization-proposal.md",
+      "bytes": 2313,
+      "sha256": "a7d7cddb939c34f2b8a7a26e8293457ba2087167a57872306bbf975ada884589"
+    },
+    {
+      "path": "diff-check.log",
+      "bytes": 4676,
+      "sha256": "c24d6e61a8ec69fc9d5b9e43f132d87a9e267ab075adca69ab16f6040ec3721f"
+    },
+    {
+      "path": "existing-artifact-verification.json",
+      "bytes": 10001,
+      "sha256": "707bc19633197d4a318d64dcac5574383dffda7e44c6844c05602595e83f2175"
+    },
+    {
+      "path": "frontend-tests.log",
+      "bytes": 3441,
+      "sha256": "8d81fa82741f3727b71cdfb82da23a23b26bb9c524e1857c666e731fbbb273f0"
+    },
+    {
+      "path": "original-profiles-readonly-preservation.json",
+      "bytes": 102,
+      "sha256": "91e524853ddaffc65e95ae26f5d853229dcdf643d54f12827a578c768eb8d30f"
+    },
+    {
+      "path": "original-sql-test-harness.mjs.txt",
+      "bytes": 15250,
+      "sha256": "5ff84fff90486cf38259fdd3a32e5b1c111b4078c8a7af899154bcd18b60db99"
+    },
+    {
+      "path": "production-readonly-preflight.json",
+      "bytes": 1378,
+      "sha256": "7bff69c74f2da73955f861bb765377f36d4980ff5fe8c1a225795f2c94f2bf10"
+    },
+    {
+      "path": "profile-attribution-procedure.md",
+      "bytes": 3771,
+      "sha256": "eb77e6faf985e6cf5e37e6027d8e4a64f382b7b7a548ca417db3f1af6a8d7d6f"
+    },
+    {
+      "path": "profile-readonly-evidence.json",
+      "bytes": 623,
+      "sha256": "caa8882154eab515750cf303bd57aeb24115e0ea2ef4b6429c8aabb1e758b1e2"
+    },
+    {
+      "path": "review.md",
+      "bytes": 10704,
+      "sha256": "79b78ffff653850b2fccf2980527bf7723abcbe5b89667c39cf6a5d6afaeb9fa"
+    },
+    {
+      "path": "sql-test-evidence.json",
+      "bytes": 1857,
+      "sha256": "55d297e97a3be2d5e3675e0680f8541426fdd9cfc3cd28341cb482233bac1c06"
+    },
+    {
+      "path": "sql-tests.tap",
+      "bytes": 5995,
+      "sha256": "430bac73f2b0bf85b389b8f4fafb494c665ee4460affa81c248b7f3b23980383"
+    },
+    {
+      "path": "verify-existing-artifacts.mjs",
+      "bytes": 1993,
+      "sha256": "dc661d092ffc0e7762e06936709a91089e359f71616db05e21cbac184bed1195"
+    },
+    {
+      "path": "write-receipt.mjs",
+      "bytes": 3059,
+      "sha256": "569d3ace783ee42f872477b90bb0d71b4a21e5b1872d76b78a55c12091398e1f"
+    }
+  ]
+}

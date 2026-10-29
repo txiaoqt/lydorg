@@ -1,0 +1,98 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-12T04:54:48.673Z",
+  "files": {
+    "status": "PASS",
+    "sourceRevision": "sha256:e8ffe3241f7529f4440e8e4cc427254d2cd29da5e1bbcd0d689395431cd5aa8d",
+    "fileCount": 561,
+    "inventorySha256": "e8ffe3241f7529f4440e8e4cc427254d2cd29da5e1bbcd0d689395431cd5aa8d",
+    "freshExtraction": true,
+    "cliGeneratedMetadataFiles": []
+  },
+  "provider": {
+    "capturedAt": "2026-10-12T04:53:43.500Z",
+    "status": "PASS",
+    "authenticatedProviderAccess": true,
+    "admin": {
+      "id": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "name": "lydorg",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "updatedAt": 1791482045170,
+      "productionId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "productionUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true
+    },
+    "organization": {
+      "id": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "name": "yorbms_user",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "updatedAt": 1791481871891,
+      "productionId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "productionUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true
+    },
+    "adminAlias": {
+      "alias": "y-trace-admin.vercel.app",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "deploymentId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "deploymentUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app"
+    },
+    "organizationAlias": {
+      "alias": "ytrace.app",
+      "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+    },
+    "concurrentDeployments": 0,
+    "adminDeploymentIds": [
+      "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "dpl_BhYo37WcJuwBVx6JLL7VBJ5mQRY6",
+      "dpl_7GrB5SNwBBREHPr4wCYmzyG9JyMC",
+      "dpl_G4yh2FunfypmupKLTi69ULcq7rrp",
+      "dpl_6FJw3ZhqGbJk3PGbkCoyf8mMKk4w",
+      "dpl_Bm1idFnT8mzBfPWLoKed1qSnDMyZ",
+      "dpl_3zoCdrToHb9cQJBugBBJJMbQ53Nx",
+      "dpl_AY8K99yX6Gur4xf56A45ENW7bLYW",
+      "dpl_DEo54GRRSteKryaVyBsRMYLRqFxX",
+      "dpl_AmSTtB6gTpHZTckbEtHcZAGRwxTd",
+      "dpl_78xkUPrmTK6quMLRhHwM8SdWHQiP",
+      "dpl_A694MmRxnnXFeTYxirYc4i5Nzbqz",
+      "dpl_2DnwRR2wAGzQq9BJ6DXXraywWdt2",
+      "dpl_4AzoYFKHbBowFghrG1XpRx83zneV",
+      "dpl_FBwEZMMFvqY9FzdVN9XxLuPztwnU"
+    ],
+    "organizationDeploymentIds": [
+      "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "dpl_4YfNAbqeFDknqHszpARV5QW7o1GV",
+      "dpl_Ba4GUi6zLuYgBY3dkuWdgAui9Vgi",
+      "dpl_BtuYhQdZKRuUMZpxhaG8nepDjWC5",
+      "dpl_7dxckuuhfsfUAmEMXvJz37Lr9wgo",
+      "dpl_B64ppKg2KFvh9vdTZuYNUeQCnbBT",
+      "dpl_H1eTRoovHmQFJH51LkQoYzdirg7Y",
+      "dpl_9JxrDNGYWC28MmzXsxAsmma9ZSdG",
+      "dpl_HzbzcQWbdyBJ6eqLkAr39oEPsdjD",
+      "dpl_AqUFnz1Agw76oVvuJuX4ZPA6NDgL",
+      "dpl_2tF5QmmhRiHCmKhrJhtmzMD6Crix",
+      "dpl_4j1sZTY7zyLkENqYDDxCa28zfCCB",
+      "dpl_7ecpsJuM4EwsnqJcnaWX6At6rgmb",
+      "dpl_HqjUHqKs8CLyLoFe58r952aexJqy",
+      "dpl_Frczi2sE9aTTkCB1CxQXLNE15FX3"
+    ]
+  },
+  "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+  "lockOwnerVerified": true
+}

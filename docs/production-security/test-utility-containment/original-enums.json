@@ -1,0 +1,86 @@
+[
+  {
+    "name": "activity_action",
+    "labels": "{created_profile,updated_profile,submitted_documents,reviewed_documents,submitted_budget_request,reviewed_budget_request,submitted_liquidation_report,reviewed_liquidation_report,published_news_release,published_transparency_post,added_remark,resolved_remark}"
+  },
+  {
+    "name": "app_role_code",
+    "labels": "{admin,organization_user,youth,super_admin}"
+  },
+  {
+    "name": "budget_request_status",
+    "labels": "{draft,submitted,under_review,needs_revision,approved_for_ftf_green,rejected_red,hard_copy_submitted,budget_released,completed,awaiting_release}"
+  },
+  {
+    "name": "compliance_remark_status",
+    "labels": "{open,resolved}"
+  },
+  {
+    "name": "document_file_validation_status",
+    "labels": "{correct,needs_reupload,missing,mismatch}"
+  },
+  {
+    "name": "document_submission_status",
+    "labels": "{not_started,draft,uploaded,ocr_processing,ready_for_review,submitted,under_admin_review,needs_revision,approved_green,rejected_red}"
+  },
+  {
+    "name": "inquiry_status",
+    "labels": "{pending_review,reviewed,closed,in_review,responded,resolved}"
+  },
+  {
+    "name": "liquidation_report_status",
+    "labels": "{pending_activity_completion,not_started,draft,submitted,under_review,needs_revision,approved_for_ftf_green,rejected_red,hard_copy_submitted,completed_liquidated,overdue}"
+  },
+  {
+    "name": "move_application_status",
+    "labels": "{draft,submitted,under_review,needs_revision,approved_for_ftf_green,rejected_red,completed}"
+  },
+  {
+    "name": "notification_type",
+    "labels": "{document_revision,document_green,document_red,budget_go_signal,budget_revision,budget_released,liquidation_go_signal,liquidation_revision,overdue,completed,news_release,renewal_window_opened,renewal_window_urgent,accreditation_expired,rejected,inquiry_responded,inquiry_closed,ypop_verified,ypop_needs_revision,ypop_qualified,ypop_not_qualified}"
+  },
+  {
+    "name": "ocr_status",
+    "labels": "{pending,processing,completed,failed}"
+  },
+  {
+    "name": "profile_status",
+    "labels": "{incomplete,pending_review,verified,needs_update,suspended_inactive}"
+  },
+  {
+    "name": "registration_type",
+    "labels": "{new_organization,existing_urn}"
+  },
+  {
+    "name": "renewal_application_status",
+    "labels": "{draft,submitted,under_review,needs_revision,resubmitted,approved,rejected}"
+  },
+  {
+    "name": "urn_review_status",
+    "labels": "{not_applicable,pending,verified,needs_correction,rejected}"
+  },
+  {
+    "name": "verification_method",
+    "labels": "{documents,urn}"
+  },
+  {
+    "name": "visibility_status",
+    "labels": "{draft,published,hidden}"
+  },
+  {
+    "name": "ypop_entry_status",
+    "labels": "{draft,submitted,under_review,needs_revision,qualified,not_qualified,pending_evaluation}"
+  },
+  {
+    "name": "ypop_event_participation_status",
+    "labels": "{pending_verification,verified,needs_revision,rejected,confirmed,draft,pending_evaluation}"
+  },
+  {
+    "name": "ypop_org_activity_status",
+    "labels": "{draft,submitted,under_review,needs_revision,approved,rejected,pending_evaluation}"
+  },
+  {
+    "name": "ypop_period_status",
+    "labels": "{draft,open,closed}"
+  }
+]

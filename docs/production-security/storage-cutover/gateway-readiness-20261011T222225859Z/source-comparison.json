@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "project": "zroudsvpswqsjlyttkjf",
+  "slug": "admin-storage-access",
+  "version": 1,
+  "statusAtRead": "ACTIVE",
+  "verifyJwt": false,
+  "stagingBundleSha256": "564d0b5ceab9a63e8b81a824382fe565f045f1f794d3d9120b2fb5e9dc67fc8e",
+  "stagingBundleMatchesPriorReviewed": true,
+  "files": [
+    {
+      "name": "index.ts",
+      "path": "supabase/functions/admin-storage-access/index.ts",
+      "localBytes": 1479,
+      "localSha256": "97fba3f9c7a271860080b89f3f1c8710bdda3dccbe76961175d19d1154346248",
+      "pinnedBytes": 1479,
+      "pinnedSha256": "97fba3f9c7a271860080b89f3f1c8710bdda3dccbe76961175d19d1154346248",
+      "localExactPinMatches": true,
+      "deployedRawBytes": 1481,
+      "deployedRawSha256": "b7dba37e02082b11f4662400e535a15fb52e0c978e53601ff090f7d96f9ce983",
+      "normalizedSourceMatches": true,
+      "normalizedSourceSha256": "07a286f51ac557ec7f9a7bebfdc0c9a36d47d74bd5e8bc26fa296f0f5e897f44",
+      "onlyBoundaryWhitespaceOrLineEndings": true
+    },
+    {
+      "name": "control.ts",
+      "path": "supabase/functions/admin-storage-access/control.ts",
+      "localBytes": 4182,
+      "localSha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21",
+      "pinnedBytes": 4182,
+      "pinnedSha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21",
+      "localExactPinMatches": true,
+      "deployedRawBytes": 4184,
+      "deployedRawSha256": "c3ddd42216b537dcc41fee0b4cdd2bacd0ee2dc8041a2e62a25956476f6de5c0",
+      "normalizedSourceMatches": true,
+      "normalizedSourceSha256": "bbb62f96aec44c74beccdd5e1e8efc278dacce3cad84d59215fff2fd391bf3fd",
+      "onlyBoundaryWhitespaceOrLineEndings": true
+    }
+  ],
+  "reviewedFileManifestSha256": "f9dad701151f662044aa371595fb316b0d814a89b036bc932bab1131e7245668",
+  "deploymentPayloadSerialization": "UTF-8 JSON.stringify of {project_id,name,entrypoint_path,verify_jwt,files:[{name,content}]} in the recorded order; no trailing newline",
+  "deploymentPayloadBytes": 6048,
+  "deploymentPayloadSha256": "3fe07c6f768703c23a4ad2fe36884fb9832c23826ae6712b159f189ffcb129b0",
+  "sourcePackageSha256": "cad8759f87965a10a83d927c335c1d01667ef4022099c1c1af0a560f8e3601be",
+  "dependency": "https://esm.sh/@supabase/supabase-js@2.99.0",
+  "runtimeDenoServe": true,
+  "importMap": false,
+  "preparedOnly": true,
+  "deploymentPerformed": false
+}

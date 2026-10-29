@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-10-12T15:15:25.329Z",
+  "status": "PASS",
+  "initialStop": "PROMOTION_JOB_NOT_COMPLETED",
+  "cause": "The local verifier required lastAliasRequest, which the project response did not include.",
+  "authoritativeEvidence": "Project production target and domain mappings match; exact two provider alias jobs are completed; candidate READY, aliasAssigned=true and no alias error.",
+  "priorStopPreserved": true,
+  "originalPromotionRunnerUnchanged": true,
+  "promotionSubmissions": 1,
+  "promotionRetries": 0,
+  "readOnlyReconciliation": true
+}

@@ -1,0 +1,1246 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T17:53:10.417Z",
+  "results": [
+    {
+      "check": "Immediate exact-stage inventory, credentials and reviewed SQL hash",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Immediate exact-stage inventory, credentials and reviewed SQL hash",
+          "method": "GET",
+          "endpoint": "/auth/v1/admin/users",
+          "status": 200,
+          "durationMs": 1172
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Immediate exact-stage inventory, credentials and reviewed SQL hash",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 153
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Immediate exact-stage inventory, credentials and reviewed SQL hash",
+          "method": "GET",
+          "endpoint": "/storage/v1/bucket",
+          "status": 200,
+          "durationMs": 139
+        }
+      ]
+    },
+    {
+      "check": "Create exactly one confirmed synthetic Auth identity without email endpoints",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Create exactly one confirmed synthetic Auth identity without email endpoints",
+          "method": "POST",
+          "endpoint": "/auth/v1/admin/users",
+          "status": 200,
+          "durationMs": 222
+        }
+      ]
+    },
+    {
+      "check": "Normal dedicated organization Auth login",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Dedicated owner JWT",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 448
+        }
+      ]
+    },
+    {
+      "check": "Owner creates designated fictional organization profile",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner creates designated fictional organization profile",
+          "method": "POST",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 201,
+          "durationMs": 173
+        }
+      ]
+    },
+    {
+      "check": "Normal existing Super Admin login and permission context",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal existing Super Admin login and permission context",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+          "status": 200,
+          "durationMs": 137
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal existing Super Admin login and permission context",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+          "status": 200,
+          "durationMs": 127
+        }
+      ]
+    },
+    {
+      "check": "Normal identity review and genuine registration uploads",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+          "status": 200,
+          "durationMs": 143
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 201,
+          "durationMs": 136
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "GET",
+          "endpoint": "/rest/v1/required_document_types",
+          "status": 200,
+          "durationMs": 135
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 257
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 137
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 207
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 134
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 246
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 155
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 220
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 136
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 262
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 130
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 207
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 141
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 181
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal identity review and genuine registration uploads",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 148
+        }
+      ]
+    },
+    {
+      "check": "Authorized registration review produces legitimate initial accreditation",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Authorized registration review produces legitimate initial accreditation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 158
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Authorized registration review produces legitimate initial accreditation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 256
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Authorized registration review produces legitimate initial accreditation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 157
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Authorized registration review produces legitimate initial accreditation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 169
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Authorized registration review produces legitimate initial accreditation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 132
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Authorized registration review produces legitimate initial accreditation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 164
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Authorized registration review produces legitimate initial accreditation",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "Genuine zero-permission Admin login",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Genuine zero-permission Admin login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+          "status": 200,
+          "durationMs": 897
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Genuine zero-permission Admin login",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+          "status": 200,
+          "durationMs": 143
+        }
+      ]
+    },
+    {
+      "check": "Privileged expiry fixture shortens only newly created genuine test session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Privileged expiry fixture shortens only newly created genuine test session",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/admin_sessions",
+          "status": 200,
+          "durationMs": 140
+        }
+      ]
+    },
+    {
+      "check": "invalid Admin denied scenario before simulation",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "invalid Admin denied scenario before simulation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+          "status": 401,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "zero-permission Admin denied scenario before simulation",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "zero-permission Admin denied scenario before simulation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+          "status": 401,
+          "durationMs": 129
+        }
+      ]
+    },
+    {
+      "check": "revoked Admin denied scenario before simulation",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "revoked Admin denied scenario before simulation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+          "status": 401,
+          "durationMs": 124
+        }
+      ]
+    },
+    {
+      "check": "expired Admin denied scenario before simulation",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "expired Admin denied scenario before simulation",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+          "status": 401,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "Owner JWT cannot operate privileged scenario",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner JWT cannot operate privileged scenario",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+          "status": 403,
+          "durationMs": 139
+        }
+      ]
+    },
+    {
+      "check": "Super Admin binds only independently designated fixture without displaying password",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Super Admin binds only independently designated fixture without displaying password",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_get_or_create_renewal_test_account",
+          "status": 200,
+          "durationMs": 162
+        }
+      ]
+    },
+    {
+      "check": "30 Days Ahead scenario and OPEN genuine owner eligibility",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "30 Days Ahead scenario and OPEN genuine owner eligibility",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+          "status": 200,
+          "durationMs": 141
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "30 Days Ahead scenario and OPEN genuine owner eligibility",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/calculate_organization_renewal_eligibility",
+          "status": 200,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "Genuine owner creates one renewal draft",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Genuine owner creates one renewal draft",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+          "status": 200,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "Owner uploads all required renewal PDFs and submits",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "GET",
+          "endpoint": "/rest/v1/required_document_types",
+          "status": 200,
+          "durationMs": 129
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 296
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 135
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 245
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 139
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 267
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 133
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 243
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 132
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 376
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 154
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 260
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 153
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Owner uploads all required renewal PDFs and submits",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_submit_renewal",
+          "status": 200,
+          "durationMs": 149
+        }
+      ]
+    },
+    {
+      "check": "Admin sees submitted renewal through scoped review RPC",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Admin sees submitted renewal through scoped review RPC",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_get_renewal_review_context",
+          "status": 200,
+          "durationMs": 133
+        }
+      ]
+    },
+    {
+      "check": "Normal Admin document flag and Needs Revision transition",
+      "status": "FAIL",
+      "code": "P0001",
+      "reason": "Sanitized operation failure",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal Admin document flag and Needs Revision transition",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 138
+        },
+        {
+          "actor": "Controlled renewal",
+          "step": "Normal Admin document flag and Needs Revision transition",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/admin_request_renewal_revision",
+          "status": 400,
+          "durationMs": 130
+        }
+      ]
+    },
+    {
+      "check": "Revoke only lifecycle test Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Revoke only lifecycle test Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 127
+        }
+      ]
+    },
+    {
+      "check": "Revoke only lifecycle test Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Revoke only lifecycle test Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 129
+        }
+      ]
+    },
+    {
+      "check": "Revoke only lifecycle test Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Revoke only lifecycle test Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 125
+        }
+      ]
+    },
+    {
+      "check": "Controlled execution stopped",
+      "status": "BLOCKED",
+      "code": "P0001",
+      "reason": "Sanitized operation failure"
+    },
+    {
+      "check": "Revoke only execution Super Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Revoke only execution Super Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "check": "Close only execution owner Auth session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Controlled renewal",
+          "step": "Close only execution owner Auth session",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 138
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "Controlled renewal",
+      "step": "Immediate exact-stage inventory, credentials and reviewed SQL hash",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 1172
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Immediate exact-stage inventory, credentials and reviewed SQL hash",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 153
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Immediate exact-stage inventory, credentials and reviewed SQL hash",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Create exactly one confirmed synthetic Auth identity without email endpoints",
+      "method": "POST",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 222
+    },
+    {
+      "actor": "Dedicated owner JWT",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 448
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner creates designated fictional organization profile",
+      "method": "POST",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 201,
+      "durationMs": 173
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal existing Super Admin login and permission context",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal existing Super Admin login and permission context",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_organization_identity_review",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 201,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 257
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 137
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 207
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 134
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 246
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 155
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 220
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 262
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 130
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 207
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 141
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 181
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal identity review and genuine registration uploads",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Authorized registration review produces legitimate initial accreditation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 158
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Authorized registration review produces legitimate initial accreditation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 256
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Authorized registration review produces legitimate initial accreditation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 157
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Authorized registration review produces legitimate initial accreditation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 169
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Authorized registration review produces legitimate initial accreditation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Authorized registration review produces legitimate initial accreditation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 164
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Authorized registration review produces legitimate initial accreditation",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Genuine zero-permission Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 897
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Genuine zero-permission Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Genuine zero-permission Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Genuine zero-permission Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Genuine zero-permission Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 414
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Privileged expiry fixture shortens only newly created genuine test session",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/admin_sessions",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "invalid Admin denied scenario before simulation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+      "status": 401,
+      "durationMs": 133
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "zero-permission Admin denied scenario before simulation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+      "status": 401,
+      "durationMs": 129
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "revoked Admin denied scenario before simulation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+      "status": 401,
+      "durationMs": 124
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "expired Admin denied scenario before simulation",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+      "status": 401,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner JWT cannot operate privileged scenario",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+      "status": 403,
+      "durationMs": 139
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Super Admin binds only independently designated fixture without displaying password",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_or_create_renewal_test_account",
+      "status": 200,
+      "durationMs": 162
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "30 Days Ahead scenario and OPEN genuine owner eligibility",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_prepare_renewal_test_scenario",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "30 Days Ahead scenario and OPEN genuine owner eligibility",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/calculate_organization_renewal_eligibility",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Genuine owner creates one renewal draft",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_start_or_get_renewal_draft",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 296
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 135
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 245
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 139
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 267
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 133
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 243
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 132
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 376
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 154
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 260
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 153
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Owner uploads all required renewal PDFs and submits",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_submit_renewal",
+      "status": 200,
+      "durationMs": 149
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Admin sees submitted renewal through scoped review RPC",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_get_renewal_review_context",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal Admin document flag and Needs Revision transition",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Normal Admin document flag and Needs Revision transition",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/admin_request_renewal_revision",
+      "status": 400,
+      "durationMs": 130
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Revoke only lifecycle test Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 127
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Revoke only lifecycle test Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 129
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Revoke only lifecycle test Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 125
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Revoke only execution Super Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 134
+    },
+    {
+      "actor": "Controlled renewal",
+      "step": "Close only execution owner Auth session",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 138
+    }
+  ]
+}

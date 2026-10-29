@@ -1,0 +1,15 @@
+{
+  "capturedAt": "2026-10-12T04:56:36.217Z",
+  "deploymentId": "dpl_645dxpV4ubKyVXast3rBHjy3mZhr",
+  "eventsCount": 37,
+  "rawLogsPersisted": false,
+  "rawEventsSha256": "e4d6c6f5556ed7f997393f2d543bf3561ffe1664cae0f653cc9cf26741383116",
+  "npmCiInvoked": true,
+  "wrapperInvoked": true,
+  "wrapper": null,
+  "pythonEvidence": [],
+  "selectedBuildEvidence": [
+    "Running \"install\" command: `npm ci --include=dev --no-audit --no-fund`...",
+    "> node scripts/build-admin-release.mjs"
+  ]
+}

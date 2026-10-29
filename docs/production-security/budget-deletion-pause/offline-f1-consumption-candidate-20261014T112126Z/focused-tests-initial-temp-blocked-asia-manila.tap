@@ -1,0 +1,677 @@
+TAP version 13
+# Subtest: fixed synthetic scope; full context bound while the authorization key is stable
+ok 1 - fixed synthetic scope; full context bound while the authorization key is stable
+  ---
+  duration_ms: 3.6572
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: non-synthetic project
+ok 2 - invalid binding denied before fixture access: non-synthetic project
+  ---
+  duration_ms: 0.4966
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: changed purpose
+ok 3 - invalid binding denied before fixture access: changed purpose
+  ---
+  duration_ms: 0.1599
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: authorization case alias
+ok 4 - invalid binding denied before fixture access: authorization case alias
+  ---
+  duration_ms: 0.1687
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: authorization whitespace alias
+ok 5 - invalid binding denied before fixture access: authorization whitespace alias
+  ---
+  duration_ms: 0.1717
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: timezone-free timestamp
+ok 6 - invalid binding denied before fixture access: timezone-free timestamp
+  ---
+  duration_ms: 0.1991
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: future ordered interval ambiguity
+ok 7 - invalid binding denied before fixture access: future ordered interval ambiguity
+  ---
+  duration_ms: 0.1918
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: invalid calendar
+ok 8 - invalid binding denied before fixture access: invalid calendar
+  ---
+  duration_ms: 0.1234
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: unexpected context field
+ok 9 - invalid binding denied before fixture access: unexpected context field
+  ---
+  duration_ms: 0.1822
+  type: 'test'
+  ...
+# Subtest: property getters cannot supply a context field
+ok 10 - property getters cannot supply a context field
+  ---
+  duration_ms: 0.3563
+  type: 'test'
+  ...
+# Subtest: no production capability, alternate transport, or resume option is exposed
+ok 11 - no production capability, alternate transport, or resume option is exposed
+  ---
+  duration_ms: 1.1773
+  type: 'test'
+  ...
+# Subtest: non-fixture paths are rejected before filesystem inspection
+ok 12 - non-fixture paths are rejected before filesystem inspection
+  ---
+  duration_ms: 1.0419
+  type: 'test'
+  ...
+# Subtest: wrong disposable fixture identifier fails closed without consumption
+not ok 13 - wrong disposable fixture identifier fails closed without consumption
+  ---
+  duration_ms: 13.6184
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:111:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:112:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: record create/write/sync/readback precede the sole in-memory observation
+not ok 14 - record create/write/sync/readback precede the sole in-memory observation
+  ---
+  duration_ms: 4.5981
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:116:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:117:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: 40 concurrent invocation objects dispatch at most once for one authorization
+not ok 15 - 40 concurrent invocation objects dispatch at most once for one authorization
+  ---
+  duration_ms: 1.6858
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:127:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:128:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: changing nonce cannot acquire a second allowance
+not ok 16 - changing nonce cannot acquire a second allowance
+  ---
+  duration_ms: 1.4943
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:134:39'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:135:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: changing proof hash cannot acquire a second allowance
+not ok 17 - changing proof hash cannot acquire a second allowance
+  ---
+  duration_ms: 1.1301
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:134:39'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:135:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: changing bundle cannot acquire a second allowance
+not ok 18 - changing bundle cannot acquire a second allowance
+  ---
+  duration_ms: 1.071
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:134:39'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:135:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: changing approval timestamp cannot acquire a second allowance
+not ok 19 - changing approval timestamp cannot acquire a second allowance
+  ---
+  duration_ms: 1.1019
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:134:39'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:135:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: changing validity start cannot acquire a second allowance
+not ok 20 - changing validity start cannot acquire a second allowance
+  ---
+  duration_ms: 1.5514
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:134:39'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:135:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: changing validity end cannot acquire a second allowance
+not ok 21 - changing validity end cannot acquire a second allowance
+  ---
+  duration_ms: 1.1422
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:134:39'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:135:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: existing empty consumption is retained and never grants resume
+not ok 22 - existing empty consumption is retained and never grants resume
+  ---
+  duration_ms: 1.3712
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:143:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:144:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: existing partial consumption is retained and never grants resume
+not ok 23 - existing partial consumption is retained and never grants resume
+  ---
+  duration_ms: 1.0659
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:143:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:144:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: existing malformed consumption is retained and never grants resume
+not ok 24 - existing malformed consumption is retained and never grants resume
+  ---
+  duration_ms: 0.9524
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:143:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:144:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: existing conflict consumption is retained and never grants resume
+not ok 25 - existing conflict consumption is retained and never grants resume
+  ---
+  duration_ms: 1.1051
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:143:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:144:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: existing forged-not-sent consumption is retained and never grants resume
+not ok 26 - existing forged-not-sent consumption is retained and never grants resume
+  ---
+  duration_ms: 2.6484
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:143:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:144:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected AFTER_CREATE burns the key and never retries
+not ok 27 - injected AFTER_CREATE burns the key and never retries
+  ---
+  duration_ms: 1.1128
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected PARTIAL_WRITE burns the key and never retries
+not ok 28 - injected PARTIAL_WRITE burns the key and never retries
+  ---
+  duration_ms: 1.0685
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected AFTER_WRITE burns the key and never retries
+not ok 29 - injected AFTER_WRITE burns the key and never retries
+  ---
+  duration_ms: 1.3003
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected SYNC_UNCERTAIN burns the key and never retries
+not ok 30 - injected SYNC_UNCERTAIN burns the key and never retries
+  ---
+  duration_ms: 1.151
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected AFTER_SYNC burns the key and never retries
+not ok 31 - injected AFTER_SYNC burns the key and never retries
+  ---
+  duration_ms: 1.0528
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected CLOSE_UNCERTAIN burns the key and never retries
+not ok 32 - injected CLOSE_UNCERTAIN burns the key and never retries
+  ---
+  duration_ms: 1.08
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected READBACK_MISMATCH burns the key and never retries
+not ok 33 - injected READBACK_MISMATCH burns the key and never retries
+  ---
+  duration_ms: 0.8224
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: injected AFTER_VERIFY burns the key and never retries
+not ok 34 - injected AFTER_VERIFY burns the key and never retries
+  ---
+  duration_ms: 0.9151
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:151:55'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:152:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: uncertain synthetic transport: UNCERTAIN_AFTER_ACCEPT
+not ok 35 - uncertain synthetic transport: UNCERTAIN_AFTER_ACCEPT
+  ---
+  duration_ms: 0.9716
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:159:66'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:160:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: uncertain synthetic transport: UNAVAILABLE
+not ok 36 - uncertain synthetic transport: UNAVAILABLE
+  ---
+  duration_ms: 1.0266
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:159:66'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:160:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: a genuinely different synthetic authorization has a distinct consumption key
+not ok 37 - a genuinely different synthetic authorization has a distinct consumption key
+  ---
+  duration_ms: 1.0187
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:166:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:167:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: six real disposable Windows children race one create-new key, one observation wins
+not ok 38 - six real disposable Windows children race one create-new key, one observation wins
+  ---
+  duration_ms: 1.7953
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:172:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:173:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: fresh real process after successful consumption cannot resume or redispatch
+not ok 39 - fresh real process after successful consumption cannot resume or redispatch
+  ---
+  duration_ms: 1.5164
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:179:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:180:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: terminated real child at CREATED retains consumption and restart denies
+not ok 40 - terminated real child at CREATED retains consumption and restart denies
+  ---
+  duration_ms: 1.5115
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:187:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:188:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: terminated real child at PARTIAL_WRITTEN retains consumption and restart denies
+not ok 41 - terminated real child at PARTIAL_WRITTEN retains consumption and restart denies
+  ---
+  duration_ms: 1.3091
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:187:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:188:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: terminated real child at SYNCED retains consumption and restart denies
+not ok 42 - terminated real child at SYNCED retains consumption and restart denies
+  ---
+  duration_ms: 2.6443
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:187:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:188:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: terminated real child at VERIFIED retains consumption and restart denies
+not ok 43 - terminated real child at VERIFIED retains consumption and restart denies
+  ---
+  duration_ms: 1.1249
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:187:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:188:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: terminated real child at OBSERVATION_CALLED retains consumption and restart denies
+not ok 44 - terminated real child at OBSERVATION_CALLED retains consumption and restart denies
+  ---
+  duration_ms: 1.2039
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:187:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:188:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: terminated real child at OBSERVATION_ACKNOWLEDGED retains consumption and restart denies
+not ok 45 - terminated real child at OBSERVATION_ACKNOWLEDGED retains consumption and restart denies
+  ---
+  duration_ms: 0.9928
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:187:3'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:188:15)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: uncertain observation in one real child burns allowance for a fresh process
+not ok 46 - uncertain observation in one real child burns allowance for a fresh process
+  ---
+  duration_ms: 1.2062
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:198:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:199:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: nonce/proof/bundle/time changes across fresh processes cannot acquire another allowance
+not ok 47 - nonce/proof/bundle/time changes across fresh processes cannot acquire another allowance
+  ---
+  duration_ms: 0.9422
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-f1-consumption-candidate-20261014T112126Z\\synthetic-f1.test.mjs:203:1'
+  failureType: 'testCodeFailure'
+  error: "EPERM: operation not permitted, mkdtemp 'C:\\Users\\Christopher x Angel\\AppData\\Local\\Temp\\ytrace-f1-synthetic-XXXXXX'"
+  code: 'EPERM'
+  stack: |-
+    async mkdtemp (node:internal/fs/promises:1902:10)
+    async createDisposableFixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/fixture-harness.mjs:39:16)
+    async fixture (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:20:17)
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/offline-f1-consumption-candidate-20261014T112126Z/synthetic-f1.test.mjs:204:13)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+1..47
+# tests 47
+# suites 0
+# pass 12
+# fail 35
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 199.3668

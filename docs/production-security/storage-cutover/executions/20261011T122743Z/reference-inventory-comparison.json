@@ -1,0 +1,42 @@
+{
+  "news": {
+    "beforeCount": 3,
+    "nowCount": 3,
+    "unchanged": true
+  },
+  "files": {
+    "beforeCount": 579,
+    "nowCount": 579,
+    "unchanged": true
+  },
+  "objects": {
+    "beforeCount": 378,
+    "nowCount": 378,
+    "unchanged": true
+  },
+  "parents": {
+    "beforeCount": 266,
+    "nowCount": 266,
+    "unchanged": true
+  },
+  "templates": {
+    "beforeCount": 13,
+    "nowCount": 13,
+    "unchanged": true
+  },
+  "organizations": {
+    "beforeCount": 92,
+    "nowCount": 92,
+    "unchanged": true
+  },
+  "document_history": {
+    "beforeCount": 2,
+    "nowCount": 2,
+    "unchanged": true
+  },
+  "reference_tokens": {
+    "beforeCount": 597,
+    "nowCount": 597,
+    "unchanged": true
+  }
+}

@@ -1,0 +1,29 @@
+# Actual Windows NTFS disposable-fixture suite; no production I/O
+# native FileRenameInfo=3 replace=FALSE error=0
+ok 1 - actual same-directory Win32 rename preserves file ID, bytes and timestamps
+not ok 2 - two concurrent kernel contenders / unique fixture 0 # IOException
+not ok 3 - two concurrent kernel contenders / unique fixture 1 # IOException
+not ok 4 - two concurrent kernel contenders / unique fixture 2 # IOException
+not ok 5 - two concurrent kernel contenders / unique fixture 3 # IOException
+not ok 6 - two concurrent kernel contenders / unique fixture 4 # IOException
+not ok 7 - two concurrent kernel contenders / unique fixture 5 # IOException
+not ok 8 - two concurrent kernel contenders / unique fixture 6 # IOException
+not ok 9 - two concurrent kernel contenders / unique fixture 7 # IOException
+not ok 10 - two concurrent kernel contenders / unique fixture 8 # IOException
+not ok 11 - two concurrent kernel contenders / unique fixture 9 # IOException
+not ok 12 - two concurrent kernel contenders / unique fixture 10 # IOException
+not ok 13 - two concurrent kernel contenders / unique fixture 11 # IOException
+not ok 14 - two concurrent kernel contenders / unique fixture 12 # IOException
+not ok 15 - two concurrent kernel contenders / unique fixture 13 # IOException
+not ok 16 - two concurrent kernel contenders / unique fixture 14 # IOException
+not ok 17 - two concurrent kernel contenders / unique fixture 15 # IOException
+ok 18 - preexisting destination rejected and both file identities/bytes retained
+not ok 19 - destination appearing after handle preparation is rejected by kernel # IOException
+ok 20 - source pathname replacement after capture rejects changed identity
+ok 21 - directory pathname replacement after capture rejects changed identity
+ok 22 - same-file content change after capture rejects changed bytes
+ok 23 - held parent/source handles reject move and write interference
+ok 24 - one prepared operation cannot submit twice, including after rejection
+ok 25 - fixture root, traversal, alternate stream and same-leaf inputs fail before rename
+# existing directory nativeError=183 status=REJECTED_DESTINATION_EXISTS
+ok 26 - preexisting directory destination rejected without replacing directory or source

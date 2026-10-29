@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-12T05:45:08.982Z",
+  "projectId": "mqqaykksadotbrghbexz",
+  "functionCount": 9,
+  "gateway": {
+    "id": "8ea84d1d-ab6b-40b3-8cc4-d78262fb182f",
+    "name": "admin-storage-access",
+    "slug": "admin-storage-access",
+    "status": "ACTIVE",
+    "version": 1,
+    "verify_jwt": false,
+    "created_at": 1791759427880,
+    "updated_at": 1791759427880,
+    "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_8ea84d1d-ab6b-40b3-8cc4-d78262fb182f_1/source/index.ts",
+    "import_map": false
+  },
+  "readOnly": true,
+  "redeployment": false
+}

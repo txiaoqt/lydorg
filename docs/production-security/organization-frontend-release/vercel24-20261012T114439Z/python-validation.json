@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-10-12T11:49:54.072Z",
+  "status": "PASS",
+  "tests": 7,
+  "pipCheck": "PASS",
+  "actualRuntime": "Windows Python 3.14.3",
+  "python312Grammar": "PASS",
+  "python312Execution": "NOT TESTED",
+  "realExternalSync": false,
+  "networkBlockedByMocks": true
+}

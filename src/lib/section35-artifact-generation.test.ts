@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { afterAll, describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import {
   generateSection35QuarterlySummaryPdf,
   generateSection35DisaggregatedPdf,
@@ -16,8 +17,10 @@ import {
   buildCsvContent,
 } from "./report-export";
 import type { YorpQuarterlyReport, OrganizationProfile } from "./lydo-connect-data";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
-const scratchDir = path.resolve(process.cwd(), "scratch");
+const scratchDir = fs.mkdtempSync(path.join(os.tmpdir(), "ytrace-section35-artifacts-"));
+afterAll(() => fs.rmSync(scratchDir, { recursive: true, force: true }));
 
 const sampleLiveQ3Report: YorpQuarterlyReport = {
   year: 2026,
@@ -107,6 +110,50 @@ const sampleLiveQ3Report: YorpQuarterlyReport = {
   },
 };
 
+const createSampleOrganization = (
+  index: number,
+  organizationName: string,
+  majorClassification: OrganizationProfile["majorClassification"],
+): OrganizationProfile => {
+  const urn = `2026-01-${String(index).padStart(4, "0")}-YO`;
+  const createdAt = "2026-01-10T08:00:00Z";
+  const verifiedAt = "2026-03-15T08:00:00Z";
+  return {
+    id: `org-${index}`,
+    referenceId: `ORG-${String(index).padStart(4, "0")}`,
+    userId: `user-${index}`,
+    organizationName,
+    organizationEmail: `organization.${index}@pasigyouth.org.ph`,
+    contactNumber: "09171234567",
+    district: index % 2 === 0 ? "District II" : "District I",
+    barangay: index % 2 === 0 ? "Manggahan" : "Bagong Ilog",
+    isExistingOrganization: true,
+    organizationIdentifierNumber: urn,
+    registrationType: "existing_urn",
+    urn,
+    urnNormalized: urn.toLowerCase(),
+    urnReviewStatus: "verified",
+    urnAdminRemarks: "",
+    urnReviewedBy: "sample-admin",
+    urnReviewedAt: verifiedAt,
+    verificationMethod: "urn",
+    majorClassification,
+    subClassification: "community-based",
+    advocacies: ["education"],
+    adviserName: "Sample Adviser",
+    representativeName: `Sample Head ${index}`,
+    address: `Sample Street ${index}, Pasig City`,
+    facebookPageUrl: "",
+    profileStatus: "verified",
+    verifiedAt,
+    internalNotes: "",
+    yorpRegisteredYear: 2026,
+    yorpRenewedYear: null,
+    createdAt,
+    updatedAt: verifiedAt,
+  };
+};
+
 describe("Section 35 Artifact Generation & Verification", () => {
   it("generates Section 35 Quarterly Summary PDF and saves to scratch", async () => {
     const doc = await generateSection35QuarterlySummaryPdf(sampleLiveQ3Report);
@@ -153,21 +200,13 @@ describe("Section 35 Artifact Generation & Verification", () => {
   }, 15000);
 
   it("generates Master YORP Registry Export (PDF & CSV) and saves to scratch", async () => {
-    const sampleOrgs: OrganizationProfile[] = Array.from({ length: 5 }, (_, i) => ({
-      id: `org-${i + 1}`,
-      urn: `2026-01-00${i + 1}-YO`,
-      organizationName: `Pasig Youth Leadership Council ${i + 1}`,
-      majorClassification: i % 2 === 0 ? "Youth Organization" : "Youth-Serving Organization",
-      subClassification: "Community-Based",
-      advocacies: ["education", "environment"],
-      district: i % 2 === 0 ? "District I" : "District II",
-      barangay: i % 2 === 0 ? "Bagong Ilog" : "Manggahan",
-      verifiedAt: "2026-03-15T08:00:00Z",
-      createdAt: "2026-01-10T08:00:00Z",
-      profileStatus: "verified",
-      contactNumber: "09171234567",
-      organizationEmail: `council.${i + 1}@pasigyouth.org.ph`,
-    }));
+    const sampleOrgs: OrganizationProfile[] = Array.from({ length: 5 }, (_, i) =>
+      createSampleOrganization(
+        i + 1,
+        `Pasig Youth Leadership Council ${i + 1}`,
+        i % 2 === 0 ? "Youth Organization" : "Youth-Serving Organization",
+      ),
+    );
 
     const rows = sampleOrgs.map((org, index) => mapOrganizationProfileToYorpExportRow(org, index));
 
@@ -193,7 +232,7 @@ describe("Section 35 Artifact Generation & Verification", () => {
     const csvPath = path.join(scratchDir, "YORP_Registry_Master_2026-09-17.csv");
     fs.writeFileSync(csvPath, csvContent, "utf8");
     expect(fs.existsSync(csvPath)).toBe(true);
-    expect(csvContent).toContain('"URN","Name of Organization"');
+    expect(csvContent).toContain('"No.","Organization Name","URN"');
 
     console.log("Saved Master YORP PDF & CSV:", pdfPath, csvPath);
   });
@@ -238,17 +277,32 @@ describe("Section 35 Artifact Generation & Verification", () => {
         expect(doc.internal.pageSize.getHeight()).toBeCloseTo(841.89, 1);
       }
 
-      const rawPdfString = doc.output();
-      // Verify page numbering is dynamic
-      expect(rawPdfString).toContain(`Page 1 of ${totalPages}`);
-      expect(rawPdfString).toContain(`Page 2 of ${totalPages}`);
+      const pdfLoadingTask = getDocument({
+        data: new Uint8Array(doc.output("arraybuffer")),
+        disableFontFace: true,
+        verbosity: 0,
+      });
+      const parsedPdf = await pdfLoadingTask.promise;
+      const extractedPages = await Promise.all(
+        Array.from({ length: totalPages }, async (_, index) => {
+          const page = await parsedPdf.getPage(index + 1);
+          const content = await page.getTextContent();
+          return content.items
+            .filter((item) => "str" in item)
+            .map((item) => item.str)
+            .join(" ");
+        }),
+      );
+      const extractedText = extractedPages.join(" ");
+      expect(extractedText).toContain(`Page 1 of ${totalPages}`);
+      expect(extractedText).toContain(`Page 2 of ${totalPages}`);
+      await pdfLoadingTask.destroy();
     });
 
     it("ensures Section 35 Quarterly Summary XLSX does NOT contain the misleading 166.67% approval rate", async () => {
       const buffer = await generateSection35QuarterlySummaryXlsx(sampleLiveQ3Report);
-      const { resolveExcelJsWorkbook } = await import("./report-export");
-      const Workbook = await resolveExcelJsWorkbook();
-      const workbook = new Workbook();
+      const ExcelJS = await import("exceljs");
+      const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(Buffer.from(buffer));
       const summarySheet = workbook.getWorksheet("Quarterly Summary");
       expect(summarySheet).toBeDefined();
@@ -268,21 +322,9 @@ describe("Section 35 Artifact Generation & Verification", () => {
     });
 
     it("ensures Master YORP Registry export uses the official A4 template layout", async () => {
-      const sampleOrgs: OrganizationProfile[] = Array.from({ length: 3 }, (_, i) => ({
-        id: `org-${i + 1}`,
-        urn: `2026-01-00${i + 1}-YO`,
-        organizationName: `Pasig Youth Org ${i + 1}`,
-        majorClassification: "Youth Organization",
-        subClassification: "Community-Based",
-        advocacies: ["education"],
-        district: "District I",
-        barangay: "Bagong Ilog",
-        verifiedAt: "2026-03-15T08:00:00Z",
-        createdAt: "2026-01-10T08:00:00Z",
-        profileStatus: "verified",
-        contactNumber: "09171234567",
-        organizationEmail: `org.${i + 1}@pasig.gov.ph`,
-      }));
+      const sampleOrgs: OrganizationProfile[] = Array.from({ length: 3 }, (_, i) =>
+        createSampleOrganization(i + 1, `Pasig Youth Org ${i + 1}`, "Youth Organization"),
+      );
 
       const rows = sampleOrgs.map((org, index) => mapOrganizationProfileToYorpExportRow(org, index));
       const doc = await generateReportPdfDocument({
@@ -291,8 +333,8 @@ describe("Section 35 Artifact Generation & Verification", () => {
         metadataLines: ["Total Records: 3"],
       });
 
-      expect(doc.internal.pageSize.getWidth()).toBeCloseTo(595.28, 1);
-      expect(doc.internal.pageSize.getHeight()).toBeCloseTo(841.89, 1);
+      expect(doc.internal.pageSize.getWidth()).toBeCloseTo(841.89, 1);
+      expect(doc.internal.pageSize.getHeight()).toBeCloseTo(595.28, 1);
       expect(doc.getNumberOfPages()).toBeGreaterThanOrEqual(1);
 
       const rawPdfString = doc.output();

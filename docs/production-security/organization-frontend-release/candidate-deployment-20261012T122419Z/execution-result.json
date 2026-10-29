@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-10-12T12:50:10.316Z",
+  "status": "PASS_CANDIDATE_READY",
+  "candidate": {
+    "id": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+    "url": "yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+    "readyState": "READY"
+  },
+  "sourceRevision": "0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+  "sourceArchiveSha256": "e7d43c8aa7d0d0a2cc42130eafd34ad9b1b5147aeb416aba55349353f7fa33c8",
+  "hostedSourceIdentity": "PASS",
+  "hostedNode": "v24.21.0",
+  "hostedPlatform": "linux",
+  "npmCi": "PASS",
+  "vite": "PASS via successful awaited wrapper",
+  "pythonVersions": [
+    "3.12"
+  ],
+  "httpAcceptance": "BLOCKED",
+  "assets": "BLOCKED",
+  "staticMatched": 0,
+  "productionAliasesPreserved": true,
+  "attempts": 1,
+  "automaticRetries": 0,
+  "productionDomainPromotion": false,
+  "decision": "CONDITIONAL GO only after outstanding hosted/owner acceptance and separate promotion authorization"
+}

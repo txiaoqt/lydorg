@@ -1,0 +1,79 @@
+{
+  "capturedAt": "2026-10-12T10:16:25.682Z",
+  "project": "mqqaykksadotbrghbexz",
+  "functions": [
+    {
+      "id": "dfcbb155-25d6-452b-a483-f9de5eea7218",
+      "name": "delete-organization-account",
+      "version": 19,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1789887081222
+    },
+    {
+      "id": "23e34274-1f83-45f1-8cdf-d4358a6cd5b5",
+      "name": "admin-invite",
+      "version": 10,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1789924934746
+    },
+    {
+      "id": "f2bde504-508e-4bc8-ba84-4e20e7b64e02",
+      "name": "send-activity-announcement",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1790749744599
+    },
+    {
+      "id": "cc5f638d-970d-4669-a70d-74c80de8700e",
+      "name": "send-admin-notification",
+      "version": 19,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1790749761210
+    },
+    {
+      "id": "2038f234-e0a4-48f6-89bb-1552879318ba",
+      "name": "send-org-transactional-email",
+      "version": 8,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1790749728730
+    },
+    {
+      "id": "7ee96def-ea17-4d77-a795-d7058496eae1",
+      "name": "admin-seed-yorp-sample-dataset",
+      "version": 7,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1790744795139
+    },
+    {
+      "id": "2538cfd8-1cf8-4f52-830d-769c413c5449",
+      "name": "delete-ypop-submissions",
+      "version": 6,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1790972031573
+    },
+    {
+      "id": "2c503e50-489f-48f2-a85f-ffcb1cb3fef2",
+      "name": "admin-backup-control",
+      "version": 4,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1791191291358
+    },
+    {
+      "id": "8ea84d1d-ab6b-40b3-8cc4-d78262fb182f",
+      "name": "admin-storage-access",
+      "version": 1,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "updated_at": 1791759427880
+    }
+  ],
+  "gatewayActiveV1": true
+}

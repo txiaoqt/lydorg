@@ -1,0 +1,50 @@
+{
+  "format": "YTRACE_OFFLINE_TRUSTED_IO_ARTIFACT_INVENTORY_V1",
+  "classification": "NON-RUNNABLE — NOT AUTHORIZED",
+  "algorithm": "sha256",
+  "bundleSha256": "a52dd7ebdfa1b99bcbc5915992025e2f906fe59fe22febd80e40b681b15aa47a",
+  "manifestSha256": "c4dcd431e0eba49ff0df4014902c4cb3a3451d50b4eedca36f1351ebef2c567f",
+  "selfExcluded": true,
+  "files": [
+    {
+      "file": "focused-tests-asia-manila.tap",
+      "bytes": 4746,
+      "sha256": "ba86721ba7f3414b43df03543ed90075858c30094444ba48b13c0478be9a4384"
+    },
+    {
+      "file": "focused-tests-utc.tap",
+      "bytes": 4739,
+      "sha256": "b17c5c0581e824ab74ec96602da25faebf188b431095bfc0dc91354c420130db"
+    },
+    {
+      "file": "integration-engine.mjs",
+      "bytes": 15646,
+      "sha256": "6c9837931ff3fc37b380233feda261f7b65e698035a65e92d1d4539a2c2175e0"
+    },
+    {
+      "file": "integration-review.md",
+      "bytes": 17355,
+      "sha256": "0217be6dd5527ef72122ebb0042cc7a985033c1ab962211bda4760c6ef033cae"
+    },
+    {
+      "file": "io-boundary-contract.md",
+      "bytes": 8462,
+      "sha256": "30e7690f624d288b6b325b6fb9b337c899885f376a07a23b5c27777bb7a5a94e"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 42928,
+      "sha256": "c4dcd431e0eba49ff0df4014902c4cb3a3451d50b4eedca36f1351ebef2c567f"
+    },
+    {
+      "file": "trusted-io-integration.mjs",
+      "bytes": 1004,
+      "sha256": "3cf14f82c5e393b340758abc090c8e74db10869253696fa73126d72f08b3f19c"
+    },
+    {
+      "file": "trusted-io-integration.test.mjs",
+      "bytes": 23246,
+      "sha256": "a1739d35e8328dabfb3c46accd0bc849778fb352d26877cc4bb7c5d402c53044"
+    }
+  ]
+}

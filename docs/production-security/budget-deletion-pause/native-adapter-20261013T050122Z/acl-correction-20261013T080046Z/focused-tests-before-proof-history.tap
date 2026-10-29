@@ -1,0 +1,209 @@
+TAP version 13
+# Subtest: pins the approved SQL bytes, digest, one target routine, transaction and timeouts
+ok 1 - pins the approved SQL bytes, digest, one target routine, transaction and timeouts
+  ---
+  duration_ms: 8.4636
+  type: 'test'
+  ...
+# Subtest: rejects alternate project, endpoint, SQL path and mismatched input pins
+ok 2 - rejects alternate project, endpoint, SQL path and mismatched input pins
+  ---
+  duration_ms: 0.9636
+  type: 'test'
+  ...
+# Subtest: complete reviewed manifest pins every helper, verifier, input and pg runtime file identity
+ok 3 - complete reviewed manifest pins every helper, verifier, input and pg runtime file identity
+  ---
+  duration_ms: 95.4607
+  type: 'test'
+  ...
+# Subtest: runner rejects arbitrary SQL, endpoint and multi-argument execution requests before loading a connection
+ok 4 - runner rejects arbitrary SQL, endpoint and multi-argument execution requests before loading a connection
+  ---
+  duration_ms: 90.5965
+  type: 'test'
+  ...
+# Subtest: only the declared read-only ROLLBACK terminal tag is accepted
+ok 5 - only the declared read-only ROLLBACK terminal tag is accepted
+  ---
+  duration_ms: 1.1373
+  type: 'test'
+  ...
+# Subtest: captures exactly the 57 pinned relation identities and rejects missing, duplicate or unexpected rows
+ok 6 - captures exactly the 57 pinned relation identities and rejects missing, duplicate or unexpected rows
+  ---
+  duration_ms: 2.6431
+  type: 'test'
+  ...
+# Subtest: requires exact before/after budget RPC and protected foundation state
+ok 7 - requires exact before/after budget RPC and protected foundation state
+  ---
+  duration_ms: 2.1126
+  type: 'test'
+  ...
+# Subtest: compares all 57 immediate inventories and supplemental foundation state without adopting drift
+ok 8 - compares all 57 immediate inventories and supplemental foundation state without adopting drift
+  ---
+  duration_ms: 12.5339
+  type: 'test'
+  ...
+# Subtest: native identity requires exact server version, TLS, role privileges and backend binding
+ok 9 - native identity requires exact server version, TLS, role privileges and backend binding
+  ---
+  duration_ms: 0.6875
+  type: 'test'
+  ...
+# Subtest: environment and fixed TLS socket checks fail closed
+ok 10 - environment and fixed TLS socket checks fail closed
+  ---
+  duration_ms: 1.0439
+  type: 'test'
+  ...
+# Subtest: trusted CA hash, TLS hostname and chain failure stop the one client before any query
+ok 11 - trusted CA hash, TLS hostname and chain failure stop the one client before any query
+  ---
+  duration_ms: 13.9464
+  type: 'test'
+  ...
+# Subtest: control-plane proof and human authorization are exact, short-lived and bound to artifacts
+ok 12 - control-plane proof and human authorization are exact, short-lived and bound to artifacts
+  ---
+  duration_ms: 2.1777
+  type: 'test'
+  ...
+# Subtest: lock is exclusive across processes and nonce ownership cannot be replaced
+ok 13 - lock is exclusive across processes and nonce ownership cannot be replaced
+  ---
+  duration_ms: 96.727
+  type: 'test'
+  ...
+# Subtest: single attempt consumes marker before exactly one SQL submission and never sends rollback
+ok 14 - single attempt consumes marker before exactly one SQL submission and never sends rollback
+  ---
+  duration_ms: 27.185
+  type: 'test'
+  ...
+# Subtest: duplicate marker blocks before any SQL request
+ok 15 - duplicate marker blocks before any SQL request
+  ---
+  duration_ms: 5.5285
+  type: 'test'
+  ...
+# Subtest: connection loss before or after simulated COMMIT remains unresolved and is never retried
+ok 16 - connection loss before or after simulated COMMIT remains unresolved and is never retried
+  ---
+  duration_ms: 44.2847
+  type: 'test'
+  ...
+# Subtest: receipt preparation and post-commit receipt failures fail closed without a second SQL submission
+ok 17 - receipt preparation and post-commit receipt failures fail closed without a second SQL submission
+  ---
+  duration_ms: 7.9445
+  type: 'test'
+  ...
+# Subtest: reconciliation classification requires a finished writer and exact old/new state plus preservation
+ok 18 - reconciliation classification requires a finished writer and exact old/new state plus preservation
+  ---
+  duration_ms: 0.4663
+  type: 'test'
+  ...
+# Subtest: backend reconciliation uses a separate read-only session and exact backend identity
+ok 19 - backend reconciliation uses a separate read-only session and exact backend identity
+  ---
+  duration_ms: 0.4804
+  type: 'test'
+  ...
+# Subtest: human authorization absence or drift is rejected; errors and receipts do not leak secrets
+ok 20 - human authorization absence or drift is rejected; errors and receipts do not leak secrets
+  ---
+  duration_ms: 0.6855
+  type: 'test'
+  ...
+# Subtest: fixed install application name fits PostgreSQL application_name without truncation
+ok 21 - fixed install application name fits PostgreSQL application_name without truncation
+  ---
+  duration_ms: 0.1851
+  type: 'test'
+  ...
+# Subtest: Windows ACL helper applies and verifies isolated effective ACLs (disposable temporary directory only)
+ok 22 - Windows ACL helper applies and verifies isolated effective ACLs (disposable temporary directory only)
+  ---
+  duration_ms: 831.0382
+  type: 'test'
+  ...
+# Subtest: actual shipped PowerShell CLI and runner verify existing operator root/proof read-only
+ok 23 - actual shipped PowerShell CLI and runner verify existing operator root/proof read-only
+  ---
+  duration_ms: 1959.5342
+  type: 'test'
+  ...
+# Subtest: PowerShell CLI Protect and Verify use the bounded artifact allowlist (disposable fixed-root copy)
+    # Subtest: Protect accepts only its exact approved root
+    ok 1 - Protect accepts only its exact approved root
+      ---
+      duration_ms: 1920.566
+      type: 'test'
+      ...
+    # Subtest: Verify accepts root and every legitimate child evidence family
+    ok 2 - Verify accepts root and every legitimate child evidence family
+      ---
+      duration_ms: 7581.1173
+      type: 'test'
+      ...
+    # Subtest: Verify rejects alternate roots, siblings, nested children and unknown leaves
+    ok 3 - Verify rejects alternate roots, siblings, nested children and unknown leaves
+      ---
+      duration_ms: 3022.3603
+      type: 'test'
+      ...
+    # Subtest: CLI rejects traversal, relative/device/UNC paths, streams and ambiguous names
+    ok 4 - CLI rejects traversal, relative/device/UNC paths, streams and ambiguous names
+      ---
+      duration_ms: 4389.7605
+      type: 'test'
+      ...
+    # Subtest: Verify rejects an allowed leaf whose DACL grants another principal
+    ok 5 - Verify rejects an allowed leaf whose DACL grants another principal
+      ---
+      duration_ms: 945.6637
+      type: 'test'
+      ...
+    # Subtest: Verify rejects a directory using an allowed artifact filename
+    ok 6 - Verify rejects a directory using an allowed artifact filename
+      ---
+      duration_ms: 798.9302
+      type: 'test'
+      ...
+    # Subtest: Verify rejects a child junction; Protect rejects a root junction without changing its target
+    ok 7 - Verify rejects a child junction; Protect rejects a root junction without changing its target
+      ---
+      duration_ms: 2115.0089
+      type: 'test'
+      ...
+    # Subtest: Verify also checks the root DACL when a broad grant is added
+    ok 8 - Verify also checks the root DACL when a broad grant is added
+      ---
+      duration_ms: 1576.9171
+      type: 'test'
+      ...
+    1..8
+ok 24 - PowerShell CLI Protect and Verify use the bounded artifact allowlist (disposable fixed-root copy)
+  ---
+  duration_ms: 22359.1009
+  type: 'test'
+  ...
+# Subtest: installation authorization draft is deliberately non-runnable and prior blocked proof is stale
+ok 25 - installation authorization draft is deliberately non-runnable and prior blocked proof is stale
+  ---
+  duration_ms: 1.181
+  type: 'test'
+  ...
+1..25
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 25682.1596

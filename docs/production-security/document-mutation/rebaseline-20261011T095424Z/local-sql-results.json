@@ -1,0 +1,236 @@
+{
+  "engine": "Existing PGlite / actual PostgreSQL",
+  "engineVersion": "PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+  "candidateSha256": "bd06efbc326146cabf00ef005401a5bb7aa4a060927d7bffb63eafcf0f35f567",
+  "results": [
+    {
+      "check": "Historical artifact preserved; executable patch body byte-identical; no Auth/Storage/fixture/history writes",
+      "status": "PASS"
+    },
+    {
+      "check": "Untouched production gate fails closed locally",
+      "status": "PASS"
+    },
+    {
+      "check": "Exact patch body installs atomically; all rows/containment/history unchanged",
+      "status": "PASS"
+    },
+    {
+      "check": "Read-only operator post-install verifier validates functions, triggers, grants and preserved history locally",
+      "status": "PASS"
+    },
+    {
+      "check": "requested renewal revision changes one file, preserves five peers and resubmits",
+      "status": "PASS"
+    },
+    {
+      "check": "normal registration requested revision preserves the peer and original revision history",
+      "status": "PASS"
+    },
+    {
+      "check": "API grants preserve authenticated owner RPCs and custom Admin anon review transport",
+      "status": "PASS"
+    },
+    {
+      "check": "approved renewal and associated documents deny both replacement RPCs and direct writes",
+      "status": "PASS"
+    },
+    {
+      "check": "rejected renewal and associated documents deny both replacement RPCs and direct writes",
+      "status": "PASS"
+    },
+    {
+      "check": "approved_green submission blocks content mutations and owner deletion",
+      "status": "PASS"
+    },
+    {
+      "check": "rejected_red submission blocks content mutations and owner deletion",
+      "status": "PASS"
+    },
+    {
+      "check": "under_admin_review file content is immutable through owner replacement",
+      "status": "PASS"
+    },
+    {
+      "check": "approved_green file content is immutable through owner replacement",
+      "status": "PASS"
+    },
+    {
+      "check": "rejected_red file content is immutable through owner replacement",
+      "status": "PASS"
+    },
+    {
+      "check": "cross-organization and anonymous RPC mutation denied without changed rows",
+      "status": "PASS"
+    },
+    {
+      "check": "direct cross-organization RLS updates affect zero rows",
+      "status": "PASS"
+    },
+    {
+      "check": "suspended owner replacement and resubmission denied",
+      "status": "PASS"
+    },
+    {
+      "check": "genuine captured Admin validator accepts active reviewer and denies invalid/expired/revoked sessions",
+      "status": "PASS"
+    },
+    {
+      "check": "inactive Admin is denied and no review state changes",
+      "status": "PASS"
+    },
+    {
+      "check": "normal full Admin approval creates one next term then terminal replacement stays denied",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: budget_requests fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: liquidation_reports fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: document_submissions fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: document_submission_files fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: budget_requests fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: liquidation_reports fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: document_submissions fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: document_submission_files fixture markers remain protected after patch",
+      "status": "PASS"
+    },
+    {
+      "check": "identity markers and test GUC cannot bypass accreditation/renewal immutability",
+      "status": "PASS"
+    },
+    {
+      "check": "anon: all 12 test mutation RPCs remain disabled",
+      "status": "PASS"
+    },
+    {
+      "check": "authenticated: all 12 test mutation RPCs remain disabled",
+      "status": "PASS"
+    },
+    {
+      "check": "service_role: all 12 test mutation RPCs remain disabled",
+      "status": "PASS"
+    },
+    {
+      "check": "postgres: all 12 test mutation RPCs remain disabled",
+      "status": "PASS"
+    },
+    {
+      "check": "retained sample status retains Super Admin enforcement over anon transport",
+      "status": "PASS"
+    },
+    {
+      "check": "replacement audit failure rolls back file/history/parent changes",
+      "status": "PASS"
+    },
+    {
+      "check": "second installation is rejected without data changes",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: migration version/name",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: migration statements",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: missing migration receipt",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: RPC function body",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: RPC ACL",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: RPC owner",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: fixture trigger disabled",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: fixture trigger missing",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: containment helper grant",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: containment private schema grant",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: test-only RPC reenabled",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: environment guard changed",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: RLS disabled",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: table column changed",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: table constraint changed",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: Storage policy changed",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: role inheritance changed",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: namespace collision",
+      "status": "PASS"
+    },
+    {
+      "check": "Drift gate: guard trigger-name collision",
+      "status": "PASS"
+    },
+    {
+      "check": "Injected final failure rolls back every RPC/trigger/grant and all rows",
+      "status": "PASS"
+    }
+  ],
+  "passed": 56,
+  "scope": "Synthetic isolated rows and current captured production functions. Same SQL gate with only expected-catalog literal substituted locally. Real RLS predicates on scoped tables; Auth UID/digest/ordinary-admin helper and URN generation have declared local adapters. Generated identity-name expressions are represented by typed nullable columns; unrelated identity name derivation is not certified. No live HTTP, hosted Supabase Auth/Storage, physical devices or multi-session concurrency certification.",
+  "productionWrites": false,
+  "stagingWrites": false,
+  "concurrency": "NOT TESTED; single PGlite connection"
+}

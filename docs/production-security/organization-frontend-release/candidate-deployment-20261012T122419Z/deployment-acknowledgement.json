@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-10-12T12:46:47.466Z",
+  "status": "SUBMITTED_ACKNOWLEDGED",
+  "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "attempts": 1,
+  "automaticRetries": 0,
+  "cliExitCode": 0,
+  "timedOut": false,
+  "outputLimitExceeded": false,
+  "stdoutSha256": "8fe576716d0629af7b08d03f18fb4e4908fdec2f8bb1bcfbee85e4907dfbae5d",
+  "stderrSha256": "5af38f1f2b178ae3fe49a01053ab39b94bea67f6113e8ef958c975a8ed8878f3",
+  "deployment": {
+    "id": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+    "url": "https://yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+    "readyState": "INITIALIZING",
+    "target": "production"
+  },
+  "productionDomainPromotionRequested": false
+}

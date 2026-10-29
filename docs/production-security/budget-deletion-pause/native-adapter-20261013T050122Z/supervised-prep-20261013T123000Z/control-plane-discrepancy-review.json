@@ -1,0 +1,37 @@
+{
+  "recordType": "YTRACE_BUDGET_PAUSE_CONTROL_PLANE_DISCREPANCY_REVIEW",
+  "reviewedAt": "2026-10-13T12:41:08Z",
+  "mode": "REVIEW_ONLY",
+  "discrepancy": {
+    "affectedProofSha256": "fafda4fbc5d54e357208d322478f7db265697cbdec05c6d3a9493cfc7771d7c7",
+    "affectedProofFile": "control-plane-proof.json (active, expired 2026-10-13T12:38:34.351Z)",
+    "affectedPreflightSha256": "9332dd5567c39d61169779107e859186debc43af8dd9833f18ca606750769456",
+    "affectedPreflightFile": "preflight-20261013T123403150Z-cc1a595c-9343-4788-9a1f-ad7d8060182a.json",
+    "declaredVerifiedVia": "supabase-control-plane-get-project",
+    "actualSource": "Supabase CLI 2.118.0 `projects list -o json` (Management API list endpoint, CLI stored login)",
+    "cause": "obtain-control-plane-evidence.mjs hard-coded the validator's required verifiedVia literal while using a different mechanism. The true route was recorded only in the side-file control-plane-evidence.json (actualRoute), not in the proof the adapter consumes."
+  },
+  "validatorContract": {
+    "function": "budget-runner-core.mjs verifyControlPlaneProof",
+    "checks": ["exact five keys", "project === mqqaykksadotbrghbexz", "host === db.mqqaykksadotbrghbexz.supabase.co", "status === ACTIVE_HEALTHY", "verifiedVia === 'supabase-control-plane-get-project' (only accepted value)", "0 <= now - verifiedAt <= 300000 ms"],
+    "provenanceIsCryptographicallyVerified": false,
+    "alternativeRoutesSupported": false,
+    "reviewedEquivalenceForProjectsList": "NONE FOUND in operator-procedure.md, operator-checklist.md, authorization-proposal.md, final-review.md or tests"
+  },
+  "assessment": {
+    "identityFieldsMatched": true,
+    "freshnessTimestampAccurate": true,
+    "provenanceRequirementSatisfied": false,
+    "proofMayBeUsedForInstallationBindings": false,
+    "freshPreflightDatabaseObservationsValid": "Database facts (TLS, catalog, 57/57, fingerprint 8d8a45...) were observed correctly, but the snapshot is bound to the misdeclared proof and must not become approved-preflight.json."
+  },
+  "quiescence": {
+    "explicitOperatorConfirmation": true,
+    "source": "Operator answer 'Confirmed drained' to the explicit in-session question at about 2026-10-13T12:31Z",
+    "inferredFromDatabaseActivity": false,
+    "scope": "2026-10-13T12:30:00Z to 2026-10-13T13:00:00Z only"
+  },
+  "newMaintenanceWindowRequired": true,
+  "actionsTakenByThisReview": ["read-only inspection", "this review record created"],
+  "notPerformed": ["proof refresh", "native preflight", "proof archival/overwrite/edit", "authorization/approved-preflight/lock/marker creation", "--install", "SQL change"]
+}

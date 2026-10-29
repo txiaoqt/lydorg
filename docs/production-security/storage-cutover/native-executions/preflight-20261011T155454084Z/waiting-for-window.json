@@ -1,0 +1,28 @@
+{
+  "recordedAt": "2026-10-11T15:58:12.988Z",
+  "project": "mqqaykksadotbrghbexz",
+  "status": "WAITING_FOR_REQUIRED_EXCLUSIVE_WINDOW_CONFIRMATION",
+  "readOnlyPreflight": "PASS",
+  "protectedInventoriesMatched": 57,
+  "catalogCompatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "migrations": 164,
+  "storagePolicies": 15,
+  "foundationInstalled": false,
+  "installationAttempted": false,
+  "authorizationRecordCreated": false,
+  "automaticRetries": 0,
+  "processInspection": {
+    "status": "PASS",
+    "nodeProcesses": 15,
+    "competingFoundationProcesses": 0,
+    "unavailableCommandLines": 0,
+    "rawCommandLinesPrinted": false,
+    "sandboxInspectionUnavailable": true,
+    "supportedElevatedReadOnlyInspectionSucceeded": true
+  },
+  "localOperationStateAcl": {
+    "inheritanceDisabled": true,
+    "allowedPrincipals": "current operator and SYSTEM only"
+  },
+  "nextStep": "After human confirmation, refresh control-plane proof and immediate read-only preflight; install only if every original gate remains satisfied."
+}

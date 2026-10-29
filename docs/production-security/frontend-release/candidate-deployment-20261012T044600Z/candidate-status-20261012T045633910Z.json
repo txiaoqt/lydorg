@@ -1,0 +1,143 @@
+{
+  "capturedAt": "2026-10-12T04:56:33.907Z",
+  "id": "dpl_645dxpV4ubKyVXast3rBHjy3mZhr",
+  "url": "lydorg-2nk97irag-toffs-projects-81b2ce10.vercel.app",
+  "readyState": "ERROR",
+  "status": "ERROR",
+  "target": "production",
+  "createdAt": 1791780905649,
+  "ready": 1791780933502,
+  "buildingAt": 1791780907616,
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "ownerId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "version": 2,
+  "aliasAssigned": false,
+  "alias": [
+    "lydorg-toffs-projects-81b2ce10.vercel.app"
+  ],
+  "isInConcurrentBuildsQueue": false,
+  "regions": [
+    "iad1"
+  ],
+  "responseKeys": [
+    "alias",
+    "aliasAssigned",
+    "autoAssignCustomDomains",
+    "automaticAliases",
+    "bootedAt",
+    "buildingAt",
+    "buildSkipped",
+    "buildContainerFinishedAt",
+    "createdAt",
+    "creator",
+    "deletedAt",
+    "duration",
+    "errorCode",
+    "errorMessage",
+    "errorStep",
+    "id",
+    "initReadyAt",
+    "name",
+    "meta",
+    "originCacheRegion",
+    "project",
+    "public",
+    "ready",
+    "readyState",
+    "readySubstate",
+    "regions",
+    "source",
+    "status",
+    "target",
+    "team",
+    "type",
+    "url",
+    "version",
+    "previewCommentsEnabled",
+    "oidcTokenClaims",
+    "lambdas",
+    "aliasAssignedAt",
+    "build",
+    "builds",
+    "createdIn",
+    "env",
+    "functions",
+    "inspectorUrl",
+    "isInConcurrentBuildsQueue",
+    "isInSystemBuildsQueue",
+    "ownerId",
+    "plan",
+    "projectId",
+    "resourceConfig",
+    "projectSettings",
+    "routes",
+    "config",
+    "attribution"
+  ],
+  "projectSettings": {
+    "nodeVersion": "24.x",
+    "framework": "vite",
+    "outputDirectory": "build",
+    "buildCommand": "npm run build",
+    "installCommand": "npm ci --include=dev --no-audit --no-fund"
+  },
+  "builds": [],
+  "lambdas": [
+    {
+      "id": "bld_l992bweb8",
+      "createdAt": 1791780905331,
+      "readyState": "READY",
+      "outputKeys": []
+    }
+  ],
+  "functions": null,
+  "routes": [
+    {
+      "src": "^(?:/(.*))$",
+      "continue": true,
+      "headerNames": [
+        "X-Frame-Options",
+        "X-Content-Type-Options",
+        "Referrer-Policy",
+        "Content-Security-Policy",
+        "Cross-Origin-Resource-Policy",
+        "Permissions-Policy"
+      ],
+      "securityHeaders": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Content-Security-Policy": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://airnet-backend.vercel.app https://nominatim.openstreetmap.org https://router.project-osrm.org; frame-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:; upgrade-insecure-requests",
+        "Cross-Origin-Resource-Policy": "same-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      }
+    },
+    {
+      "handle": "filesystem",
+      "headerNames": [],
+      "securityHeaders": {}
+    },
+    {
+      "src": "^/api/sync-run-once$",
+      "dest": "/api/sync-run-once",
+      "check": true,
+      "headerNames": [],
+      "securityHeaders": {}
+    },
+    {
+      "src": "^/api(?:/(.*))$",
+      "dest": "https://airnet-backend.vercel.app/api/$1",
+      "check": true,
+      "headerNames": [],
+      "securityHeaders": {}
+    },
+    {
+      "src": "^(?:/(.*))$",
+      "dest": "/index.html",
+      "check": true,
+      "headerNames": [],
+      "securityHeaders": {}
+    }
+  ],
+  "error": {}
+}

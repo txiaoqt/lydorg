@@ -1,0 +1,33 @@
+{
+  "actualAppTypecheck": "FAIL",
+  "baselineErrors": 651,
+  "currentErrors": 647,
+  "newDiagnosticIdentities": 0,
+  "removedDiagnosticIdentities": 4,
+  "newDiagnostics": [],
+  "removedDiagnostics": [
+    {
+      "file": "src/admin/AdminPortal.tsx",
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types 'BudgetRequestStatus' and '\"approved_for_ftf_green\"' have no overlap."
+    },
+    {
+      "file": "src/admin/AdminPortal.tsx",
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types 'BudgetRequestStatus' and '\"hard_copy_submitted\"' have no overlap."
+    },
+    {
+      "file": "src/admin/AdminPortal.tsx",
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types '\"needs_revision\" | \"draft\" | \"submitted\" | \"rejected_red\" | \"under_review\" | \"awaiting_release\"' and '\"approved_for_ftf_green\"' have no overlap."
+    },
+    {
+      "file": "src/admin/AdminPortal.tsx",
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types '\"needs_revision\" | \"draft\" | \"submitted\" | \"rejected_red\" | \"under_review\" | \"awaiting_release\"' and '\"hard_copy_submitted\"' have no overlap."
+    }
+  ],
+  "runtimeScopeBaselineDiagnostics": 65,
+  "runtimeScopeCurrentDiagnostics": 61,
+  "limitation": "Existing app errors remain real technical debt; no compiler options or assertions were weakened. This comparison covers the immutable live Admin source plus the four-file overlay, not the unrelated dirty root or the separate Organization baseline."
+}

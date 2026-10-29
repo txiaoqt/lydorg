@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "route": "native-pg-direct-tls",
+  "nativeReadOnlyPreflight": "PASS",
+  "tls": {
+    "chainVerified": true,
+    "hostnameVerified": true,
+    "encryptedSocketVerified": true,
+    "protocol": "TLSv1.3",
+    "peerCertificateFingerprint256": "6D:58:E8:D1:17:BE:04:F4:2A:59:0C:EE:98:3A:95:DA:A7:63:F7:D1:C9:C4:6E:75:5D:5A:72:28:14:83:6B:91"
+  },
+  "postgresql": {
+    "serverVersion": "17.6",
+    "serverVersionNum": 170006,
+    "database": "postgres",
+    "currentUser": "postgres",
+    "sessionUser": "postgres",
+    "readOnly": "on",
+    "expectedPrivilegesVerified": true
+  },
+  "originalUnpausedRpcAndCatalog": "PASS",
+  "catalogSha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "functionDefinitionMd5": "f6c36316ba941c9e0f76674754ac44ba",
+  "functionSourceMd5": "eb7b756964fd31efebfb39749f5c9e5b",
+  "foundationStructure": "PASS",
+  "foundationStructureSha256": "eb9bf6a418438358fc9b6e8e72208e4b3ade1d798ac04fe91c7eb58c2b5063d9",
+  "productionEnvironmentGuard": false,
+  "migrations": {
+    "count": 164,
+    "latest": "20261011230000",
+    "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+  },
+  "storagePolicies": 15,
+  "storageObjects": 378,
+  "inventoryComparison": {
+    "matched": 57,
+    "changed": 0,
+    "beforeSha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429",
+    "currentSha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429"
+  },
+  "proofFreshness": "PASS",
+  "proofAgeAtFinishSeconds": 36.022,
+  "operatorEvidenceFile": "preflight-20261013T104229359Z-a0bcdc9b-9465-4b70-8cbd-ae2f9a76058e.json",
+  "preflightEvidenceSha256": "6e5869fcde18f45edfef0ba0a9709d4d0530204d89c6dfd548f55dc719dece81",
+  "preflightStateSha256": "8d8a45ca4a229d17b8cd79c33b914791e8b435774e5f615cae364b3d319c80fc",
+  "controlPlaneProofSha256": "79a508950d5a04eda66634e9ef8bb17eb51756abdcd979b6b996866a9077ced1",
+  "runnerBundleSha256": "58aed13a1099907460f74e9730afa8c8f22a1a0f0ee07fd6e77d609ac80a0e25",
+  "manifestSha256": "562f0b078c3ee29f17050e465ff3c1a87f9be71fac05642cd3e9e3863f19a3bb",
+  "nativeAttempts": 1,
+  "automaticRetries": 0,
+  "installationActivated": false,
+  "installationAuthorizationCreated": false,
+  "approvedPreflightCreated": false
+}

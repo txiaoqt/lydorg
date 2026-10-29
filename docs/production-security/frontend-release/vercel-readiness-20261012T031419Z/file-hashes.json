@@ -1,0 +1,70 @@
+{
+  "capturedAt": "2026-10-12T03:41:39.477Z",
+  "files": [
+    {
+      "path": "admin-production-deployment.log",
+      "bytes": 718,
+      "sha256": "1ea939040489b6f96b92b56bd14ded04fcb5de828899b11784d43e07a02ae6d0"
+    },
+    {
+      "path": "admin-project.log",
+      "bytes": 386,
+      "sha256": "c96c5c59136a15641db55bb00cd57522af661f6c9c3781adf21c8772270cd791"
+    },
+    {
+      "path": "artifact-verification.json",
+      "bytes": 851,
+      "sha256": "91362809ac124e0f48f1bc4502fc067b74220e0f48244cbfe102b1948c106419"
+    },
+    {
+      "path": "preservation-verification-final.json",
+      "bytes": 580,
+      "sha256": "672f1e51f845a8a09903e60cc0e86a1b95e99ef62dd3ce673b3ba71409ab2ea7"
+    },
+    {
+      "path": "previous-deployment.log",
+      "bytes": 745,
+      "sha256": "2f35e844a2cd5ed38ddd357177fab60386ec5f90bdead6df0f5df3ed5cd39401"
+    },
+    {
+      "path": "provider-metadata.sanitized.json",
+      "bytes": 8548,
+      "sha256": "d92a586efe817d26357eb149ca6637c6bfc27d968475d0a4c68378773268f668"
+    },
+    {
+      "path": "public-build.sanitized.json",
+      "bytes": 1715,
+      "sha256": "546f4a97dba06e7fb6c9a35319b1efa6b8647e76cc53e8fe5e4b4e595f321193"
+    },
+    {
+      "path": "read-provider-metadata.mjs",
+      "bytes": 7636,
+      "sha256": "cb2fd3d29aba05524927830257f044ae7ca0c658c59f7169ebe04c98e1ddd1ea"
+    },
+    {
+      "path": "read-public-build.mjs",
+      "bytes": 3892,
+      "sha256": "48a790f40bc637d863fa48158f6af0ece04889e0598dd7529a49d39c38399cd1"
+    },
+    {
+      "path": "readiness.json",
+      "bytes": 1627,
+      "sha256": "c2528369f9f622a6ab0744be27fd6afc260c20f612c348ac0a2ebd4f11e2a5d2"
+    },
+    {
+      "path": "review.md",
+      "bytes": 14152,
+      "sha256": "0f2a670dfb2900519bc9874eefd06f7e83f89f2a192d6456994fb4d03c6659b0"
+    },
+    {
+      "path": "teams.log",
+      "bytes": 170,
+      "sha256": "33aed76a126952f8718eccd7421fbe9bf4be253298e75079d21f872108662e83"
+    },
+    {
+      "path": "user-project.log",
+      "bytes": 396,
+      "sha256": "42320f7b24d39168dc2322c217928f8f30915ed9b5a314dd3211a3850125874f"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "project": "mqqaykksadotbrghbexz",
+  "projectName": "lydo-org-focused",
+  "status": "ACTIVE_HEALTHY",
+  "databaseHost": "db.mqqaykksadotbrghbexz.supabase.co",
+  "platformDatabaseVersion": "17.6.1.127",
+  "postgresEngine": "17",
+  "source": "Supabase get_project (read-only), this task",
+  "limitation": "Endpoint verification only; not native PostgreSQL authentication, TLS or SQL/catalog verification. Not an activation record."
+}

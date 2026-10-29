@@ -1,0 +1,313 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-12T06:43:47.833Z",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "rootStatus": " M .gitignore\n M build/apple-touch-icon.png\n D build/assets/About-BgE2NY5_.js\n D build/assets/Contacts-PVxhRUkh.js\n D build/assets/Faqs-C1BTPjfA.js\n D build/assets/Index-CKmzLnSI.js\n D build/assets/LegalPolicy-rOEY3vG8.js\n D build/assets/NewsReleases-B8yw4yk-.js\n D build/assets/PublicBudgetTransparency-DleAq-zl.js\n D build/assets/PublicNewsReleaseCard-Bp70quGQ.js\n D build/assets/PublicTemplates-BXSB9xGm.js\n D build/assets/PwaUserPortal-BwzxXVpY.js\n D build/assets/SiteMap-Bv3paW95.js\n D build/assets/exceljs.min-CuiCxha2.js\n D build/assets/facebook-CMEyvuS-.js\n D build/assets/hero-image-_uJVR4fB.webp\n M build/assets/html2canvas.esm-CBrSDip1.js\n D build/assets/index-BcOz4wp7.js\n D build/assets/index-CvrzG9oa.css\n D build/assets/index.es-03HJTjHp.js\n M build/assets/pdf.worker.min-D39lNQBd.mjs\n M build/assets/purify.es-CPrKKeqe.js\n D build/assets/ytrace-community-workshop-azmEJAYn.png\n M build/favicon.ico\n M build/icons/icon-192.png\n M build/icons/icon-512.png\n M build/index.html\n M build/manifest-admin.webmanifest\n M build/manifest.webmanifest\n M build/sw.js\n M build/y-trace-logo-blue.png\n M index.html\n M playwright.config.ts\n M public/manifest-admin.webmanifest\n M public/manifest.webmanifest\n M public/sw.js\n M src/App.tsx\n M src/admin/components/AdminSettingsPage.tsx\n M src/admin/components/RenewalTestEnvironmentPanel.tsx\n M src/admin/renewal-test-environment.test.tsx\n M src/components/portal/UserPortalRenewalWorkspaceView.tsx\n M src/components/portal/UserPortalResponsiveWorkspace.test.tsx\n M src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx\n M src/components/public/PublicTemplatesCatalog.tsx\n M src/lib/admin-lifecycle-user-sync.test.tsx\n M src/lib/admin-system-settings.ts\n M src/lib/audit-records-hardening.test.ts\n M src/lib/lydo-connect-store.tsx\n M src/lib/lydo-connect-supabase.ts\n M src/lib/query-client.ts\n M src/lib/renewal-realtime.test.ts\n M src/lib/report-export.test.ts\n M src/lib/section35-reporting.test.ts\n M src/main.tsx\n M src/test/setup.ts\n M src/user/UserPortalEntry.tsx\n M src/user/pwa/PwaAppShell.tsx\n M src/user/pwa/PwaDocumentPreview.tsx\n M src/user/pwa/PwaOrganizationAvatar.tsx\n M src/user/pwa/renewals/PwaRenewalPage.tsx\n M supabase/.temp/cli-latest\n M supabase/config.toml\n M vite.config.ts\n M vitest.config.ts\n",
+  "preservedEvidence": [
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/backend-readonly-postflight.json",
+      "sha256": "fad9a7d80a2e1ec56d592a7a537c6f5a5244bcb3e04a9d72cf207cfea0d29774"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/backend-readonly-preflight.json",
+      "sha256": "448f1a5b210caf92cd91330b41cf57100fc9f030faca27d46e3513c3bde1e469"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/candidate-status-20261012T045633910Z.json",
+      "sha256": "5c5857c0982fdf29253ac1302dfd22551a0887486296d599b49f3a724a022715"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/deployment-acknowledgement.json",
+      "sha256": "50b560623de691826e9f136cc7e0a8f04bcf3433a588aca34c2fabc8bcb11ca3"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/dry-inspection.json",
+      "sha256": "716b1f9c6fdc011db1e630afed69c8b646fca1093aa231e66a5e4681dafe9999"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/execution-report.md",
+      "sha256": "79c63b677ee8203dc16890e8503f40526a0b0f5e8ddfefe45de9c735573f8411"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/failure-environment-name-evidence.json",
+      "sha256": "ddac0ab05c80ecb2996ddbac2111d26e2c0788384e5b0c4c8a2617d5f364dffe"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/failure-reconciliation.json",
+      "sha256": "5987d9f90bfc25914c548630ea375b26aa2871606b5aaee834934ad2540d5804"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/gateway-readonly-preflight.json",
+      "sha256": "c5fde0f379021b476e642f3025944399f4f0f83696389ac565cd17c4d18239c1"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/hosted-build-evidence.json",
+      "sha256": "712f4182198f5d64bd746b716f1ebfa46d83abb1c833ceba437b296ec3baf241"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/hosted-source-identity-corrected.json",
+      "sha256": "db413c5106b893a3a7a8425c4e925836520cd46edf308ca030440fd50c6e9132"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/hosted-source-identity.json",
+      "sha256": "ecf224052f203d4c234fc46c82c71d255f754ae0f0f8e3cce9968871b6d84d26"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/immediate-deploy-preflight.json",
+      "sha256": "7fab8b25a05cf8ccf1447d4a09d58d5e437eac21f4866d4d77e8c5959cd5b03a"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/preservation.json",
+      "sha256": "a28a794c000a78ad9bd2b87c4bcb4f144bd84541cf0ccb9eee419f5a7895654b"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/provider-preflight.json",
+      "sha256": "c8632106ff0053aab98308325ee81b4d92eda61090afd477618e3f46066edfbc"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/public-configuration.json",
+      "sha256": "def8a41acbaa985bc24500490518107892c4071ec3832973472a197eaffbe771"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/read-only-diagnostic.json",
+      "sha256": "b18d6782e237cdb3e550df4fd26777c02a9322de5f77fa46772d6a0fe3c470b3"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/source-preflight.json",
+      "sha256": "d9e65392d717298213c978b205a6cb39da1fa66eab24086d52b0336763356e3e"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T044600Z/evidence-manifest.json",
+      "sha256": "1a3b952e72cd3f5220038b959075f58b9d519185ddc93cd93bf4db5a35b4e8f0"
+    },
+    {
+      "path": ".agent/admin-candidate-deploy-20261012T044600Z/deployment-attempt.json",
+      "sha256": "e1f4541a15c52a7a0e944a9880dcd64d70683ec76040849301689db81fdc18b6"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/candidate-status-20261012T055142020Z.json",
+      "sha256": "60dc1e2cb0a05c239da5df5c19ebb5d5b4d5918ca0c82ec710e913affa57056b"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/deployment-acknowledgement.json",
+      "sha256": "30924618720d28490b0ab79b76e2bfc32ccaec12ef95764c9f86317484b6cdaf"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/dry-inspection.json",
+      "sha256": "41e4e2a1fafa769f03f76d10ff7bc24176943ffc905cee265724598522d6f309"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/execution-report.md",
+      "sha256": "4c1ba9c5d649aab7b4a3346ec8ebc42dfc0be4c54570c8aae416feb18cfd1123"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/failure-environment-name-evidence.json",
+      "sha256": "4cc0909a8f5f344d388fd4168da8b8ed48f2294b86cdcd5fb05102553f07a505"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/failure-reconciliation.json",
+      "sha256": "edeb12350c69042c81521bae3101f925f828361ac121dd7b4bcce745b8012928"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/final-preservation.json",
+      "sha256": "16ab38bd32c11d41e4f1c3b4abdf4d1d5dee3ff29b1ff1fe3703d2a5ef4e75aa"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/gateway-readonly-postflight.json",
+      "sha256": "2a2d68e7151a6d3581655bd5feea39ac7d50c8eb96553544b84c05961c38c160"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/gateway-readonly-preflight.json",
+      "sha256": "18d512b2bae2b1430bec691dfa75d9c5497c3633cb5e3fc825947de3657ba505"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/hosted-build-evidence.json",
+      "sha256": "405811397ec510c6b2cfc015892af2ae98aeab158b74eba2b87729c9a38abe3b"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/hosted-source-identity-corrected.json",
+      "sha256": "50e5c1fb896dc0f9c983252491a7fc8f97a9a6705be2c05c97e46451fd386332"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/immediate-deploy-preflight.json",
+      "sha256": "94bc634feac38ad406454314cf9594dab76e1cba92573d6772797919f0369fef"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/operation-preparation.json",
+      "sha256": "605cccf5958e2a6b94efa7993eaed5a4ad312382bf2840fa60aff4a1420097ad"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/preservation.json",
+      "sha256": "ac16a9e593defae6d02f08aec68288efc842c2ce623fc593501f6538a3f6d331"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/provider-preflight.json",
+      "sha256": "06c577a3cde6e94babec6375eb7cc800dfac110ce3e5610ea726f35794f93810"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/public-configuration.json",
+      "sha256": "1ee92e43a133f650505f8f01ce88a3dd61b40f79a0b3a9aa640f1b62b1963d04"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/source-preflight.json",
+      "sha256": "cd30da10ab565a93432ade1dedb51c798934779aa011d3d7778d3239a1ae8d08"
+    },
+    {
+      "path": "docs/production-security/frontend-release/candidate-deployment-20261012T054338Z/evidence-manifest.json",
+      "sha256": "4a9f16cdb4cf751f0099e5026d03be0e366d6110215a34eaf91d924cba95a16d"
+    },
+    {
+      "path": ".agent/admin-candidate-deploy-20261012T054338Z/deployment-attempt.json",
+      "sha256": "94559a40b097a6cf5ba2bc59118137cb474a642dc88389d23cc6ce05ab50d00d"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/admin-build.log",
+      "sha256": "6879036ddd86c0e49c1ad2e904329487e7781cc04c4194aa581c717c75c3410e"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/admin-gateway-vercel24-source.zip",
+      "sha256": "a6ba0e4e9dc4684a45dc8c86bdaf448311db571bc7156ea73dbf3cf62d36d465"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/admin-gateway-vercel24-static-build.zip",
+      "sha256": "56a44b576db1b7db0e47e6131e15770943be2ff9e0cf55b200709a14f91e2abe"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/artifact-verification.json",
+      "sha256": "9f4d589013a004d1fcc3118a54cf900d93e9afd92ba36be225da1ed0762d61e9"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/build-public-parity.json",
+      "sha256": "7882aa4b0f0405184e40591624e9acc57fdb998cdf815ae80b9ecab3f184b5be"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/check-diff-exit-codes.mjs",
+      "sha256": "b6fec606da51ec72062f0b9d43cea97ac25bce0bcc4bf9b6067b82fd5e0c121e"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/diff-exit-evidence.json",
+      "sha256": "6e7a7daeb41b06c39e0c7f7e006483f93676114837f8e52ee40a5ca51f64b728"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/empty-global.npmrc",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/empty-user.npmrc",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/focused-tests.json",
+      "sha256": "fc47033d09c83b571807be32fddb2da96bc1c9b61f4b39fa9048fd4f522d4bd2"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/focused-tests.log",
+      "sha256": "be3a5fbc6e712a2227de3e1411894462cdfcdf2c815a39bced494222ebb2fa9c"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/npm-ci.log",
+      "sha256": "abb56d1b14c199fd66a6462ad5c47163f5081785d46ab6a4f53bd3948a6145e0"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/package-source.mjs",
+      "sha256": "d693fee76af2ddade25d5db59e03b64a8c5377116078aa761427b3c5b1718c14"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/packaging-tests.log",
+      "sha256": "18761866a3602441c1c38f1fc92bfa8b5847bef495336abfd31631966c432723"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/preparation-baseline.json",
+      "sha256": "994844d9e5454e2e467d58997635abad71c18ac7f2810db84185b4f42852f6cf"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/prepare.mjs",
+      "sha256": "a6ebfd48d2b15f1f1f6f6126759dbca468dbcacb2bfb772cd869ed7bf2024c0a"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/python-check.log",
+      "sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/python-packaging.json",
+      "sha256": "e95533382eb55fbfc8112b3daab56e0ccb8752bff875721c0dac10368f9ee3ef"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/python-tests.log",
+      "sha256": "6fe2a19f08bdb33d338566a0c7eaa4fc554fa4a8ef892cffd2c71a1aae2ce426"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduce-build.mjs",
+      "sha256": "4151339447be535276a7f6981d3abbf92ba2f27d1c95ab707a1d8e4a4709e11a"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduction-build.log",
+      "sha256": "6879036ddd86c0e49c1ad2e904329487e7781cc04c4194aa581c717c75c3410e"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduction-npm-ci.log",
+      "sha256": "70d8a497e0f983329a05fd6e1b8376a743d6f30be9cba1e0a6e8277f39d8e397"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/reproduction-public-parity.json",
+      "sha256": "71518a8e4df82a2b86b044246e1beeab4b49e5d98ca91f546a684b88e356ef4d"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/source-manifest.json",
+      "sha256": "c0cf57ef27437f59e8cc354085c95e7b7a55783264b8edd5bd140c87ed7ca0d2"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/test-python-packaging.py",
+      "sha256": "af4085638b833e256368a3081991cee7ce77aeb87b4586db57fbe05b5dd38507"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/typescript.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/validate-python.mjs",
+      "sha256": "3257535219efe336036732dcf99936b30460161d4ab8ef47cd52969a4874ee0b"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/validate-variant.mjs",
+      "sha256": "0b13db939ade2954583df83f3290209455ff99a8a7c0d4134132b4afc76725be"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/verify-artifacts.mjs",
+      "sha256": "f8744ad3c1d5a3a3ccccb2901423ad851022150cb22aeb2726df346c0537f7d1"
+    },
+    {
+      "path": ".agent/admin-storage-vercel-20261012T061324Z/write-review.mjs",
+      "sha256": "84abec26574be349aaaa4f2e1a3ab1a02353e9bc9e3209ef50329be5be384daf"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/build-inventory.json",
+      "sha256": "353eff4a8df9bf9aca3a15522ff7fe9f7bacb108869b613fbd69cbe7045b4cd0"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/packaging-changes.diff",
+      "sha256": "2d7b671739b4aa3d7e1c3e2afc16f69d28eaa56aa6b73fe10748af66a1c2a75d"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/review.md",
+      "sha256": "be1a0da808112731677d22f84ef1d19c09b572450f15d3e00da4183f17e7450c"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/source-manifest.json",
+      "sha256": "c0cf57ef27437f59e8cc354085c95e7b7a55783264b8edd5bd140c87ed7ca0d2"
+    },
+    {
+      "path": "docs/production-security/frontend-release/environment-isolated-20261012T061324Z/validation-summary.json",
+      "sha256": "09e06ecbf4fde825995617d35c7d57d4ced704462dae72d465135e80437b98c6"
+    }
+  ],
+  "priorAttemptsPreserved": 2,
+  "newAttemptCreated": false,
+  "sourceRevision": "0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
+  "sourceZipSha256": "a6ba0e4e9dc4684a45dc8c86bdaf448311db571bc7156ea73dbf3cf62d36d465",
+  "sourceZipBytes": 15424104,
+  "artifactInventorySha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d",
+  "deploymentAuthorized": true,
+  "promotionAuthorized": false
+}

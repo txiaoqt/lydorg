@@ -1,0 +1,27 @@
+[
+  {
+    "path": "src/lib/lydo-connect-supabase.ts",
+    "sha256": "c3a8b445e51178c061407b8f60d6793093769e6943514149f6346dcd8c386353",
+    "bytes": 437088
+  },
+  {
+    "path": "src/admin/AdminPortal.tsx",
+    "sha256": "0ab2356753e5fa569ba9918988d4277e2a73fd7b03cadd69e522644cf6d8c7ee",
+    "bytes": 909180
+  },
+  {
+    "path": "src/admin/components/BudgetRequestsTable.tsx",
+    "sha256": "5b2a471d17811f34ad076e18897b7b1a68238fa66eafcf7a3973d703f65b50fe",
+    "bytes": 28689
+  },
+  {
+    "path": "src/lib/admin-budget-request-deletion.test.ts",
+    "sha256": "61cc70a243a5aa2423f9b10d3d5cd1cdf1648c8c6e4b4a927087f627f86886be",
+    "bytes": 15618
+  },
+  {
+    "path": "src/admin/components/BudgetRequestsTableSelection.test.tsx",
+    "sha256": "d2ba6b9f726ad94e32a2a2253353a796245039960ad7f0a5f7032e98d2e768b6",
+    "bytes": 8889
+  }
+]

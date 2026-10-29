@@ -1,0 +1,15 @@
+{
+  "capturedAt": "2026-10-12T07:05:46.009Z",
+  "readOnly": true,
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "vercelAuthentication": {
+    "deploymentType": "all_except_custom_domains"
+  },
+  "existingAutomationBypassEntries": 0,
+  "protectionMetadataPresent": false,
+  "secretValuesPersisted": false,
+  "secretValuesLogged": false,
+  "settingsChanged": false,
+  "curlExecuted": false,
+  "limitation": "CLI curl was not invoked because it may generate project credentials when no existing bypass is present."
+}

@@ -1,0 +1,64 @@
+{
+  "read_only": "on",
+  "captured_at": "2026-10-12T16:24:58.508816+00:00",
+  "reference_groups": [
+    {
+      "form": "canonical",
+      "rows": 6,
+      "bucket": "budget-request-files",
+      "source": "budget_request_files",
+      "object_exists": true,
+      "sample_policy_retained": null,
+      "private_metadata_supported": true
+    },
+    {
+      "form": "canonical",
+      "rows": 37,
+      "bucket": "organization-documents",
+      "source": "document_submission_files",
+      "object_exists": true,
+      "sample_policy_retained": null,
+      "private_metadata_supported": true
+    },
+    {
+      "form": "canonical",
+      "rows": 510,
+      "bucket": "registration-seed-file",
+      "source": "document_submission_files",
+      "object_exists": true,
+      "sample_policy_retained": true,
+      "private_metadata_supported": null
+    },
+    {
+      "form": "canonical",
+      "rows": 5,
+      "bucket": "liquidation-report-files",
+      "source": "liquidation_report_files",
+      "object_exists": true,
+      "sample_policy_retained": null,
+      "private_metadata_supported": true
+    },
+    {
+      "form": "canonical",
+      "rows": 17,
+      "bucket": "ypop-files",
+      "source": "ypop_event_files",
+      "object_exists": true,
+      "sample_policy_retained": null,
+      "private_metadata_supported": true
+    },
+    {
+      "form": "canonical",
+      "rows": 4,
+      "bucket": "ypop-files",
+      "source": "ypop_org_activity_files",
+      "object_exists": true,
+      "sample_policy_retained": null,
+      "private_metadata_supported": true
+    }
+  ],
+  "current_file_rows": 579,
+  "existing_current_avatar_links": null,
+  "current_existing_private_links_unsupported": 0
+}
+

@@ -1,0 +1,111 @@
+TAP version 13
+# Subtest: reviewed artifact, exact contract and future cutover predicate preservation
+ok 1 - reviewed artifact, exact contract and future cutover predicate preservation
+  ---
+  duration_ms: 7.2432
+  ...
+# Subtest: unmodified production artifact rejects a synthetic catalog before installation
+not ok 2 - unmodified production artifact rejects a synthetic catalog before installation
+  ---
+  duration_ms: 2154.4965
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\budget_deletion_pause.local.test.mjs:83:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /Exact reviewed production catalog drifted/. Input:
+    
+    'error: Unexpected PostgreSQL major version'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'Unexpected PostgreSQL major version'
+  stack: |-
+    pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/budget_deletion_pause.local.test.mjs:84:85)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: atomic installer, unconditional role/session denial and unchanged protected rows
+not ok 3 - atomic installer, unconditional role/session denial and unchanged protected rows
+  ---
+  duration_ms: 1621.3244
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\budget_deletion_pause.local.test.mjs:86:1'
+  failureType: 'testCodeFailure'
+  error: 'Unexpected PostgreSQL major version'
+  code: 'P0001'
+  name: 'error'
+  stack: |-
+    pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  ...
+# Subtest: unrelated actual captured viewing, review and release SQL remains functional
+not ok 4 - unrelated actual captured viewing, review and release SQL remains functional
+  ---
+  duration_ms: 1470.3057
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\budget_deletion_pause.local.test.mjs:109:1'
+  failureType: 'testCodeFailure'
+  error: 'Unexpected PostgreSQL major version'
+  code: 'P0001'
+  name: 'error'
+  stack: |-
+    pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  ...
+# Subtest: unexpected contract, origin and catalog drift fail closed; injected failure rolls back
+not ok 5 - unexpected contract, origin and catalog drift fail closed; injected failure rolls back
+  ---
+  duration_ms: 1630.8959
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\budget_deletion_pause.local.test.mjs:122:1'
+  failureType: 'testCodeFailure'
+  error: 'Unexpected PostgreSQL major version'
+  code: 'P0001'
+  name: 'error'
+  stack: |-
+    pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 1
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7076.4101

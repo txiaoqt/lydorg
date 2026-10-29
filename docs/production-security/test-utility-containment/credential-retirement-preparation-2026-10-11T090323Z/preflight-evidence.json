@@ -1,0 +1,613 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "mode": "READ_ONLY_PREPARATION",
+  "capturedAt": "2026-10-11 09:03:23 UTC",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "productionMutationsExecuted": 0,
+  "authMutationsExecuted": 0,
+  "passwordAuthenticationAttempts": 0,
+  "oldPasswordOrPasswordHashRetrieved": false,
+  "targetRecord": {
+    "path": "docs/production-security/test-utility-containment/affected-account-readonly.json",
+    "sha256": "5f7f4312c0d27b40d21d8e2470789478c19a0273335c65ae59580a6628bfa98a",
+    "targetCount": 1,
+    "authUserSuffix": "941f85",
+    "organizationSuffix": "14de17",
+    "tracked": false,
+    "gitIgnored": false
+  },
+  "checks": {
+    "containment": {
+      "status": "PASS",
+      "receipt": "20261011230000",
+      "guard": false,
+      "disabledMutationRpcs": 12,
+      "protectedMarkerTriggers": 4,
+      "matchedFunctionDefinitions": 17
+    },
+    "exactAccount": {
+      "status": "PASS",
+      "checkedAt": "2026-10-11T08:50:56.539376+00:00",
+      "matchesRecordedIds": true,
+      "matchesOriginalLegacyDesignation": true,
+      "linkedEmailIdentityCount": 1,
+      "organizationAssociations": 1,
+      "authRole": "authenticated",
+      "applicationRoles": [
+        "youth"
+      ],
+      "deleted": false,
+      "currentlyBanned": false,
+      "confirmed": true,
+      "allRefreshSessionRows": 0,
+      "allRefreshTokenRows": 0,
+      "unrevokedRefreshTokenRows": 0,
+      "pendingOneTimeTokens": 0,
+      "accreditationTerms": 1,
+      "renewals": 0,
+      "currentAccreditationMatchesOwner": true,
+      "originalNullableBanNormalized": true
+    },
+    "classification": {
+      "status": "PASS",
+      "basis": [
+        "Exact designated email and organization label match the redacted legacy function",
+        "One recorded creation audit for the renewal test account",
+        "Persisted dedicated renewal-test marker now protected by containment",
+        "Only the reviewed organization ownership and email provider identity found"
+      ],
+      "notAnUnusedAccountClaim": true,
+      "lastTestUtilityActivityUtc": "2026-10-10T16:23:00.274658+00:00"
+    },
+    "preservedData": {
+      "status": "PASS",
+      "relationsCompared": 57,
+      "matchingFingerprints": 57,
+      "permissionAndPolicyFingerprintsUnchanged": true
+    },
+    "authNotificationBehavior": {
+      "status": "PASS",
+      "evidence": {
+        "projectRef": "mqqaykksadotbrghbexz",
+        "observedAt": "2026-10-11T08:58:21Z",
+        "method": "Read-only authenticated Supabase Dashboard DOM and switch attributes; no settings saved.",
+        "customSmtpEnabled": true,
+        "globalEmailDeliveryDisabled": false,
+        "passwordChangedNotificationEnabled": false,
+        "otherSecurityNotificationsEnabled": false,
+        "configuredAuthHooks": 0,
+        "configuredSendEmailHooks": 0,
+        "accessTokenExpirySeconds": 3600,
+        "refreshTokenRotationEnabled": true,
+        "refreshTokenReuseIntervalSeconds": 10,
+        "sessionsTimeboxHours": 0,
+        "sessionsInactivityTimeoutHours": 0,
+        "valuesForSmtpCredentialsRead": false,
+        "observationWindowUtc": {
+          "start": "2026-10-11T08:50:56Z",
+          "end": "2026-10-11T08:58:21Z"
+        }
+      },
+      "customWriteTriggers": [
+        {
+          "table": "auth.users",
+          "trigger": "trg_auth_user_created",
+          "function": "handle_new_auth_user()",
+          "definition": "CREATE TRIGGER trg_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_auth_user()"
+        }
+      ],
+      "legacyEmailUsesInvalidDomain": false,
+      "scope": "Only the proposed password-and-ban Auth Admin update; not global email isolation"
+    },
+    "supportedRevocation": {
+      "status": "PASS",
+      "health": {
+        "projectRef": "mqqaykksadotbrghbexz",
+        "readOnly": true,
+        "httpStatus": 200,
+        "version": "v2.197.0",
+        "serviceName": "GoTrue",
+        "keyType": "public-anon",
+        "adminCredentialUsed": false,
+        "credentialValuesPrinted": false
+      },
+      "deployedVersion": "v2.197.0",
+      "mechanism": "Auth Admin password update invokes UpdatePassword(tx,nil), which logs out all user sessions; live refresh-token foreign key cascades session deletion.",
+      "sessionConstraints": [
+        {
+          "table": "auth.mfa_amr_claims",
+          "constraint": "mfa_amr_claims_session_id_fkey",
+          "definition": "FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE"
+        },
+        {
+          "table": "auth.refresh_tokens",
+          "constraint": "refresh_tokens_session_id_fkey",
+          "definition": "FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE"
+        }
+      ],
+      "liveExecutionTested": false,
+      "banAloneRevokesSessions": false
+    },
+    "productionAuthAdminExecutionCredential": {
+      "status": "BLOCKED",
+      "reason": "No recognized production Auth Admin service-role/secret credential is available in this task process; no privileged Auth request was attempted."
+    },
+    "authMutationExecution": {
+      "status": "NOT TESTED",
+      "reason": "Separate exact-account authorization required."
+    }
+  },
+  "targetBusinessBaseline": [
+    {
+      "relation": "public.activity_logs",
+      "row_count": 393,
+      "content_fingerprint": "336ea1e625232c60d7dbb6041819a3f6"
+    },
+    {
+      "relation": "public.budget_request_files",
+      "row_count": 3,
+      "content_fingerprint": "167bf815f7b3a766afb7b223e5b9da7f"
+    },
+    {
+      "relation": "public.budget_requests",
+      "row_count": 3,
+      "content_fingerprint": "85b5b9fe12722aeb6462bc1c00655213"
+    },
+    {
+      "relation": "public.compliance_remarks",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.document_submission_files",
+      "row_count": 6,
+      "content_fingerprint": "c136a18babe7f0649677166a9db68169"
+    },
+    {
+      "relation": "public.document_submissions",
+      "row_count": 1,
+      "content_fingerprint": "168ae2b44f45f6b3474fed62638656e2"
+    },
+    {
+      "relation": "public.inquiries",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.liquidation_report_files",
+      "row_count": 2,
+      "content_fingerprint": "b5fda20cae18cedd5094a364d5cbafee"
+    },
+    {
+      "relation": "public.liquidation_reports",
+      "row_count": 2,
+      "content_fingerprint": "a770b6f2f635588715e8a5e2093a7690"
+    },
+    {
+      "relation": "public.move_applications",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.move_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.notifications",
+      "row_count": 79,
+      "content_fingerprint": "e8891f01d24726c90466b1fe6829a5e8"
+    },
+    {
+      "relation": "public.organization_accreditations",
+      "row_count": 1,
+      "content_fingerprint": "77b9e3f318587db81af34168d17523ce"
+    },
+    {
+      "relation": "public.organization_contacts",
+      "row_count": 2,
+      "content_fingerprint": "cab2fe5ec7dfee6a68d1088b20e591cb"
+    },
+    {
+      "relation": "public.organization_profiles",
+      "row_count": 1,
+      "content_fingerprint": "cb851fdfb8dc5caf0e4dd14c4ab44aee"
+    },
+    {
+      "relation": "public.organization_renewals",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.urn_review_history",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.user_policy_acceptance",
+      "row_count": 1,
+      "content_fingerprint": "539d1985ccf4ffaee1d17f59303d689a"
+    },
+    {
+      "relation": "public.user_profiles",
+      "row_count": 1,
+      "content_fingerprint": "d6a1f1e4722d6122894dc89ec4ca4f1b"
+    },
+    {
+      "relation": "public.user_roles",
+      "row_count": 1,
+      "content_fingerprint": "82fe01aab8c2420d4b6f3f5ca18b013b"
+    },
+    {
+      "relation": "public.ypop_entries",
+      "row_count": 1,
+      "content_fingerprint": "63ec83123c2d16d638d6d6d94f118b8a"
+    },
+    {
+      "relation": "public.ypop_event_files",
+      "row_count": 3,
+      "content_fingerprint": "bd54ceb4c54b6ab4a5d4a3cc2c7ca72c"
+    },
+    {
+      "relation": "public.ypop_event_participations",
+      "row_count": 3,
+      "content_fingerprint": "f6a46c4a31053ea7802b704914836e60"
+    },
+    {
+      "relation": "public.ypop_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.ypop_org_activities",
+      "row_count": 1,
+      "content_fingerprint": "00e866b9e37ca7db0d80d87d3acc2ffe"
+    },
+    {
+      "relation": "public.ypop_org_activity_files",
+      "row_count": 1,
+      "content_fingerprint": "a2e6d605fb7deed5448264cb810ca2b2"
+    },
+    {
+      "relation": "public.ypop_submission_deletion_receipts",
+      "row_count": 2,
+      "content_fingerprint": "cc775929d65c7b4b06d8890f6f634de8"
+    }
+  ],
+  "preservedData": [
+    {
+      "relation": "auth.identities_inventory",
+      "row_count": 95,
+      "content_fingerprint": "45a9fb511bd1822a28e82dbc913dde5d"
+    },
+    {
+      "relation": "auth.users_inventory",
+      "row_count": 94,
+      "content_fingerprint": "5bcc63fdd00f4cdd786facd3c2f6f58d"
+    },
+    {
+      "relation": "public.activity_announcements",
+      "row_count": 6,
+      "content_fingerprint": "28e322bab084e9a89718da39795b22e0"
+    },
+    {
+      "relation": "public.activity_logs",
+      "row_count": 3332,
+      "content_fingerprint": "5fc339b896fb4e34ef17f1eba1ed0eb8"
+    },
+    {
+      "relation": "public.admin_accounts",
+      "row_count": 2,
+      "content_fingerprint": "30a5c6f52b69e8dec2125a71bfa4616e"
+    },
+    {
+      "relation": "public.admin_portal_change_versions",
+      "row_count": 6,
+      "content_fingerprint": "7e6c7f061514e0fde6c43ce6aeb874c9"
+    },
+    {
+      "relation": "public.admin_sessions",
+      "row_count": 482,
+      "content_fingerprint": "fa88c66589b3ecbd301dcd9cf03736f1"
+    },
+    {
+      "relation": "public.admin_system_settings",
+      "row_count": 68,
+      "content_fingerprint": "68095125d275901d6333baa9c36cb4a9"
+    },
+    {
+      "relation": "public.admin_template_categories",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.admin_ypop_deletion_jobs",
+      "row_count": 4,
+      "content_fingerprint": "e81781ac735813b1e0c2021650142e9c"
+    },
+    {
+      "relation": "public.annual_budget_allocations",
+      "row_count": 3,
+      "content_fingerprint": "2c9338864d856a9856dcda0491f81387"
+    },
+    {
+      "relation": "public.barangays",
+      "row_count": 3,
+      "content_fingerprint": "285e90ea897994d57efd99680da96c8e"
+    },
+    {
+      "relation": "public.budget_purpose_categories",
+      "row_count": 8,
+      "content_fingerprint": "99cd6b10027869db5618c37855082401"
+    },
+    {
+      "relation": "public.budget_request_files",
+      "row_count": 6,
+      "content_fingerprint": "81a2d5b32a6c5a29a5f8ede183dd3129"
+    },
+    {
+      "relation": "public.budget_requests",
+      "row_count": 90,
+      "content_fingerprint": "2d911ea3051078776c3f5f5e008288f1"
+    },
+    {
+      "relation": "public.compliance_remarks",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.disclosure_documents",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.document_submission_files",
+      "row_count": 547,
+      "content_fingerprint": "6c35d6ddc8da60d9852f22f95d453977"
+    },
+    {
+      "relation": "public.document_submissions",
+      "row_count": 92,
+      "content_fingerprint": "f87d27a80e429144f2c88a41d27aeb58"
+    },
+    {
+      "relation": "public.events",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.inquiries",
+      "row_count": 4,
+      "content_fingerprint": "f6d52fba640e3934452396902bdd486d"
+    },
+    {
+      "relation": "public.liquidation_report_files",
+      "row_count": 5,
+      "content_fingerprint": "12787cc1f63c1e29706e5ae868b6c3cb"
+    },
+    {
+      "relation": "public.liquidation_reports",
+      "row_count": 62,
+      "content_fingerprint": "0f8a58c9fbd797f27eb38b6a2a262423"
+    },
+    {
+      "relation": "public.move_applications",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.move_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.news_categories",
+      "row_count": 3,
+      "content_fingerprint": "1caed02a216979387f5baa2a67f5dfa8"
+    },
+    {
+      "relation": "public.news_releases",
+      "row_count": 3,
+      "content_fingerprint": "e8dbf275e72fca49bddf422d64298434"
+    },
+    {
+      "relation": "public.notifications",
+      "row_count": 173,
+      "content_fingerprint": "5b105d7f7bd483b3d87731f89e2b041f"
+    },
+    {
+      "relation": "public.organization_accreditations",
+      "row_count": 89,
+      "content_fingerprint": "acaca3a360e0eee207b26e99f89d273a"
+    },
+    {
+      "relation": "public.organization_contacts",
+      "row_count": 212,
+      "content_fingerprint": "5a135b2217ca0426515b803247725720"
+    },
+    {
+      "relation": "public.organization_profiles",
+      "row_count": 92,
+      "content_fingerprint": "74635aef35af2f782effc2bec513a7f2"
+    },
+    {
+      "relation": "public.organization_reference_counters",
+      "row_count": 3,
+      "content_fingerprint": "fb2571fbeb0992e19f5d0cd90ddb0c5c"
+    },
+    {
+      "relation": "public.organization_renewals",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.organization_urn_counters",
+      "row_count": 3,
+      "content_fingerprint": "953db2031037ddb2e308e1acfce461d2"
+    },
+    {
+      "relation": "public.organizations",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.policy_versions",
+      "row_count": 3,
+      "content_fingerprint": "24e58d491ffe06bf0bfd2657912e2fd9"
+    },
+    {
+      "relation": "public.programs",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.required_document_types",
+      "row_count": 13,
+      "content_fingerprint": "216d9574c0ecba0eb6d1dc92dd857aea"
+    },
+    {
+      "relation": "public.roles",
+      "row_count": 4,
+      "content_fingerprint": "618c7b05d0ce767b5dc15b1eabfc3ead"
+    },
+    {
+      "relation": "public.transparency_posts",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.units",
+      "row_count": 3,
+      "content_fingerprint": "3990c69587b1e4b3f290eb34e731095e"
+    },
+    {
+      "relation": "public.urn_review_history",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.user_policy_acceptance",
+      "row_count": 8,
+      "content_fingerprint": "42bfbee4e900458bc2e632c539150015"
+    },
+    {
+      "relation": "public.user_profiles",
+      "row_count": 94,
+      "content_fingerprint": "33ac6c4a91f677a63d23a434133069e0"
+    },
+    {
+      "relation": "public.user_roles",
+      "row_count": 94,
+      "content_fingerprint": "7389281c9a335d86c30ac3d08fd0bc00"
+    },
+    {
+      "relation": "public.yorp_sample_document_assets",
+      "row_count": 6,
+      "content_fingerprint": "43bceefa25c46d3d6eac3fe3e22bcc04"
+    },
+    {
+      "relation": "public.ypop_city_activities",
+      "row_count": 3,
+      "content_fingerprint": "8b71c043841baf7f98335431a2e5e1de"
+    },
+    {
+      "relation": "public.ypop_entries",
+      "row_count": 5,
+      "content_fingerprint": "a73db120d12731dcb1bdacc271f419fe"
+    },
+    {
+      "relation": "public.ypop_event_files",
+      "row_count": 17,
+      "content_fingerprint": "49ae31d3a00d004a3adf8ca33a3c2e79"
+    },
+    {
+      "relation": "public.ypop_event_participations",
+      "row_count": 14,
+      "content_fingerprint": "ccabd058a74fb35c39060f898f7c6a3c"
+    },
+    {
+      "relation": "public.ypop_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.ypop_org_activities",
+      "row_count": 3,
+      "content_fingerprint": "9b8692dd3ae0b9e08b52747a21b9628d"
+    },
+    {
+      "relation": "public.ypop_org_activity_files",
+      "row_count": 4,
+      "content_fingerprint": "1b910d8245d4e3df2da5c6440319d582"
+    },
+    {
+      "relation": "public.ypop_periods",
+      "row_count": 1,
+      "content_fingerprint": "2dfa94654bc6b0bb01f41c05587817df"
+    },
+    {
+      "relation": "public.ypop_submission_deletion_receipts",
+      "row_count": 2,
+      "content_fingerprint": "cc775929d65c7b4b06d8890f6f634de8"
+    },
+    {
+      "relation": "storage.buckets",
+      "row_count": 10,
+      "content_fingerprint": "acc282dfda329140a4a6d68e5bc10d8a"
+    },
+    {
+      "relation": "storage.objects",
+      "row_count": 378,
+      "content_fingerprint": "f7998fec5fa18463de4fee1b6205385f"
+    }
+  ],
+  "permissionBaseline": {
+    "relation_acl_rls": "5f88ac85303e95fd1b466b39a86b4478",
+    "all_policy_catalog": "badea3ac4e8877ef1a919bab0883a854",
+    "existing_schema_acls": "a2babb6c4c9bcfefebbbed7ccfcae4d4",
+    "test_utility_active_calls": 0,
+    "unrelated_function_catalog": "513d8915579c8c0f1d5ae1737b7f1c65"
+  },
+  "operatorPlan": {
+    "decision": "READY_FOR_SEPARATE_APPROVAL; EXECUTION_BLOCKED",
+    "endpointOrigin": "https://mqqaykksadotbrghbexz.supabase.co",
+    "officialOperation": "supabase.auth.admin.updateUserById(record.targets[0].auth_user_id, { password: randomInMemoryPassword, ban_duration: '876000h' })",
+    "approvedOperationCountRequired": 1,
+    "passwordSpec": "64 ASCII characters with guaranteed upper/lower/digit/symbol and cryptographically random remainder; generated only in memory after approval; never logged or persisted.",
+    "fieldsExcluded": [
+      "email",
+      "phone",
+      "role",
+      "app_metadata",
+      "user_metadata",
+      "email_confirm",
+      "phone_confirm",
+      "password_hash"
+    ],
+    "noLoginRequiredForSupportedRevocation": true,
+    "noDirectAuthSqlWrites": true,
+    "postconditions": [
+      "Exact returned Auth user ID",
+      "Ban active for intended interval",
+      "Zero account sessions and refresh-token rows",
+      "Ownership/identity roles and metadata preserved",
+      "Public business, accreditation and Storage fingerprints preserved",
+      "Sanitized Auth HTTP result and available Auth audit evidence"
+    ],
+    "noAutomaticRetryOnUncertainResult": true,
+    "existingJwtExpirySeconds": 3600,
+    "alreadyIssuedSignedUrlsRevoked": false,
+    "dependentDocumentHotfixRebaseline": "Separate task after independently confirmed retirement; old candidate must not be executed unchanged."
+  },
+  "finalReadOnlySessionObservation": {"checked_at":"2026-10-11T09:06:24.058217+00:00","all_session_rows":0,"all_refresh_token_rows":0,"unrevoked_refresh_token_rows":0},
+  "sources": [
+    "https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid",
+    "https://raw.githubusercontent.com/supabase/auth/v2.197.0/internal/api/admin.go",
+    "https://raw.githubusercontent.com/supabase/auth/v2.197.0/internal/models/user.go",
+    "https://raw.githubusercontent.com/supabase/auth/v2.197.0/internal/models/sessions.go",
+    "https://supabase.com/docs/reference/javascript/auth-admin-signout",
+    "https://supabase.com/docs/guides/auth/sessions"
+  ]
+}
+

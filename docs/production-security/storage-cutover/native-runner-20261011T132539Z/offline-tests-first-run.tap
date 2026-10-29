@@ -1,0 +1,110 @@
+TAP version 13
+# Subtest: exact reviewed artifact bytes and atomic timeouts are retained
+ok 1 - exact reviewed artifact bytes and atomic timeouts are retained
+  ---
+  duration_ms: 2.64
+  ...
+# Subtest: truncated and same-length changed artifacts are rejected
+ok 2 - truncated and same-length changed artifacts are rejected
+  ---
+  duration_ms: 1.266
+  ...
+# Subtest: wrong project, host, port and pooled route are rejected
+ok 3 - wrong project, host, port and pooled route are rejected
+  ---
+  duration_ms: 1.1252
+  ...
+# Subtest: missing credentials and CA stop before any connection
+ok 4 - missing credentials and CA stop before any connection
+  ---
+  duration_ms: 0.7437
+  ...
+# Subtest: wrong CA hash fails and verified config cannot disable hostname/chain validation
+ok 5 - wrong CA hash fails and verified config cannot disable hostname/chain validation
+  ---
+  duration_ms: 16.9185
+  ...
+# Subtest: Node TLS hostname verifier rejects a wrong certificate identity
+ok 6 - Node TLS hostname verifier rejects a wrong certificate identity
+  ---
+  duration_ms: 5.2583
+  ...
+# Subtest: native identity requires reviewed version, roles, privileges and read-only TLS
+ok 7 - native identity requires reviewed version, roles, privileges and read-only TLS
+  ---
+  duration_ms: 0.555
+  ...
+# Subtest: unexpected compatibility, history, policy and protection drift stop preflight
+ok 8 - unexpected compatibility, history, policy and protection drift stop preflight
+  ---
+  duration_ms: 6.9907
+  ...
+# Subtest: all 57 protected data/object/reference fingerprints must match
+ok 9 - all 57 protected data/object/reference fingerprints must match
+  ---
+  duration_ms: 0.8425
+  ...
+# Subtest: control-plane proof must match the fixed endpoint and remain fresh
+ok 10 - control-plane proof must match the fixed endpoint and remain fresh
+  ---
+  duration_ms: 0.8852
+  ...
+# Subtest: future authorization is scoped to SQL, native route, code bundle, CA and exclusive window
+ok 11 - future authorization is scoped to SQL, native route, code bundle, CA and exclusive window
+  ---
+  duration_ms: 0.7905
+  ...
+# Subtest: read-only query result must include COMMIT acknowledgement
+ok 12 - read-only query result must include COMMIT acknowledgement
+  ---
+  duration_ms: 0.2141
+  ...
+# Subtest: same-machine lock is exclusive; stale locks are never auto-cleared
+ok 13 - same-machine lock is exclusive; stale locks are never auto-cleared
+  ---
+  duration_ms: 29.0746
+  ...
+# Subtest: a changed foreign lock cannot be released
+ok 14 - a changed foreign lock cannot be released
+  ---
+  duration_ms: 11.1342
+  ...
+# Subtest: single attempt sends the exact complete SQL once; durable marker prevents a second send
+ok 15 - single attempt sends the exact complete SQL once; durable marker prevents a second send
+  ---
+  duration_ms: 20.8645
+  ...
+# Subtest: ambiguous response is never retried; marker and lock remain, logs have no secrets
+ok 16 - ambiguous response is never retried; marker and lock remain, logs have no secrets
+  ---
+  duration_ms: 19.9552
+  ...
+# Subtest: missing COMMIT acknowledgement is uncertain and never triggers resubmission
+ok 17 - missing COMMIT acknowledgement is uncertain and never triggers resubmission
+  ---
+  duration_ms: 12.6672
+  ...
+# Subtest: known PostgreSQL error permits only ROLLBACK and still requires reconciliation
+ok 18 - known PostgreSQL error permits only ROLLBACK and still requires reconciliation
+  ---
+  duration_ms: 13.7501
+  ...
+# Subtest: failure after COMMIT is reported as committed; no rollback or reinstall
+ok 19 - failure after COMMIT is reported as committed; no rollback or reinstall
+  ---
+  duration_ms: 16.1187
+  ...
+# Subtest: postflight validates exact source/ACLs, trigger bindings, private tables and canonical assets
+ok 20 - postflight validates exact source/ACLs, trigger bindings, private tables and canonical assets
+  ---
+  duration_ms: 2.839
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 316.5932

@@ -1,0 +1,40 @@
+{
+  "capturedAt": "2026-10-12T12:48:35.732Z",
+  "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "readyState": "READY",
+  "eventsRead": 55,
+  "eventsSha256": "b02c6fd910b9c0a44302e712c530df1766bc0826fe7f19eb864d18a9b20538f5",
+  "rawLogsPersisted": false,
+  "npmCiInvoked": true,
+  "installs": [
+    {
+      "packages": 675,
+      "duration": "16s"
+    }
+  ],
+  "wrapperInvoked": true,
+  "wrapper": {
+    "status": "PASS",
+    "surface": "user",
+    "fixedVersion": "1.0.0-org-storage-rc+20261012114439.vercel24",
+    "node": "v24.21.0",
+    "platform": "linux",
+    "publicConfigurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+    "privateEnvironmentPassed": false
+  },
+  "node24Configured": true,
+  "actualHostedNpmVersion": "NOT RECORDED",
+  "pythonVersions": [
+    "3.12"
+  ],
+  "pythonSignals": {
+    "requirements": true,
+    "requests": true,
+    "dotenv": false,
+    "urllib3": false,
+    "installCompletion": false
+  },
+  "failureCodes": [],
+  "buildCompleted": true,
+  "productionDomainPromotion": false
+}

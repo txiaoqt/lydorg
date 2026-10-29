@@ -1,0 +1,57 @@
+{
+  "recordedAt": "2026-10-12T14:42:53.609Z",
+  "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "decision": "CONDITIONAL GO FOR SEPARATELY AUTHORIZED PROMOTION",
+  "hostedAcceptance": {
+    "status": "PASS",
+    "evidence": "Operator-executed; independently compared locally",
+    "matchedAssets": 53,
+    "failedAssets": 0,
+    "blockedAssets": 0,
+    "routes": 7,
+    "headerMismatches": 0,
+    "apiGet": 405,
+    "apiOptions": 204,
+    "scanTextVisits": 33,
+    "scanFindings": 0,
+    "devtoolsNetworkBypass": "Operator confirmed; not independently attested"
+  },
+  "ownerSmoke": {
+    "passed": [
+      "login",
+      "dashboard",
+      "submission/status display",
+      "document preview",
+      "document download",
+      "registration access",
+      "public templates/news",
+      "account switching/private-data cleanup"
+    ],
+    "notTested": [
+      "renewal owner page",
+      "live Realtime status change"
+    ],
+    "evidence": "Operator reported"
+  },
+  "manualProfileMutationReported": true,
+  "exactManualProfileDeltaIndependentlyVerified": false,
+  "providerPreservation": "PASS",
+  "candidateState": "READY",
+  "adminDeployment": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+  "organizationLiveDeployment": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+  "typecheck": "FAIL 651 baseline diagnostics, not rerun",
+  "sourceArchivePreserved": true,
+  "checkerUnmodified": true,
+  "agentActions": {
+    "deployment": 0,
+    "promotion": 0,
+    "rebuild": 0,
+    "supabaseRequests": 0,
+    "privateFileRequests": 0,
+    "automatedLogins": 0,
+    "newAccounts": 0,
+    "businessMutations": 0,
+    "syncPosts": 0,
+    "gitPushes": 0
+  }
+}

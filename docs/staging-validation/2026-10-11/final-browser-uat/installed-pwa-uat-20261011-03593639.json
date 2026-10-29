@@ -1,0 +1,159 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "runLabel": "installed-pwa-uat-20261011-03593639",
+  "environment": "isolated-local-production-build",
+  "installedPwa": {
+    "browserVersion": "155.0.8059.39",
+    "localProductionBuild": true,
+    "serviceWorkerInitially": {
+      "controlled": true,
+      "active": true,
+      "scopeIsAppRoot": true,
+      "scriptHasVersionQuery": true
+    },
+    "manifestLinked": true,
+    "appIdDerivedFromManifest": true,
+    "installedViaChromePwaProtocol": true,
+    "standaloneLaunch": false,
+    "appWindowServiceWorkerControlled": true,
+    "startPath": "/",
+    "testProfileIsolated": true,
+    "uninstalledAfterTest": true
+  },
+  "networkIsolation": {
+    "serviceWorkerProbeBlocked": true,
+    "egressProxyDeniedProbe": true,
+    "proxy": {
+      "allowedStagingTls": 2,
+      "blockedTotal": 19,
+      "blockedProduction": 0,
+      "blockedUnrelated": 19
+    },
+    "productionAttemptsBlocked": 0,
+    "productionRequestsObservedByHarness": 0
+  },
+  "checks": [
+    {
+      "name": "Production build registers and controls the installed PWA origin with the application service worker",
+      "status": "PASS",
+      "controlled": true,
+      "active": true,
+      "scopeIsAppRoot": true,
+      "scriptHasVersionQuery": true
+    },
+    {
+      "name": "Service-worker-originated unrelated request is blocked below Playwright routing",
+      "status": "PASS",
+      "workerFetchRejected": true,
+      "allowlistProxyDeniedRequest": true
+    },
+    {
+      "name": "Chrome installed and launched the local app in standalone mode with the real service worker",
+      "status": "FAIL",
+      "standalone": false,
+      "serviceWorkerControlled": true,
+      "manifestLinked": true
+    }
+  ],
+  "http": [
+    {
+      "phase": "service-worker-registration",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "service-worker-registration",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_public_system_settings",
+      "status": 200
+    },
+    {
+      "phase": "pwa-install",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_public_system_settings",
+      "status": 200
+    },
+    {
+      "phase": "pwa-install",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "pwa-install",
+      "method": "GET",
+      "endpoint": "/rest/v1/news_releases",
+      "status": 200
+    },
+    {
+      "phase": "pwa-install",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_public_system_settings",
+      "status": 200
+    }
+  ],
+  "blocked": [
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/news-releases/:idSYNTHETIC-news-pixel.png",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "service-worker-registration",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "pwa-install",
+      "endpoint": "/news-releases/:idSYNTHETIC-news-pixel.png",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "pwa-install",
+      "endpoint": "/css2",
+      "method": "GET",
+      "production": false
+    },
+    {
+      "phase": "pwa-install",
+      "endpoint": "/news-releases/:idSYNTHETIC-news-pixel.png",
+      "method": "GET",
+      "production": false
+    }
+  ],
+  "errors": [],
+  "operationErrors": [
+    {
+      "name": "Error",
+      "reason": "Chrome did not launch the PWA in standalone mode."
+    }
+  ],
+  "console": {
+    "error": 2,
+    "warning": 0,
+    "sanitizedSamples": [
+      {
+        "phase": "pwa-install",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      },
+      {
+        "phase": "pwa-install",
+        "type": "error",
+        "message": "Failed to load resource: net::ERR_FAILED"
+      }
+    ]
+  },
+  "websockets": [],
+  "finishedAt": "2026-10-11T03:59:43.650Z"
+}

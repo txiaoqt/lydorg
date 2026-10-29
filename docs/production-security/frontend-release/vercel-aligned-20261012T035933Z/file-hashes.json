@@ -1,0 +1,72 @@
+{
+  "files": [
+    {
+      "path": "admin-build.log",
+      "sha256": "6879036ddd86c0e49c1ad2e904329487e7781cc04c4194aa581c717c75c3410e"
+    },
+    {
+      "path": "artifact-verification.json",
+      "sha256": "72e62928310827cf9856da1c2753549e29d6dc58f9ae5a1528dad69ad1a35950"
+    },
+    {
+      "path": "diff-check.json",
+      "sha256": "49f4839cb2abe6cfa7c323677c16834972fc63fce79fe0d5ccc0dd4a7120d979"
+    },
+    {
+      "path": "final-source-manifest.json",
+      "sha256": "b3851e15a37f6e4522f682401c542513682e5eafdfe052d80893b3a91937bb97"
+    },
+    {
+      "path": "focused-tests.json",
+      "sha256": "7bd14a3e06c4621567947e4c6df290a543d6512e674be3108d99230513d23fef"
+    },
+    {
+      "path": "node24-runtime.json",
+      "sha256": "04e7eef0ebba2c010e58b1431ec5fb5ed8ac4d6153131061eb8f0a62b49b638e"
+    },
+    {
+      "path": "npm-ci.log",
+      "sha256": "1c5eebbbc8d31fe0d001cd82c407c01ea44fd399fa4604c52ac5bcf68c13aad9"
+    },
+    {
+      "path": "packaging-tests.log",
+      "sha256": "9cf834e87803942b07d17aa5c054f4cbdf28debeecdeed9612f79d053c3723aa"
+    },
+    {
+      "path": "public-configuration-review.json",
+      "sha256": "3a2b3a72628249392b8073481c80858860228f46ba1c4838baf9580c09347c0c"
+    },
+    {
+      "path": "python-check.log",
+      "sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    {
+      "path": "python-tests.log",
+      "sha256": "907058bebb15a2b5d7cb561a9965313945abc9fdc5a13d7da3ce4ee6d67eee7c"
+    },
+    {
+      "path": "release-manifest.json",
+      "sha256": "91ef1d7c0137c579b43995bec157dcb5d76235b81cbbb9cb110731c578af599e"
+    },
+    {
+      "path": "reproduction-build.log",
+      "sha256": "6879036ddd86c0e49c1ad2e904329487e7781cc04c4194aa581c717c75c3410e"
+    },
+    {
+      "path": "reproduction-npm-ci.log",
+      "sha256": "e005379a4dd7e7e4a2621030a9714618d4f385a52594bc434cf88926a0b5f04f"
+    },
+    {
+      "path": "reproduction-public-parity.json",
+      "sha256": "f16ab26c705265e5e3ef4432349bc598c0757fddae97d7bcaea9222b2ea013a3"
+    },
+    {
+      "path": "review.md",
+      "sha256": "4c7f7f2a6e59f80149fb4839e93f03b330a3f12529ec8434e74da8a94a6246d6"
+    },
+    {
+      "path": "typescript.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

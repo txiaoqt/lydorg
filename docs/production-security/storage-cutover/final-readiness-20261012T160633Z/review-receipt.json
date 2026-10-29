@@ -1,0 +1,166 @@
+{
+  "capturedAt": "2026-10-12T16:35:16.475Z",
+  "project": "mqqaykksadotbrghbexz",
+  "purpose": "READ_ONLY_FINAL_STORAGE_CUTOVER_REVIEW",
+  "catalogComparison": "PASS",
+  "comparisonChecks": 20,
+  "providerIdentity": "PASS",
+  "liveMutations": 0,
+  "installationAttempted": false,
+  "frontendCodeModified": false,
+  "reviewedSqlModified": false,
+  "preparationDecision": "CONDITIONAL GO",
+  "executionDecision": "NO-GO pending operator decisions and separately authorized correction/cutover",
+  "evidence": [
+    {
+      "file": "catalog-readonly.json",
+      "bytes": 214670,
+      "sha256": "261683f8a282df40157464281d18b70e44fce36832a852aaac792540d83fa3d7"
+    },
+    {
+      "file": "cleanup-readonly.json",
+      "bytes": 5468,
+      "sha256": "c689242f488e2d658682c5e69c8ee87a90028e74dde46d18a0d57aee0885e636"
+    },
+    {
+      "file": "cleanup-rpc-readonly.sql",
+      "bytes": 1664,
+      "sha256": "70b47116f6eb2c71260fedbb26f2a1a4cad79981b46cf8456e39dabb6c2ec794"
+    },
+    {
+      "file": "compare-evidence.mjs",
+      "bytes": 9155,
+      "sha256": "4e281f3fdff611cceabe8a7347fba58e8e454098c05e615923c0521af79cbc7a"
+    },
+    {
+      "file": "comparison-reviewed.json",
+      "bytes": 4168,
+      "sha256": "5374d81001ce365f260ed4dc088cf2ac2364ac4df62459d2fdfc2949d217bd52"
+    },
+    {
+      "file": "comparison.json",
+      "bytes": 4166,
+      "sha256": "85cb559318bceb18a6c327ebae24cef3a8d75e049b6e46e2ef526e5632a7cbeb"
+    },
+    {
+      "file": "control-plane-readonly.json",
+      "bytes": 3478,
+      "sha256": "a39dd0ad0f1dc905ce36ed48ad4a0593155658e0b896ae8bc0b7f5c6fd95ee47"
+    },
+    {
+      "file": "current-budget-delete-definition.sql",
+      "bytes": 3239,
+      "sha256": "a43dd8280fcc05e2860d517962fddece15056d46717196e4e166846b1b93a303"
+    },
+    {
+      "file": "current-references-readonly.json",
+      "bytes": 1701,
+      "sha256": "6612b036fe0b69e5e25505f0b359ec9214e46b059e9c9341b102d79f35ea76f2"
+    },
+    {
+      "file": "current-references-readonly.sql",
+      "bytes": 16956,
+      "sha256": "5a3c9c475f146c954b275e0b23a79ab660b0726bee8691994269d08eee1096b7"
+    },
+    {
+      "file": "delete-trigger-readonly-review.json",
+      "bytes": 499,
+      "sha256": "607d4b7e2281ae7cd8d2c94fda1bef1face120979eae924dfeb2e6bbd616f320"
+    },
+    {
+      "file": "finding-ledger.json",
+      "bytes": 3229,
+      "sha256": "72b05cf98c2c5df14ed1ef742244f29498f0150f7d41a3d0d6ea9398eaace48e"
+    },
+    {
+      "file": "foundation-readonly.json",
+      "bytes": 21852,
+      "sha256": "9b8075b5d733b5ec86f6b824e79df9400746f367778f61a26cc4c64e9d674652"
+    },
+    {
+      "file": "foundation-readonly.sql",
+      "bytes": 5923,
+      "sha256": "61c81752a121232734465e9cd3f4f0078d6bd1457ea4cd4d5ed981096bde4639"
+    },
+    {
+      "file": "object-readonly.sql",
+      "bytes": 19998,
+      "sha256": "43ea0d8e3747f2aafe705c53a275124f2b4e5eab26481120d6aec12433191947"
+    },
+    {
+      "file": "operator-decisions.md",
+      "bytes": 3909,
+      "sha256": "70b2a578fd51664f73778719439f999df84793697b86a165ba7ddb6465b5477b"
+    },
+    {
+      "file": "owner-access-exception-readonly.sql",
+      "bytes": 1683,
+      "sha256": "c7d26a4802cc759e6b1881fa0479bd3ebfda9246e9dae742900d1f0c37d747c4"
+    },
+    {
+      "file": "owner-access-exception.json",
+      "bytes": 665,
+      "sha256": "c0393b506a122918cbf3c2a8aeef54c6243ca4428e036b0edd89e2b3b75eb815"
+    },
+    {
+      "file": "policy-manifest.json",
+      "bytes": 15474,
+      "sha256": "4547e95c87afffaa0f3ff8b52861aca49699b01271322b02bda83bf01003516a"
+    },
+    {
+      "file": "preservation-readonly.json",
+      "bytes": 3178,
+      "sha256": "c290c8ac29da7b852358fd29cfc470afd7d445317cf1631359ea0dc03076d4c9"
+    },
+    {
+      "file": "preservation-readonly.sql",
+      "bytes": 5171,
+      "sha256": "e4f55eb464e544de511b886341ced44d8aaf39928a39880cc8d42aa38c6860b0"
+    },
+    {
+      "file": "priority-parent-evidence-readonly.json",
+      "bytes": 11198,
+      "sha256": "f6eade2f96f0600123554298e5750a5e7c89d7996fe60a150521bf5983d7dcef"
+    },
+    {
+      "file": "priority-parent-evidence-readonly.sql",
+      "bytes": 1838,
+      "sha256": "bd728e1f2bd76a2ad4423067460254006e6040ea4e0650b38f8a26ea40185a05"
+    },
+    {
+      "file": "provider-identity.json",
+      "bytes": 2949,
+      "sha256": "8c19de737542364878c6627acbd0e6385112f2d65b69b505b255a39140e17364"
+    },
+    {
+      "file": "provider-readonly.mjs",
+      "bytes": 2822,
+      "sha256": "c7b20bb9b34c1c714d7dad8a7613e8efaf8c11997af6904787c6261be158d1c6"
+    },
+    {
+      "file": "review.md",
+      "bytes": 21860,
+      "sha256": "e7b4dffc0ef58ad9c2ff7434b1dcdf7754d81c9a396df03f4f857ceb8033a284"
+    },
+    {
+      "file": "sample-references-readonly.json",
+      "bytes": 212,
+      "sha256": "236b1722b2d161a2fe8817710fbb30ffd16112e6afce5ce7e974cb4469f6f8a4"
+    },
+    {
+      "file": "sample-references-readonly.sql",
+      "bytes": 975,
+      "sha256": "d678be42912070f9b3309ab3391afd6854ae731aa68a2f82d606495447b41297"
+    },
+    {
+      "file": "session-validator-readonly-review.json",
+      "bytes": 337,
+      "sha256": "01513bb70cdc99711124b621c171001a831ad93109fdf3c05fb1e0c0532208be"
+    },
+    {
+      "file": "storage-readonly.json",
+      "bytes": 246256,
+      "sha256": "cafe086c25723b4e3747c20b9cfc25c5a7a1cdbb348566b2de674d2e5ff296c7"
+    }
+  ]
+}

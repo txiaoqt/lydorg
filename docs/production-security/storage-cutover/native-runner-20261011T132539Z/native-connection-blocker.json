@@ -1,0 +1,15 @@
+{
+  "status": "BLOCKED",
+  "project": "mqqaykksadotbrghbexz",
+  "probe": "docs/production-security/storage-cutover/diagnostics/20261011T125750Z/native-postgres-readonly-probe.mjs",
+  "missing": [
+    "YTRACE_PRODUCTION_DB_PASSWORD",
+    "YTRACE_PRODUCTION_DB_CA_FILE",
+    "YTRACE_PRODUCTION_DB_CA_SHA256"
+  ],
+  "connectionAttempted": false,
+  "tlsHandshakeExecuted": false,
+  "nativeCatalogVerified": false,
+  "productionDdlExecuted": false,
+  "stagingAccessed": false
+}

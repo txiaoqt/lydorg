@@ -1,0 +1,108 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T11:07:05.134Z",
+  "checks": [
+    {
+      "check": "Exact four journal-recorded synthetic Auth identities",
+      "status": "PASS"
+    },
+    {
+      "check": "Existing activated Super Admin and zero-permission Admin",
+      "status": "PASS"
+    },
+    {
+      "check": "Ten existing buckets with unchanged visibility",
+      "status": "PASS"
+    },
+    {
+      "check": "Preserved synthetic template bytes match journal hash",
+      "status": "PASS"
+    },
+    {
+      "check": "Preserved synthetic news bytes match journal hash",
+      "status": "PASS"
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 940
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 360
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 353
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 162
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/template-files/a2cbcab8-f402-40c1-9908-1049f50cf936",
+      "status": 200,
+      "durationMs": 284
+    },
+    {
+      "actor": "Read-only fixture inventory",
+      "step": "Identity repair preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/news-release-images/news-releases",
+      "status": 200,
+      "durationMs": 704
+    }
+  ]
+}

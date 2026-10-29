@@ -1,0 +1,12 @@
+{
+  "approvedWindowStartUtc": "2026-10-13T12:30:00Z",
+  "approvedWindowEndUtc": "2026-10-13T13:00:00Z",
+  "approvedWindowLocal": "2026-10-13 20:30-21:00 Asia/Manila",
+  "scope": "Supervised preparation only: proof archival, fresh control-plane proof, ONE native read-only preflight. NO --install / production SQL submission.",
+  "existingDeletionRequestsDrained": true,
+  "competingWritersAndBackgroundJobsPaused": true,
+  "confirmedBy": "Accountable operator (session user), via explicit in-session answer 'Confirmed drained'",
+  "controlPlaneRouteDecision": "Operator approved local Supabase CLI 2.118.0 `projects list -o json` as substitute for unavailable MCP get_project (route deviation recorded)",
+  "nodePgForceNativeUnset": true,
+  "installAuthorized": false
+}

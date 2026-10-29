@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "operationExecuted": false,
+  "source": "control-plane-proof.json",
+  "sourceSha256": "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf",
+  "sourceStillExists": true,
+  "proposedDestination": "control-plane-proof-history-2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf.json",
+  "destinationAbsent": true,
+  "originalArchivedProof": "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+  "originalArchiveNotARenameSource": true,
+  "effectiveAcls": "PASS",
+  "singleNonOverwritingMoveInReviewedCommand": true,
+  "currentAuthorizationFileSha256": "99453771ac91e5db5ce81e334e98c2155a3be001c316509109ad4caea84b8d9e",
+  "autoReviewRejection": "First command not executed: reviewer interpreted this as repeat of earlier original-proof rename",
+  "productionConnectionAttempts": 0,
+  "recordedAt": "2026-10-13T10:38:09.6687347Z"
+}

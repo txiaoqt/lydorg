@@ -1,0 +1,32 @@
+{
+  "capturedAt": "2026-10-12T09:23:17.126Z",
+  "status": "PROMOTION_ACKNOWLEDGED_PENDING_READONLY_VERIFICATION",
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+  "attempts": 1,
+  "automaticRetries": 0,
+  "exitCode": 0,
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSha256": "a5e14105df170f3d9c1ed2500dc76deeb9b5d20c26c5281332cdb66280eb5bdf",
+  "timeout": false,
+  "overflow": false,
+  "spawnError": false,
+  "transport": {
+    "recordedAt": "2026-10-12T09:23:17.098Z",
+    "cliVersion": "63.1.2",
+    "clientModuleSha256": "d09cbde148f869762f51b35b7cf0fd5defdd450094e288b81cefa93e6cd40914",
+    "commandsModuleSha256": "a7f2f57caf3f42d10c370ea36efca693948e5fa04856ef040784558f44a01cf5",
+    "credentialsReadByLocalGuard": false,
+    "cliAuthentication": "Existing official CLI credential handling; no manual token extraction",
+    "promotionFetchInvocations": 1,
+    "promotionRequestsDispatched": 1,
+    "blockedMutationCalls": 0,
+    "automaticRetriesConfigured": 0,
+    "promotionHttp": 201
+  },
+  "productionAliasesRequested": [
+    "y-trace-admin.vercel.app"
+  ],
+  "newDeploymentRequested": false
+}

@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-10-12T01:38:47.777Z",
+  "files": [
+    {
+      "path": "docs\\production-security\\frontend-readiness\\20261012T011835Z\\review.md",
+      "bytes": 21349,
+      "sha256": "672e4799582243af8de4bfc71241cb7ca13e2100d53d14347f910dd5b00a59d4",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "docs\\production-security\\frontend-readiness\\20261012T011835Z\\release-manifest.json",
+      "bytes": 7827,
+      "sha256": "e1feab1b974624470df7b0d7b27b9228619ea00ce1e039e691f0f78515f63bff",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "docs\\production-security\\frontend-readiness\\20261012T011835Z\\live-frontend-evidence.json",
+      "bytes": 2812,
+      "sha256": "80f59d5313aa3ed9b8f9145d76773991607862fd2efe659e44ca9a7e963d7059",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "docs\\production-security\\frontend-readiness\\20261012T011835Z\\local-validation.json",
+      "bytes": 4714,
+      "sha256": "585664670fc506cdcc6d99089b254f470dc1341b880cbad1450244e53a135232",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "docs\\production-security\\frontend-readiness\\20261012T011835Z\\build-artifact-inventories.json",
+      "bytes": 28616,
+      "sha256": "5f7a49765ff6fe2579416dbed0c2216e6da45c33d13d8a20746888a23c992684",
+      "previousStorageReviewMatch": null
+    }
+  ]
+}

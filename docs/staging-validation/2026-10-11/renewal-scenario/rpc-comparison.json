@@ -1,0 +1,56 @@
+[
+  {
+    "name": "admin_ensure_renewal_test_account_profile",
+    "signature": "admin_ensure_renewal_test_account_profile(text)",
+    "productionDefinitionCharacters": 5981,
+    "stagingDefinitionCharacters": 324,
+    "stagingDisabled": true,
+    "productionWritesAuth": false,
+    "productionDeletesRows": false
+  },
+  {
+    "name": "admin_get_or_create_renewal_test_account",
+    "signature": "admin_get_or_create_renewal_test_account(text)",
+    "productionDefinitionCharacters": 14068,
+    "stagingDefinitionCharacters": 323,
+    "stagingDisabled": true,
+    "productionWritesAuth": true,
+    "productionDeletesRows": false
+  },
+  {
+    "name": "admin_prepare_renewal_test_scenario",
+    "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+    "productionDefinitionCharacters": 3581,
+    "stagingDefinitionCharacters": 412,
+    "stagingDisabled": true,
+    "productionWritesAuth": false,
+    "productionDeletesRows": false
+  },
+  {
+    "name": "admin_reset_renewal_test_scenario",
+    "signature": "admin_reset_renewal_test_scenario(text)",
+    "productionDefinitionCharacters": 3961,
+    "stagingDefinitionCharacters": 316,
+    "stagingDisabled": true,
+    "productionWritesAuth": false,
+    "productionDeletesRows": true
+  },
+  {
+    "name": "admin_restore_renewal_test_scenario",
+    "signature": "admin_restore_renewal_test_scenario(text)",
+    "productionDefinitionCharacters": 2099,
+    "stagingDefinitionCharacters": 318,
+    "stagingDisabled": true,
+    "productionWritesAuth": false,
+    "productionDeletesRows": false
+  },
+  {
+    "name": "admin_seed_renewal_test_registration_documents",
+    "signature": "admin_seed_renewal_test_registration_documents(text)",
+    "productionDefinitionCharacters": 7154,
+    "stagingDefinitionCharacters": 340,
+    "stagingDisabled": true,
+    "productionWritesAuth": false,
+    "productionDeletesRows": false
+  }
+]

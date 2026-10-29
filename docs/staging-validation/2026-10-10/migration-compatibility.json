@@ -1,0 +1,281 @@
+{
+  "scope": "Filename/name/version comparison only; historical SQL-body equivalence not established",
+  "local_count": 166,
+  "live_count": 163,
+  "same_version_different_name": [
+    {
+      "version": "20260905",
+      "local": "ypop_workflow_closure_evaluation",
+      "live": "admin_ypop_sync_rpcs"
+    }
+  ],
+  "same_name_different_version": [
+    {
+      "name": "admin_ypop_sync_rpcs",
+      "local_version": "20260905200000",
+      "live_version": "20260905"
+    },
+    {
+      "name": "include_org_activity_files_in_admin_ypop_review",
+      "local_version": "20261005200000",
+      "live_version": "20261005082646"
+    },
+    {
+      "name": "admin_backup_control_permissions",
+      "local_version": "20261005190000",
+      "live_version": "20261005090731"
+    },
+    {
+      "name": "guard_budget_revision_approval",
+      "local_version": "20261005215904",
+      "live_version": "20261005220220"
+    },
+    {
+      "name": "admin_sidebar_counts_realtime",
+      "local_version": "20261005220545",
+      "live_version": "20261005220921"
+    },
+    {
+      "name": "hide_unsubmitted_liquidation_drafts",
+      "local_version": "20261005221435",
+      "live_version": "20261005221916"
+    },
+    {
+      "name": "qualify_liquidation_draft_review_guard",
+      "local_version": "20261005221819",
+      "live_version": "20261005222047"
+    },
+    {
+      "name": "lock_submitted_registration_document_edits",
+      "local_version": "20261005222222",
+      "live_version": "20261005222451"
+    },
+    {
+      "name": "repair_registration_revision_lock_columns",
+      "local_version": "20261005223009",
+      "live_version": "20261005223241"
+    },
+    {
+      "name": "fix_registration_replacement_audit_actor",
+      "local_version": "20261005223134",
+      "live_version": "20261005223415"
+    },
+    {
+      "name": "fix_registration_replacement_notification_type",
+      "local_version": "20261005223229",
+      "live_version": "20261005223454"
+    },
+    {
+      "name": "admin_quarterly_export_filters",
+      "local_version": "20261007203541",
+      "live_version": "20261007211022"
+    },
+    {
+      "name": "admin_independent_year_quarter_filters",
+      "local_version": "20261007212327",
+      "live_version": "20261007212512"
+    },
+    {
+      "name": "admin_monitoring_all_years",
+      "local_version": "20261007213208",
+      "live_version": "20261007213515"
+    },
+    {
+      "name": "admin_budget_period_summary",
+      "local_version": "20261007214053",
+      "live_version": "20261007214250"
+    },
+    {
+      "name": "rebalance_yorp_seed_reporting_quarters",
+      "local_version": "20261007214552",
+      "live_version": "20261007215151"
+    },
+    {
+      "name": "diversify_yorp_seed_projects_and_budgets",
+      "local_version": "20261007215640",
+      "live_version": "20261007215950"
+    }
+  ],
+  "live_versions_without_local_filename": [
+    {
+      "version": "20261005082646",
+      "name": "include_org_activity_files_in_admin_ypop_review"
+    },
+    {
+      "version": "20261005090731",
+      "name": "admin_backup_control_permissions"
+    },
+    {
+      "version": "20261005220220",
+      "name": "guard_budget_revision_approval"
+    },
+    {
+      "version": "20261005220921",
+      "name": "admin_sidebar_counts_realtime"
+    },
+    {
+      "version": "20261005221916",
+      "name": "hide_unsubmitted_liquidation_drafts"
+    },
+    {
+      "version": "20261005222047",
+      "name": "qualify_liquidation_draft_review_guard"
+    },
+    {
+      "version": "20261005222451",
+      "name": "lock_submitted_registration_document_edits"
+    },
+    {
+      "version": "20261005223241",
+      "name": "repair_registration_revision_lock_columns"
+    },
+    {
+      "version": "20261005223415",
+      "name": "fix_registration_replacement_audit_actor"
+    },
+    {
+      "version": "20261005223454",
+      "name": "fix_registration_replacement_notification_type"
+    },
+    {
+      "version": "20261007211022",
+      "name": "admin_quarterly_export_filters"
+    },
+    {
+      "version": "20261007212512",
+      "name": "admin_independent_year_quarter_filters"
+    },
+    {
+      "version": "20261007213515",
+      "name": "admin_monitoring_all_years"
+    },
+    {
+      "version": "20261007214250",
+      "name": "admin_budget_period_summary"
+    },
+    {
+      "version": "20261007215151",
+      "name": "rebalance_yorp_seed_reporting_quarters"
+    },
+    {
+      "version": "20261007215950",
+      "name": "diversify_yorp_seed_projects_and_budgets"
+    }
+  ],
+  "local_versions_without_live_entry": [
+    {
+      "version": "20261005190000",
+      "name": "admin_backup_control_permissions",
+      "file": "supabase/migrations/20261005190000_admin_backup_control_permissions.sql",
+      "sha256": "ce2c693ff393d7a1d324043333cbc9eb6e327b02d5d5666a134caf36d1e3cbdd"
+    },
+    {
+      "version": "20261005200000",
+      "name": "include_org_activity_files_in_admin_ypop_review",
+      "file": "supabase/migrations/20261005200000_include_org_activity_files_in_admin_ypop_review.sql",
+      "sha256": "52d107562127c3e13bdd03cc9b2d4bd89c507510b8e4067432e12d34cfc65751"
+    },
+    {
+      "version": "20261005215904",
+      "name": "guard_budget_revision_approval",
+      "file": "supabase/migrations/20261005215904_guard_budget_revision_approval.sql",
+      "sha256": "4275b331d7f23aa6e7714bdd1aa3c32893c3055747cdb387d805dd1b27e09351"
+    },
+    {
+      "version": "20261005220545",
+      "name": "admin_sidebar_counts_realtime",
+      "file": "supabase/migrations/20261005220545_admin_sidebar_counts_realtime.sql",
+      "sha256": "9751186aa159ee6188b1e8f99acf3b1779ea39deb9aea9760b4b8c52adc87371"
+    },
+    {
+      "version": "20261005221435",
+      "name": "hide_unsubmitted_liquidation_drafts",
+      "file": "supabase/migrations/20261005221435_hide_unsubmitted_liquidation_drafts.sql",
+      "sha256": "c6ab770a0a15d24d14e68e3cef013e4be8329b1be7a8a755aad397eea3d577ce"
+    },
+    {
+      "version": "20261005221819",
+      "name": "qualify_liquidation_draft_review_guard",
+      "file": "supabase/migrations/20261005221819_qualify_liquidation_draft_review_guard.sql",
+      "sha256": "5e078ffd4733f9826f8ea63a690ab4c781f1fe7451033e426e78617a2842e679"
+    },
+    {
+      "version": "20261005222222",
+      "name": "lock_submitted_registration_document_edits",
+      "file": "supabase/migrations/20261005222222_lock_submitted_registration_document_edits.sql",
+      "sha256": "c5f4549c6a7b3e91a2a2ca37664dfdd56b2f791c1057ef50cb293b898b8e898f"
+    },
+    {
+      "version": "20261005223009",
+      "name": "repair_registration_revision_lock_columns",
+      "file": "supabase/migrations/20261005223009_repair_registration_revision_lock_columns.sql",
+      "sha256": "e5dc87ccbaacf12b4e85f856e1f8d1e1dae0588439c17e938c6621b3bd0a11cf"
+    },
+    {
+      "version": "20261005223134",
+      "name": "fix_registration_replacement_audit_actor",
+      "file": "supabase/migrations/20261005223134_fix_registration_replacement_audit_actor.sql",
+      "sha256": "0159cc3bcf708c81cbfbf06066259a610baf4e2901499a91ccab00d57d2e875b"
+    },
+    {
+      "version": "20261005223229",
+      "name": "fix_registration_replacement_notification_type",
+      "file": "supabase/migrations/20261005223229_fix_registration_replacement_notification_type.sql",
+      "sha256": "8c41bb43dd06ab9515c4113fba063b9973974ca744f9d8dd7c011ee182f35592"
+    },
+    {
+      "version": "20261007203541",
+      "name": "admin_quarterly_export_filters",
+      "file": "supabase/migrations/20261007203541_admin_quarterly_export_filters.sql",
+      "sha256": "cfbfa95e95f72b5a64dff7115d57080022d520e0d1933c3d3ccdc090d0f973be"
+    },
+    {
+      "version": "20261007212327",
+      "name": "admin_independent_year_quarter_filters",
+      "file": "supabase/migrations/20261007212327_admin_independent_year_quarter_filters.sql",
+      "sha256": "cd4ffbac2d8eb3387425230752237aa4956e824bfe947e0fe5026192237a16e1"
+    },
+    {
+      "version": "20261007213208",
+      "name": "admin_monitoring_all_years",
+      "file": "supabase/migrations/20261007213208_admin_monitoring_all_years.sql",
+      "sha256": "dc66673358627bb52f6068ac7b248dd70a7042307a7e357d9c6f8e06f45eccb5"
+    },
+    {
+      "version": "20261007214053",
+      "name": "admin_budget_period_summary",
+      "file": "supabase/migrations/20261007214053_admin_budget_period_summary.sql",
+      "sha256": "8da19306d7d4aec85a86e1231bb9dbd36461dd31388e870cdc0306a9ec9321d3"
+    },
+    {
+      "version": "20261007214552",
+      "name": "rebalance_yorp_seed_reporting_quarters",
+      "file": "supabase/migrations/20261007214552_rebalance_yorp_seed_reporting_quarters.sql",
+      "sha256": "0ec1463338a15f09663c0e746b7b824baa8d086d08d826bfa7f06c33b237e6b4"
+    },
+    {
+      "version": "20261007215640",
+      "name": "diversify_yorp_seed_projects_and_budgets",
+      "file": "supabase/migrations/20261007215640_diversify_yorp_seed_projects_and_budgets.sql",
+      "sha256": "56205c25ccf0d77e92210f33646138b7562094ed3fbb574dd961117a9ae1892f"
+    },
+    {
+      "version": "20261009114340",
+      "name": "performance_auth_uid_initplans",
+      "file": "supabase/migrations/20261009114340_performance_auth_uid_initplans.sql",
+      "sha256": "222d2655688fb17dbcc7e287778a13884abb76d647db8e586bc4b6931c0fcc16"
+    },
+    {
+      "version": "20261009145634",
+      "name": "storage_authorization_remediation",
+      "file": "supabase/migrations/20261009145634_storage_authorization_remediation.sql",
+      "sha256": "8d241721b21ea83c422c4ae0ecc2d0b09feb7b151b7d8f79fc1ea516a28a01d7"
+    },
+    {
+      "version": "20261009150110",
+      "name": "storage_authorization_cutover",
+      "file": "supabase/migrations/20261009150110_storage_authorization_cutover.sql",
+      "sha256": "12697389da2644dcfa3945619fb522dc28d905deea7f348f5b02cf4a918c261e"
+    }
+  ]
+}

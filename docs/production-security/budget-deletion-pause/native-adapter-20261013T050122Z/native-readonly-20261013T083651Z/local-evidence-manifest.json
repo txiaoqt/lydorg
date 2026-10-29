@@ -1,0 +1,50 @@
+{
+  "status": "STOPPED_BEFORE_NATIVE_PREFLIGHT",
+  "files": [
+    {
+      "file": "archive-acl-verification.json",
+      "bytes": 90,
+      "sha256": "6008a57a30f42715fccfd88b85db91053f56f31bdd0dedde10991eb958e7a21d"
+    },
+    {
+      "file": "ca-trust-comparison.json",
+      "bytes": 50,
+      "sha256": "1eb86c742a376b8a1566716d9640c3f52c6d0f6fe74e3710ac7eba8bc1f7bcf5"
+    },
+    {
+      "file": "environment-validation.json",
+      "bytes": 268,
+      "sha256": "c6e888c5fee297c95c691b0ea8c6d819c4c6dc03baf0b747b87aeac76e60444e"
+    },
+    {
+      "file": "execution-report.md",
+      "bytes": 3327,
+      "sha256": "185ef0b774ad3894d184fcd8cd87eefae5fdb32f228acbb026d779b03f677350"
+    },
+    {
+      "file": "local-proof-after-rename.json",
+      "bytes": 353,
+      "sha256": "7bd70b0b9685eea20b1c86b84c51e6b750b192e037ce01c22d2642996e99f60b"
+    },
+    {
+      "file": "local-proof-before-rename.json",
+      "bytes": 353,
+      "sha256": "e941338d4d9466b546870f6800425f6d5b384ab9cf5952d21715c686175ca114"
+    },
+    {
+      "file": "ntfs-last-access-policy.txt",
+      "bytes": 73,
+      "sha256": "00cb3ca180c249427014898ea1f3c5751525381323843bca7bd04f9148d27a45"
+    },
+    {
+      "file": "offline-review.json",
+      "bytes": 540,
+      "sha256": "7489b230998d93f50de6af4d1d4681a4bb53fb9c45fa4c794926bc23ced63f81"
+    },
+    {
+      "file": "read-only-stop-receipt.json",
+      "bytes": 1532,
+      "sha256": "b6fa66cc3d87602368e8d7623aa6c46707dc5d89f8dc7415a87a977f3d95fc47"
+    }
+  ]
+}

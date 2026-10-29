@@ -1,0 +1,19 @@
+{
+  "standardRepositoryDiffCheckExitCode": 0,
+  "diffDiagnosticBytes": 0,
+  "lineEndingWarningCount": 34,
+  "evidenceFiles": 14,
+  "invalidJson": [],
+  "approvedSqlHashUnchanged": true,
+  "unrelatedDocumentHotfixHashUnchanged": true,
+  "savedEvidenceChecksPassed": 48,
+  "savedEvidenceChecksFailed": 0,
+  "unchangedDataInventories": 57,
+  "nonstandardDiagnostic": {
+    "command": "git -c core.fsmonitor=false -c core.autocrlf=false diff --check",
+    "exitCode": 1,
+    "explanation": "The command-local autocrlf override treated existing CRLF lines throughout the dirty checkout as trailing whitespace. It changed no file or Git configuration. The normal repository-configured check result is recorded separately.",
+    "productionEffect": "None"
+  },
+  "productionVerificationUnchanged": "COMMITTED_AND_VERIFIED"
+}

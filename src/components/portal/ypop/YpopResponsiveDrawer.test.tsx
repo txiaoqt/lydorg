@@ -1173,10 +1173,16 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
     it("Canonical preview: PortalDrawerDocumentSection renders active file, resolves URL, allows file switching, and handles Open/Download", async () => {
       setViewportWidth(1280);
       const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
-      vi.spyOn(lydoSupabase, "resolveSupabaseFileUrl").mockImplementation(async (url) => `https://resolved.cdn.com/${url}`);
+      vi.spyOn(globalThis, "fetch").mockResolvedValue({
+        ok: true,
+        blob: async () => new Blob(["synthetic PDF fixture"], { type: "application/pdf" }),
+      } as Response);
+      vi.spyOn(lydoSupabase, "resolveSupabaseFileUrl").mockImplementation(async (url) => `blob:resolved-${encodeURIComponent(url)}`);
 
       const file1 = createProofFile("f-multi-1", proofPendingPart.id, "proof_page1.pdf");
       const file2 = createProofFile("f-multi-2", proofPendingPart.id, "proof_page2.pdf");
+      file1.fileUrl = "blob:proof-page1";
+      file2.fileUrl = "blob:proof-page2";
 
       render(
         <YpopProofDrawer

@@ -1,0 +1,67 @@
+{
+  "capturedAt": "2026-10-11 14:37:40 UTC",
+  "project": "mqqaykksadotbrghbexz",
+  "scope": "Local environment-file setup only",
+  "nodeVersion": "22.14.0",
+  "windowsProtection": {
+    "fileIgnored": true,
+    "fileTracked": false,
+    "aclVerified": true,
+    "aclInheritanceDisabled": true,
+    "allowedAccess": "Current Windows user and SYSTEM",
+    "authorizationRecordCreated": false,
+    "nativeAttemptMarkerCreated": false
+  },
+  "localValidation": {
+    "status": "PASS",
+    "variables": [
+      {
+        "name": "YTRACE_PRODUCTION_DB_PASSWORD",
+        "present": true
+      },
+      {
+        "name": "YTRACE_PRODUCTION_DB_CA_FILE",
+        "present": true
+      },
+      {
+        "name": "YTRACE_PRODUCTION_DB_CA_SHA256",
+        "present": true
+      }
+    ],
+    "caFileExists": true,
+    "caSha256Matches": true,
+    "networkAttempted": false
+  },
+  "preservedArtifacts": {
+    "runnerBundleUnchanged": true,
+    "sqlUnchanged": true,
+    "sqlBytes": 47407,
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "runnerExecuted": false
+  },
+  "focusedTests": {
+    "passed": 12,
+    "failed": 0,
+    "command": "node --test scripts/security/foundation-environment.test.mjs",
+    "realCredentialsUsedInTests": false,
+    "realTlsTested": false
+  },
+  "typeScriptConfig": {
+    "command": "node node_modules/typescript/bin/tsc -p tsconfig.node.json --noEmit",
+    "exitCode": 0
+  },
+  "diffCheck": {
+    "command": "git diff --check -- .gitignore vite.config.ts",
+    "exitCode": 0,
+    "existingCrLfWarning": true
+  },
+  "privateFileContentsPrinted": false,
+  "privateFileValuesPersistedInEvidence": false,
+  "nativeProbeExecuted": false,
+  "nativePreflightExecuted": false,
+  "installerExecuted": false,
+  "productionWrites": 0,
+  "stagingWrites": 0,
+  "authorizationRecordCreated": false,
+  "limitation": "Local validation matches CA bytes against the supplied fingerprint. Independent CA provenance, native TLS, production identity and catalog readiness remain for the next read-only task."
+}

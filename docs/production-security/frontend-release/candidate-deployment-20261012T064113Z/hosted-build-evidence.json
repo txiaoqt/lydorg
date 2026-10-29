@@ -1,0 +1,134 @@
+{
+  "capturedAt": "2026-10-12T06:54:48.477Z",
+  "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+  "status": "READY",
+  "eventsRead": 56,
+  "eventsLimit": 1000,
+  "rawLogsPersisted": false,
+  "eventsSha256": "3458646246880c1ac446d9eb4f0053bab2064d1b26a33c8066f538407a31ed36",
+  "npmCiInvoked": true,
+  "installs": [
+    {
+      "packages": 675,
+      "duration": "22s"
+    }
+  ],
+  "wrapperInvoked": true,
+  "wrapper": {
+    "status": "PASS",
+    "surface": "admin",
+    "fixedVersion": "1.0.0-admin-storage-rc+20261012035933.vercel24",
+    "node": "v24.21.0",
+    "platform": "linux",
+    "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+    "privateEnvironmentPassed": false
+  },
+  "node24Configured": true,
+  "actualNpmVersion": null,
+  "pythonVersions": [
+    "3.12"
+  ],
+  "pythonSignals": {
+    "pythonMentioned": true,
+    "uvMentioned": true,
+    "requirementsMentioned": true,
+    "dependencyInstallMentioned": false,
+    "requestsMentioned": true,
+    "dotenvMentioned": false,
+    "urllib3Mentioned": false
+  },
+  "failureCodes": [],
+  "providerBuildCompletedSignal": true,
+  "sourceIdentity": "PASS",
+  "provider": {
+    "capturedAt": "2026-10-12T06:54:48.458Z",
+    "status": "PASS",
+    "authenticatedProviderAccess": true,
+    "admin": {
+      "id": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "name": "lydorg",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "updatedAt": 1791787763905,
+      "productionId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "productionUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true
+    },
+    "organization": {
+      "id": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "name": "yorbms_user",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "updatedAt": 1791481871891,
+      "productionId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "productionUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true
+    },
+    "adminAlias": {
+      "alias": "y-trace-admin.vercel.app",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "deploymentId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "deploymentUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app"
+    },
+    "organizationAlias": {
+      "alias": "ytrace.app",
+      "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+    },
+    "concurrentDeployments": 0,
+    "adminDeploymentIds": [
+      "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS",
+      "dpl_645dxpV4ubKyVXast3rBHjy3mZhr",
+      "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "dpl_BhYo37WcJuwBVx6JLL7VBJ5mQRY6",
+      "dpl_7GrB5SNwBBREHPr4wCYmzyG9JyMC",
+      "dpl_G4yh2FunfypmupKLTi69ULcq7rrp",
+      "dpl_6FJw3ZhqGbJk3PGbkCoyf8mMKk4w",
+      "dpl_Bm1idFnT8mzBfPWLoKed1qSnDMyZ",
+      "dpl_3zoCdrToHb9cQJBugBBJJMbQ53Nx",
+      "dpl_AY8K99yX6Gur4xf56A45ENW7bLYW",
+      "dpl_DEo54GRRSteKryaVyBsRMYLRqFxX",
+      "dpl_AmSTtB6gTpHZTckbEtHcZAGRwxTd",
+      "dpl_78xkUPrmTK6quMLRhHwM8SdWHQiP",
+      "dpl_A694MmRxnnXFeTYxirYc4i5Nzbqz",
+      "dpl_2DnwRR2wAGzQq9BJ6DXXraywWdt2",
+      "dpl_4AzoYFKHbBowFghrG1XpRx83zneV",
+      "dpl_FBwEZMMFvqY9FzdVN9XxLuPztwnU"
+    ],
+    "organizationDeploymentIds": [
+      "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "dpl_4YfNAbqeFDknqHszpARV5QW7o1GV",
+      "dpl_Ba4GUi6zLuYgBY3dkuWdgAui9Vgi",
+      "dpl_BtuYhQdZKRuUMZpxhaG8nepDjWC5",
+      "dpl_7dxckuuhfsfUAmEMXvJz37Lr9wgo",
+      "dpl_B64ppKg2KFvh9vdTZuYNUeQCnbBT",
+      "dpl_H1eTRoovHmQFJH51LkQoYzdirg7Y",
+      "dpl_9JxrDNGYWC28MmzXsxAsmma9ZSdG",
+      "dpl_HzbzcQWbdyBJ6eqLkAr39oEPsdjD",
+      "dpl_AqUFnz1Agw76oVvuJuX4ZPA6NDgL",
+      "dpl_2tF5QmmhRiHCmKhrJhtmzMD6Crix",
+      "dpl_4j1sZTY7zyLkENqYDDxCa28zfCCB",
+      "dpl_7ecpsJuM4EwsnqJcnaWX6At6rgmb",
+      "dpl_HqjUHqKs8CLyLoFe58r952aexJqy",
+      "dpl_Frczi2sE9aTTkCB1CxQXLNE15FX3"
+    ]
+  },
+  "automaticRetries": 0,
+  "promotionAttempted": false,
+  "viteCompletion": "PASS via reviewed wrapper success after awaited Vite build",
+  "childEnvironmentIsolation": "PASS: uploaded exact projection + fresh strict worker validation succeeded; private/provider inputs omitted; not a dump of environment values"
+}

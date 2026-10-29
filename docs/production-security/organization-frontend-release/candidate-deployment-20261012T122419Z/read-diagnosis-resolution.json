@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-10-12T13:02:20.711Z",
+  "status": "PASS",
+  "initialStop": "preflight-stop.json retained, PROVIDER_GET_FAILED before any deployment attempt; exact original cause unknown",
+  "individualProviderReads": 8,
+  "allIndividualReadsSucceeded": true,
+  "freshSerializedPreflight": "PASS",
+  "driftFound": false,
+  "keywordFlagCaveat": "The early diagnostic scanned complete successful JSON for words such as permission or 404. Those keyword flags are not actual HTTP failures when CLI exit is zero and valid provider objects are returned.",
+  "deploymentRetries": 0
+}

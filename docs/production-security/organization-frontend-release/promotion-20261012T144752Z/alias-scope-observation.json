@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-10-12T15:01:28.310Z",
+  "readOnly": true,
+  "promotionSubmissions": 0,
+  "currentProductionAliases": [
+    {
+      "alias": "www.ytrace.app",
+      "projectId": null,
+      "deploymentId": null
+    },
+    {
+      "alias": "yorbmsuser-git-main-toffs-projects-81b2ce10.vercel.app",
+      "projectId": null,
+      "deploymentId": null
+    },
+    {
+      "alias": "ytrace.app",
+      "projectId": null,
+      "deploymentId": null
+    }
+  ],
+  "candidateAliases": [
+    {
+      "alias": "yorbmsuser-toffs-projects-81b2ce10.vercel.app",
+      "projectId": null,
+      "deploymentId": null
+    }
+  ],
+  "configuredOrganizationDomains": [
+    {
+      "name": "www.ytrace.app",
+      "verified": true,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "redirect": "ytrace.app",
+      "redirectStatusCode": 307
+    },
+    {
+      "name": "ytrace.app",
+      "verified": true,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "redirect": null,
+      "redirectStatusCode": null
+    }
+  ],
+  "paginationComplete": true
+}

@@ -1,0 +1,291 @@
+{
+  "captured_at": "2026-10-11T15:31:27.305Z",
+  "read_only": "on",
+  "preserved_data": [
+    {
+      "relation": "auth.identities_inventory",
+      "row_count": 96,
+      "content_fingerprint": "76c6dbf4f53a6b3f7df2038e41f3c4ac"
+    },
+    {
+      "relation": "auth.users_inventory",
+      "row_count": 95,
+      "content_fingerprint": "6aa6c3d524eceb9dd7e3c9d3cd97c583"
+    },
+    {
+      "relation": "public.activity_announcements",
+      "row_count": 6,
+      "content_fingerprint": "a477e1841f1f52aa84be99c7e42c9212"
+    },
+    {
+      "relation": "public.activity_logs",
+      "row_count": 3334,
+      "content_fingerprint": "b8ef438a867a4e17cfd988f5bfc6ab23"
+    },
+    {
+      "relation": "public.admin_accounts",
+      "row_count": 2,
+      "content_fingerprint": "6667025b4e95390384c3e8d21ebd86b9"
+    },
+    {
+      "relation": "public.admin_portal_change_versions",
+      "row_count": 6,
+      "content_fingerprint": "3adec7b30f5510c40a56289af100772b"
+    },
+    {
+      "relation": "public.admin_sessions",
+      "row_count": 484,
+      "content_fingerprint": "7016ab80b40dbe0a6f48785e8ba7b41e"
+    },
+    {
+      "relation": "public.admin_system_settings",
+      "row_count": 68,
+      "content_fingerprint": "41cbbcc17101732120fe4ae511cf9fb9"
+    },
+    {
+      "relation": "public.admin_template_categories",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.admin_ypop_deletion_jobs",
+      "row_count": 4,
+      "content_fingerprint": "605e3150726ac44764f165c6ac17f869"
+    },
+    {
+      "relation": "public.annual_budget_allocations",
+      "row_count": 3,
+      "content_fingerprint": "baeafe3ae17c3eb8b1157bb6ea685f80"
+    },
+    {
+      "relation": "public.barangays",
+      "row_count": 3,
+      "content_fingerprint": "772803262eb4662effaca6b0f9189a00"
+    },
+    {
+      "relation": "public.budget_purpose_categories",
+      "row_count": 8,
+      "content_fingerprint": "00877f0b785dccfbbbb45fbf24969975"
+    },
+    {
+      "relation": "public.budget_request_files",
+      "row_count": 6,
+      "content_fingerprint": "959a679f0db324003bfbd9a41a73bd76"
+    },
+    {
+      "relation": "public.budget_requests",
+      "row_count": 90,
+      "content_fingerprint": "57fe3b1985eeb77aef7c8b7e61c43b84"
+    },
+    {
+      "relation": "public.compliance_remarks",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.disclosure_documents",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.document_submission_files",
+      "row_count": 547,
+      "content_fingerprint": "86e23905698f1463ca8324b2f2fdee29"
+    },
+    {
+      "relation": "public.document_submissions",
+      "row_count": 92,
+      "content_fingerprint": "cc28a4388e2ed0a521c1a57f6ee6f54d"
+    },
+    {
+      "relation": "public.events",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.inquiries",
+      "row_count": 4,
+      "content_fingerprint": "86a8b1c7c9bd972b5f61dcbc632033ec"
+    },
+    {
+      "relation": "public.liquidation_report_files",
+      "row_count": 5,
+      "content_fingerprint": "74753e505a742349247f64c80a710765"
+    },
+    {
+      "relation": "public.liquidation_reports",
+      "row_count": 62,
+      "content_fingerprint": "c8feef83d961d102237a129520184554"
+    },
+    {
+      "relation": "public.move_applications",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.move_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.news_categories",
+      "row_count": 3,
+      "content_fingerprint": "abd1a75ddf10f1e3ec488bb737041d9e"
+    },
+    {
+      "relation": "public.news_releases",
+      "row_count": 3,
+      "content_fingerprint": "798d23db2aef87b5dc37457dd3b2e180"
+    },
+    {
+      "relation": "public.notifications",
+      "row_count": 173,
+      "content_fingerprint": "c9da28803eedeaa26c65b78bb6eda6c9"
+    },
+    {
+      "relation": "public.organization_accreditations",
+      "row_count": 89,
+      "content_fingerprint": "61c8deb3bf9495fde59e613cc4f9b7f4"
+    },
+    {
+      "relation": "public.organization_contacts",
+      "row_count": 212,
+      "content_fingerprint": "44b6275d26e3b12bc73b78506cf891f3"
+    },
+    {
+      "relation": "public.organization_profiles",
+      "row_count": 92,
+      "content_fingerprint": "52f00b0d86d0c583a56143629fd7409a"
+    },
+    {
+      "relation": "public.organization_reference_counters",
+      "row_count": 3,
+      "content_fingerprint": "0982786fe42d4cc6e2931ce03c7620a3"
+    },
+    {
+      "relation": "public.organization_renewals",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.organization_urn_counters",
+      "row_count": 3,
+      "content_fingerprint": "b51b9a427d9ac10351501c0812c8056c"
+    },
+    {
+      "relation": "public.organizations",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.policy_versions",
+      "row_count": 3,
+      "content_fingerprint": "73a74104d4b95b6ec97c9598656e473c"
+    },
+    {
+      "relation": "public.programs",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.required_document_types",
+      "row_count": 13,
+      "content_fingerprint": "0c5e9f03ad34ee1de7605d93eec093d4"
+    },
+    {
+      "relation": "public.roles",
+      "row_count": 4,
+      "content_fingerprint": "1dcad3d0e8c8490def0d21146dca21df"
+    },
+    {
+      "relation": "public.transparency_posts",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.units",
+      "row_count": 3,
+      "content_fingerprint": "a97f533c92fb2de1bb66f97de4ea00ea"
+    },
+    {
+      "relation": "public.urn_review_history",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.user_policy_acceptance",
+      "row_count": 9,
+      "content_fingerprint": "08fc7b45a84206f14263f28759a9d624"
+    },
+    {
+      "relation": "public.user_profiles",
+      "row_count": 95,
+      "content_fingerprint": "bff1ea8e1490becad98c4f6c83a016d6"
+    },
+    {
+      "relation": "public.user_roles",
+      "row_count": 95,
+      "content_fingerprint": "9f133f574c7172ba6ad6ef106293d46a"
+    },
+    {
+      "relation": "public.yorp_sample_document_assets",
+      "row_count": 6,
+      "content_fingerprint": "62c3e8cf15931bfb8c61447e80a5a8dd"
+    },
+    {
+      "relation": "public.ypop_city_activities",
+      "row_count": 3,
+      "content_fingerprint": "528903a538a50c258a98c6f7566c60c3"
+    },
+    {
+      "relation": "public.ypop_entries",
+      "row_count": 5,
+      "content_fingerprint": "af85bef72658c2ea0eb84d1a98262965"
+    },
+    {
+      "relation": "public.ypop_event_files",
+      "row_count": 17,
+      "content_fingerprint": "8cbfd3e6b00371e388f42144f4aee2fb"
+    },
+    {
+      "relation": "public.ypop_event_participations",
+      "row_count": 14,
+      "content_fingerprint": "45edd1bde95490300c5e0e36866476a7"
+    },
+    {
+      "relation": "public.ypop_files",
+      "row_count": 0,
+      "content_fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.ypop_org_activities",
+      "row_count": 3,
+      "content_fingerprint": "d9970134c1e270bf09164bf6ddf67111"
+    },
+    {
+      "relation": "public.ypop_org_activity_files",
+      "row_count": 4,
+      "content_fingerprint": "49bd4a87247d409605d93844836c11fb"
+    },
+    {
+      "relation": "public.ypop_periods",
+      "row_count": 1,
+      "content_fingerprint": "a836b242db10b87679dfd8e840732f68"
+    },
+    {
+      "relation": "public.ypop_submission_deletion_receipts",
+      "row_count": 2,
+      "content_fingerprint": "dc63498e324a7f91ce15207b07f05fc7"
+    },
+    {
+      "relation": "storage.buckets",
+      "row_count": 10,
+      "content_fingerprint": "832ce1466eb597a15f1082c9544eb540"
+    },
+    {
+      "relation": "storage.objects",
+      "row_count": 378,
+      "content_fingerprint": "67284160e3ab4a273194aad042e84e40"
+    }
+  ]
+}

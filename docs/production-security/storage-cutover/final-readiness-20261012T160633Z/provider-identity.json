@@ -1,0 +1,92 @@
+{
+  "capturedAt": "2026-10-12T16:13:48.245Z",
+  "readOnly": true,
+  "status": "PASS",
+  "checks": {
+    "adminAlias": true,
+    "organizationAlias": true,
+    "adminReady": true,
+    "organizationReady": true,
+    "adminProject": true,
+    "organizationProject": true
+  },
+  "aliases": [
+    {
+      "alias": "y-trace-admin.vercel.app",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "deploymentUrl": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app"
+    },
+    {
+      "alias": "ytrace.app",
+      "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+      "deploymentUrl": "yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app"
+    }
+  ],
+  "deployments": [
+    {
+      "id": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "ownerId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "url": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+      "readyState": "READY",
+      "target": "production",
+      "createdAt": 1791787673913,
+      "ready": 1791787763579
+    },
+    {
+      "id": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+      "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "ownerId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "url": "yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+      "readyState": "READY",
+      "target": "production",
+      "createdAt": 1791809207507,
+      "ready": 1791809278925
+    }
+  ],
+  "projects": [
+    {
+      "id": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "name": "lydorg",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "productionId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "productionUrl": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoExposeSystemEnvs": true,
+      "link": {
+        "type": "github",
+        "org": "txiaoqt",
+        "repo": "lydorg",
+        "productionBranch": "main"
+      }
+    },
+    {
+      "id": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "name": "yorbms_user",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "productionId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+      "productionUrl": "yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoExposeSystemEnvs": true,
+      "link": {
+        "type": "github",
+        "org": "txiaoqt",
+        "repo": "lydorg",
+        "productionBranch": "main"
+      }
+    }
+  ],
+  "scope": "Provider metadata only; no deployment, promotion, environment reads, browser login, or business requests."
+}

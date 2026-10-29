@@ -1,0 +1,314 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "results": [
+    {
+      "case": "Authorized Admin signs template; downloaded hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 629,
+      "downloadMs": 332,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs template; downloaded hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 623
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs template; downloaded hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/template-files",
+          "status": 200,
+          "durationMs": 332
+        }
+      ]
+    },
+    {
+      "case": "INVALID: template gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 440,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: template gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 440
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: template gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 239,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: template gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 239
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: template gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 242,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: template gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 241
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: template gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 262,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: template gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 262
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs news; downloaded hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 278,
+      "downloadMs": 211,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs news; downloaded hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 276
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs news; downloaded hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/news-release-images",
+          "status": 200,
+          "durationMs": 210
+        }
+      ]
+    },
+    {
+      "case": "INVALID: news gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 212,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: news gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 212
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: news gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 236,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: news gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 235
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: news gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 244,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: news gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 244
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: news gateway signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 250,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: news gateway signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 250
+        }
+      ]
+    },
+    {
+      "case": "Valid Admin cannot sign an unbound arbitrary object",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 251,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Valid Admin cannot sign an unbound arbitrary object",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 251
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs template; downloaded hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 623
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs template; downloaded hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/template-files",
+      "status": 200,
+      "durationMs": 332
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: template gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 440
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: template gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 239
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: template gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 241
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: template gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 262
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs news; downloaded hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 276
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs news; downloaded hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/news-release-images",
+      "status": 200,
+      "durationMs": 210
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: news gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 212
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: news gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 235
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: news gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 244
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: news gateway signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 250
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Valid Admin cannot sign an unbound arbitrary object",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 251
+    }
+  ]
+}

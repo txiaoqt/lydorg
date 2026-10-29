@@ -1,0 +1,830 @@
+[
+  {
+    "surface": "admin",
+    "status": "PASS",
+    "sourceScope": "entire preserved dirty worktree; validation only, NOT isolated release candidate",
+    "files": 77,
+    "artifactInventorySha256": "d67438f87efc089902b4125b4cb3879533df635ea3c5cad1490e4ecb080d6d9a",
+    "manifestSha256": "a10f1588c7476261d96657e20126a4c48df0123a25cadcdca0456793911059f3",
+    "entry": {
+      "path": "assets/index-5tFizMQ1.js",
+      "bytes": 1245605,
+      "sha256": "30c31c6f2ae4fee18191cfd9bea09c9ee50f1a41b214c91e4b60fd1f60f0ef09"
+    },
+    "staticJsClosureBytes": 1245605,
+    "buildVersions": [
+      "1.0.0-review-gateway+20261012012502"
+    ],
+    "supabaseProjectRefs": [
+      "zroudsvpswqsjlyttkjf",
+      "mqqaykksadotbrghbexz"
+    ],
+    "serviceCredentialDetected": false,
+    "gatewayChunk": {
+      "path": "assets/admin-storage-access-BDVyqm_Y.js",
+      "bytes": 1223,
+      "sha256": "c8f7ecad9d30c5177406437d8a18ee9b62cfa7edc6a78c80aaeadbfd39a70631"
+    },
+    "inventory": [
+      {
+        "path": ".vite/manifest.json",
+        "bytes": 14460,
+        "sha256": "a10f1588c7476261d96657e20126a4c48df0123a25cadcdca0456793911059f3"
+      },
+      {
+        "path": "apple-touch-icon.png",
+        "bytes": 11211,
+        "sha256": "24bd4480ae38815dc1f85d590f4b5a1ae8946527f1f1ce74efcd0e1e3d503a20"
+      },
+      {
+        "path": "assets/About-DFC-05HW.js",
+        "bytes": 21231,
+        "sha256": "2071ef3047d83baf5ec1cf29bc99c7577b7e040476a3abb202232eecfc6498d5"
+      },
+      {
+        "path": "assets/about-hero-CYTwmDDX.webp",
+        "bytes": 15042,
+        "sha256": "bd8bf997e25e3a09499438f8a9c2591737cea5133294275f209f55f8096f5c5c"
+      },
+      {
+        "path": "assets/AccountSuspendedScreen-BRJH3Qw1.js",
+        "bytes": 217093,
+        "sha256": "93874bbaa753cc37f4abcc7aef830f48cb9952499334b91e07e6b6c9b925185a"
+      },
+      {
+        "path": "assets/admin-storage-access-BDVyqm_Y.js",
+        "bytes": 1223,
+        "sha256": "c8f7ecad9d30c5177406437d8a18ee9b62cfa7edc6a78c80aaeadbfd39a70631"
+      },
+      {
+        "path": "assets/AdminPortal-CT43Naie.js",
+        "bytes": 2874789,
+        "sha256": "ecf06ac35a20e63108343c7d80685752573ae8febbd9755b1def080662f4b259"
+      },
+      {
+        "path": "assets/AdminPortal-VndWF7ip.css",
+        "bytes": 35517,
+        "sha256": "bdd140fa753f002204b71de41c98d2c2d054b478c4d7e7104e39dd172b10a2f7"
+      },
+      {
+        "path": "assets/banknote-BtE4ySS6.js",
+        "bytes": 414,
+        "sha256": "168895e8a883fe64ebca2e44aa5eb71e82529af75b11dfd448507a700621b096"
+      },
+      {
+        "path": "assets/calendar-vYCici8s.js",
+        "bytes": 426,
+        "sha256": "60df29e95e09637bf883a6ac8592361cd4888b384541b49383243d7ca8c02717"
+      },
+      {
+        "path": "assets/clock-DI2x4bEA.js",
+        "bytes": 352,
+        "sha256": "657054d3be09ec0d55aa43724a061bfead6824c7f86b7a775077b7a368c46a47"
+      },
+      {
+        "path": "assets/Contacts-Dxt5o_B8.js",
+        "bytes": 7965,
+        "sha256": "964dfd596b4b6428ac1865bfdb44961660db673a489c94bb4704fb5555fd3fbc"
+      },
+      {
+        "path": "assets/exceljs.min-kiEaXCbR.js",
+        "bytes": 938989,
+        "sha256": "49ba32736333d5c7ee766ca555322787e7037849388baba0b047dedea6633e9b"
+      },
+      {
+        "path": "assets/Faqs-uFNZnGF9.js",
+        "bytes": 11757,
+        "sha256": "28e8038b800da4a1968a58fbc5883bf8054c502697242561370947c1ff4b85c1"
+      },
+      {
+        "path": "assets/file-check-DrQ1aUzX.js",
+        "bytes": 434,
+        "sha256": "93f2aa7dbae9216b74338159412f936a14e032f2f3855a307d25f567125433c2"
+      },
+      {
+        "path": "assets/hero-image-upscaled-DMBKzXU7.jpeg",
+        "bytes": 3367084,
+        "sha256": "e3c68597ac41c0b84cff0a6ce5496a82d4d7a9cfe37bbc8ca528ed755101d36b"
+      },
+      {
+        "path": "assets/html2canvas.esm-CBrSDip1.js",
+        "bytes": 202301,
+        "sha256": "b4f3add809a6d59f46260e8fd56cab240f3153def977386b230a839e8cb0b281"
+      },
+      {
+        "path": "assets/index-5tFizMQ1.js",
+        "bytes": 1245605,
+        "sha256": "30c31c6f2ae4fee18191cfd9bea09c9ee50f1a41b214c91e4b60fd1f60f0ef09"
+      },
+      {
+        "path": "assets/index-CnyAbpkl.js",
+        "bytes": 60158,
+        "sha256": "e62aae6556356fc58787fe8a19c88e9604066cbfb56ce0188a2be54716acd081"
+      },
+      {
+        "path": "assets/index-nn-gkKHN.css",
+        "bytes": 385747,
+        "sha256": "949017f8214b633c0458e1d0421da42b2fac6e424d26761a5406aa1e37f00859"
+      },
+      {
+        "path": "assets/Index-obyo1j9x.js",
+        "bytes": 31678,
+        "sha256": "57a61df3c848bae935a6d4e987a0d54812dc1554d01f013e3149cd2611d3e3fb"
+      },
+      {
+        "path": "assets/index.es-BQAhSWFD.js",
+        "bytes": 151464,
+        "sha256": "91c4f30dfb1728cbd8525759a178ea688a3172e88bb5b370233aee718f29c2f8"
+      },
+      {
+        "path": "assets/jszip.min-CUmwYtKq.js",
+        "bytes": 116876,
+        "sha256": "fb85dfbe7acee8a3460e702fe3dc4eb1e87aae8f678c39db8dc8b4384d3646eb"
+      },
+      {
+        "path": "assets/layout-grid-DM2MqIPZ.js",
+        "bytes": 1290,
+        "sha256": "bf05095ae4a85f6af5054b32f7a7a8d0728e8b9a9feca07e8b80924213544fd6"
+      },
+      {
+        "path": "assets/leaflet-Dgihpmma.css",
+        "bytes": 15037,
+        "sha256": "7e14f0f44c4713eb7519182d93575f59139200ca781397a493a11f1dff0ce5e1"
+      },
+      {
+        "path": "assets/leaflet-Dwh3D972.js",
+        "bytes": 153651,
+        "sha256": "1a914814ad3e7c03bd8d7122e250847621bfc88c6b99e844350ff116d4a5a372"
+      },
+      {
+        "path": "assets/LegalPolicy-B-L4chAE.js",
+        "bytes": 2733,
+        "sha256": "a8378fde556873911bfd439186b8c5614d1d8ae8536d7fc91a50776ac8f1c7d7"
+      },
+      {
+        "path": "assets/lock-Dm8ibyAm.js",
+        "bytes": 375,
+        "sha256": "00891a1d1b844d21896c4e971df754a7bb07dc5e417f1c0ed30e61bd3293f1c7"
+      },
+      {
+        "path": "assets/NewsReleases-BwbdmyOu.js",
+        "bytes": 7930,
+        "sha256": "e0de905749b23c18afa9ab674fe753af733035a5d200a0bd8c8adef4484e96d3"
+      },
+      {
+        "path": "assets/PasigBudgetMap-CF0aLVRq.js",
+        "bytes": 14507,
+        "sha256": "f7771f9be65dc3365807cf355ff1c81e3324d3814c6218f70edb15ccdd7e5f8c"
+      },
+      {
+        "path": "assets/PasigBudgetMap-sa5bjIxU.css",
+        "bytes": 25349,
+        "sha256": "74cc0ab1268d9f15a0af0f703d8f4b230790a46e0012244bc875627be3d633b8"
+      },
+      {
+        "path": "assets/pdf.worker.min-D39lNQBd.mjs",
+        "bytes": 1299173,
+        "sha256": "630e9622a4e3b72ecc2e668b1d662bc83931482cbc31265c73992f8f6da5b070"
+      },
+      {
+        "path": "assets/portal-ui-C2uxPnPv.js",
+        "bytes": 5266,
+        "sha256": "b35aea145a4b27cec01a5d1a1ba3d3f75de9baadd34fa9bd8acadbddcfb8ec1c"
+      },
+      {
+        "path": "assets/PortalDocumentDrawer-BgrAc6SM.js",
+        "bytes": 32818,
+        "sha256": "b5c92669f981843d0cb965df92374bc815d92dd267946338844412608257e81e"
+      },
+      {
+        "path": "assets/PublicBudgetOverview-e8_iUCeF.js",
+        "bytes": 21466,
+        "sha256": "79db0a07513812023fc50a1fdac242af341e36557dfbbc62c1e454b361c8bca3"
+      },
+      {
+        "path": "assets/PublicBudgetTransparency-B95z5AnZ.js",
+        "bytes": 7281,
+        "sha256": "f8d7d16eeb49e7068ba1cb3dd9d152fab62c72a0796f69c490311c47d7638274"
+      },
+      {
+        "path": "assets/PublicNewsReleaseCard-CbYc9t0z.js",
+        "bytes": 3252,
+        "sha256": "e65d152e74b22f9ed522bc4d467b45707b46c23766563e375213cd5bd2489f7b"
+      },
+      {
+        "path": "assets/PublicTemplates-BHDHGT15.js",
+        "bytes": 4858,
+        "sha256": "84231dd278f676df680e557efc0e13ea9126c3d178c14ed3db5d0b8f668dd3c4"
+      },
+      {
+        "path": "assets/purify.es-CPrKKeqe.js",
+        "bytes": 28072,
+        "sha256": "c423ba0449cbec5c46418b68c694f4f090d1761b5ed567fd2309b4a951a6f29d"
+      },
+      {
+        "path": "assets/PwaUserPortal-G_HWRkP9.js",
+        "bytes": 169904,
+        "sha256": "596ae253a5d85e4c41e13248682ea0b9814c103293535cf1898a68dd24f78a7f"
+      },
+      {
+        "path": "assets/search-DqI1fKCC.js",
+        "bytes": 622,
+        "sha256": "01fe28a28b4b92f2b14be3a03a0510445e6ec20dd7a3ee79a5d55a76bcb848de"
+      },
+      {
+        "path": "assets/send-BRkyFqcL.js",
+        "bytes": 459,
+        "sha256": "c28fbcd247f2d585c65a4be655a149600a132ee0584ef2c0c097f932e95c1b1a"
+      },
+      {
+        "path": "assets/sheet-VK3aA_Lq.js",
+        "bytes": 550344,
+        "sha256": "ee8d0b5cebe4a410f2f02ac3f9237ee226a666290978df55cfb47aba1b7ccc4c"
+      },
+      {
+        "path": "assets/SiteMap-BdDi3gtv.js",
+        "bytes": 3477,
+        "sha256": "74c234d4eacf299179684e6cbfaf31abd6d0a124014485bb22b8b61a53d3e975"
+      },
+      {
+        "path": "assets/switch-DjGCm1A5.js",
+        "bytes": 4834,
+        "sha256": "9b893a1b0fa23a25d6859f1b1812b00215a3cf5ee14020b7ad87f53a0c22bd54"
+      },
+      {
+        "path": "assets/UserPortal-BG_svH7E.js",
+        "bytes": 406163,
+        "sha256": "297e8fffe309cb299177283d860f74d464298f663483f1ce3f27dc940c191fd4"
+      },
+      {
+        "path": "assets/UserPortalTemplatesWorkspaceView-CHG2SqKJ.js",
+        "bytes": 22532,
+        "sha256": "91cf2a5a94df9ff921a17d91ea980de04dfcaf3e7f5344c16628a9e7b616b3c0"
+      },
+      {
+        "path": "assets/yorp-organization-report-CaGJIsHW.js",
+        "bytes": 6571,
+        "sha256": "71d310029c013289ed28f2bbf15218af66d0e47024f43eaf64d031c54e2a4dff"
+      },
+      {
+        "path": "assets/YpopValidationComputationPopover-CW8JoWfy.js",
+        "bytes": 12448,
+        "sha256": "b46ad83e5e6e65ec4c9f91b425e93c05d4d5afe8333a6f83ac4868c4900b116b"
+      },
+      {
+        "path": "assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+        "bytes": 2415626,
+        "sha256": "b0524c2d71cb5d728017cd94d970cf892c6b0c1cbd570038eb74e9b9d9cbc7d3"
+      },
+      {
+        "path": "data/pasig-barangay-boundaries.geojson",
+        "bytes": 113197,
+        "sha256": "15e90f550ffa07c39248eb6716f47643b08ef531c4ba90a4463bd762c61b4114"
+      },
+      {
+        "path": "favicon.ico",
+        "bytes": 7719,
+        "sha256": "70be86306d9f8606daced09183809973d2cf743e465f2875db552abf1593cc6f"
+      },
+      {
+        "path": "fonts/segoeui.ttf",
+        "bytes": 959752,
+        "sha256": "8134dbcd09e7b123c9a7f229d49cffbcb01352cc72ea5e1076b65d0dca9f73cd"
+      },
+      {
+        "path": "fonts/segoeuib.ttf",
+        "bytes": 947092,
+        "sha256": "aeb9e4a6ec5cc59f4d72df8189032d7dbb28f45161cf1552174818b5465dac4e"
+      },
+      {
+        "path": "FullFooter.svg",
+        "bytes": 4073,
+        "sha256": "20732fef4c07569fb0f7f4525f7ec1e9d6d0c0a92b3b8d612b06fdd15d89c164"
+      },
+      {
+        "path": "FullNavbar.svg",
+        "bytes": 8944,
+        "sha256": "17cddead947c27f73b49853b94640f9efb343f9b7ac860ff0eced090f012ace6"
+      },
+      {
+        "path": "icons/icon-192.png",
+        "bytes": 12203,
+        "sha256": "4622c905e79026b34986468cfa5d26851bbaf25a51ad6dd312fc58e9bf13a71a"
+      },
+      {
+        "path": "icons/icon-512.png",
+        "bytes": 35387,
+        "sha256": "2af1fa14ce334220afc802de1bb10883f066781aad791cb30531b2ae3952a223"
+      },
+      {
+        "path": "icons/icon-maskable-512.png",
+        "bytes": 24947,
+        "sha256": "53582355239d66c5b515085f012bfa7e463b0d519ff4c1b6ffc9290516e4ed78"
+      },
+      {
+        "path": "index.html",
+        "bytes": 1869,
+        "sha256": "ac045a9b84d410745973f30d4ff2565146b86df9acb9e4df6032816a5e029fcd"
+      },
+      {
+        "path": "loginPageImages/image1.jpg",
+        "bytes": 478514,
+        "sha256": "530b225946862e9d95025fed01c7f50aca5e67ab7b53e489afd6dd7427d77dd6"
+      },
+      {
+        "path": "loginPageImages/image2.jpg",
+        "bytes": 181237,
+        "sha256": "1e4ae5e16d97a9d0fd2f5625862f7d86c5c505417e108f50f1af8732d4c1885e"
+      },
+      {
+        "path": "loginPageImages/image3.jpg",
+        "bytes": 383215,
+        "sha256": "de1756c3ba2f30b9439ab776122442174835bd52272012a8161191e7699d8e3b"
+      },
+      {
+        "path": "loginPageImages/image4.jpg",
+        "bytes": 378638,
+        "sha256": "acc870614aeb8271ebbff4e8766a90cc4c0b43debd517e0220d93cbca2a533e6"
+      },
+      {
+        "path": "logo.png",
+        "bytes": 720105,
+        "sha256": "f3be9998c42135c78212575bb7fbd8f58ffc57b3e9bf61835e65e95369ecae29"
+      },
+      {
+        "path": "lydo-connect-logo.svg",
+        "bytes": 991,
+        "sha256": "61f8f64af2b354b1760fbf3bc4b7aa62182420e4f00f37b58951e55db554d8ba"
+      },
+      {
+        "path": "lydo-letterhead-footer.jpg",
+        "bytes": 53620,
+        "sha256": "e4cb8a6011c203e4038b32b33310bb2c1b32103f351e33fed4a8ab6cbbb92a57"
+      },
+      {
+        "path": "lydo-letterhead-header.jpg",
+        "bytes": 54632,
+        "sha256": "bef27e996b3d6a8f0c0730711120f2529335d2a7d9df819cebaa53f15d67d90a"
+      },
+      {
+        "path": "manifest-admin.webmanifest",
+        "bytes": 813,
+        "sha256": "b72a83015ea675cdc88e5b7b64c002fd3a9e9685b29f3f8ba3b34f490516d9bb"
+      },
+      {
+        "path": "manifest.webmanifest",
+        "bytes": 834,
+        "sha256": "215709a0ee1da2be4a84006fa1e53f1f4dd9e750b3db3c80d98f989c9340ef40"
+      },
+      {
+        "path": "pwa-theme-init.js",
+        "bytes": 1257,
+        "sha256": "d89c8cde4fa13c309cd0abcd5403334f1a04ed04ef6b4f7b6870944ed61542f9"
+      },
+      {
+        "path": "robots.txt",
+        "bytes": 25,
+        "sha256": "1cbdbc6504be7abe1267d01d7f565bfcfe5851ba3f6a3754d1d61c8f8a2c6aa3"
+      },
+      {
+        "path": "sw.js",
+        "bytes": 6092,
+        "sha256": "95e694d2b115bba54e1ce658c61d317f80840dec1aca84bbf6347b2d4868d1e4"
+      },
+      {
+        "path": "templates/pcydo-move-application-form.pdf",
+        "bytes": 188008,
+        "sha256": "6793c6da6bb3e3f02c722e4b3617edc5388e5ebe98742a9fa4917e1867c81442"
+      },
+      {
+        "path": "y-trace-logo-blue.png",
+        "bytes": 29873,
+        "sha256": "b5ea537fb23f03e04e4ea3b3396e38a22d0527f30856ddb5f4e43b5b8f6d265d"
+      },
+      {
+        "path": "y-trace-logo.png",
+        "bytes": 7815,
+        "sha256": "36e934aede49e22eda687caf2e924becaf090be8dcef4606421894485eabf9f8"
+      },
+      {
+        "path": "y-trace-logo.svg",
+        "bytes": 17823,
+        "sha256": "690f07c7c53a2ceeff615bec0ba345150b4841f6121ad47d4383f8098b388aa7"
+      }
+    ]
+  },
+  {
+    "surface": "user",
+    "status": "PASS",
+    "sourceScope": "entire preserved dirty worktree; validation only, NOT isolated release candidate",
+    "files": 77,
+    "artifactInventorySha256": "5de67d6b697087880741cd719e832ad7c7d5162754ec839354914fa8eebb8a71",
+    "manifestSha256": "f983a8a9b499acf68062157e2a080e663c42cd7638b8026aae0255742b79bc0d",
+    "entry": {
+      "path": "assets/index-BCoGjxae.js",
+      "bytes": 1245604,
+      "sha256": "fb82d258db7f9d5b67219badd9e568ce82fb62f7b8e820729646113f3a1e97a0"
+    },
+    "staticJsClosureBytes": 1245604,
+    "buildVersions": [
+      "1.0.0-review-gateway+20261012012559"
+    ],
+    "supabaseProjectRefs": [
+      "zroudsvpswqsjlyttkjf",
+      "mqqaykksadotbrghbexz"
+    ],
+    "serviceCredentialDetected": false,
+    "gatewayChunk": {
+      "path": "assets/admin-storage-access-2cPmA6Ec.js",
+      "bytes": 1223,
+      "sha256": "4dd58c6a8a768d67266d37fd90cbf9c1926b4b2acbc8283f28b5629b35a149f3"
+    },
+    "inventory": [
+      {
+        "path": ".vite/manifest.json",
+        "bytes": 14460,
+        "sha256": "f983a8a9b499acf68062157e2a080e663c42cd7638b8026aae0255742b79bc0d"
+      },
+      {
+        "path": "apple-touch-icon.png",
+        "bytes": 11211,
+        "sha256": "24bd4480ae38815dc1f85d590f4b5a1ae8946527f1f1ce74efcd0e1e3d503a20"
+      },
+      {
+        "path": "assets/About-BmbSIZO_.js",
+        "bytes": 21231,
+        "sha256": "487c39235fb06ed946d25d635e01b01b4fa6cbe05712311ace8d0cab67004900"
+      },
+      {
+        "path": "assets/about-hero-CYTwmDDX.webp",
+        "bytes": 15042,
+        "sha256": "bd8bf997e25e3a09499438f8a9c2591737cea5133294275f209f55f8096f5c5c"
+      },
+      {
+        "path": "assets/AccountSuspendedScreen-BuOSthMj.js",
+        "bytes": 217093,
+        "sha256": "3e33392281f1b6fda86d870ff542f0a99bd64fd3381c1c753dc65839f6ca2758"
+      },
+      {
+        "path": "assets/admin-storage-access-2cPmA6Ec.js",
+        "bytes": 1223,
+        "sha256": "4dd58c6a8a768d67266d37fd90cbf9c1926b4b2acbc8283f28b5629b35a149f3"
+      },
+      {
+        "path": "assets/AdminPortal-BXQTc3m4.js",
+        "bytes": 2874787,
+        "sha256": "76b92ded8eeb0cbf10b2c7ab1d6edbdcb956a087d3ddc527a124a58a45320eee"
+      },
+      {
+        "path": "assets/AdminPortal-VndWF7ip.css",
+        "bytes": 35517,
+        "sha256": "bdd140fa753f002204b71de41c98d2c2d054b478c4d7e7104e39dd172b10a2f7"
+      },
+      {
+        "path": "assets/banknote-DvoErjGx.js",
+        "bytes": 414,
+        "sha256": "4181b908e45c3e0a9cdde4e6bfaf80cd43d4b8c3a13358d33a996434abce7cad"
+      },
+      {
+        "path": "assets/calendar-XSTS2OaR.js",
+        "bytes": 426,
+        "sha256": "a6ff53015fb3c2b6a59051bf47e5950b843fe98b76cac2e22a7c1e82dcd711bf"
+      },
+      {
+        "path": "assets/clock-BnUIjmKW.js",
+        "bytes": 352,
+        "sha256": "63b19a407341e97233421b2a88ccbb5b785702e1b8aba528d6cec0d290a1cb3b"
+      },
+      {
+        "path": "assets/Contacts-xQsuHN-X.js",
+        "bytes": 7965,
+        "sha256": "bfc8ab56fd55a69c5d1a9a661c5b7191e7ef7ed0f0a86ec58dceb5cb4e0362bb"
+      },
+      {
+        "path": "assets/exceljs.min-Dc3FmEdO.js",
+        "bytes": 938989,
+        "sha256": "f327a20bf4ce6f3c4f5fb65d525de7472d7a65054215acd9ff161de4274f8c0d"
+      },
+      {
+        "path": "assets/Faqs-BXCcdoHH.js",
+        "bytes": 11757,
+        "sha256": "716b96a31e18225c2b8ea47fd2193d8b1e1ece9ec6766c23848942432c4d309b"
+      },
+      {
+        "path": "assets/file-check-CrtJd_Ap.js",
+        "bytes": 434,
+        "sha256": "e0935a506e23f748038d73e360691e2723062a91524533d56a91278e08648898"
+      },
+      {
+        "path": "assets/hero-image-upscaled-DMBKzXU7.jpeg",
+        "bytes": 3367084,
+        "sha256": "e3c68597ac41c0b84cff0a6ce5496a82d4d7a9cfe37bbc8ca528ed755101d36b"
+      },
+      {
+        "path": "assets/html2canvas.esm-CBrSDip1.js",
+        "bytes": 202301,
+        "sha256": "b4f3add809a6d59f46260e8fd56cab240f3153def977386b230a839e8cb0b281"
+      },
+      {
+        "path": "assets/Index-7aQnJXB6.js",
+        "bytes": 31678,
+        "sha256": "c77aa92859939b44640f867c29b3c9c48a8202cfb01ab5093adcca012ea3b94b"
+      },
+      {
+        "path": "assets/index-BA1Dxnwh.js",
+        "bytes": 60158,
+        "sha256": "5b758653d7a88cb8450000fd3a98217f612acc0c997dd03d0d9d5a1f10399eaf"
+      },
+      {
+        "path": "assets/index-BCoGjxae.js",
+        "bytes": 1245604,
+        "sha256": "fb82d258db7f9d5b67219badd9e568ce82fb62f7b8e820729646113f3a1e97a0"
+      },
+      {
+        "path": "assets/index-nn-gkKHN.css",
+        "bytes": 385747,
+        "sha256": "949017f8214b633c0458e1d0421da42b2fac6e424d26761a5406aa1e37f00859"
+      },
+      {
+        "path": "assets/index.es-C8GDjIuL.js",
+        "bytes": 151464,
+        "sha256": "69c2d439411356e0ea03c0fbf1c07ef8ec04e8a46a0cbd3b4a09eb9baa100ffc"
+      },
+      {
+        "path": "assets/jszip.min-CUHuyD07.js",
+        "bytes": 116876,
+        "sha256": "db6d167b89002eba4f37e65be6cbb095ca62487cd6c6f48bddb34cc1f14c8b72"
+      },
+      {
+        "path": "assets/layout-grid-Ciyp6Nvd.js",
+        "bytes": 1290,
+        "sha256": "2c201daf5abfd729edce53e33270d6a809ed68e7e6dd5901a871a9518b6cdec7"
+      },
+      {
+        "path": "assets/leaflet-Dgihpmma.css",
+        "bytes": 15037,
+        "sha256": "7e14f0f44c4713eb7519182d93575f59139200ca781397a493a11f1dff0ce5e1"
+      },
+      {
+        "path": "assets/leaflet-DlssSAiF.js",
+        "bytes": 153651,
+        "sha256": "ac49e85513cfb351d616b2e8dbc9bc2ba5279365488d6a96cd69dad419b904e8"
+      },
+      {
+        "path": "assets/LegalPolicy-CP75Mu4l.js",
+        "bytes": 2733,
+        "sha256": "4445d48d0259d8812d24e36835ded0ac6b3ff97993a2879c1a3c5a3ccff9fdb3"
+      },
+      {
+        "path": "assets/lock-D63pJw8R.js",
+        "bytes": 375,
+        "sha256": "7209f0647407100256cf2a08243c59884b115fdcf3d9989defdd61923b6df6eb"
+      },
+      {
+        "path": "assets/NewsReleases-BoeiVdkg.js",
+        "bytes": 7930,
+        "sha256": "2c1e785e1ee3836fff30815d2b3589198e2080b8451ab3f364ee91ff8c85946e"
+      },
+      {
+        "path": "assets/PasigBudgetMap-3aCMvUf_.js",
+        "bytes": 14507,
+        "sha256": "226f94fa4a036ed2ea3454fcad4406139caca246c087ea0cf0ae704bb4620b8b"
+      },
+      {
+        "path": "assets/PasigBudgetMap-sa5bjIxU.css",
+        "bytes": 25349,
+        "sha256": "74cc0ab1268d9f15a0af0f703d8f4b230790a46e0012244bc875627be3d633b8"
+      },
+      {
+        "path": "assets/pdf.worker.min-D39lNQBd.mjs",
+        "bytes": 1299173,
+        "sha256": "630e9622a4e3b72ecc2e668b1d662bc83931482cbc31265c73992f8f6da5b070"
+      },
+      {
+        "path": "assets/portal-ui-CDgBlLAS.js",
+        "bytes": 5266,
+        "sha256": "e706edfcfd5373fb0a197da73e5713e1e6c2aeae56aed0e9b23ca8cb7209911c"
+      },
+      {
+        "path": "assets/PortalDocumentDrawer-BXgERdwK.js",
+        "bytes": 32818,
+        "sha256": "f809181ea03ca309a7adfaeef74a4d0387ed306afb6115d9daa5a3a7276f23a2"
+      },
+      {
+        "path": "assets/PublicBudgetOverview-POBMJ1pt.js",
+        "bytes": 21466,
+        "sha256": "89fa3a20d5fa2bd880e9192e121128f19916e9719648de70d053340e806e1627"
+      },
+      {
+        "path": "assets/PublicBudgetTransparency-Br48I_li.js",
+        "bytes": 7281,
+        "sha256": "f20b4c7e273e01fe4273d3ad36689eb8de637639934e88b86ebade024c5fb580"
+      },
+      {
+        "path": "assets/PublicNewsReleaseCard-CCb63zEY.js",
+        "bytes": 3252,
+        "sha256": "07ef236cbab9d2eb799860026620a64199fe9ee54d3c5c46e9844c6fc2ca6757"
+      },
+      {
+        "path": "assets/PublicTemplates-D9bM7wUz.js",
+        "bytes": 4858,
+        "sha256": "7092f00cd244af8ee671b40be8f51bdd92805b4128555be76d8e2f30607cd1d8"
+      },
+      {
+        "path": "assets/purify.es-CPrKKeqe.js",
+        "bytes": 28072,
+        "sha256": "c423ba0449cbec5c46418b68c694f4f090d1761b5ed567fd2309b4a951a6f29d"
+      },
+      {
+        "path": "assets/PwaUserPortal-Hzys9E-2.js",
+        "bytes": 169904,
+        "sha256": "332c3b2d2c07155ec196bb4c123198d4b7bea9983505a3a7d2d36c34ac51e56f"
+      },
+      {
+        "path": "assets/search-DjtxyYbP.js",
+        "bytes": 622,
+        "sha256": "4c2d115e5ea02c722155344c8a1cc71fc390f38416aa1769e7188d0c338e01e9"
+      },
+      {
+        "path": "assets/send-zFRKQQKM.js",
+        "bytes": 459,
+        "sha256": "ed8c3e2b96e35b576195a5289191b1101047a04b03c5c822c1c44d2e43130342"
+      },
+      {
+        "path": "assets/sheet-BANbdheY.js",
+        "bytes": 550344,
+        "sha256": "b259019560dcf1ea436675ae2019fda235e444ad3280a782a6b233089c1bd265"
+      },
+      {
+        "path": "assets/SiteMap-CNmicp9P.js",
+        "bytes": 3477,
+        "sha256": "f2717897b72015ee8cd2b3d83e7f26b9bc053e3640b852172a994b6f6191d05a"
+      },
+      {
+        "path": "assets/switch-Bbli3_Il.js",
+        "bytes": 4834,
+        "sha256": "35ac20424d2854e823fe50270885e05a9671f4945785fab863a5943d5c7a1e03"
+      },
+      {
+        "path": "assets/UserPortal-xqgtM0wv.js",
+        "bytes": 406163,
+        "sha256": "b19f3df6117cc6d974afd26dab65d57194988bbac6f0e1170bc84a0e82265755"
+      },
+      {
+        "path": "assets/UserPortalTemplatesWorkspaceView-BiyBkIof.js",
+        "bytes": 22532,
+        "sha256": "8bdf8cb934f5742f808e13b50f64bbc16c18654930a6a687e7331e78ab0add39"
+      },
+      {
+        "path": "assets/yorp-organization-report-ByO6CRM2.js",
+        "bytes": 6571,
+        "sha256": "b1af377c305a2d947efd5b413cdd80c4142d9f79569b74d21d45320132760de3"
+      },
+      {
+        "path": "assets/YpopValidationComputationPopover-CHw_PIvl.js",
+        "bytes": 12448,
+        "sha256": "1f449a8baca9c70df67b8bd3f27a80e594780fb5841a4240b540be7931227458"
+      },
+      {
+        "path": "assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+        "bytes": 2415626,
+        "sha256": "b0524c2d71cb5d728017cd94d970cf892c6b0c1cbd570038eb74e9b9d9cbc7d3"
+      },
+      {
+        "path": "data/pasig-barangay-boundaries.geojson",
+        "bytes": 113197,
+        "sha256": "15e90f550ffa07c39248eb6716f47643b08ef531c4ba90a4463bd762c61b4114"
+      },
+      {
+        "path": "favicon.ico",
+        "bytes": 7719,
+        "sha256": "70be86306d9f8606daced09183809973d2cf743e465f2875db552abf1593cc6f"
+      },
+      {
+        "path": "fonts/segoeui.ttf",
+        "bytes": 959752,
+        "sha256": "8134dbcd09e7b123c9a7f229d49cffbcb01352cc72ea5e1076b65d0dca9f73cd"
+      },
+      {
+        "path": "fonts/segoeuib.ttf",
+        "bytes": 947092,
+        "sha256": "aeb9e4a6ec5cc59f4d72df8189032d7dbb28f45161cf1552174818b5465dac4e"
+      },
+      {
+        "path": "FullFooter.svg",
+        "bytes": 4073,
+        "sha256": "20732fef4c07569fb0f7f4525f7ec1e9d6d0c0a92b3b8d612b06fdd15d89c164"
+      },
+      {
+        "path": "FullNavbar.svg",
+        "bytes": 8944,
+        "sha256": "17cddead947c27f73b49853b94640f9efb343f9b7ac860ff0eced090f012ace6"
+      },
+      {
+        "path": "icons/icon-192.png",
+        "bytes": 12203,
+        "sha256": "4622c905e79026b34986468cfa5d26851bbaf25a51ad6dd312fc58e9bf13a71a"
+      },
+      {
+        "path": "icons/icon-512.png",
+        "bytes": 35387,
+        "sha256": "2af1fa14ce334220afc802de1bb10883f066781aad791cb30531b2ae3952a223"
+      },
+      {
+        "path": "icons/icon-maskable-512.png",
+        "bytes": 24947,
+        "sha256": "53582355239d66c5b515085f012bfa7e463b0d519ff4c1b6ffc9290516e4ed78"
+      },
+      {
+        "path": "index.html",
+        "bytes": 1869,
+        "sha256": "6dfbb10bd00d9188039b15f355c6a88d41a4dfe339d337ab704debe9a4a97ce9"
+      },
+      {
+        "path": "loginPageImages/image1.jpg",
+        "bytes": 478514,
+        "sha256": "530b225946862e9d95025fed01c7f50aca5e67ab7b53e489afd6dd7427d77dd6"
+      },
+      {
+        "path": "loginPageImages/image2.jpg",
+        "bytes": 181237,
+        "sha256": "1e4ae5e16d97a9d0fd2f5625862f7d86c5c505417e108f50f1af8732d4c1885e"
+      },
+      {
+        "path": "loginPageImages/image3.jpg",
+        "bytes": 383215,
+        "sha256": "de1756c3ba2f30b9439ab776122442174835bd52272012a8161191e7699d8e3b"
+      },
+      {
+        "path": "loginPageImages/image4.jpg",
+        "bytes": 378638,
+        "sha256": "acc870614aeb8271ebbff4e8766a90cc4c0b43debd517e0220d93cbca2a533e6"
+      },
+      {
+        "path": "logo.png",
+        "bytes": 720105,
+        "sha256": "f3be9998c42135c78212575bb7fbd8f58ffc57b3e9bf61835e65e95369ecae29"
+      },
+      {
+        "path": "lydo-connect-logo.svg",
+        "bytes": 991,
+        "sha256": "61f8f64af2b354b1760fbf3bc4b7aa62182420e4f00f37b58951e55db554d8ba"
+      },
+      {
+        "path": "lydo-letterhead-footer.jpg",
+        "bytes": 53620,
+        "sha256": "e4cb8a6011c203e4038b32b33310bb2c1b32103f351e33fed4a8ab6cbbb92a57"
+      },
+      {
+        "path": "lydo-letterhead-header.jpg",
+        "bytes": 54632,
+        "sha256": "bef27e996b3d6a8f0c0730711120f2529335d2a7d9df819cebaa53f15d67d90a"
+      },
+      {
+        "path": "manifest-admin.webmanifest",
+        "bytes": 813,
+        "sha256": "b72a83015ea675cdc88e5b7b64c002fd3a9e9685b29f3f8ba3b34f490516d9bb"
+      },
+      {
+        "path": "manifest.webmanifest",
+        "bytes": 834,
+        "sha256": "215709a0ee1da2be4a84006fa1e53f1f4dd9e750b3db3c80d98f989c9340ef40"
+      },
+      {
+        "path": "pwa-theme-init.js",
+        "bytes": 1257,
+        "sha256": "d89c8cde4fa13c309cd0abcd5403334f1a04ed04ef6b4f7b6870944ed61542f9"
+      },
+      {
+        "path": "robots.txt",
+        "bytes": 25,
+        "sha256": "1cbdbc6504be7abe1267d01d7f565bfcfe5851ba3f6a3754d1d61c8f8a2c6aa3"
+      },
+      {
+        "path": "sw.js",
+        "bytes": 6092,
+        "sha256": "95e694d2b115bba54e1ce658c61d317f80840dec1aca84bbf6347b2d4868d1e4"
+      },
+      {
+        "path": "templates/pcydo-move-application-form.pdf",
+        "bytes": 188008,
+        "sha256": "6793c6da6bb3e3f02c722e4b3617edc5388e5ebe98742a9fa4917e1867c81442"
+      },
+      {
+        "path": "y-trace-logo-blue.png",
+        "bytes": 29873,
+        "sha256": "b5ea537fb23f03e04e4ea3b3396e38a22d0527f30856ddb5f4e43b5b8f6d265d"
+      },
+      {
+        "path": "y-trace-logo.png",
+        "bytes": 7815,
+        "sha256": "36e934aede49e22eda687caf2e924becaf090be8dcef4606421894485eabf9f8"
+      },
+      {
+        "path": "y-trace-logo.svg",
+        "bytes": 17823,
+        "sha256": "690f07c7c53a2ceeff615bec0ba345150b4841f6121ad47d4383f8098b388aa7"
+      }
+    ]
+  }
+]

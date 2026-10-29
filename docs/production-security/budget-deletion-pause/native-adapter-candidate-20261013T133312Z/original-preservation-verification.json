@@ -1,0 +1,840 @@
+{
+  "status": "PASS",
+  "oldBundleSha256": "58aed13a1099907460f74e9730afa8c8f22a1a0f0ee07fd6e77d609ac80a0e25",
+  "oldManifestSha256": "562f0b078c3ee29f17050e465ff3c1a87f9be71fac05642cd3e9e3863f19a3bb",
+  "originalPinnedAndHistoricalFilesVerified": 207,
+  "originalFilesModified": false,
+  "historicalTestsRerun": false,
+  "productionConnectionAttempted": false,
+  "operationStateModified": false,
+  "files": [
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-runner-core.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-budget-pause-runner.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-budget-pause.test.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/operation-acl.ps1",
+      "matched": true
+    },
+    {
+      "path": "scripts/security/verify-foundation-environment.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/storage-cutover/native-runner-20261011T132539Z/runner-core.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/storage-cutover/native-executions/20261011T221428755Z/independent-postflight.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/storage-cutover/final-readiness-20261012T160633Z/foundation-readonly.sql",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-identity-readonly.sql",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql",
+      "matched": true
+    },
+    {
+      "path": "package-lock.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/20261012T165000Z/post-install-readonly.sql",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/20261012T165000Z/pre-install-readonly.sql",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-protected-data-readonly.sql",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/dist/empty.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/dist/empty.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/dist/empty.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/dist/index.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/dist/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/dist/index.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/esm/index.mjs",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/src/empty.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/src/index.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-cloudflare/src/types.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-connection-string/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-connection-string/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-connection-string/esm/index.mjs",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-connection-string/index.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-connection-string/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-connection-string/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-int8/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-int8/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-int8/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-int8/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-pool/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-pool/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-pool/esm/index.mjs",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-pool/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-pool/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/b.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/b.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/b.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/buffer-reader.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/buffer-reader.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/buffer-reader.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/buffer-writer.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/buffer-writer.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/buffer-writer.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/inbound-parser.test.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/inbound-parser.test.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/inbound-parser.test.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/index.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/index.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/messages.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/messages.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/messages.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/outbound-serializer.test.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/outbound-serializer.test.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/outbound-serializer.test.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/parser.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/parser.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/parser.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/serializer.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/serializer.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/dist/serializer.js.map",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/esm/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/b.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/buffer-reader.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/buffer-writer.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/inbound-parser.test.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/index.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/messages.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/outbound-serializer.test.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/parser.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/serializer.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/testing/buffer-list.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-protocol/src/testing/test-buffers.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/.travis.yml",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/Makefile",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/index.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/index.test-d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/lib/arrayParser.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/lib/binaryParsers.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/lib/builtins.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/lib/textParsers.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/test/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg-types/test/types.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/esm/index.mjs",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/client.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/connection-parameters.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/connection.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/crypto/cert-signatures.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/crypto/sasl.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/crypto/utils.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/defaults.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/native/client.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/native/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/native/query.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/query.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/result.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/stream.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/type-overrides.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/lib/utils.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pg/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pgpass/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pgpass/lib/helper.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pgpass/lib/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/pgpass/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-array/index.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-array/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-array/license",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-array/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-array/readme.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-bytea/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-bytea/license",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-bytea/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-bytea/readme.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-date/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-date/license",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-date/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-date/readme.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-interval/index.d.ts",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-interval/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-interval/license",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-interval/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/postgres-interval/readme.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/split2/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/split2/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/split2/bench.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/split2/index.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/split2/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/split2/test.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/xtend/.jshintrc",
+      "matched": true
+    },
+    {
+      "path": "node_modules/xtend/LICENSE",
+      "matched": true
+    },
+    {
+      "path": "node_modules/xtend/README.md",
+      "matched": true
+    },
+    {
+      "path": "node_modules/xtend/immutable.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/xtend/mutable.js",
+      "matched": true
+    },
+    {
+      "path": "node_modules/xtend/package.json",
+      "matched": true
+    },
+    {
+      "path": "node_modules/xtend/test.js",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/archival-scope-readonly-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/archive-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/ca-and-reference-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/compare-saved-preflight.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/control-plane-evidence.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/create-fresh-proof.ps1",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/environment-validation.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/execution-report.md",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/finalize-readonly-evidence.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/foundation-supplemental-comparison.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/fresh-proof-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/inventory-comparison.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/local-preconditions.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/native-preflight-evidence.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/native-preflight-output.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/offline-review.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/operator-state-after.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/operator-state-before.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/preflight-completion.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/preflight-invocation.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/proof-freshness-independent.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/read-only-execution-receipt.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/read-only-verification-result.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/verify-and-archive-proofs.ps1",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/verify-ca-and-reference.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/wrapper-timestamp-diagnosis.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/archive-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/ca-trust-comparison.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/environment-validation.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/execution-report.md",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/final-state-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/fresh-proof-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/native-preflight-output.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/offline-review.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/preflight-invocation.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/read-only-execution-receipt.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/verifier-contract-review.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/authorization-proposal.md",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/capture-state-metadata.ps1",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/final-review.md",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/finalize-review.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/git-status-after.txt",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/git-status-before.txt",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/independent-artifact-review.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/operator-checklist.md",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/operator-state-after.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/operator-state-before.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/preservation-verification.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/reconciliation-label-review.json",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/reproduce-reconciliation-label.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/verify-reviewed-evidence.mjs",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/20261013T023224Z/sql-tests.tap",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/20261013T023224Z/frontend-tests.log",
+      "matched": true
+    },
+    {
+      "path": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/focused-tests.tap",
+      "matched": true
+    }
+  ]
+}

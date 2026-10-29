@@ -1,0 +1,134 @@
+{
+  "status": "PASS_LOCAL_OFFLINE",
+  "recordedAt": "2026-10-13T16:17:16.503Z",
+  "candidate": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T161403Z",
+  "runnerBundleSha256": "f3f762ca25eed5b4bc701a1eff184fc7e99d0493b847e341588d2c737571db84",
+  "manifestSha256": "3600a83cc67202d1ebbef855900a2a9df018d33c9f6af10a2d19253c00247fd2",
+  "code": [
+    {
+      "file": "budget-runner-core.mjs",
+      "bytes": 56813,
+      "sha256": "1a57f717e6aa0a9bf3fd6bc2115440f167760fab82b6fe690b897cade471cbe4"
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "bytes": 43117,
+      "sha256": "a16c7037c9c44200505e7b14c001e8b7eedfb0704aa3154f60bd26950ccb9789"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "bytes": 36455,
+      "sha256": "30ac1e54902c1b6ae44f2aa1c9111fc36457d481dbc35b242ebc4a82f172d0a6"
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "bytes": 7666,
+      "sha256": "14b725b6891294f8658403cca451efafda031a9eaaceb4e162212488a39a8d35"
+    },
+    {
+      "file": "operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    }
+  ],
+  "sql": {
+    "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+    "bytes": 11945,
+    "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+  },
+  "nodeVersion": "v24.21.0",
+  "focusedTests": {
+    "tests": 103,
+    "pass": 103,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "exitStatus": 0,
+    "startedAt": "2026-10-13T16:14:03.134Z",
+    "finishedAt": "2026-10-13T16:14:04.315Z",
+    "tapSha256": "e70955f7cb82f970f634a676d3648b1570098e6dc1028d99aedf6a2cc66694a5",
+    "stderr": "(node:71412) [PERM0002] SecurityWarning: The flag --allow-child-process must be used with extreme caution. It could invalidate the permission model.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+  },
+  "syntax": [
+    {
+      "file": "budget-runner-core.mjs",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "powerShellParser": {
+    "errors": 0,
+    "scriptExecuted": false
+  },
+  "diffChecks": [
+    {
+      "file": "budget-runner-core.mjs",
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "command": [
+    "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\admin-storage-vercel-20261012T035933Z\\toolchain\\extracted\\node-v24.21.0-win-x64\\node.exe",
+    "--permission",
+    "--allow-child-process",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\scripts",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\node_modules",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\package.json",
+    "--allow-fs-read=C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\package-lock.json",
+    "--test",
+    "--test-reporter=tap",
+    "budget-safety-controls.test.mjs"
+  ],
+  "environment": "OS essentials only; nonexistent dummy profile; no credentials",
+  "fileSystemWritesFromTests": false,
+  "networkCalls": 0,
+  "databaseConnection": false,
+  "protectedStateAccess": false,
+  "actualOsPidReuseTested": false,
+  "diskLockCrashTested": false,
+  "firstFailure": {
+    "candidate": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z",
+    "result": "102/103",
+    "preserved": true,
+    "rerun": false
+  }
+}

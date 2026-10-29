@@ -1,0 +1,1863 @@
+{
+  "roles": [
+    {
+      "name": "anon",
+      "login": false,
+      "super": false,
+      "bypass": false,
+      "inherit": true
+    },
+    {
+      "name": "authenticated",
+      "login": false,
+      "super": false,
+      "bypass": false,
+      "inherit": true
+    },
+    {
+      "name": "postgres",
+      "login": true,
+      "super": false,
+      "bypass": true,
+      "inherit": true
+    },
+    {
+      "name": "service_role",
+      "login": false,
+      "super": false,
+      "bypass": true,
+      "inherit": true
+    }
+  ],
+  "grants": [
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "force": false,
+      "owner": "postgres",
+      "table": "activity_logs"
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "force": false,
+      "owner": "postgres",
+      "table": "organization_accreditations"
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "force": false,
+      "owner": "postgres",
+      "table": "organization_profiles"
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "force": false,
+      "owner": "postgres",
+      "table": "organization_renewals"
+    },
+    {
+      "acl": "{supabase_storage_admin=a*r*w*d*D*x*t*m*/supabase_storage_admin,service_role=arwdDxtm/supabase_storage_admin,authenticated=arwdDxtm/supabase_storage_admin,anon=arwdDxtm/supabase_storage_admin,postgres=a*r*w*d*D*x*t*m*/supabase_storage_admin}",
+      "rls": true,
+      "force": false,
+      "owner": "supabase_storage_admin",
+      "table": "storage.objects"
+    }
+  ],
+  "columns": [
+    {
+      "name": "instance_id",
+      "type": "uuid",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "users",
+      "schema": "auth",
+      "notnull": true
+    },
+    {
+      "name": "aud",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "role",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "email",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "encrypted_password",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "email_confirmed_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "invited_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "confirmation_token",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "confirmation_sent_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "recovery_token",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "recovery_sent_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "email_change_token_new",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "email_change",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "email_change_sent_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "last_sign_in_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "raw_app_meta_data",
+      "type": "jsonb",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "raw_user_meta_data",
+      "type": "jsonb",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "is_super_admin",
+      "type": "boolean",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "phone",
+      "type": "text",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "phone_confirmed_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "phone_change",
+      "type": "text",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "phone_change_token",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "phone_change_sent_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "confirmed_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "email_change_token_current",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "email_change_confirm_status",
+      "type": "smallint",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "banned_until",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "reauthentication_token",
+      "type": "character varying(255)",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "reauthentication_sent_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "is_sso_user",
+      "type": "boolean",
+      "table": "users",
+      "schema": "auth",
+      "notnull": true
+    },
+    {
+      "name": "deleted_at",
+      "type": "timestamp with time zone",
+      "table": "users",
+      "schema": "auth",
+      "notnull": false
+    },
+    {
+      "name": "is_anonymous",
+      "type": "boolean",
+      "table": "users",
+      "schema": "auth",
+      "notnull": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "actor_user_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "action",
+      "type": "text",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "related_type",
+      "type": "text",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "related_id",
+      "type": "uuid",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "metadata",
+      "type": "jsonb",
+      "table": "activity_logs",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "username",
+      "type": "citext",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "password_hash",
+      "type": "text",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "email",
+      "type": "citext",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "display_name",
+      "type": "text",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "is_active",
+      "type": "boolean",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "role_id",
+      "type": "smallint",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "unit_id",
+      "type": "smallint",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "is_password_set",
+      "type": "boolean",
+      "table": "admin_accounts",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "activity_title",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "activity_description",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "activity_date",
+      "type": "date",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "venue",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "requested_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "approved_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "released_amount",
+      "type": "numeric(14,2)",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "release_date",
+      "type": "date",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "purpose_category",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "status",
+      "type": "budget_request_status",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "remarks",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "go_signal_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "hard_copy_submitted_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "user_note",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "revision_history",
+      "type": "jsonb",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "budget_request_type",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "ypop_entry_id",
+      "type": "uuid",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "fiscal_year",
+      "type": "integer",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "budget_requests",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "budget_request_id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "status",
+      "type": "liquidation_report_status",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "remarks",
+      "type": "text",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "go_signal_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "deadline_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "hard_copy_submitted_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "liquidation_reports",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "term_number",
+      "type": "integer",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "start_date",
+      "type": "date",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "end_date",
+      "type": "date",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "certificate_urn",
+      "type": "text",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "is_legacy_inferred",
+      "type": "boolean",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "approved_by",
+      "type": "uuid",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "approved_at",
+      "type": "timestamp with time zone",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "revoked_at",
+      "type": "timestamp with time zone",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revocation_reason",
+      "type": "text",
+      "table": "organization_accreditations",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "user_id",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_email",
+      "type": "citext",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "contact_number",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "barangay",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_type",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "adviser_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "representative_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "facebook_page_url",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "profile_status",
+      "type": "profile_status",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "internal_notes",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "major_classification",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "sub_classification",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "advocacies",
+      "type": "text[]",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "verified_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "district",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "yorp_registered_year",
+      "type": "smallint",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "yorp_renewed_year",
+      "type": "smallint",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "is_existing_organization",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_identifier_number",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "profile_image_url",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "directory_visibility",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "directory_show_representative",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "directory_show_adviser",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "directory_visibility_initialized",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "registration_type",
+      "type": "registration_type",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "urn",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "urn_normalized",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "urn_review_status",
+      "type": "urn_review_status",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "urn_admin_remarks",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "urn_reviewed_by",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "urn_reviewed_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "verification_method",
+      "type": "verification_method",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "reference_id",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "current_accreditation_id",
+      "type": "uuid",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "accreditation_start_date",
+      "type": "date",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "accreditation_expires_at",
+      "type": "timestamp with time zone",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "is_renewal_test_account",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "representative_first_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "representative_middle_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "representative_last_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "representative_suffix",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "adviser_first_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "adviser_middle_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "adviser_last_name",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "adviser_suffix",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address_unit_building",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address_street",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address_subdivision",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address_barangay",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address_city",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address_province",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "address_zip_code",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "additional_emails",
+      "type": "text[]",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "additional_contact_numbers",
+      "type": "text[]",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "boolean",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "seed_source_year",
+      "type": "integer",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "seed_source_record_number",
+      "type": "integer",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "identity_name_key",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "identity_name_anchor",
+      "type": "text",
+      "table": "organization_profiles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "cycle_number",
+      "type": "integer",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "current_accreditation_id",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "submitted_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "reviewed_by",
+      "type": "uuid",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_locked",
+      "type": "boolean",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamp with time zone",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "certificate_urn",
+      "type": "text",
+      "table": "organization_renewals",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "id",
+      "type": "smallint",
+      "table": "roles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "code",
+      "type": "app_role_code",
+      "table": "roles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "label",
+      "type": "text",
+      "table": "roles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "table": "roles",
+      "schema": "public",
+      "notnull": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "roles",
+      "schema": "public",
+      "notnull": true
+    },
+    {
+      "name": "permission_codes",
+      "type": "text[]",
+      "table": "roles",
+      "schema": "public",
+      "notnull": true
+    }
+  ],
+  "indexes": [
+    {
+      "name": "idx_accreditations_end_date",
+      "definition": "CREATE INDEX idx_accreditations_end_date ON public.organization_accreditations USING btree (end_date)"
+    },
+    {
+      "name": "idx_accreditations_org_dates",
+      "definition": "CREATE INDEX idx_accreditations_org_dates ON public.organization_accreditations USING btree (organization_id, start_date, end_date)"
+    },
+    {
+      "name": "idx_accreditations_status",
+      "definition": "CREATE INDEX idx_accreditations_status ON public.organization_accreditations USING btree (status)"
+    },
+    {
+      "name": "idx_org_single_active_accreditation",
+      "definition": "CREATE UNIQUE INDEX idx_org_single_active_accreditation ON public.organization_accreditations USING btree (organization_id) WHERE (status = 'active'::text)"
+    },
+    {
+      "name": "organization_accreditations_pkey",
+      "definition": "CREATE UNIQUE INDEX organization_accreditations_pkey ON public.organization_accreditations USING btree (id)"
+    },
+    {
+      "name": "uq_organization_term_number",
+      "definition": "CREATE UNIQUE INDEX uq_organization_term_number ON public.organization_accreditations USING btree (organization_id, term_number)"
+    }
+  ],
+  "storage": [
+    {
+      "cmd": "ALL",
+      "name": "transparency_attachments_admin_manage",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "roles": [
+        "public"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "transparency_attachments_read_public",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "check": null,
+      "roles": [
+        "public"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "yorp_sample_seed_assets_read",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_active_templates_read",
+      "qual": "((bucket_id = 'template-files'::text) AND ytrace_storage_private.is_active_template(name))",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_news_images_read",
+      "qual": "((bucket_id = 'news-release-images'::text) AND ytrace_storage_private.is_published_news_image(name))",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "DELETE",
+      "name": "ytrace_private_organization_delete",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'delete'::text))",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "INSERT",
+      "name": "ytrace_private_organization_insert",
+      "qual": null,
+      "check": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'insert'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_private_organization_read",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'read'::text))",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_published_profile_avatar_read",
+      "qual": "ytrace_storage_private.is_public_avatar(bucket_id, name, (metadata ->> 'mimetype'::text), COALESCE(owner_id, (owner)::text))",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "permissive": "PERMISSIVE"
+    }
+  ],
+  "triggers": [
+    {
+      "name": "trg_accreditation_immutability",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_accreditation_immutability BEFORE DELETE OR UPDATE ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION enforce_accreditation_immutability()"
+    },
+    {
+      "name": "trg_admin_track_accreditation_version",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_admin_track_accreditation_version AFTER INSERT OR DELETE OR UPDATE ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION admin_track_renewal_version()"
+    },
+    {
+      "name": "trg_identity_accreditation_owner",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_identity_accreditation_owner BEFORE UPDATE OF organization_id ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION guard_historical_organization_owner()"
+    },
+    {
+      "name": "trg_sync_organization_accreditation_projection",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_sync_organization_accreditation_projection AFTER INSERT OR UPDATE ON public.organization_accreditations FOR EACH ROW EXECUTE FUNCTION sync_organization_accreditation_projection()"
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "admin_ensure_renewal_test_account_profile(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_ensure_renewal_test_account_profile(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "admin_get_or_create_renewal_test_account(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_get_or_create_renewal_test_account(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_prepare_renewal_test_scenario(p_session_token text, p_expiration_days_ahead integer DEFAULT 30, p_custom_expiration_date date DEFAULT NULL::date)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "admin_reset_renewal_test_scenario(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_reset_renewal_test_scenario(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "admin_restore_renewal_test_scenario(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_restore_renewal_test_scenario(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "admin_seed_renewal_test_registration_documents(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_seed_renewal_test_registration_documents(p_session_token text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions', 'storage'\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Disabled in isolated staging until synthetic fixtures are reviewed';\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "calculate_organization_renewal_eligibility(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.calculate_organization_renewal_eligibility(_org_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'auth', 'extensions'\nAS $function$\nDECLARE\n  _today date := current_date;\n  _org record;\n  _acc record;\n  _end_date date;\n  _days_diff integer;\n  _window_status text;\n  _can_draft boolean;\n  _can_submit boolean;\n  _days_until_open integer := NULL;\n  _days_past_expiry integer := NULL;\n  _reason text;\nBEGIN\n  SELECT * INTO _org\n  FROM public.organization_profiles\n  WHERE id = _org_id;\n\n  IF _org.id IS NULL THEN\n    RETURN jsonb_build_object(\n      'canDraft', false,\n      'canSubmit', false,\n      'windowStatus', 'too_early',\n      'reason', 'Organization profile not found.',\n      'daysRemaining', NULL,\n      'daysUntilOpen', NULL,\n      'daysPastExpiry', NULL,\n      'expiresAt', NULL\n    );\n  END IF;\n\n  -- Resolve authoritative active accreditation term\n  SELECT * INTO _acc\n  FROM public.organization_accreditations\n  WHERE organization_id = _org_id\n    AND status = 'active'\n  ORDER BY term_number DESC\n  LIMIT 1;\n\n  IF _acc.id IS NULL THEN\n    IF _org.accreditation_expires_at IS NOT NULL THEN\n      _end_date := _org.accreditation_expires_at::date;\n    ELSE\n      RETURN jsonb_build_object(\n        'canDraft', false,\n        'canSubmit', false,\n        'windowStatus', 'too_early',\n        'reason', 'No authoritative accreditation expiration date found.',\n        'daysRemaining', NULL,\n        'daysUntilOpen', NULL,\n        'daysPastExpiry', NULL,\n        'expiresAt', NULL\n      );\n    END IF;\n  ELSE\n    _end_date := _acc.end_date;\n  END IF;\n\n  _days_diff := _end_date - _today;\n\n  -- Authoritative Window Rules:\n  -- 1. Window opens: 90 calendar days before expiry\n  -- 2. Active Window: [end_date - 90, end_date]\n  -- 3. Late Renewal (Grace Period): (end_date, end_date + 180]\n  -- 4. Cutoff exceeded (Lapsed): > 180 days past expiry\n  IF _days_diff > 90 THEN\n    _window_status := 'too_early';\n    _can_draft := false;\n    _can_submit := false;\n    _days_until_open := _days_diff - 90;\n    _reason := format('Renewal window opens 90 days before expiry (in %s days).', _days_until_open);\n  ELSIF _days_diff >= 0 THEN\n    _window_status := 'open';\n    _can_draft := true;\n    _can_submit := true;\n    _reason := 'Renewal window is open.';\n  ELSIF ABS(_days_diff) <= 180 THEN\n    _window_status := 'expired';\n    _can_draft := true;\n    _can_submit := true;\n    _days_past_expiry := ABS(_days_diff);\n    _reason := format('Late renewal allowed within 180 days of expiry (%s days expired).', _days_past_expiry);\n  ELSE\n    _window_status := 'lapsed';\n    _can_draft := false;\n    _can_submit := false;\n    _days_past_expiry := ABS(_days_diff);\n    _reason := 'Late renewal window expired (180 days past expiry). Full re-registration is required.';\n  END IF;\n\n  RETURN jsonb_build_object(\n    'canDraft', _can_draft,\n    'canSubmit', _can_submit,\n    'windowStatus', _window_status,\n    'daysRemaining', GREATEST(0, _days_diff),\n    'daysUntilOpen', _days_until_open,\n    'daysPastExpiry', _days_past_expiry,\n    'expiresAt', _end_date,\n    'reason', _reason\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "derive_accreditation_status(text,date,date)",
+      "definition": "CREATE OR REPLACE FUNCTION public.derive_accreditation_status(_status text, _end_date date, _eval_date date DEFAULT CURRENT_DATE)\n RETURNS text\n LANGUAGE sql\n IMMUTABLE\nAS $function$\r\n  select case\r\n    when _status = 'revoked' then 'revoked'\r\n    when _status = 'superseded' then 'superseded'\r\n    when _eval_date > _end_date then 'expired'\r\n    when (_end_date - _eval_date) <= 90 then 'expiring_soon'\r\n    else 'active'\r\n  end;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "enforce_accreditation_immutability()",
+      "definition": "CREATE OR REPLACE FUNCTION public.enforce_accreditation_immutability()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF tg_op = 'UPDATE' THEN\n    IF old.term_number IS DISTINCT FROM new.term_number\n       OR old.start_date IS DISTINCT FROM new.start_date\n       OR old.end_date IS DISTINCT FROM new.end_date\n       OR old.certificate_urn IS DISTINCT FROM new.certificate_urn\n       OR old.approved_by IS DISTINCT FROM new.approved_by\n       OR old.approved_at IS DISTINCT FROM new.approved_at\n       OR old.created_at IS DISTINCT FROM new.created_at\n       OR old.is_legacy_inferred IS DISTINCT FROM new.is_legacy_inferred THEN\n      -- Controlled exception: permit date adjustments strictly for the designated renewal test account in non-production\n      IF current_setting('app.allow_test_scenario_prep', true) = 'true' THEN\n        IF EXISTS (\n          SELECT 1 FROM public.organization_profiles op\n          WHERE op.id = old.organization_id\n            AND (op.is_renewal_test_account = true)\n        ) THEN\n          RETURN new;\n        END IF;\n      END IF;\n\n      RAISE EXCEPTION 'Historical accreditation term fields are immutable.';\n    END IF;\n\n    -- Revocation immutability rules:\n    IF old.revoked_at IS NOT NULL AND new.revoked_at IS DISTINCT FROM old.revoked_at THEN\n      RAISE EXCEPTION 'Accreditation revocation timestamp is immutable once set.';\n    END IF;\n\n    IF old.revocation_reason IS NOT NULL AND new.revocation_reason IS DISTINCT FROM old.revocation_reason THEN\n      RAISE EXCEPTION 'Accreditation revocation reason is immutable once set.';\n    END IF;\n\n    IF new.status <> 'revoked' AND new.revoked_at IS NOT NULL THEN\n      RAISE EXCEPTION 'Non-revoked accreditation terms cannot have a revocation timestamp.';\n    END IF;\n\n    -- Valid status transitions only:\n    IF old.status = 'superseded' AND new.status <> 'superseded' THEN\n      IF current_setting('app.allow_test_scenario_prep', true) = 'true' THEN\n        IF EXISTS (\n          SELECT 1 FROM public.organization_profiles op\n          WHERE op.id = old.organization_id\n            AND (op.is_renewal_test_account = true)\n        ) THEN\n          RETURN new;\n        END IF;\n      END IF;\n      RAISE EXCEPTION 'A superseded accreditation term cannot be reactivated or altered.';\n    END IF;\n\n    IF old.status = 'revoked' AND new.status <> 'revoked' THEN\n      RAISE EXCEPTION 'A revoked accreditation term cannot be reactivated.';\n    END IF;\n\n    IF old.status <> 'revoked' AND new.status = 'revoked' THEN\n      IF new.revoked_at IS NULL THEN\n        new.revoked_at := clock_timestamp();\n      END IF;\n    END IF;\n\n    RETURN new;\n  END IF;\n\n  IF tg_op = 'DELETE' THEN\n    IF current_setting('app.allow_org_deletion', true) = 'true' THEN\n      RETURN old;\n    END IF;\n    IF current_setting('app.allow_test_scenario_prep', true) = 'true' THEN\n      IF EXISTS (\n        SELECT 1 FROM public.organization_profiles op\n        WHERE op.id = old.organization_id\n          AND (op.is_renewal_test_account = true)\n      ) THEN\n        RETURN old;\n      END IF;\n    END IF;\n    RAISE EXCEPTION 'Accreditation terms in the authoritative ledger cannot be deleted.';\n  END IF;\n\n  RETURN new;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "sync_organization_accreditation_projection()",
+      "definition": "CREATE OR REPLACE FUNCTION public.sync_organization_accreditation_projection()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nbegin\r\n  if tg_op = 'INSERT' or tg_op = 'UPDATE' then\r\n    if new.status = 'active' then\r\n      update public.organization_profiles\r\n      set\r\n        current_accreditation_id = new.id,\r\n        accreditation_start_date = new.start_date,\r\n        accreditation_expires_at = (new.end_date::text || 'T23:59:59+08:00')::timestamptz\r\n      where id = new.organization_id;\r\n    elsif (tg_op = 'UPDATE' and old.status = 'active' and new.status in ('superseded', 'revoked')) then\r\n      -- If active was superseded or revoked, update projection to latest active or keep latest term\r\n      update public.organization_profiles op\r\n      set\r\n        current_accreditation_id = new.id,\r\n        accreditation_start_date = new.start_date,\r\n        accreditation_expires_at = (new.end_date::text || 'T23:59:59+08:00')::timestamptz\r\n      where op.id = new.organization_id\r\n        and op.current_accreditation_id = old.id;\r\n    end if;\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "signature": "validate_admin_session_token(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.validate_admin_session_token(_session_token text)\n RETURNS TABLE(admin_id uuid, username citext, email citext, display_name text, expires_at timestamp with time zone)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nbegin\r\n  update public.admin_sessions\r\n  set last_used_at = now()\r\n  where token_hash = encode(extensions.digest(_session_token, 'sha256'), 'hex')\r\n    and revoked_at is null\r\n    and public.admin_sessions.expires_at > now();\r\n\r\n  return query\r\n  select\r\n    aa.id,\r\n    aa.username,\r\n    aa.email,\r\n    aa.display_name,\r\n    s.expires_at\r\n  from public.admin_sessions s\r\n  join public.admin_accounts aa on aa.id = s.admin_id\r\n  where s.token_hash = encode(extensions.digest(_session_token, 'sha256'), 'hex')\r\n    and s.revoked_at is null\r\n    and s.expires_at > now()\r\n    and aa.is_active = true\r\n  limit 1;\r\nend;\r\n$function$\n"
+    }
+  ],
+  "constraints": [
+    {
+      "name": "activity_logs_actor_user_id_fkey",
+      "table": "activity_logs",
+      "definition": "FOREIGN KEY (actor_user_id) REFERENCES admin_accounts(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "activity_logs_organization_id_fkey",
+      "table": "activity_logs",
+      "definition": "FOREIGN KEY (organization_id) REFERENCES organization_profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "activity_logs_pkey",
+      "table": "activity_logs",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "chk_accreditation_dates",
+      "table": "organization_accreditations",
+      "definition": "CHECK ((end_date > start_date))"
+    },
+    {
+      "name": "chk_accreditation_revocation_consistency",
+      "table": "organization_accreditations",
+      "definition": "CHECK ((((status <> 'revoked'::text) AND (revoked_at IS NULL)) OR (status = 'revoked'::text)))"
+    },
+    {
+      "name": "organization_accreditations_approved_by_fkey",
+      "table": "organization_accreditations",
+      "definition": "FOREIGN KEY (approved_by) REFERENCES admin_accounts(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "organization_accreditations_organization_id_fkey",
+      "table": "organization_accreditations",
+      "definition": "FOREIGN KEY (organization_id) REFERENCES organization_profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "organization_accreditations_pkey",
+      "table": "organization_accreditations",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "organization_accreditations_status_check",
+      "table": "organization_accreditations",
+      "definition": "CHECK ((status = ANY (ARRAY['active'::text, 'superseded'::text, 'revoked'::text])))"
+    },
+    {
+      "name": "organization_accreditations_term_number_check",
+      "table": "organization_accreditations",
+      "definition": "CHECK ((term_number >= 1))"
+    },
+    {
+      "name": "uq_organization_term_number",
+      "table": "organization_accreditations",
+      "definition": "UNIQUE (organization_id, term_number)"
+    },
+    {
+      "name": "organization_profiles_contact_number_check",
+      "table": "organization_profiles",
+      "definition": "CHECK ((contact_number ~ '^09[0-9]{9}$'::text))"
+    },
+    {
+      "name": "organization_profiles_current_accreditation_id_fkey",
+      "table": "organization_profiles",
+      "definition": "FOREIGN KEY (current_accreditation_id) REFERENCES organization_accreditations(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "organization_profiles_pkey",
+      "table": "organization_profiles",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "organization_profiles_user_id_fkey",
+      "table": "organization_profiles",
+      "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "organization_profiles_user_id_key",
+      "table": "organization_profiles",
+      "definition": "UNIQUE (user_id)"
+    },
+    {
+      "name": "organization_renewals_current_accreditation_id_fkey",
+      "table": "organization_renewals",
+      "definition": "FOREIGN KEY (current_accreditation_id) REFERENCES organization_accreditations(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "organization_renewals_cycle_number_check",
+      "table": "organization_renewals",
+      "definition": "CHECK ((cycle_number >= 2))"
+    },
+    {
+      "name": "organization_renewals_organization_id_fkey",
+      "table": "organization_renewals",
+      "definition": "FOREIGN KEY (organization_id) REFERENCES organization_profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "name": "organization_renewals_pkey",
+      "table": "organization_renewals",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "organization_renewals_reviewed_by_fkey",
+      "table": "organization_renewals",
+      "definition": "FOREIGN KEY (reviewed_by) REFERENCES admin_accounts(id) ON DELETE SET NULL"
+    },
+    {
+      "name": "organization_renewals_status_check",
+      "table": "organization_renewals",
+      "definition": "CHECK ((status = ANY (ARRAY['draft'::text, 'submitted'::text, 'under_review'::text, 'needs_revision'::text, 'resubmitted'::text, 'approved'::text, 'rejected'::text])))"
+    },
+    {
+      "name": "uq_organization_renewal_cycle",
+      "table": "organization_renewals",
+      "definition": "UNIQUE (organization_id, cycle_number)"
+    }
+  ]
+}

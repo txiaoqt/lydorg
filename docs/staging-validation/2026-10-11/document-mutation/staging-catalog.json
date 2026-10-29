@@ -1,0 +1,913 @@
+{
+  "grants": [
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "table": "document_submission_files"
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "table": "document_submissions"
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "table": "organization_renewals"
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "submission_id",
+      "type": "uuid",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "document_type_id",
+      "type": "uuid",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "file_url",
+      "type": "text",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "file_name",
+      "type": "text",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "file_type",
+      "type": "text",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "file_size",
+      "type": "int8",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "validation_status",
+      "type": "document_file_validation_status",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "admin_status",
+      "type": "document_submission_status",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "uploaded_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "created_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "revision_history",
+      "type": "jsonb",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "revision_locked",
+      "type": "bool",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "bool",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamptz",
+      "table": "document_submission_files"
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "document_submissions"
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "document_submissions"
+    },
+    {
+      "name": "submitted_by",
+      "type": "uuid",
+      "table": "document_submissions"
+    },
+    {
+      "name": "status",
+      "type": "document_submission_status",
+      "table": "document_submissions"
+    },
+    {
+      "name": "user_confirmed",
+      "type": "bool",
+      "table": "document_submissions"
+    },
+    {
+      "name": "submitted_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "reviewed_by",
+      "type": "uuid",
+      "table": "document_submissions"
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "overall_remarks",
+      "type": "text",
+      "table": "document_submissions"
+    },
+    {
+      "name": "created_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "submission_scope",
+      "type": "text",
+      "table": "document_submissions"
+    },
+    {
+      "name": "renewal_id",
+      "type": "uuid",
+      "table": "document_submissions"
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "revision_locked",
+      "type": "bool",
+      "table": "document_submissions"
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamptz",
+      "table": "document_submissions"
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "document_submissions"
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "bool",
+      "table": "document_submissions"
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "document_submissions"
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "user_id",
+      "type": "uuid",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "organization_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "organization_email",
+      "type": "citext",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "contact_number",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "barangay",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "organization_type",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "adviser_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "representative_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "facebook_page_url",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "profile_status",
+      "type": "profile_status",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "internal_notes",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "created_at",
+      "type": "timestamptz",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamptz",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "major_classification",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "sub_classification",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "advocacies",
+      "type": "_text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "verified_at",
+      "type": "timestamptz",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "district",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "yorp_registered_year",
+      "type": "int2",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "yorp_renewed_year",
+      "type": "int2",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "is_existing_organization",
+      "type": "bool",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "organization_identifier_number",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "profile_image_url",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "directory_visibility",
+      "type": "bool",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "directory_show_representative",
+      "type": "bool",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "directory_show_adviser",
+      "type": "bool",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "directory_visibility_initialized",
+      "type": "bool",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "registration_type",
+      "type": "registration_type",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "urn",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "urn_normalized",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "urn_review_status",
+      "type": "urn_review_status",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "urn_admin_remarks",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "urn_reviewed_by",
+      "type": "uuid",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "urn_reviewed_at",
+      "type": "timestamptz",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "verification_method",
+      "type": "verification_method",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "reference_id",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "current_accreditation_id",
+      "type": "uuid",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "accreditation_start_date",
+      "type": "date",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "accreditation_expires_at",
+      "type": "timestamptz",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "is_renewal_test_account",
+      "type": "bool",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "representative_first_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "representative_middle_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "representative_last_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "representative_suffix",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "adviser_first_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "adviser_middle_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "adviser_last_name",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "adviser_suffix",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address_unit_building",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address_street",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address_subdivision",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address_barangay",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address_city",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address_province",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "address_zip_code",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "additional_emails",
+      "type": "_text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "additional_contact_numbers",
+      "type": "_text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "is_seeded_sample_data",
+      "type": "bool",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "seed_batch",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "seed_source_year",
+      "type": "int4",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "seed_source_record_number",
+      "type": "int4",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "identity_name_key",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "identity_name_anchor",
+      "type": "text",
+      "table": "organization_profiles"
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "cycle_number",
+      "type": "int4",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "current_accreditation_id",
+      "type": "uuid",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "submitted_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "reviewed_by",
+      "type": "uuid",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "admin_remarks",
+      "type": "text",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "created_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "revision_requested_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "revision_due_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "revision_locked_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "revision_locked",
+      "type": "bool",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "revision_unlocked_at",
+      "type": "timestamptz",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "revision_unlocked_by",
+      "type": "text",
+      "table": "organization_renewals"
+    },
+    {
+      "name": "certificate_urn",
+      "type": "text",
+      "table": "organization_renewals"
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "ALL",
+      "name": "document_submission_files_self_or_admin",
+      "qual": "(current_user_is_admin() OR (EXISTS ( SELECT 1\n   FROM (document_submissions ds\n     JOIN organization_profiles op ON ((op.id = ds.organization_id)))\n  WHERE ((ds.id = document_submission_files.submission_id) AND ((op.user_id = auth.uid()) OR (ds.submitted_by = auth.uid()))))))",
+      "check": "(current_user_is_admin() OR (EXISTS ( SELECT 1\n   FROM (document_submissions ds\n     JOIN organization_profiles op ON ((op.id = ds.organization_id)))\n  WHERE ((ds.id = document_submission_files.submission_id) AND ((op.user_id = auth.uid()) OR (ds.submitted_by = auth.uid()))))))",
+      "roles": [
+        "public"
+      ],
+      "table": "document_submission_files"
+    },
+    {
+      "cmd": "ALL",
+      "name": "document_submissions_self_or_admin",
+      "qual": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = document_submissions.organization_id) AND (op.user_id = auth.uid())))))",
+      "check": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = document_submissions.organization_id) AND (op.user_id = auth.uid())))))",
+      "roles": [
+        "public"
+      ],
+      "table": "document_submissions"
+    },
+    {
+      "cmd": "INSERT",
+      "name": "organization_renewals_insert_owner",
+      "qual": null,
+      "check": "((status = 'draft'::text) AND (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = organization_renewals.organization_id) AND (op.user_id = auth.uid())))))",
+      "roles": [
+        "public"
+      ],
+      "table": "organization_renewals"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "organization_renewals_select_owner",
+      "qual": "(EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = organization_renewals.organization_id) AND (op.user_id = auth.uid()))))",
+      "check": null,
+      "roles": [
+        "public"
+      ],
+      "table": "organization_renewals"
+    },
+    {
+      "cmd": "UPDATE",
+      "name": "organization_renewals_update_owner",
+      "qual": "((status = ANY (ARRAY['draft'::text, 'needs_revision'::text])) AND (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = organization_renewals.organization_id) AND (op.user_id = auth.uid())))))",
+      "check": "((status = ANY (ARRAY['draft'::text, 'submitted'::text, 'resubmitted'::text])) AND (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = organization_renewals.organization_id) AND (op.user_id = auth.uid())))))",
+      "roles": [
+        "public"
+      ],
+      "table": "organization_renewals"
+    }
+  ],
+  "triggers": [
+    {
+      "name": "trg_admin_track_document_file_version",
+      "table": "document_submission_files",
+      "definition": "CREATE TRIGGER trg_admin_track_document_file_version AFTER INSERT OR DELETE OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION admin_track_document_file_version()"
+    },
+    {
+      "name": "trg_admin_track_document_submission_version",
+      "table": "document_submissions",
+      "definition": "CREATE TRIGGER trg_admin_track_document_submission_version AFTER INSERT OR DELETE OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION admin_track_document_submission_version()"
+    },
+    {
+      "name": "trg_admin_track_renewal_version",
+      "table": "organization_renewals",
+      "definition": "CREATE TRIGGER trg_admin_track_renewal_version AFTER INSERT OR DELETE OR UPDATE ON public.organization_renewals FOR EACH ROW EXECUTE FUNCTION admin_track_renewal_version()"
+    },
+    {
+      "name": "trg_document_submission_files_updated_at",
+      "table": "document_submission_files",
+      "definition": "CREATE TRIGGER trg_document_submission_files_updated_at BEFORE UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+    },
+    {
+      "name": "trg_document_submission_notify",
+      "table": "document_submissions",
+      "definition": "CREATE TRIGGER trg_document_submission_notify AFTER UPDATE ON public.document_submissions FOR EACH ROW WHEN ((old.status IS DISTINCT FROM new.status)) EXECUTE FUNCTION notify_submission_change()"
+    },
+    {
+      "name": "trg_document_submissions_updated_at",
+      "table": "document_submissions",
+      "definition": "CREATE TRIGGER trg_document_submissions_updated_at BEFORE UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+    },
+    {
+      "name": "trg_guard_submitted_registration_document_edits",
+      "table": "document_submission_files",
+      "definition": "CREATE TRIGGER trg_guard_submitted_registration_document_edits BEFORE DELETE OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION guard_submitted_registration_document_edits()"
+    },
+    {
+      "name": "trg_identity_documents_owner",
+      "table": "document_submissions",
+      "definition": "CREATE TRIGGER trg_identity_documents_owner BEFORE UPDATE OF organization_id ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION guard_historical_organization_owner()"
+    },
+    {
+      "name": "trg_identity_renewal_owner",
+      "table": "organization_renewals",
+      "definition": "CREATE TRIGGER trg_identity_renewal_owner BEFORE UPDATE OF organization_id ON public.organization_renewals FOR EACH ROW EXECUTE FUNCTION guard_historical_organization_owner()"
+    },
+    {
+      "name": "trg_immutable_renewal_test_registration_file",
+      "table": "document_submission_files",
+      "definition": "CREATE TRIGGER trg_immutable_renewal_test_registration_file BEFORE INSERT OR DELETE OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION guard_renewal_test_registration_packet_immutable()"
+    },
+    {
+      "name": "trg_immutable_renewal_test_registration_submission",
+      "table": "document_submissions",
+      "definition": "CREATE TRIGGER trg_immutable_renewal_test_registration_submission BEFORE DELETE OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION guard_renewal_test_registration_packet_immutable()"
+    },
+    {
+      "name": "trg_promote_renewal_files_for_admin_review",
+      "table": "document_submissions",
+      "definition": "CREATE TRIGGER trg_promote_renewal_files_for_admin_review AFTER UPDATE OF status ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION promote_renewal_submission_files_for_review()"
+    },
+    {
+      "name": "trg_renewal_terminal_immutability",
+      "table": "organization_renewals",
+      "definition": "CREATE TRIGGER trg_renewal_terminal_immutability BEFORE DELETE OR UPDATE ON public.organization_renewals FOR EACH ROW EXECUTE FUNCTION enforce_renewal_terminal_immutability()"
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "33ba7c606820f771e4ed79709bcd188b",
+      "name": "admin_approve_renewal",
+      "owner": "postgres",
+      "signature": "admin_approve_renewal(text,uuid,text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_approve_renewal(p_session_token text, p_renewal_id uuid, p_certificate_urn text DEFAULT NULL::text, p_admin_remarks text DEFAULT NULL::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _admin_id uuid;\n  _now timestamptz := clock_timestamp();\n  _today date := current_date;\n  _renewal record;\n  _curr_acc record;\n  _target_org record;\n  _submission record;\n  _owner_id uuid;\n  _old_urn text;\n  _official_urn text;\n  _anchor_cutoff date;\n  _start_date date;\n  _end_date date;\n  _new_accreditation_id uuid;\nBEGIN\n  -- Authenticate admin session\n  SELECT vat.admin_id INTO _admin_id\n  FROM public.validate_admin_session_token(p_session_token) vat\n  LIMIT 1;\n\n  IF _admin_id IS NULL THEN\n    RAISE EXCEPTION 'Admin account is not authorized.';\n  END IF;\n\n  -- Lock Renewal Record\n  SELECT * INTO _renewal\n  FROM public.organization_renewals\n  WHERE id = p_renewal_id\n  FOR UPDATE;\n\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'Renewal record not found: %', p_renewal_id;\n  END IF;\n\n  IF _renewal.status NOT IN ('submitted', 'under_review', 'resubmitted') THEN\n    RAISE EXCEPTION 'Renewal is not in a reviewable status: %', _renewal.status;\n  END IF;\n\n  -- Lock Organization Profile\n  SELECT * INTO _target_org\n  FROM public.organization_profiles\n  WHERE id = _renewal.organization_id\n  FOR UPDATE;\n\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'Organization profile not found.';\n  END IF;\n\n  _old_urn := coalesce(_target_org.urn, _target_org.organization_identifier_number, '');\n\n  -- Lock Current Accreditation Record if present\n  IF _renewal.current_accreditation_id IS NOT NULL THEN\n    SELECT * INTO _curr_acc\n    FROM public.organization_accreditations\n    WHERE id = _renewal.current_accreditation_id\n    FOR UPDATE;\n  ELSE\n    SELECT * INTO _curr_acc\n    FROM public.organization_accreditations\n    WHERE organization_id = _renewal.organization_id\n      AND status = 'active'\n    ORDER BY term_number DESC\n    LIMIT 1\n    FOR UPDATE;\n  END IF;\n\n  -- Compute Term Dates (Standard Continuous Protection Anchor: 3-Year Terms)\n  IF _curr_acc.id IS NOT NULL AND _curr_acc.end_date IS NOT NULL THEN\n    _anchor_cutoff := (_curr_acc.end_date + 30);\n    IF _today <= _anchor_cutoff THEN\n      _start_date := _curr_acc.end_date;\n      _end_date := (_curr_acc.end_date + interval '3 years')::date;\n    ELSE\n      _start_date := _today;\n      _end_date := (_today + interval '3 years')::date;\n    END IF;\n  ELSE\n    _start_date := _today;\n    _end_date := (_today + interval '3 years')::date;\n  END IF;\n\n  -- Generate or use URN\n  IF p_certificate_urn IS NOT NULL AND trim(p_certificate_urn) <> '' THEN\n    _official_urn := trim(p_certificate_urn);\n  ELSE\n    _official_urn := public.generate_unique_urn(_target_org.barangay, _now);\n  END IF;\n\n  IF _official_urn IS NULL OR trim(_official_urn) = '' THEN\n    RAISE EXCEPTION 'Failed to generate authoritative URN for renewal approval.';\n  END IF;\n\n  -- Supersede previous active accreditation term(s)\n  UPDATE public.organization_accreditations\n  SET status = 'superseded'\n  WHERE organization_id = _renewal.organization_id\n    AND status = 'active';\n\n  -- Insert New Authoritative Accreditation Term into the Ledger\n  INSERT INTO public.organization_accreditations (\n    organization_id,\n    term_number,\n    start_date,\n    end_date,\n    certificate_urn,\n    status,\n    is_legacy_inferred,\n    approved_by,\n    approved_at,\n    created_at\n  ) VALUES (\n    _renewal.organization_id,\n    _renewal.cycle_number,\n    _start_date,\n    _end_date,\n    _official_urn,\n    'active',\n    false,\n    _admin_id,\n    _now,\n    _now\n  ) RETURNING id INTO _new_accreditation_id;\n\n  -- Update Renewal Record\n  UPDATE public.organization_renewals\n  SET\n    status = 'approved',\n    reviewed_at = _now,\n    reviewed_by = _admin_id,\n    admin_remarks = p_admin_remarks,\n    certificate_urn = _official_urn,\n    updated_at = _now\n  WHERE id = p_renewal_id;\n\n  -- Update Document Submission if present\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE renewal_id = p_renewal_id\n  ORDER BY created_at DESC\n  LIMIT 1;\n\n  IF _submission.id IS NOT NULL THEN\n    UPDATE public.document_submissions\n    SET\n      status = 'approved_green'::public.document_submission_status,\n      reviewed_at = _now,\n      reviewed_by = _admin_id,\n      overall_remarks = p_admin_remarks,\n      updated_at = _now\n    WHERE id = _submission.id;\n  END IF;\n\n  -- Update Organization Profile to newly assigned URN and validity period\n  UPDATE public.organization_profiles\n  SET\n    profile_status = 'verified',\n    urn = _official_urn,\n    urn_normalized = public.normalize_urn(_official_urn),\n    organization_identifier_number = _official_urn,\n    urn_review_status = 'verified',\n    current_accreditation_id = _new_accreditation_id,\n    accreditation_start_date = _start_date,\n    accreditation_expires_at = (_end_date::text || 'T23:59:59+08:00')::timestamptz,\n    verified_at = _now,\n    updated_at = _now\n  WHERE id = _renewal.organization_id;\n\n  _owner_id := _target_org.user_id;\n\n  -- Write Activity Log with actor_user_id = _admin_id\n  INSERT INTO public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description,\n    metadata,\n    created_at\n  ) VALUES (\n    _admin_id,\n    _renewal.organization_id,\n    'approved_renewal',\n    'organization_renewal',\n    p_renewal_id,\n    format('Accreditation Renewal Cycle %s approved for %s. New URN: %s, Term: %s to %s',\n      _renewal.cycle_number, _target_org.organization_name, _official_urn, _start_date, _end_date),\n    jsonb_build_object(\n      'renewal_id', p_renewal_id,\n      'term_number', _renewal.cycle_number,\n      'previous_urn', _old_urn,\n      'new_urn', _official_urn,\n      'start_date', _start_date,\n      'end_date', _end_date\n    ),\n    _now\n  );\n\n  -- Notify Organization Owner\n  IF _owner_id IS NOT NULL THEN\n    INSERT INTO public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) VALUES (\n      _owner_id,\n      _renewal.organization_id,\n      'Accreditation Renewal Approved',\n      format('Congratulations! Your accreditation renewal has been approved with URN %s, valid until %s.', _official_urn, to_char(_end_date, 'Mon DD, YYYY')),\n      'completed',\n      'organization_renewal',\n      p_renewal_id,\n      _now\n    );\n  END IF;\n\n  RETURN jsonb_build_object(\n    'success', true,\n    'renewal_id', p_renewal_id,\n    'accreditation_id', _new_accreditation_id,\n    'term_number', _renewal.cycle_number,\n    'start_date', _start_date,\n    'end_date', _end_date,\n    'certificate_urn', _official_urn,\n    'approved_at', _now\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "36f6fe0e336b1ebe464249051f47bc1d",
+      "name": "admin_track_document_file_version",
+      "owner": "postgres",
+      "signature": "admin_track_document_file_version()",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_track_document_file_version()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public', 'pg_temp'\nAS $function$\r\nDECLARE\r\n  submission_row public.document_submissions%ROWTYPE;\r\n  submission_id uuid;\r\n  resource_key text;\r\nBEGIN\r\n  submission_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.submission_id ELSE NEW.submission_id END;\r\n  SELECT * INTO submission_row FROM public.document_submissions WHERE id = submission_id;\r\n  IF FOUND THEN\r\n    resource_key := CASE WHEN submission_row.submission_scope::text = 'renewal' OR submission_row.renewal_id IS NOT NULL THEN 'renewals' ELSE 'registration' END;\r\n    PERFORM public.admin_bump_portal_change_version(resource_key);\r\n  END IF;\r\n  IF TG_OP = 'UPDATE' AND OLD.submission_id IS DISTINCT FROM NEW.submission_id THEN\r\n    SELECT * INTO submission_row FROM public.document_submissions WHERE id = OLD.submission_id;\r\n    IF FOUND THEN\r\n      resource_key := CASE WHEN submission_row.submission_scope::text = 'renewal' OR submission_row.renewal_id IS NOT NULL THEN 'renewals' ELSE 'registration' END;\r\n      PERFORM public.admin_bump_portal_change_version(resource_key);\r\n    END IF;\r\n  END IF;\r\n  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "21d7a797af2af446678a16750235646c",
+      "name": "admin_track_document_submission_version",
+      "owner": "postgres",
+      "signature": "admin_track_document_submission_version()",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_track_document_submission_version()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public', 'pg_temp'\nAS $function$\r\nDECLARE\r\n  old_resource text;\r\n  new_resource text;\r\nBEGIN\r\n  IF TG_OP <> 'INSERT' THEN\r\n    old_resource := CASE WHEN OLD.submission_scope::text = 'renewal' OR OLD.renewal_id IS NOT NULL THEN 'renewals' ELSE 'registration' END;\r\n    PERFORM public.admin_bump_portal_change_version(old_resource);\r\n  END IF;\r\n  IF TG_OP <> 'DELETE' THEN\r\n    new_resource := CASE WHEN NEW.submission_scope::text = 'renewal' OR NEW.renewal_id IS NOT NULL THEN 'renewals' ELSE 'registration' END;\r\n    IF new_resource IS DISTINCT FROM old_resource THEN\r\n      PERFORM public.admin_bump_portal_change_version(new_resource);\r\n    END IF;\r\n  END IF;\r\n  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "9fe607265fe31cfe89c3aa96296134d5",
+      "name": "admin_track_renewal_version",
+      "owner": "postgres",
+      "signature": "admin_track_renewal_version()",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_track_renewal_version()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public', 'pg_temp'\nAS $function$\r\nBEGIN PERFORM public.admin_bump_portal_change_version('renewals'); IF TG_OP = 'DELETE' THEN RETURN OLD; END IF; RETURN NEW; END;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "f733b691d1420314c1223741ce6f5746",
+      "name": "enforce_renewal_terminal_immutability",
+      "owner": "postgres",
+      "signature": "enforce_renewal_terminal_immutability()",
+      "definition": "CREATE OR REPLACE FUNCTION public.enforce_renewal_terminal_immutability()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF tg_op = 'UPDATE' THEN\n    IF old.status IN ('approved', 'rejected') THEN\n      IF current_setting('app.allow_test_scenario_prep', true) = 'true' THEN\n        IF EXISTS (\n          SELECT 1 FROM public.organization_profiles op\n          WHERE op.id = old.organization_id\n            AND (op.is_renewal_test_account = true)\n        ) THEN\n          RETURN new;\n        END IF;\n      END IF;\n      RAISE EXCEPTION 'Terminal renewal records cannot be modified.';\n    END IF;\n    RETURN new;\n  END IF;\n\n  IF tg_op = 'DELETE' THEN\n    IF current_setting('app.allow_org_deletion', true) = 'true' THEN\n      RETURN old;\n    END IF;\n    IF current_setting('app.allow_test_scenario_prep', true) = 'true' THEN\n      IF EXISTS (\n        SELECT 1 FROM public.organization_profiles op\n        WHERE op.id = old.organization_id\n          AND (op.is_renewal_test_account = true)\n      ) THEN\n        RETURN old;\n      END IF;\n    END IF;\n    IF old.status IN ('approved', 'rejected') THEN\n      RAISE EXCEPTION 'Terminal renewal records cannot be deleted.';\n    END IF;\n    RETURN old;\n  END IF;\n\n  RETURN new;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "f45c470966f52bbb18132666ce3e17ae",
+      "name": "evaluate_and_apply_automatic_registration_verification",
+      "owner": "postgres",
+      "signature": "evaluate_and_apply_automatic_registration_verification(uuid,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.evaluate_and_apply_automatic_registration_verification(_organization_id uuid, _admin_id uuid DEFAULT NULL::uuid)\n RETURNS TABLE(verified boolean, urn text, already_verified boolean, reason text)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  _target_org public.organization_profiles%rowtype;\n  _reg_submission_id uuid;\n  _required_type_ids uuid[];\n  _required_count int;\n  _approved_count int;\n  _official_urn text;\n  _effective_verified_at timestamptz := clock_timestamp();\n  _start_date date;\n  _end_date date;\n  _notify_approved boolean;\nbegin\n  -- 1. Fetch target organization profile\n  select *\n  into _target_org\n  from public.organization_profiles\n  where id = _organization_id;\n\n  if _target_org.id is null then\n    return query select false, null::text, false, 'Organization profile not found.';\n    return;\n  end if;\n\n  -- 2. If already verified or suspended, do not re-verify\n  if _target_org.profile_status = 'verified' then\n    return query select true, _target_org.urn, true, 'Organization is already verified.';\n    return;\n  end if;\n\n  if _target_org.profile_status = 'suspended_inactive' then\n    return query select false, null::text, false, 'Organization is suspended and cannot be verified.';\n    return;\n  end if;\n\n  -- 3. Resolve parent initial registration document submission (renewal_id is null)\n  select id\n  into _reg_submission_id\n  from public.document_submissions\n  where organization_id = _organization_id\n    and renewal_id is null\n  order by created_at desc\n  limit 1;\n\n  if _reg_submission_id is null then\n    return query select false, null::text, false, 'No initial registration document submission found.';\n    return;\n  end if;\n\n  -- 4. Dynamic required document types\n  select coalesce(array_agg(rdt.id), '{}'::uuid[])\n  into _required_type_ids\n  from public.required_document_types rdt\n  where rdt.is_active = true\n    and coalesce(rdt.is_required, true) = true\n    and coalesce(rdt.template_scope, 'document_submission') = 'document_submission'\n    and (rdt.scope is null or rdt.scope in ('registration', 'both'))\n    and (\n      rdt.template_category is null\n      or rdt.template_category = '{}'\n      or 'yorp' = any(rdt.template_category)\n    );\n\n  -- Fallback if no specific registration tags are set\n  if array_length(_required_type_ids, 1) is null or array_length(_required_type_ids, 1) = 0 then\n    select coalesce(array_agg(rdt.id), '{}'::uuid[])\n    into _required_type_ids\n    from public.required_document_types rdt\n    where rdt.is_active = true;\n  end if;\n\n  _required_count := coalesce(array_length(_required_type_ids, 1), 0);\n\n  if _required_count = 0 then\n    return query select false, null::text, false, 'No active required document types configured in system.';\n    return;\n  end if;\n\n  -- 5. Count approved files for required document types\n  select count(distinct dsf.document_type_id)\n  into _approved_count\n  from public.document_submission_files dsf\n  where dsf.submission_id = _reg_submission_id\n    and dsf.document_type_id = any(_required_type_ids)\n    and dsf.admin_status = 'approved_green';\n\n  -- If any required document type is not approved, block verification\n  if _approved_count < _required_count then\n    return query select false, null::text, false,\n      format('Incomplete: %s of %s required registration documents approved.', _approved_count, _required_count);\n    return;\n  end if;\n\n  -- 6. ALL REQUIRED REGISTRATION DOCUMENTS ARE APPROVED -> PROCEED WITH AUTOMATIC VERIFICATION\n  _start_date := date(_effective_verified_at);\n  _end_date := (_start_date + interval '3 years')::date;\n\n  -- Preserve existing URN if already present, otherwise generate deterministic official URN (BB-YY-NNN)\n  if _target_org.urn is not null and trim(_target_org.urn) <> '' then\n    _official_urn := trim(_target_org.urn);\n  elsif _target_org.is_existing_organization and _target_org.organization_identifier_number is not null and trim(_target_org.organization_identifier_number) <> '' then\n    _official_urn := trim(_target_org.organization_identifier_number);\n  else\n    _official_urn := public.generate_unique_urn(_target_org.barangay, _effective_verified_at);\n  end if;\n\n  -- 7. Update organization profile with official verified status and assigned URN (using actual schema)\n  update public.organization_profiles\n  set\n    profile_status = 'verified'::public.profile_status,\n    verified_at = _effective_verified_at,\n    urn = _official_urn,\n    urn_normalized = public.normalize_urn(_official_urn),\n    organization_identifier_number = _official_urn,\n    urn_review_status = 'verified'::public.urn_review_status,\n    verification_method = coalesce(_target_org.verification_method, 'documents'::public.verification_method),\n    updated_at = _effective_verified_at\n  where id = _organization_id;\n\n  -- 8. Create Term 1 accreditation record if not already present\n  if not exists (\n    select 1 from public.organization_accreditations\n    where organization_id = _organization_id and term_number = 1\n  ) then\n    insert into public.organization_accreditations (\n      organization_id,\n      term_number,\n      start_date,\n      end_date,\n      certificate_urn,\n      status,\n      is_legacy_inferred,\n      approved_by,\n      approved_at,\n      created_at\n    ) values (\n      _organization_id,\n      1,\n      _start_date,\n      _end_date,\n      _official_urn,\n      'active',\n      false,\n      _admin_id,\n      _effective_verified_at,\n      _effective_verified_at\n    );\n  end if;\n\n  -- 9. Canonical Activity Log\n  insert into public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description,\n    created_at\n  ) values (\n    _admin_id,\n    _organization_id,\n    'Verified organization registration',\n    'organization_profile',\n    _organization_id,\n    format('Organization registration verified automatically upon approval of all required documents. Assigned URN: %s (Valid until %s).', _official_urn, _end_date),\n    _effective_verified_at\n  );\n\n  -- 10. Gated In-App Notification based on workflow.notify_org_on_approved\n  _notify_approved := public.get_system_setting_bool('workflow.notify_org_on_approved', true);\n  if _target_org.user_id is not null and _notify_approved then\n    insert into public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) values (\n      _target_org.user_id,\n      _organization_id,\n      'Registration Approved & Verified',\n      format('Congratulations! Your organization registration has been approved and verified. Your official URN is %s.', _official_urn),\n      'completed',\n      'organization_profile',\n      _organization_id,\n      _effective_verified_at\n    );\n  end if;\n\n  return query select true, _official_urn, false, 'Registration successfully verified.';\nend;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "9568bb785b8d832a58e1acc894d74610",
+      "name": "guard_historical_organization_owner",
+      "owner": "postgres",
+      "signature": "guard_historical_organization_owner()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_historical_organization_owner()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nbegin\n if new.organization_id is distinct from old.organization_id then raise exception 'Historical organization ownership cannot be reassigned.'; end if;\n return new;\nend $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "82fe24048d3d32b9c3643409873441ea",
+      "name": "guard_renewal_test_registration_packet_immutable",
+      "owner": "postgres",
+      "signature": "guard_renewal_test_registration_packet_immutable()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_renewal_test_registration_packet_immutable()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _submission_id uuid;\n  _is_seeded_registration boolean := false;\nBEGIN\n  IF TG_TABLE_NAME = 'document_submission_files'\n     AND TG_OP = 'INSERT'\n     AND current_setting('app.seed_renewal_test_registration_documents', true) = 'true' THEN\n    RETURN NEW;\n  END IF;\n\n  IF TG_TABLE_NAME = 'document_submissions' THEN\n    _submission_id := OLD.id;\n    _is_seeded_registration :=\n      OLD.is_seeded_sample_data IS TRUE\n      AND OLD.seed_batch = 'RENEWAL-TEST-REGISTRATION'\n      AND OLD.submission_scope = 'registration'\n      AND OLD.renewal_id IS NULL;\n  ELSE\n    IF TG_OP = 'INSERT' THEN\n      _submission_id := NEW.submission_id;\n    ELSE\n      _submission_id := OLD.submission_id;\n    END IF;\n    SELECT EXISTS (\n      SELECT 1\n      FROM public.document_submissions submission\n      WHERE (submission.id = _submission_id\n         OR (TG_OP = 'UPDATE' AND submission.id = NEW.submission_id))\n        AND submission.is_seeded_sample_data IS TRUE\n        AND submission.seed_batch = 'RENEWAL-TEST-REGISTRATION'\n        AND submission.submission_scope = 'registration'\n        AND submission.renewal_id IS NULL\n    ) INTO _is_seeded_registration;\n  END IF;\n\n  IF _is_seeded_registration THEN\n    RAISE EXCEPTION 'The Renewal Test Organization registration packet is an immutable Cycle 1 record.';\n  END IF;\n\n  IF TG_OP = 'DELETE' THEN\n    RETURN OLD;\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "md5": "c6265ae36e8db8678de7a4e69691008e",
+      "name": "guard_submitted_registration_document_edits",
+      "owner": "postgres",
+      "signature": "guard_submitted_registration_document_edits()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_submitted_registration_document_edits()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\ndeclare\n  _submission_status text;\n  _registration_submission boolean;\nbegin\n  -- Admin and correction RPCs run with their validated definer privileges.\n  if current_user not in ('authenticated', 'anon')\n     or public.current_user_is_admin() then\n    if tg_op = 'DELETE' then return old; end if;\n    return new;\n  end if;\n\n  select ds.status,\n         ds.submission_scope = 'registration' and ds.renewal_id is null\n    into _submission_status, _registration_submission\n  from public.document_submissions ds\n  where ds.id = old.submission_id\n  for update;\n\n  if old.admin_status is distinct from 'draft'\n     or _submission_status is null\n     or not (\n       _submission_status in ('draft', 'needs_revision')\n       or (\n         _registration_submission is true\n         and _submission_status in ('under_admin_review', 'submitted', 'ready_for_review')\n       )\n     ) then\n    raise exception 'Submitted documents are locked. Only draft documents can be edited or removed; requested revisions must use the replacement flow.';\n  end if;\n\n  if tg_op = 'DELETE' then return old; end if;\n  return new;\nend;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "0da3cdcd6af21b6b28016853b205685f",
+      "name": "notify_submission_change",
+      "owner": "postgres",
+      "signature": "notify_submission_change()",
+      "definition": "CREATE OR REPLACE FUNCTION public.notify_submission_change()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\ndeclare\r\n  org_user_id uuid;\r\n  notif_type public.notification_type;\r\n  notif_title text;\r\n  notif_message text;\r\nbegin\r\n  select op.user_id into org_user_id\r\n  from public.organization_profiles op\r\n  where op.id = new.organization_id;\r\n\r\n  if org_user_id is null then\r\n    return new;\r\n  end if;\r\n\r\n  if new.status = 'needs_revision' then\r\n    notif_type := 'document_revision';\r\n    notif_title := 'Document revision requested';\r\n    notif_message := 'Your document submission has been marked needs revision.';\r\n  elsif new.status = 'approved_green' then\r\n    notif_type := 'document_green';\r\n    notif_title := 'Document submission approved';\r\n    notif_message := 'Your document submission has been marked approved.';\r\n  elsif new.status = 'rejected_red' then\r\n    notif_type := 'document_red';\r\n    notif_title := 'Document submission rejected';\r\n    notif_message := 'Your document submission has been marked rejected.';\r\n  else\r\n    return new;\r\n  end if;\r\n\r\n  insert into public.notifications (user_id, organization_id, title, message, type, related_type, related_id)\r\n  values (org_user_id, new.organization_id, notif_title, notif_message, notif_type, 'document_submission', new.id);\r\n\r\n  insert into public.activity_logs (actor_user_id, organization_id, action, related_type, related_id, description)\r\n  values (coalesce(new.reviewed_by, auth.uid()), new.organization_id, 'reviewed_documents', 'document_submission', new.id, notif_message);\r\n\r\n  return new;\r\nend;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "b1a1e8a2d5eb9e8ccd66b10b6c652b45",
+      "name": "promote_renewal_submission_files_for_review",
+      "owner": "postgres",
+      "signature": "promote_renewal_submission_files_for_review()",
+      "definition": "CREATE OR REPLACE FUNCTION public.promote_renewal_submission_files_for_review()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  IF NEW.submission_scope = 'renewal'\n    AND NEW.status::text IN ('submitted', 'resubmitted')\n    AND OLD.status IS DISTINCT FROM NEW.status THEN\n    UPDATE public.document_submission_files\n    SET\n      admin_status = 'under_admin_review',\n      reviewed_at = NULL,\n      updated_at = clock_timestamp()\n    WHERE submission_id = NEW.id\n      AND admin_status = 'draft'\n      AND NULLIF(trim(file_url), '') IS NOT NULL;\n  END IF;\n\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "name": "replace_organization_document_file",
+      "owner": "postgres",
+      "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+      "definition": "CREATE OR REPLACE FUNCTION public.replace_organization_document_file(_file_id uuid, _document_type_id uuid, _expected_updated_at timestamp with time zone, _file_url text, _file_name text, _file_type text, _file_size bigint)\n RETURNS SETOF document_submission_files\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  _user_id uuid := auth.uid();\n  _file public.document_submission_files%rowtype;\n  _submission public.document_submissions%rowtype;\n  _organization public.organization_profiles%rowtype;\n  _document_name text;\n  _submitted_at timestamptz := clock_timestamp();\n  _overall_status public.document_submission_status;\n  _notify_resubmitted boolean;\nbegin\n  if _user_id is null then\n    raise exception 'Please sign in with your organization account first.';\n  end if;\n\n  select * into _file\n  from public.document_submission_files\n  where id = _file_id\n  for update;\n  if _file.id is null then raise exception 'Document file not found.'; end if;\n\n  select * into _submission from public.document_submissions where id = _file.submission_id for update;\n  select * into _organization from public.organization_profiles where id = _submission.organization_id;\n\n  if _organization.user_id is distinct from _user_id then\n    raise exception 'You are not authorized to replace this document.';\n  end if;\n\n  -- PERMANENT SUSPENSION GUARD\n  if _organization.profile_status = 'suspended_inactive' then\n    raise exception 'This organization account is permanently suspended. Document replacement is not permitted.';\n  end if;\n\n  if _file.document_type_id is distinct from _document_type_id then\n    raise exception 'The selected file does not match this document requirement.';\n  end if;\n\n  -- TERMINAL REJECTION GUARD\n  if _file.admin_status = 'rejected_red' or _submission.status = 'rejected_red' then\n    raise exception 'This rejected document cannot be replaced. The organization account is permanently suspended.';\n  end if;\n\n  if _file.admin_status <> 'needs_revision' then\n    raise exception 'This document is no longer open for correction. Refresh the page to see its current status.';\n  end if;\n\n  -- AUTHORITATIVE SERVER-SIDE DEADLINE AND LOCK ENFORCEMENT\n  if (_submission.revision_locked = true or (_submission.revision_due_at is not null and _submitted_at >= _submission.revision_due_at and _submission.revision_unlocked_at is null)) then\n    update public.document_submissions\n    set revision_locked = true,\n        revision_locked_at = coalesce(revision_locked_at, _submitted_at)\n    where id = _submission.id;\n\n    raise exception 'Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.';\n  end if;\n\n  if (_file.revision_locked = true or (_file.revision_due_at is not null and _submitted_at >= _file.revision_due_at and _file.revision_unlocked_at is null)) then\n    raise exception 'Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.';\n  end if;\n\n  if _file.updated_at is distinct from _expected_updated_at then\n    raise exception 'This document changed after the page was opened. Refresh before uploading again.';\n  end if;\n  if _file_size <= 0 or _file_size > 10485760 then\n    raise exception 'The replacement file must be between 1 byte and 10 MB.';\n  end if;\n  if nullif(trim(_file_name), '') is null or length(_file_name) > 180\n     or _file_name ~ '[\\\\/[:cntrl:]]' then\n    raise exception 'The replacement file name is not allowed.';\n  end if;\n  if _file_url not like\n    'storage://organization-documents/' || _organization.id::text || '/' ||\n    _document_type_id::text || '/revisions/%'\n     and _file_url not like\n    'https://' || '%' || '/storage/v1/object/public/organization-documents/' ||\n    _organization.id::text || '/' || _document_type_id::text || '/revisions/%'\n     and _file_url not like\n    'http://' || '%' || '/storage/v1/object/public/organization-documents/' ||\n    _organization.id::text || '/' || _document_type_id::text || '/revisions/%'\n  then\n    raise exception 'The uploaded file path is invalid.';\n  end if;\n\n  select coalesce(required_document_types.name, _file.file_name)\n  into _document_name\n  from public.required_document_types\n  where id = _document_type_id;\n\n  update public.document_submission_files\n  set\n    file_url = _file_url,\n    file_name = _file_name,\n    file_type = _file_type,\n    file_size = _file_size,\n    validation_status = 'correct',\n    admin_status = 'under_admin_review',\n    admin_remarks = null,\n    uploaded_at = _submitted_at,\n    reviewed_at = null,\n    revision_history = coalesce(revision_history, '[]'::jsonb) || jsonb_build_array(\n      jsonb_build_object(\n        'action', 'replaced',\n        'file_name', _file_name,\n        'replaced_at', _submitted_at,\n        'previous_file_url', _file.file_url,\n        'previous_admin_remarks', _file.admin_remarks\n      )\n    ),\n    revision_requested_at = null,\n    revision_due_at = null,\n    revision_locked = false,\n    revision_locked_at = null,\n    revision_unlocked_at = null,\n    revision_unlocked_by = null,\n    updated_at = _submitted_at\n  where id = _file.id;\n\n  select\n    case\n      when exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n          and admin_status = 'rejected_red'\n      ) then 'rejected_red'::public.document_submission_status\n      when exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n          and admin_status = 'needs_revision'\n      ) then 'needs_revision'::public.document_submission_status\n      when exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n      ) and not exists (\n        select 1\n        from public.document_submission_files\n        where submission_id = _submission.id\n          and admin_status <> 'approved_green'\n      ) then 'approved_green'::public.document_submission_status\n      else 'under_admin_review'::public.document_submission_status\n    end\n  into _overall_status;\n\n  update public.document_submissions\n  set\n    status = _overall_status,\n    updated_at = _submitted_at,\n    revision_requested_at = case when _overall_status = 'needs_revision' then revision_requested_at else null end,\n    revision_due_at = case when _overall_status = 'needs_revision' then revision_due_at else null end,\n    revision_locked = false,\n    revision_locked_at = null,\n    revision_unlocked_at = null,\n    revision_unlocked_by = null\n  where id = _submission.id;\n\n  insert into public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description,\n    created_at,\n    metadata\n  ) values (\n    null,\n    _organization.id,\n    'Replaced document',\n    'document_submission_file',\n    _file.id,\n    format('Uploaded a corrected version of %s.', coalesce(_document_name, _file_name)),\n    _submitted_at,\n    jsonb_build_object('actor_auth_user_id', _user_id, 'actor_type', 'organization')\n  );\n\n  -- Gated resubmission acknowledgement notification based on workflow.notify_org_on_resubmitted\n  _notify_resubmitted := public.get_system_setting_bool('workflow.notify_org_on_resubmitted', true);\n  if _notify_resubmitted then\n    insert into public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) values (\n      _user_id,\n      _organization.id,\n      'Document Resubmitted',\n      format('You have successfully uploaded a corrected version of ''%s''. It is now under review.', coalesce(_document_name, _file_name)),\n      'completed',\n      'document_submission',\n      _submission.id,\n      _submitted_at\n    );\n  end if;\n\n  return query\n  select *\n  from public.document_submission_files\n  where id = _file_id;\nend;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "8de7ae383447503e8949149bfb3f0efb",
+      "name": "set_updated_at",
+      "owner": "postgres",
+      "signature": "set_updated_at()",
+      "definition": "CREATE OR REPLACE FUNCTION public.set_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  new.updated_at = now();\r\n  return new;\r\nend;\r\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "252754fd75505948c26afe27f6b0b760",
+      "name": "update_admin_document_submission_file_review",
+      "owner": "postgres",
+      "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.update_admin_document_submission_file_review(_session_token text, _file_id uuid, _status document_submission_status, _admin_remarks text DEFAULT NULL::text)\n RETURNS SETOF document_submission_files\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _admin_id uuid;\n  _submission_id uuid;\n  _org_id uuid;\n  _org_user_id uuid;\n  _renewal_id uuid;\n  _document_name text;\n  _current_admin_status public.document_submission_status;\n  _current_revision_requested_at timestamptz;\n  _current_uploaded_at timestamptz;\n  _reviewed_at timestamptz := clock_timestamp();\n  _revision_due timestamptz := _reviewed_at + interval '5 days';\n  _overall_status public.document_submission_status;\n  _overall_remarks text;\n  _notify_approved boolean;\n  _notify_revision boolean;\n  _notify_rejected boolean;\nBEGIN\n  -- Validate admin session\n  SELECT vat.admin_id\n  INTO _admin_id\n  FROM public.validate_admin_session_token(_session_token) vat\n  LIMIT 1;\n\n  IF _admin_id IS NULL THEN\n    RAISE EXCEPTION 'Admin account is not authorized.';\n  END IF;\n\n  -- Resolve file, current status, timestamps, submission, organization, and document type name\n  SELECT\n    document_submission_files.submission_id,\n    document_submission_files.admin_status,\n    document_submission_files.revision_requested_at,\n    document_submission_files.uploaded_at,\n    COALESCE(required_document_types.name, document_submission_files.file_name)\n  INTO\n    _submission_id,\n    _current_admin_status,\n    _current_revision_requested_at,\n    _current_uploaded_at,\n    _document_name\n  FROM public.document_submission_files\n  LEFT JOIN public.required_document_types\n    ON required_document_types.id = document_submission_files.document_type_id\n  WHERE document_submission_files.id = _file_id\n  LIMIT 1;\n\n  IF _submission_id IS NULL THEN\n    RAISE EXCEPTION 'Document submission file was not found.';\n  END IF;\n\n  -- Resolve parent submission details and organization owner\n  SELECT ds.organization_id, ds.renewal_id\n  INTO _org_id, _renewal_id\n  FROM public.document_submissions ds\n  WHERE ds.id = _submission_id;\n\n  IF _org_id IS NOT NULL THEN\n    SELECT op.user_id\n    INTO _org_user_id\n    FROM public.organization_profiles op\n    WHERE op.id = _org_id;\n  END IF;\n\n  -- Guard 1: Permanently suspended organizations cannot have registration review decisions modified\n  IF _renewal_id IS NULL AND _org_id IS NOT NULL AND EXISTS (\n    SELECT 1\n    FROM public.organization_profiles op\n    WHERE op.id = _org_id\n      AND op.profile_status = 'suspended_inactive'\n  ) THEN\n    RAISE EXCEPTION 'This organization account is permanently suspended. Review actions cannot be performed.';\n  END IF;\n\n  -- Guard 2: Once marked needs_revision, cannot be approved without a genuine new replacement upload\n  IF _status = 'approved_green' AND _current_admin_status = 'needs_revision' THEN\n    IF _current_uploaded_at IS NULL OR (_current_revision_requested_at IS NOT NULL AND _current_uploaded_at <= _current_revision_requested_at) THEN\n      RAISE EXCEPTION 'Cannot approve document file that is awaiting revision without a new upload.';\n    END IF;\n  END IF;\n\n  -- Fetch workflow notification settings\n  _notify_approved := public.get_system_setting_bool('workflow.notify_org_on_approved', true);\n  _notify_revision := public.get_system_setting_bool('workflow.notify_org_on_needs_revision', true);\n  _notify_rejected := public.get_system_setting_bool('workflow.notify_org_on_rejected', true);\n\n  -- Update the individual document file review record\n  UPDATE public.document_submission_files\n  SET\n    admin_status = _status,\n    admin_remarks = COALESCE(_admin_remarks, document_submission_files.admin_remarks),\n    reviewed_at = _reviewed_at,\n    revision_requested_at = CASE WHEN _status = 'needs_revision' THEN _reviewed_at ELSE document_submission_files.revision_requested_at END,\n    revision_due_at = CASE WHEN _status = 'needs_revision' THEN _revision_due ELSE NULL END,\n    revision_locked = CASE WHEN _status = 'rejected_red' THEN true ELSE false END,\n    revision_unlocked_at = NULL,\n    revision_unlocked_by = NULL,\n    updated_at = _reviewed_at\n  WHERE document_submission_files.id = _file_id;\n\n  -- If parent submission is tied to a renewal packet, handle renewal state transition\n  IF _renewal_id IS NOT NULL THEN\n    UPDATE public.organization_renewals\n    SET\n      status = CASE\n        WHEN _status = 'rejected_red' THEN 'rejected'\n        WHEN _status = 'needs_revision' THEN 'needs_revision'\n        ELSE 'under_review'\n      END,\n      admin_remarks = CASE WHEN _status IN ('needs_revision', 'rejected_red') THEN COALESCE(_admin_remarks, organization_renewals.admin_remarks) ELSE organization_renewals.admin_remarks END,\n      reviewed_by = _admin_id,\n      reviewed_at = _reviewed_at,\n      revision_requested_at = CASE WHEN _status = 'needs_revision' THEN _reviewed_at ELSE organization_renewals.revision_requested_at END,\n      revision_due_at = CASE WHEN _status = 'needs_revision' THEN _revision_due ELSE organization_renewals.revision_due_at END,\n      revision_locked = CASE WHEN _status = 'rejected_red' THEN true ELSE false END,\n      revision_locked_at = CASE WHEN _status = 'rejected_red' THEN _reviewed_at ELSE NULL END,\n      revision_unlocked_at = NULL,\n      revision_unlocked_by = NULL,\n      updated_at = _reviewed_at\n    WHERE id = _renewal_id;\n  END IF;\n\n  -- Recompute overall parent submission status\n  SELECT\n    CASE\n      WHEN EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n          AND admin_status = 'rejected_red'\n      ) THEN 'rejected_red'::public.document_submission_status\n      WHEN EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n          AND admin_status = 'needs_revision'\n      ) THEN 'needs_revision'::public.document_submission_status\n      WHEN EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n      ) AND NOT EXISTS (\n        SELECT 1\n        FROM public.document_submission_files\n        WHERE submission_id = _submission_id\n          AND admin_status <> 'approved_green'\n      ) THEN 'approved_green'::public.document_submission_status\n      ELSE 'under_admin_review'::public.document_submission_status\n    END\n  INTO _overall_status;\n\n  _overall_remarks :=\n    CASE\n      WHEN _status = 'approved_green' THEN format('Admin approved %s.', _document_name)\n      WHEN _status = 'needs_revision' THEN format('Admin requested revisions for %s.', _document_name)\n      ELSE format('Admin rejected %s.', _document_name)\n    END;\n\n  UPDATE public.document_submissions\n  SET\n    status = _overall_status,\n    reviewed_by = _admin_id,\n    reviewed_at = _reviewed_at,\n    overall_remarks = _overall_remarks,\n    revision_requested_at = CASE WHEN _overall_status = 'needs_revision' THEN _reviewed_at ELSE document_submissions.revision_requested_at END,\n    revision_due_at = CASE WHEN _overall_status = 'needs_revision' THEN _revision_due ELSE NULL END,\n    revision_locked = CASE WHEN _overall_status = 'rejected_red' THEN true ELSE false END,\n    revision_locked_at = CASE WHEN _overall_status = 'rejected_red' THEN _reviewed_at ELSE NULL END,\n    revision_unlocked_at = NULL,\n    revision_unlocked_by = NULL,\n    updated_at = _reviewed_at\n  WHERE document_submissions.id = _submission_id;\n\n  -- 1. REGISTRATION REVISION NOTIFICATION:\n  IF _renewal_id IS NULL AND _status = 'needs_revision' AND _org_id IS NOT NULL AND _org_user_id IS NOT NULL AND _notify_revision THEN\n    INSERT INTO public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) VALUES (\n      _org_user_id,\n      _org_id,\n      'Registration Revision Requested',\n      format('The admin requested revisions for %s.%s', _document_name, CASE WHEN _admin_remarks IS NOT NULL AND trim(_admin_remarks) <> '' THEN ' Remarks: ' || trim(_admin_remarks) ELSE '' END),\n      'document_revision',\n      'document_submission',\n      _submission_id,\n      _reviewed_at\n    );\n  END IF;\n\n  -- 2. REGISTRATION SINGLE FILE APPROVED NOTIFICATION (when not yet fully verified):\n  IF _renewal_id IS NULL AND _status = 'approved_green' AND _overall_status <> 'approved_green' AND _org_id IS NOT NULL AND _org_user_id IS NOT NULL AND _notify_approved THEN\n    INSERT INTO public.notifications (\n      user_id,\n      organization_id,\n      title,\n      message,\n      type,\n      related_type,\n      related_id,\n      created_at\n    ) VALUES (\n      _org_user_id,\n      _org_id,\n      'Registration Document Approved',\n      format('Your registration document ''%s'' has been approved by the admin.', _document_name),\n      'completed',\n      'document_submission',\n      _submission_id,\n      _reviewed_at\n    );\n  END IF;\n\n  -- 3. ATOMIC REJECTION RULE (Permanent Suspension):\n  IF _renewal_id IS NULL AND _status = 'rejected_red' AND _org_id IS NOT NULL THEN\n    UPDATE public.organization_profiles\n    SET\n      profile_status = 'suspended_inactive'::public.profile_status,\n      updated_at = _reviewed_at\n    WHERE id = _org_id;\n\n    INSERT INTO public.activity_logs (\n      actor_user_id,\n      organization_id,\n      action,\n      related_type,\n      related_id,\n      description,\n      created_at\n    ) VALUES (\n      _admin_id,\n      _org_id,\n      'Suspended organization',\n      'organization_profile',\n      _org_id,\n      format('Organization account permanently suspended due to rejected registration document: %s.', _document_name),\n      _reviewed_at\n    );\n\n    IF _org_user_id IS NOT NULL AND _notify_rejected THEN\n      INSERT INTO public.notifications (\n        user_id,\n        organization_id,\n        title,\n        message,\n        type,\n        related_type,\n        related_id,\n        created_at\n      ) VALUES (\n        _org_user_id,\n        _org_id,\n        'Registration Document Rejected',\n        format('Your registration document ''%s'' was rejected.%s Your organization account has been permanently suspended.', _document_name, CASE WHEN _admin_remarks IS NOT NULL AND trim(_admin_remarks) <> '' THEN ' Remarks: ' || trim(_admin_remarks) ELSE '' END),\n        'document_red',\n        'document_submission',\n        _submission_id,\n        _reviewed_at\n      );\n    END IF;\n  END IF;\n\n  -- 4. AUTOMATIC REGISTRATION VERIFICATION:\n  -- Only evaluate when not suspended, not renewal, and overall submission status reached approved_green\n  IF _renewal_id IS NULL AND _org_id IS NOT NULL AND _overall_status = 'approved_green' THEN\n    PERFORM public.evaluate_and_apply_automatic_registration_verification(_org_id, _admin_id);\n  END IF;\n\n  RETURN QUERY\n  SELECT *\n  FROM public.document_submission_files\n  WHERE id = _file_id;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "59370b100efed37d5975dc16983d786a",
+      "name": "user_replace_document_submission_file",
+      "owner": "postgres",
+      "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+      "definition": "CREATE OR REPLACE FUNCTION public.user_replace_document_submission_file(_file_id uuid, _new_file_url text, _new_file_name text, _new_file_type text, _new_file_size numeric DEFAULT NULL::numeric, _submit_for_review boolean DEFAULT true)\n RETURNS document_submission_files\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _old_file record;\n  _submission record;\n  _owner_id uuid;\n  _history jsonb;\n  _history_entry jsonb;\n  _updated_row public.document_submission_files;\nBEGIN\n  SELECT * INTO _old_file\n  FROM public.document_submission_files\n  WHERE id = _file_id;\n\n  IF _old_file.id IS NULL THEN\n    RAISE EXCEPTION 'Document file not found.';\n  END IF;\n\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE id = _old_file.submission_id;\n\n  IF _submission.id IS NULL THEN\n    RAISE EXCEPTION 'Parent document submission not found.';\n  END IF;\n\n  SELECT user_id INTO _owner_id\n  FROM public.organization_profiles\n  WHERE id = _submission.organization_id;\n\n  IF _owner_id <> auth.uid() THEN\n    RAISE EXCEPTION 'Unauthorized: Caller does not own this submission.';\n  END IF;\n\n  _history_entry := jsonb_build_object(\n    'action', 'replaced',\n    'previousFileName', _old_file.file_name,\n    'previousFileUrl', _old_file.file_url,\n    'previousFileType', _old_file.file_type,\n    'previousFileSize', _old_file.file_size,\n    'previousStatus', _old_file.admin_status,\n    'adminRemarks', _old_file.admin_remarks,\n    'reviewedAt', _old_file.reviewed_at,\n    'replacedAt', clock_timestamp()\n  );\n\n  _history := coalesce(_old_file.revision_history, '[]'::jsonb) || jsonb_build_array(_history_entry);\n\n  UPDATE public.document_submission_files\n  SET\n    file_url = _new_file_url,\n    file_name = _new_file_name,\n    file_type = _new_file_type,\n    file_size = coalesce(_new_file_size, _old_file.file_size),\n    admin_status = CASE\n      WHEN _submit_for_review THEN 'submitted'::public.document_submission_status\n      ELSE 'draft'::public.document_submission_status\n    END,\n    admin_remarks = NULL,\n    reviewed_at = NULL,\n    uploaded_at = clock_timestamp(),\n    updated_at = clock_timestamp(),\n    revision_history = _history\n  WHERE id = _file_id\n  RETURNING * INTO _updated_row;\n\n  RETURN _updated_row;\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "d19a1d0415f3eb900bab7dea241f0b21",
+      "name": "user_resubmit_renewal",
+      "owner": "postgres",
+      "signature": "user_resubmit_renewal(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.user_resubmit_renewal(p_renewal_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _renewal record;\n  _submission record;\n  _owner_id uuid;\n  _end_date date;\n  _now timestamptz := clock_timestamp();\nBEGIN\n  SELECT * INTO _renewal\n  FROM public.organization_renewals\n  WHERE id = p_renewal_id\n  FOR UPDATE;\n\n  IF _renewal.id IS NULL THEN\n    RAISE EXCEPTION 'Renewal application not found.';\n  END IF;\n\n  SELECT op.user_id INTO _owner_id\n  FROM public.organization_profiles op\n  WHERE op.id = _renewal.organization_id;\n\n  IF _owner_id <> auth.uid() THEN\n    RAISE EXCEPTION 'Unauthorized: Caller does not own this organization.';\n  END IF;\n\n  IF _renewal.status <> 'needs_revision' THEN\n    RAISE EXCEPTION 'Renewal cannot be resubmitted from status \"%\". Expected \"needs_revision\".', _renewal.status;\n  END IF;\n\n  -- Verify within 180-day window\n  SELECT oa.end_date INTO _end_date\n  FROM public.organization_accreditations oa\n  WHERE oa.id = _renewal.current_accreditation_id;\n\n  IF current_date > (_end_date + 180) THEN\n    RAISE EXCEPTION 'Late renewal cutoff has passed (180 days past expiration). Resubmission is no longer allowed.';\n  END IF;\n\n  -- Verify all flagged documents have been replaced\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE renewal_id = p_renewal_id\n  FOR UPDATE;\n\n  IF _submission.id IS NULL THEN\n    RAISE EXCEPTION 'No document submission packet found for this renewal.';\n  END IF;\n\n  IF EXISTS (\n    SELECT 1\n    FROM public.document_submission_files dsf\n    WHERE dsf.submission_id = _submission.id\n      AND dsf.admin_status IN ('needs_revision', 'rejected_red')\n  ) THEN\n    RAISE EXCEPTION 'All documents marked for revision or rejection must be replaced before resubmission.';\n  END IF;\n\n  -- Update renewal state to resubmitted\n  UPDATE public.organization_renewals\n  SET\n    status = 'resubmitted',\n    updated_at = _now\n  WHERE id = p_renewal_id;\n\n  -- Update document submission state\n  UPDATE public.document_submissions\n  SET\n    status = 'submitted',\n    updated_at = _now\n  WHERE id = _submission.id;\n\n  -- Insert activity log with NULL actor_user_id (org user action)\n  INSERT INTO public.activity_logs (\n    actor_user_id,\n    organization_id,\n    action,\n    related_type,\n    related_id,\n    description\n  ) VALUES (\n    NULL,\n    _renewal.organization_id,\n    'renewal_resubmitted',\n    'renewal',\n    p_renewal_id,\n    format('Organization resubmitted renewal application for Cycle %s after revisions.', _renewal.cycle_number)\n  );\n\n  RETURN jsonb_build_object(\n    'success', true,\n    'renewal_id', p_renewal_id,\n    'resubmitted_at', _now\n  );\nEND;\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "d41b680681db2323aba2c62693f59131",
+      "name": "user_submit_renewal",
+      "owner": "postgres",
+      "signature": "user_submit_renewal(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.user_submit_renewal(p_renewal_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  _renewal record;\n  _submission record;\n  _owner_id uuid;\n  _end_date date;\n  _now timestamptz := clock_timestamp();\nBEGIN\n  SELECT * INTO _renewal\n  FROM public.organization_renewals\n  WHERE id = p_renewal_id\n  FOR UPDATE;\n\n  IF _renewal.id IS NULL THEN\n    RAISE EXCEPTION 'Renewal application not found.';\n  END IF;\n\n  SELECT op.user_id INTO _owner_id\n  FROM public.organization_profiles op\n  WHERE op.id = _renewal.organization_id;\n\n  IF _owner_id IS DISTINCT FROM auth.uid() THEN\n    RAISE EXCEPTION 'Unauthorized: Caller does not own this organization.';\n  END IF;\n\n  IF _renewal.status <> 'draft' THEN\n    RAISE EXCEPTION 'Renewal cannot be submitted from status \"%\". Expected \"draft\".', _renewal.status;\n  END IF;\n\n  SELECT oa.end_date INTO _end_date\n  FROM public.organization_accreditations oa\n  WHERE oa.id = _renewal.current_accreditation_id;\n\n  IF current_date > (_end_date + 180) THEN\n    RAISE EXCEPTION 'Late renewal cutoff has passed (180 days past expiration). Application can no longer be submitted.';\n  END IF;\n\n  SELECT * INTO _submission\n  FROM public.document_submissions\n  WHERE renewal_id = p_renewal_id\n  FOR UPDATE;\n\n  IF _submission.id IS NULL THEN\n    RAISE EXCEPTION 'No renewal document submission found.';\n  END IF;\n\n  -- Each selected document may be sent as it is ready. The admin approval RPC\n  -- continues to enforce completeness and approval of every required type.\n  IF NOT EXISTS (\n    SELECT 1\n    FROM public.document_submission_files dsf\n    JOIN public.required_document_types rdt ON rdt.id = dsf.document_type_id\n    WHERE dsf.submission_id = _submission.id\n      AND rdt.is_active = true\n      AND coalesce(rdt.is_required, true) = true\n      AND rdt.scope IN ('renewal', 'both')\n      AND rdt.template_scope = 'document_submission'\n      AND nullif(trim(dsf.file_url), '') IS NOT NULL\n  ) THEN\n    RAISE EXCEPTION 'Upload at least one required renewal document before submitting.';\n  END IF;\n\n  UPDATE public.organization_renewals\n  SET status = 'submitted', submitted_at = _now, updated_at = _now\n  WHERE id = p_renewal_id;\n\n  UPDATE public.document_submissions\n  SET status = 'submitted', submitted_at = _now, updated_at = _now\n  WHERE id = _submission.id;\n\n  INSERT INTO public.activity_logs (\n    actor_user_id, organization_id, action, related_type, related_id, description\n  ) VALUES (\n    NULL,\n    _renewal.organization_id,\n    'renewal_submitted',\n    'renewal',\n    p_renewal_id,\n    format('Organization submitted renewal documents for Cycle %s.', _renewal.cycle_number)\n  );\n\n  RETURN jsonb_build_object(\n    'success', true,\n    'renewal_id', p_renewal_id,\n    'submitted_at', _now\n  );\nEND;\n$function$\n"
+    }
+  ]
+}

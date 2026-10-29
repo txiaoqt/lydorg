@@ -1,0 +1,614 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T10:49:33.555Z",
+  "results": [
+    {
+      "check": "A: normal registration parent and owned PDF uploads",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 201,
+          "durationMs": 163
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 438
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 151
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 250
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 144
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 451
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 140
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 698
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 134
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 233
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 141
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 247
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 138
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 176
+        },
+        {
+          "actor": "A JWT",
+          "step": "A: normal registration parent and owned PDF uploads",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "A: normal authorized registration review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "A: normal authorized registration review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 137
+        },
+        {
+          "actor": "Super Admin",
+          "step": "A: normal authorized registration review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 134
+        },
+        {
+          "actor": "Super Admin",
+          "step": "A: normal authorized registration review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 132
+        },
+        {
+          "actor": "Super Admin",
+          "step": "A: normal authorized registration review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 133
+        },
+        {
+          "actor": "Super Admin",
+          "step": "A: normal authorized registration review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 139
+        },
+        {
+          "actor": "Super Admin",
+          "step": "A: normal authorized registration review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 163
+        },
+        {
+          "actor": "Super Admin",
+          "step": "A: normal authorized registration review",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "check": "B: normal registration parent and owned PDF uploads",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B JWT",
+          "step": "B: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 201,
+          "durationMs": 149
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 200,
+          "durationMs": 253
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: normal registration parent and owned PDF uploads",
+          "method": "POST",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 201,
+          "durationMs": 140
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: normal registration parent and owned PDF uploads",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 138
+        },
+        {
+          "actor": "B JWT",
+          "step": "B: normal registration parent and owned PDF uploads",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 143
+        }
+      ]
+    },
+    {
+      "check": "B: normal authorized registration review",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "B: normal authorized registration review",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/review_organization_urn",
+          "status": 200,
+          "durationMs": 137
+        },
+        {
+          "actor": "Super Admin",
+          "step": "B: normal authorized registration review",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_profiles",
+          "status": 200,
+          "durationMs": 138
+        }
+      ]
+    },
+    {
+      "check": "Revoke fixture-setup Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Revoke fixture-setup Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 134
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/settings",
+      "status": 200,
+      "durationMs": 722
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 429
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 151
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 350
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 147
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 211
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 201,
+      "durationMs": 163
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 438
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 151
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 250
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 144
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 451
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 140
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 698
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 134
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 233
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 141
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 247
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 138
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 176
+    },
+    {
+      "actor": "A JWT",
+      "step": "A: normal registration parent and owned PDF uploads",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 163
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Super Admin",
+      "step": "A: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 144
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 512
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 201,
+      "durationMs": 149
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 200,
+      "durationMs": 253
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: normal registration parent and owned PDF uploads",
+      "method": "POST",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 201,
+      "durationMs": 140
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: normal registration parent and owned PDF uploads",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "B JWT",
+      "step": "B: normal registration parent and owned PDF uploads",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "Super Admin",
+      "step": "B: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/review_organization_urn",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "Super Admin",
+      "step": "B: normal authorized registration review",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "Super Admin",
+      "step": "B: normal authorized registration review",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 134
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Revoke fixture-setup Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 134
+    }
+  ]
+}

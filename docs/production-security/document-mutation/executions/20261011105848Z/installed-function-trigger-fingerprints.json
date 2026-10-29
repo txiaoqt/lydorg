@@ -1,0 +1,496 @@
+{
+  "installed_catalog": {
+    "functions": [
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "guard_direct_document_mutation()",
+        "source_md5": "78c205203bf617933ba606ffb30ef1db",
+        "volatility": "v",
+        "definition_md5": "7c87d7aab6ad2459b5eebaee7732efbd",
+        "security_definer": false,
+        "definition_sha256": "a1e20860ddf9de637f69ec26f8365eaf18718a5dc817714964971fce15820ad9",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": false
+          },
+          {
+            "role": "service_role",
+            "execute": true
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "guard_document_parent_mutation()",
+        "source_md5": "2573890ad54e8bdd2fdfbba358fc04e2",
+        "volatility": "v",
+        "definition_md5": "a5d0f37ccca047e22a9c1207e71600b5",
+        "security_definer": false,
+        "definition_sha256": "b83499da07ae3974de59d22f00b4819308e32e3bef2f8bcfd30968ba833a0466",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": false
+          },
+          {
+            "role": "service_role",
+            "execute": true
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+        "source_md5": "6a43862235936188e237afc28256274d",
+        "volatility": "v",
+        "definition_md5": "b8f889a1617b35a3312d7c27a2ee8cde",
+        "security_definer": true,
+        "definition_sha256": "b30f9d2bb602bb319822fe5361ef10c69cd376482e2619644031eb0e85cee943",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": true
+          },
+          {
+            "role": "service_role",
+            "execute": true
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "PUBLIC",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "anon",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+        "source_md5": "6dd339247c5a78c507dca124c0537b2d",
+        "volatility": "v",
+        "definition_md5": "855c8ad6cc7a9dd621f1921c52e9f18c",
+        "security_definer": true,
+        "definition_sha256": "0d0b875c58fb62c23f1f16cf52b2909029f85c3dffb0f19aba04d66317d02a3b",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": true
+          },
+          {
+            "role": "authenticated",
+            "execute": true
+          },
+          {
+            "role": "service_role",
+            "execute": true
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+        "source_md5": "ab31b43878e6121faa84dc9b98afa4f8",
+        "volatility": "v",
+        "definition_md5": "25c9ef7e37469b003690ce2787261312",
+        "security_definer": true,
+        "definition_sha256": "2724713edeca41392d5f25a94c1fcbd98bc6a6e31ee6ad8c79948dea9cb57d49",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": true
+          },
+          {
+            "role": "service_role",
+            "execute": true
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "user_resubmit_renewal(uuid)",
+        "source_md5": "4fc55552e211fc4e36ca6891a0546004",
+        "volatility": "v",
+        "definition_md5": "925e2cd4a1bc58959cd5520e834bbf3a",
+        "security_definer": true,
+        "definition_sha256": "0b63182b6e9f7494670a024b68b01ed7210543a3c4f1ef08453fc7a8bf205c6a",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": true
+          },
+          {
+            "role": "service_role",
+            "execute": true
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "authenticated",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantee": "service_role",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "user_submit_renewal(uuid)",
+        "source_md5": "088980e79e66b27be40f4659635faf59",
+        "volatility": "v",
+        "definition_md5": "3dd14266cc03c6aa541a4ac81065494b",
+        "security_definer": true,
+        "definition_sha256": "12cf705d67a9a7838c013a8673478053f6fef2e51f15c7f61c40b2735c4b46a6",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": true
+          },
+          {
+            "role": "service_role",
+            "execute": true
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "ytrace_document_mutation.guard_file()",
+        "source_md5": "c29d26dec63eb2a43529dd5363506eb7",
+        "volatility": "v",
+        "definition_md5": "b2082c8898b0bdc45caf61490f0d7a7e",
+        "security_definer": true,
+        "definition_sha256": "8d1082de97302a9be4bc571c28e214dec80b311a505bdead6be67b9d057f01cd",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": false
+          },
+          {
+            "role": "service_role",
+            "execute": false
+          }
+        ]
+      },
+      {
+        "acl": [
+          {
+            "grantee": "postgres",
+            "grantor": "postgres",
+            "grantable": false,
+            "privilege": "EXECUTE"
+          }
+        ],
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog, public, pg_temp"
+        ],
+        "signature": "ytrace_document_mutation.lock_replacement(uuid)",
+        "source_md5": "5cab3a4d1efaa8cf259877e3218dcd78",
+        "volatility": "v",
+        "definition_md5": "ae3cfaf97e7ff4985dfde25e9fcf4627",
+        "security_definer": true,
+        "definition_sha256": "c43c3ee9439613b4d10db006cb897c90c7dd21e2d21507744fcd4bf584543b48",
+        "effective_execute": [
+          {
+            "role": "anon",
+            "execute": false
+          },
+          {
+            "role": "authenticated",
+            "execute": false
+          },
+          {
+            "role": "service_role",
+            "execute": false
+          }
+        ]
+      }
+    ],
+    "read_only": "on",
+    "verified_at": "2026-10-11T11:05:08.436678+00:00",
+    "patch_schema": {
+      "acl": "{postgres=UC/postgres}",
+      "name": "ytrace_document_mutation",
+      "owner": "postgres"
+    },
+    "document_triggers": [
+      {
+        "name": "a_document_mutation_guard",
+        "table": "public.document_submission_files",
+        "enabled": "O",
+        "function": "ytrace_document_mutation.guard_file()",
+        "definition": "CREATE TRIGGER a_document_mutation_guard BEFORE INSERT OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION ytrace_document_mutation.guard_file()",
+        "event_mask": 23,
+        "argument_count": 0,
+        "definition_md5": "5e286b4414a9236846e912c7bb3cd7d8",
+        "when_expression": null,
+        "definition_sha256": "cd6f26c0b6eb0affa2eaf39259e95b112ba836968d56a3809510e2df3a64710d",
+        "column_restriction": "",
+        "function_definition_md5": "b2082c8898b0bdc45caf61490f0d7a7e"
+      },
+      {
+        "name": "b_document_direct_guard",
+        "table": "public.document_submission_files",
+        "enabled": "O",
+        "function": "guard_direct_document_mutation()",
+        "definition": "CREATE TRIGGER b_document_direct_guard BEFORE INSERT OR DELETE OR UPDATE ON public.document_submission_files FOR EACH ROW EXECUTE FUNCTION guard_direct_document_mutation()",
+        "event_mask": 31,
+        "argument_count": 0,
+        "definition_md5": "00a349eeb136a3719920003fd12cc1f6",
+        "when_expression": null,
+        "definition_sha256": "49f3035f189e6dad883392c91961bc4c2f8a5607fe9755f873c653ebd6e0c220",
+        "column_restriction": "",
+        "function_definition_md5": "7c87d7aab6ad2459b5eebaee7732efbd"
+      },
+      {
+        "name": "a_document_parent_guard",
+        "table": "public.document_submissions",
+        "enabled": "O",
+        "function": "guard_document_parent_mutation()",
+        "definition": "CREATE TRIGGER a_document_parent_guard BEFORE INSERT OR DELETE OR UPDATE ON public.document_submissions FOR EACH ROW EXECUTE FUNCTION guard_document_parent_mutation()",
+        "event_mask": 31,
+        "argument_count": 0,
+        "definition_md5": "8819c88ca9b8ab309123c496725be98f",
+        "when_expression": null,
+        "definition_sha256": "d115d2935806e4a31d596d794f6791c7c8f6260b7bfac9564e796928acbfb863",
+        "column_restriction": "",
+        "function_definition_md5": "a5d0f37ccca047e22a9c1207e71600b5"
+      }
+    ],
+    "migration_history": {
+      "count": 164,
+      "latest": "20261011230000",
+      "version_name_md5": "2d1ea52795f2d3c97c71e229819d9a7c",
+      "complete_history_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+    },
+    "containment_triggers": [
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "public.budget_requests",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "event_mask": 23,
+        "definition_md5": "ddeb9b8bdfb9b84283cc62218cddb0dd",
+        "definition_sha256": "2d6de37f13561339f3b58ab50447a1707502fc8490430c260ac35c40dbb0c018",
+        "function_definition_md5": "3a551ad03eaa7d24ca136cf1cbecaba9"
+      },
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "public.document_submission_files",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "event_mask": 23,
+        "definition_md5": "92a27452e528f2258b5258d27d8ccd98",
+        "definition_sha256": "002015ebd048bc0e0971f63cfaaeb68022909e3678183c6da623c82531755167",
+        "function_definition_md5": "3a551ad03eaa7d24ca136cf1cbecaba9"
+      },
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "public.document_submissions",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "event_mask": 23,
+        "definition_md5": "d63f6ba65062908d7ca9d08bf79d6b77",
+        "definition_sha256": "1707bb3459a82dc2aeed2c00dfa895cdf1dc6652a39c11da9c86fa666e69bb37",
+        "function_definition_md5": "3a551ad03eaa7d24ca136cf1cbecaba9"
+      },
+      {
+        "name": "a_production_fixture_markers_guard",
+        "table": "public.liquidation_reports",
+        "enabled": "O",
+        "function": "ytrace_production_containment.freeze_fixture_markers()",
+        "event_mask": 23,
+        "definition_md5": "fbd43967eb883fc24d2d6c83a2301348",
+        "definition_sha256": "43d88ce349172758b3a7952d430bc53f11f3d102e9e50b267a5fb5e4e378baab",
+        "function_definition_md5": "3a551ad03eaa7d24ca136cf1cbecaba9"
+      }
+    ]
+  }
+}
+

@@ -1,0 +1,62 @@
+{
+  "candidateBundleSha256": "f3f762ca25eed5b4bc701a1eff184fc7e99d0493b847e341588d2c737571db84",
+  "candidateManifestSha256": "3600a83cc67202d1ebbef855900a2a9df018d33c9f6af10a2d19253c00247fd2",
+  "excludesSelf": true,
+  "files": [
+    {
+      "file": "budget-runner-core.mjs",
+      "bytes": 56813,
+      "sha256": "1a57f717e6aa0a9bf3fd6bc2115440f167760fab82b6fe690b897cade471cbe4"
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "bytes": 43117,
+      "sha256": "a16c7037c9c44200505e7b14c001e8b7eedfb0704aa3154f60bd26950ccb9789"
+    },
+    {
+      "file": "focused-tests-01.tap",
+      "bytes": 21126,
+      "sha256": "e70955f7cb82f970f634a676d3648b1570098e6dc1028d99aedf6a2cc66694a5"
+    },
+    {
+      "file": "local-check-results.json",
+      "bytes": 4368,
+      "sha256": "8dc65dd76290c046a653fcd9aad2372199e2e6916e079da32d624e2699bc8a2e"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "bytes": 36455,
+      "sha256": "30ac1e54902c1b6ae44f2aa1c9111fc36457d481dbc35b242ebc4a82f172d0a6"
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "bytes": 7666,
+      "sha256": "14b725b6891294f8658403cca451efafda031a9eaaceb4e162212488a39a8d35"
+    },
+    {
+      "file": "operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "preservation-verification.json",
+      "bytes": 69411,
+      "sha256": "25cfad2904932aa6b3e9791c4595c996bf68a5129046386e31952319f74b8c24"
+    },
+    {
+      "file": "remediation-review.md",
+      "bytes": 18740,
+      "sha256": "39ff615c385a3319d53df8c54c041b1258c9c3726092ba572024430d2b1125ce"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "3600a83cc67202d1ebbef855900a2a9df018d33c9f6af10a2d19253c00247fd2"
+    },
+    {
+      "file": "security-correction.patch",
+      "bytes": 40863,
+      "sha256": "233bc8bc760340c31d406b0f836c658b5a90c95f673d254bb73e65cd6ce26568"
+    }
+  ]
+}

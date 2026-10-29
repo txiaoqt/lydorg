@@ -1,0 +1,52 @@
+# Actual Windows NTFS disposable-fixture suite; no production I/O
+# native FileRenameInfo=3 replace=FALSE error=0
+ok 1 - actual same-directory Win32 rename preserves file ID, bytes and timestamps
+# race=0 winner=B loserWin32=183 submissions=2
+ok 2 - two concurrent kernel contenders / unique fixture 0
+# race=1 winner=A loserWin32=183 submissions=2
+ok 3 - two concurrent kernel contenders / unique fixture 1
+# race=2 winner=A loserWin32=183 submissions=2
+ok 4 - two concurrent kernel contenders / unique fixture 2
+# race=3 winner=A loserWin32=183 submissions=2
+ok 5 - two concurrent kernel contenders / unique fixture 3
+# race=4 winner=B loserWin32=183 submissions=2
+ok 6 - two concurrent kernel contenders / unique fixture 4
+# race=5 winner=B loserWin32=183 submissions=2
+ok 7 - two concurrent kernel contenders / unique fixture 5
+# race=6 winner=A loserWin32=183 submissions=2
+ok 8 - two concurrent kernel contenders / unique fixture 6
+# race=7 winner=A loserWin32=183 submissions=2
+ok 9 - two concurrent kernel contenders / unique fixture 7
+# race=8 winner=B loserWin32=183 submissions=2
+ok 10 - two concurrent kernel contenders / unique fixture 8
+# race=9 winner=B loserWin32=183 submissions=2
+ok 11 - two concurrent kernel contenders / unique fixture 9
+# race=10 winner=A loserWin32=183 submissions=2
+ok 12 - two concurrent kernel contenders / unique fixture 10
+# race=11 winner=A loserWin32=183 submissions=2
+ok 13 - two concurrent kernel contenders / unique fixture 11
+# race=12 winner=B loserWin32=183 submissions=2
+ok 14 - two concurrent kernel contenders / unique fixture 12
+# race=13 winner=A loserWin32=183 submissions=2
+ok 15 - two concurrent kernel contenders / unique fixture 13
+# race=14 winner=B loserWin32=183 submissions=2
+ok 16 - two concurrent kernel contenders / unique fixture 14
+# race=15 winner=B loserWin32=183 submissions=2
+ok 17 - two concurrent kernel contenders / unique fixture 15
+ok 18 - preexisting destination rejected and both file identities/bytes retained
+ok 19 - destination appearing after handle preparation is rejected by kernel
+ok 20 - source pathname replacement after capture rejects changed identity
+ok 21 - directory pathname replacement after capture rejects changed identity
+ok 22 - same-file content change after capture rejects changed bytes
+ok 23 - held parent/source handles reject move and write interference
+ok 24 - one prepared operation cannot submit twice, including after rejection
+ok 25 - fixture root, traversal, alternate stream and same-leaf inputs fail before rename
+# existing directory nativeError=183 status=REJECTED_DESTINATION_EXISTS
+ok 26 - preexisting directory destination rejected without replacing directory or source
+# BLOCKED: actual junction/redirection and hardlink fixtures; creation was denied in preserved prior runs. No alternate attempt.
+# independentProcesses=2 dispatches=2 winner=A loser=REJECTED_DESTINATION_EXISTS|183|1
+ok 27 - two actual child processes contend for the same destination
+# classification=UNRESOLVED_NO_VERIFIED_RECEIPT childLaunches=1 retries=0 cleanup=0 retained=archive.bin
+ok 28 - real child exit after kernel rename is unresolved; retained archive and no resubmit
+1..28
+# pass=28 fail=0 blockedProperties=2 fixtures-retained=true

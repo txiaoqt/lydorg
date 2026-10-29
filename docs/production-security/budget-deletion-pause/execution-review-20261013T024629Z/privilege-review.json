@@ -1,0 +1,19 @@
+{
+  "evidenceType": "READ_ONLY_PRODUCTION_PRIVILEGE_CHECK",
+  "project": "mqqaykksadotbrghbexz",
+  "readOnly": true,
+  "database": "postgres",
+  "currentUser": "postgres",
+  "sessionUser": "postgres",
+  "ownsTargetFunction": true,
+  "databaseConnect": true,
+  "publicUsage": true,
+  "publicCreate": true,
+  "plpgsqlUsage": true,
+  "textTypeUsage": true,
+  "uuidArrayTypeUsage": true,
+  "jsonbTypeUsage": true,
+  "allEightTransactionProtectedRelationsSelectable": true,
+  "all57InventoriesActuallyCaptured": true,
+  "newPrivilegesGranted": false
+}

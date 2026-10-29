@@ -1,0 +1,45 @@
+{
+  "admins": [
+    {
+      "role": "organization_user",
+      "active": true,
+      "username": "staging-no-permissions",
+      "passwordSet": true
+    },
+    {
+      "role": "super_admin",
+      "active": true,
+      "username": "staging-super-admin",
+      "passwordSet": true
+    }
+  ],
+  "profiles": [
+    {
+      "terms": 1,
+      "status": "verified"
+    },
+    {
+      "terms": 0,
+      "status": "verified"
+    },
+    {
+      "terms": 0,
+      "status": "suspended_inactive"
+    }
+  ],
+  "renewals": 0,
+  "migration": [
+    {
+      "name": "staging_missing_private_identity_schema_20261010",
+      "version": "20261010104343"
+    }
+  ],
+  "ypopEntries": 2,
+  "liquidations": 2,
+  "identityCases": 3,
+  "registrations": 2,
+  "assessResolves": true,
+  "budgetRequests": 2,
+  "schemaResolves": true,
+  "identityDecisions": 0
+}

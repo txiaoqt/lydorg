@@ -1,0 +1,124 @@
+{
+  "verdict": "READY TO REQUEST SUPERVISED AUTHORIZATION",
+  "candidateApprovedForInstallation": false,
+  "before": {
+    "branch": "ui-refactor",
+    "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+    "trackedDirty": 68,
+    "untracked": 3719,
+    "staged": 0,
+    "porcelainSha256": "2fb3eca8f1c2149a5444ad2adcde5c32dda6c57b824641f6bc6e585136f1ed82"
+  },
+  "after": {
+    "branch": "ui-refactor",
+    "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+    "trackedDirty": 68,
+    "untracked": 3732,
+    "staged": 0,
+    "newCandidateFiles": 13,
+    "outsideCandidatePorcelainSha256": "2fb3eca8f1c2149a5444ad2adcde5c32dda6c57b824641f6bc6e585136f1ed82"
+  },
+  "outsideCandidateStatusPreserved": true,
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+  "sqlBytes": 11945,
+  "candidateBundleSha256": "390afb8cfa01d68cc6ad74472730fc6096775a40e9f8a98c17f6b8b2fed1d865",
+  "candidateManifestSha256": "7099f8dce1a195aa7df8f6d279c45ba451b31ab46cd4e13114a2fea7b9bcfd1b",
+  "codeIdentities": [
+    {
+      "file": "budget-runner-core.mjs",
+      "bytes": 46357,
+      "sha256": "6181be1317389ba5dd4ff801e0ffcfd0b85ffad4bae4524ae35ebb2ee44e6f9b"
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "bytes": 15120,
+      "sha256": "679284536020375873e0e6e2735cfd398ead084ef9492390b85ed4e8632f0be5"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "bytes": 32972,
+      "sha256": "f0f13fff29fdee9d95ba84f9b5265c923ff917c088c743f86175a0ccc832b885"
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "bytes": 4609,
+      "sha256": "9ad5b0fb5cad52b7557f2a57289b544957283d8fab7ad4cc11190282313d19e3"
+    },
+    {
+      "file": "operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    }
+  ],
+  "pinnedInputs": 11,
+  "dependencyFiles": 138,
+  "nodeVersion": "v24.21.0",
+  "focusedTests": {
+    "passed": 50,
+    "failed": 0,
+    "log": "focused-tests-01.tap",
+    "sha256": "2e9a500fc6b032a946f4063f0cc3b7011adf633dcd8422cc5a9ed68f05460844",
+    "historicalSuitesRerun": false
+  },
+  "syntaxChecks": [
+    {
+      "file": "budget-runner-core.mjs",
+      "exitCode": 0
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "exitCode": 0
+    },
+    {
+      "file": "native-budget-pause-supervisor.mjs",
+      "exitCode": 0
+    },
+    {
+      "file": "budget-safety-controls.test.mjs",
+      "exitCode": 0
+    }
+  ],
+  "diffChecks": [
+    {
+      "file": "budget-runner-core.mjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native-budget-pause-runner.mjs",
+      "status": "PASS"
+    }
+  ],
+  "originalPreservationChecks": 207,
+  "protectedStatePresence": {
+    "directory": "C:/Users/Christopher x Angel/.ytrace-production-budget-deletion-pause",
+    "files": [
+      {
+        "file": "authorization.json",
+        "status": "ABSENT"
+      },
+      {
+        "file": "approved-preflight.json",
+        "status": "ABSENT"
+      },
+      {
+        "file": "budget-deletion-pause.operation.lock.json",
+        "status": "ABSENT"
+      },
+      {
+        "file": "budget-deletion-pause.attempt.json",
+        "status": "ABSENT"
+      }
+    ],
+    "contentsRead": false,
+    "writes": false
+  },
+  "productionConnectionAttempted": false,
+  "freshProofCreated": false,
+  "freshPreflightExecuted": false,
+  "installationModeInvoked": false,
+  "installationAuthorizationCreated": false,
+  "lockCreated": false,
+  "attemptMarkerCreated": false,
+  "sqlExecuted": false,
+  "gitPushOrCommit": false
+}

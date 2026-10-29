@@ -1,0 +1,142 @@
+// Disposable embedded PostgreSQL only. Never loads credentials or opens a network connection.
+// Captured production SQL definitions; synthetic rows, local digest adapter, no live HTTP certification.
+import { PGlite } from '../../tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js';
+import { readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import assert from 'node:assert/strict';
+import test, { after } from 'node:test';
+const dir='docs/production-security/budget-deletion-pause/20261012T165000Z';
+const read=p=>readFile(p,'utf8');
+const manifest=JSON.parse(await read(`${dir}/candidate-manifest.json`));
+const funcs=JSON.parse(await read(`${dir}/captured-functions.json`));
+const inputs=JSON.parse(await read(`${dir}/local-schema-inputs.json`));
+const candidate=await read(`${dir}/budget_deletion_pause_production.sql`);
+const body=await read(`${dir}/pause-body.sql`);
+const expression=await read('docs/production-security/storage-cutover/20261011T113322Z/catalog-expression.sql');
+const sha=s=>createHash('sha256').update(s).digest('hex');
+const uid=n=>`31000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+const q=s=>"'"+String(s).replaceAll("'","''")+"'";
+const evidence=[];
+let localEngine;
+const tables=['budget_requests','budget_request_files','liquidation_reports','liquidation_report_files','notifications','activity_logs','admin_accounts','admin_sessions','roles','storage.objects'];
+const contractSql=`select p.oid::text oid,p.oid::regprocedure::text signature,pg_get_userbyid(p.proowner) owner,p.proacl::text acl,p.prosecdef,p.proisstrict,p.proparallel,p.provolatile,p.procost,p.proconfig,pg_get_function_arguments(p.oid) args,pg_get_function_result(p.oid) result,md5(pg_get_functiondef(p.oid)) md5 from pg_proc p where p.oid='public.admin_bulk_delete_budget_requests(text,uuid[])'::regprocedure`;
+const contract=async db=>(await db.query(contractSql)).rows[0];
+async function snapshot(db){
+ await db.exec('reset role');const out={};
+ for(const t of tables)out[t]=(await db.query(`select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text),'[]') data from ${t} t`)).rows[0].data;
+ return out;
+}
+async function catalogHash(db){return (await db.query(`select encode(sha256(convert_to((${expression} - ARRAY['captured_at','read_only','database','current_user','session_user','foundation_present','gateway_rpc_present'])::text,'UTF8')),'hex') hash`)).rows[0].hash;}
+async function fixture(){
+ const db=new PGlite();
+ localEngine=(await db.query('select version() version')).rows[0].version;
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;
+ create schema auth;create schema storage;create schema extensions;create schema ytrace_storage_private;create schema supabase_migrations;
+ create domain citext as text;
+ create function extensions.digest(text,text) returns bytea language sql immutable strict as $$select sha256(convert_to($1,'UTF8'))$$;
+ create table storage.objects(id uuid primary key,bucket_id text,name text,owner_id text,metadata jsonb);
+ create table storage.buckets(id text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table ytrace_storage_private.trusted_storage_origins(origin text);
+ insert into ytrace_storage_private.trusted_storage_origins values('https://mqqaykksadotbrghbexz.supabase.co');
+ create table supabase_migrations.schema_migrations(version text,statements text[],name text);`);
+ for(const e of inputs.enums)await db.exec(`create type public.${e.name} as enum(${e.labels.map(q).join(',')})`);
+ for(const table of new Set(inputs.columns.map(c=>c.table))){
+  const columns=inputs.columns.filter(c=>c.table===table).map(c=>`"${c.name}" ${c.type}${c.default?' default '+c.default:''}${c.not_null?' not null':''}${c.name==='id'?' primary key':''}`);
+  await db.exec(`create table public.${table}(${columns.join(',')})`);
+ }
+ for(const f of [...funcs,...inputs.functions]){
+  // Settings/audit helper bodies compile but are not called by the paused RPC.
+  await db.exec(f.definition);
+  await db.exec(`grant execute on function public.${f.signature} to anon,authenticated,service_role`);
+ }
+ await db.exec(`alter table budget_request_files add foreign key(budget_request_id) references budget_requests(id) on delete cascade;
+ alter table liquidation_reports add foreign key(budget_request_id) references budget_requests(id) on delete cascade;
+ alter table liquidation_report_files add foreign key(liquidation_report_id) references liquidation_reports(id) on delete cascade;
+ alter table budget_requests enable row level security;
+ insert into roles(id,code,label,permission_codes) values(1,'super_admin','Synthetic super admin','{}'),(2,'admin','Synthetic reviewer',array['budget_requests_review']),(3,'admin','Synthetic zero permission','{}');`);
+ for(const [n,role,active] of [[1,1,true],[2,2,true],[3,3,true],[4,1,false]])await db.query('insert into admin_accounts(id,username,password_hash,email,display_name,role_id,is_active) values($1,$2::text::citext,$3,$4,$2::text,$5,$6)',[uid(n),'synthetic-'+n,'NOT-A-PASSWORD-HASH','synthetic-'+n+'@example.invalid',role,active]);
+ for(const [n,name,days,revoked] of [[1,'valid-super',1,false],[2,'valid-reviewer',1,false],[3,'valid-zero',1,false],[4,'inactive-admin',1,false],[1,'expired',-1,false],[1,'revoked',1,true]])await db.query("insert into admin_sessions(admin_id,token_hash,expires_at,revoked_at) values($1,encode(extensions.digest($2,'sha256'),'hex'),now()+($3||' days')::interval,case when $4 then now() else null end)",[uid(n),name,String(days),revoked]);
+ await db.query("insert into budget_requests(id,organization_id,submitted_by,activity_title,activity_date,venue,status) values($1,$2,$3,'SYNTHETIC DISPOSABLE',current_date,'Local fixture','under_review')",[uid(10),uid(20),uid(21)]);
+ await db.query("insert into budget_request_files(id,budget_request_id,file_url,file_name,file_type,file_size) values($1,$2,$3,'synthetic.pdf','application/pdf',100)",[uid(11),uid(10),'storage://budget-request-files/local/synthetic.pdf']);
+ await db.query('insert into liquidation_reports(id,budget_request_id,organization_id,submitted_by) values($1,$2,$3,$4)',[uid(12),uid(10),uid(20),uid(21)]);
+ await db.query("insert into liquidation_report_files(id,liquidation_report_id,file_url,file_name,file_type,file_size) values($1,$2,$3,'synthetic.pdf','application/pdf',100)",[uid(13),uid(12),'storage://liquidation-report-files/local/synthetic.pdf']);
+ await db.query("insert into activity_logs(actor_user_id,organization_id,action,related_type,related_id,description) values($1,$2,'synthetic_history','budget_request',$3,'SYNTHETIC AUDIT')",[uid(1),uid(20),uid(10)]);
+ await db.query("insert into notifications(user_id,title,message,type,related_type,related_id) values($1,'Synthetic','Synthetic',$3,'budget_request',$2)",[uid(21),uid(10),inputs.enums.find(e=>e.name==='notification_type').labels[0]]);
+ await db.query("insert into storage.objects values($1,'budget-request-files','local/synthetic.pdf',$2,'{}'),($3,'liquidation-report-files','local/synthetic.pdf',$2,'{}')",[uid(30),uid(21),uid(31)]);
+ return db;
+}
+async function localInstall(db){
+ const old=await catalogHash(db);
+ await db.exec('begin');await db.exec(body);const next=await catalogHash(db);await db.exec('rollback');
+ const localMajor=(await db.query("select current_setting('server_version_num')::int/10000 major")).rows[0].major;
+ const versionGate="current_setting('server_version_num')::int/10000<>17";
+ const localVersionGate=`current_setting('server_version_num')::int/10000<>${localMajor}`;
+ const local=candidate.replaceAll(manifest.beforeCatalogSha256,old).replaceAll(manifest.projectedAfterCatalogSha256,next).replace(versionGate,localVersionGate);
+ assert.equal(local.replaceAll(old,manifest.beforeCatalogSha256).replaceAll(next,manifest.projectedAfterCatalogSha256).replace(localVersionGate,versionGate),candidate,'Only two catalog constants and the local engine major gate may differ');
+ await db.exec(local);
+ return {local,old,next};
+}
+test('reviewed artifact, exact contract and future cutover predicate preservation',async()=>{
+ assert.equal(sha(candidate),manifest.sha256);assert.equal(Buffer.byteLength(candidate),manifest.bytes);assert.equal(sha(body),manifest.bodySha256);
+ assert.equal((candidate.match(/CREATE OR REPLACE FUNCTION/g)||[]).length,1);
+ assert.doesNotMatch(body,/validate_admin|\b(?:DELETE|UPDATE|INSERT|GRANT|REVOKE|EXECUTE)\b/i);
+ const old=await read('docs/production-security/storage-cutover/20261011T113322Z/production_storage_policy_cutover_review.sql');
+ const proposed=await read(`${dir}/future-cutover-gates-proposal.sql`);
+ assert.equal(proposed.replaceAll(manifest.projectedAfterCatalogSha256,manifest.beforeCatalogSha256),old);
+ evidence.push({check:'Single unconditional function body; original cutover and all predicates preserved',status:'PASS'});
+});
+test('unmodified production artifact rejects a synthetic catalog before installation',async()=>{
+ const db=await fixture();try{const before=await snapshot(db),fn=await contract(db);await assert.rejects(db.exec(candidate),/Exact reviewed production catalog drifted|Unexpected PostgreSQL major version/);await db.exec('rollback');assert.deepEqual(await snapshot(db),before);assert.deepEqual(await contract(db),fn);evidence.push({check:'Untouched production candidate rejects this local PostgreSQL 18 environment; rollback preserves rows and function',status:'PASS'});}finally{await db.close();}
+});
+test('atomic installer, unconditional role/session denial and unchanged protected rows',async t=>{
+ const db=await fixture();try{
+  const initial=await snapshot(db),fn=await contract(db);await localInstall(db);
+  const after=await contract(db);assert.equal(after.md5,manifest.after.definition_md5);
+  assert.deepEqual({...after,md5:fn.md5},fn);assert.deepEqual(await snapshot(db),initial);
+  evidence.push({check:'Exact pause body/full transaction with local catalog/version gates preserves OID, signature, owner, ACL, settings and all synthetic rows',status:'PASS'});
+  for(const role of ['postgres','anon','authenticated','service_role'])for(const session of ['valid-super','valid-reviewer','valid-zero','invalid','expired','revoked','inactive-admin',null]){
+   await t.test(`${role}: ${session??'null'} is paused`,async()=>{
+    await db.exec(`set role ${role}`);
+    await assert.rejects(db.query('select public.admin_bulk_delete_budget_requests($1,$2)',[session,[uid(10)]]),e=>e.code==='PT409'&&e.message.startsWith('BUDGET_DELETION_PAUSED:'));
+    assert.deepEqual(await snapshot(db),initial);
+   });
+  }
+  for(const ids of [null,[],[uid(999)],[uid(10),uid(999),uid(10)]]){
+   await assert.rejects(db.query('select public.admin_bulk_delete_budget_requests($1,$2)',['valid-super',ids]),e=>e.code==='PT409');assert.deepEqual(await snapshot(db),initial);
+  }
+  // An armed validator proves there is no session validation on the denial path.
+  const validator=funcs.find(f=>f.signature==='validate_admin_session_token(text)');
+  await db.exec(validator.definition.replace(/AS \$function\$[\s\S]*?\$function\$/,'AS $function$ BEGIN RAISE EXCEPTION \'VALIDATOR_MUST_NOT_RUN\'; END; $function$'));
+  await assert.rejects(db.query('select public.admin_bulk_delete_budget_requests($1,$2)',['valid-super',[uid(10)]]),e=>e.code==='PT409');assert.deepEqual(await snapshot(db),initial);
+  evidence.push({check:'32 PostgreSQL role/session combinations plus null/empty/unknown/mixed IDs denied PT409; validator never runs; rows, notifications, audits, session timestamps and Storage objects unchanged',status:'PASS'});
+ }finally{await db.close();}
+});
+test('unrelated actual captured viewing, review and release SQL remains functional',async()=>{
+ const db=await fixture();try{
+  await localInstall(db);const protectedFns=[];
+  for(const f of [...funcs,...inputs.functions].filter(f=>!f.signature.startsWith('admin_bulk_delete')))protectedFns.push({signature:f.signature,md5:(await db.query('select md5(pg_get_functiondef(to_regprocedure($1))) md5',[f.signature])).rows[0].md5});
+  await db.exec('set role anon');
+  const viewed=(await db.query('select public.admin_get_budget_request_detail($1,$2) d',['valid-reviewer',uid(10)])).rows[0].d;assert.equal(viewed.request.id,uid(10));assert.equal(viewed.files.length,1);
+  const reviewed=(await db.query("select * from public.admin_update_budget_request_file_status($1,$2,'approved_green','Synthetic review')",['valid-reviewer',uid(11)])).rows[0];assert.equal(reviewed.admin_status,'approved_green');
+  const released=(await db.query("select * from public.update_admin_budget_request($1,$2,'budget_released',10,10,current_date)",['valid-super',uid(10)])).rows[0];assert.equal(released.status,'budget_released');
+  await db.exec('reset role');
+  for(const f of protectedFns)assert.equal((await db.query('select md5(pg_get_functiondef(to_regprocedure($1))) md5',[f.signature])).rows[0].md5,f.md5);
+  evidence.push({check:'Actual captured budget detail, document review and release functions work on disposable records; definitions unchanged',status:'PASS'});
+ }finally{await db.close();}
+});
+test('unexpected contract, origin and catalog drift fail closed; injected failure rolls back',async()=>{
+ const db=await fixture();try{
+  const {local}=await localInstall(db);
+  // Return the local function to its exact original captured body for each preflight test.
+  await db.exec(funcs.find(f=>f.signature===manifest.signature).definition);
+  const baseline=await contract(db),rows=await snapshot(db);
+  await db.exec('alter function public.admin_bulk_delete_budget_requests(text,uuid[]) cost 101');
+  await assert.rejects(db.exec(local),/catalog drifted|contract drifted/);await db.exec('rollback');await db.exec('alter function public.admin_bulk_delete_budget_requests(text,uuid[]) cost 100');
+  await db.exec("update ytrace_storage_private.trusted_storage_origins set origin='https://wrong.invalid'");
+  await assert.rejects(db.exec(local),/Wrong production Storage origin/);await db.exec('rollback');await db.exec("update ytrace_storage_private.trusted_storage_origins set origin='https://mqqaykksadotbrghbexz.supabase.co'");
+  const injected=local.replace(/COMMIT;\s*$/,()=>"DO $$ BEGIN RAISE EXCEPTION 'INJECTED_BEFORE_COMMIT'; END $$;\nCOMMIT;");
+  await assert.rejects(db.exec(injected),/INJECTED_BEFORE_COMMIT/);await db.exec('rollback');assert.deepEqual(await snapshot(db),rows);assert.deepEqual(await contract(db),baseline);
+  evidence.push({check:'Cost-contract drift, wrong production origin and injected pre-COMMIT failure abort; atomic rollback preserves original function and rows',status:'PASS'});
+ }finally{await db.close();}
+});
+after(async()=>{await writeFile(`${dir}/sql-test-evidence.json`,JSON.stringify({evidenceType:'DISPOSABLE_PGLITE_POSTGRESQL',localEngine,liveHTTP:false,productionWrites:0,limitation:'Existing runtime is PostgreSQL 18.3. Local installation test substitutes the two whole-catalog hashes and local major-version gate only. Exact pause body, contract/data checks and transaction remain unchanged. Original production candidate tested untouched for fail-closed rejection. No native PostgreSQL 17, live concurrency or HTTP assertions.',results:evidence},null,2)+'\n');});

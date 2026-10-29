@@ -1,0 +1,83 @@
+{
+  "scope": "Local candidate only; no live patch or fixture repair",
+  "checkedAt": "2026-10-10T19:09:35.119Z",
+  "sql": {
+    "tests": 47,
+    "pass": 47,
+    "fail": 0
+  },
+  "vitest": {
+    "tests": 117,
+    "pass": 117,
+    "fail": 0
+  },
+  "typescript": {
+    "status": "PASS",
+    "command": "npx tsc --noEmit"
+  },
+  "build": {
+    "status": "PASS",
+    "command": "npm run build -- --outDir tmp/document-mutation-build"
+  },
+  "storagePolicies": {
+    "count": 9,
+    "unchangedSinceReviewedScenario": true
+  },
+  "productionFunctionMatches": [
+    {
+      "signature": "admin_approve_renewal(text,uuid,text,text)",
+      "md5": "33ba7c606820f771e4ed79709bcd188b",
+      "matchesStaging": true
+    },
+    {
+      "signature": "guard_submitted_registration_document_edits()",
+      "md5": "c6265ae36e8db8678de7a4e69691008e",
+      "matchesStaging": true
+    },
+    {
+      "signature": "replace_organization_document_file(uuid,uuid,timestamp with time zone,text,text,text,bigint)",
+      "md5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "matchesStaging": true
+    },
+    {
+      "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+      "md5": "252754fd75505948c26afe27f6b0b760",
+      "matchesStaging": true
+    },
+    {
+      "signature": "user_replace_document_submission_file(uuid,text,text,text,numeric,boolean)",
+      "md5": "59370b100efed37d5975dc16983d786a",
+      "matchesStaging": true
+    },
+    {
+      "signature": "user_resubmit_renewal(uuid)",
+      "md5": "d19a1d0415f3eb900bab7dea241f0b21",
+      "matchesStaging": true
+    },
+    {
+      "signature": "user_submit_renewal(uuid)",
+      "md5": "d41b680681db2323aba2c62693f59131",
+      "matchesStaging": true
+    }
+  ],
+  "hashes": [
+    {
+      "file": "supabase/migrations/20261010183922_document_mutation_lifecycle_guard.sql",
+      "sha256": "b19e93c19454a9012e85eb9dce81ba152b4f93d0eaa0fa475f78ab8d30a4d7a0"
+    },
+    {
+      "file": "docs/staging-validation/2026-10-11/document-mutation/proposed-staging-reconciliation.sql",
+      "sha256": "4fc55025d07210611056c39527a6a71860edac71be35c8e2c895b0c084f57d03"
+    }
+  ],
+  "blocked": [
+    "Real concurrent sessions",
+    "Post-patch staging HTTP authorization",
+    "Browser/PWA validation"
+  ],
+  "notTested": [
+    "Complete canonical account deletion with all auxiliary tables; its existing retention/authorization function is unchanged"
+  ],
+  "productionWrites": 0,
+  "stagingWrites": 0
+}

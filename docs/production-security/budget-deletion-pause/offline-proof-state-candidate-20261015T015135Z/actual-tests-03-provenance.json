@@ -1,0 +1,41 @@
+{
+  "candidate": "offline-proof-state-candidate-20261015T015135Z",
+  "nonRunnable": true,
+  "authorizedTestScope": "single local fixture harness execution only",
+  "executable": "C:\\Users\\Christopher x Angel\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe",
+  "arguments": [
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-File",
+    "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-proof-state-candidate-20261015T015135Z\\invoke-fixture-tests.ps1"
+  ],
+  "workingDirectory": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused",
+  "processTempRoot": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-proof-state-candidate-20261015T015135Z\\test-fixtures\\run-90df88e961d842d3b52f3697ebe9a8e1",
+  "fixtureRoot": null,
+  "tempPathProbe": {
+    "exitStatus": 0,
+    "stdout": "C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\offline-proof-state-candidate-20261015T015135Z\\test-fixtures\\run-90df88e961d842d3b52f3697ebe9a8e1\\",
+    "stderr": "",
+    "startUtc": "2026-10-15T02:31:07.8093763+00:00",
+    "endUtc": "2026-10-15T02:31:08.3291929+00:00"
+  },
+  "sourceSha256Before": "31a940483ea37014c1f11427be89841f278a6ffadf979a672366c9cd7262c99b",
+  "harnessSha256Before": "0d18d9c8493c059adffcd8a076d4e47fecbc1750c9bb48a229bfcd487e2b6a2b",
+  "sourceSha256After": "31a940483ea37014c1f11427be89841f278a6ffadf979a672366c9cd7262c99b",
+  "harnessSha256After": "0d18d9c8493c059adffcd8a076d4e47fecbc1750c9bb48a229bfcd487e2b6a2b",
+  "testStartUtc": "2026-10-15T02:31:08.3331982+00:00",
+  "testEndUtc": "2026-10-15T02:31:09.9478211+00:00",
+  "testExitStatus": 1,
+  "timedOut": false,
+  "summary": {
+    "pass": 0,
+    "fail": 1,
+    "blocked": 0
+  },
+  "cleanup": "NOT_ATTEMPTED_UNVERIFIED_PATH",
+  "processEnvironmentOverrides": [
+    "TEMP",
+    "TMP only; child process scope"
+  ]
+}

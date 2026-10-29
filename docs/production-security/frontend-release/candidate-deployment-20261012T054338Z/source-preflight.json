@@ -1,0 +1,13 @@
+{
+  "observabilityGuard": "PASS",
+  "metadataValueDiscarded": true,
+  "status": "PASS",
+  "sourceRevision": "sha256:51a18dbc3a799b39d074834edcfe6a9c88de1dd9d115277061e071f9f38c1959",
+  "fileCount": 561,
+  "inventorySha256": "51a18dbc3a799b39d074834edcfe6a9c88de1dd9d115277061e071f9f38c1959",
+  "freshExtraction": true,
+  "cliGeneratedMetadataFiles": [],
+  "archiveSha256": "324ea22858359d71c4cd94f7da2ee7a658d98327a2bca4e9b7d9facfc10e7984",
+  "archiveBytes": 15422629,
+  "staticArchiveSha256": "a5c2417acf8e3bf5b5e69dadd2ed204e37a7e6a95b81b47c124875c568993199"
+}

@@ -1,0 +1,29 @@
+{
+  "capturedAt": "2026-10-12T15:13:52.779Z",
+  "readOnly": true,
+  "promotionResubmitted": false,
+  "deployment": {
+    "id": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "readyState": "READY",
+    "aliasAssigned": true,
+    "aliasErrorPresent": false,
+    "aliasFinal": null,
+    "alias": [
+      "yorbmsuser-toffs-projects-81b2ce10.vercel.app"
+    ]
+  },
+  "promotionAliases": [
+    {
+      "alias": "ytrace.app",
+      "status": "completed",
+      "deploymentId": null
+    },
+    {
+      "alias": "www.ytrace.app",
+      "status": "completed",
+      "deploymentId": null
+    }
+  ],
+  "paginationComplete": true
+}

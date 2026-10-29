@@ -1,0 +1,147 @@
+{
+  "recordedAt": "2026-10-12T01:38:47.775Z",
+  "sourceScope": "current preserved dirty worktree; not isolated minimal release candidate",
+  "vitest": {
+    "status": "PASS",
+    "passed": 56,
+    "failed": 0,
+    "files": [
+      {
+        "path": "src/lib/admin-storage-access.test.ts",
+        "status": "passed",
+        "passed": 19,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/admin-storage-resolver.integration.test.ts",
+        "status": "passed",
+        "passed": 5,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/private-query-cache.test.ts",
+        "status": "passed",
+        "passed": 2,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/signed-storage-url-cache.test.ts",
+        "status": "passed",
+        "passed": 15,
+        "failed": 0
+      },
+      {
+        "path": "src/lib/signed-storage-url.integration.test.ts",
+        "status": "passed",
+        "passed": 9,
+        "failed": 0
+      },
+      {
+        "path": "src/admin/components/AdminRenewalDocumentPreview.test.tsx",
+        "status": "passed",
+        "passed": 2,
+        "failed": 0
+      },
+      {
+        "path": "src/user/pwa/PwaDocumentPreview.account-switch.test.tsx",
+        "status": "passed",
+        "passed": 2,
+        "failed": 0
+      },
+      {
+        "path": "src/user/pwa/PwaOrganizationAvatar.storage.test.tsx",
+        "status": "passed",
+        "passed": 2,
+        "failed": 0
+      }
+    ],
+    "rawIgnoredReport": ".agent/frontend-readiness-focused-tests.json",
+    "networkIsolation": "existing isolated Vitest env and production-host guard"
+  },
+  "typescript": {
+    "command": "npx tsc --noEmit",
+    "status": "PASS",
+    "exitCode": 0
+  },
+  "builds": [
+    {
+      "surface": "admin",
+      "status": "PASS",
+      "sourceScope": "entire preserved dirty worktree; validation only, NOT isolated release candidate",
+      "files": 77,
+      "artifactInventorySha256": "d67438f87efc089902b4125b4cb3879533df635ea3c5cad1490e4ecb080d6d9a",
+      "manifestSha256": "a10f1588c7476261d96657e20126a4c48df0123a25cadcdca0456793911059f3",
+      "entry": {
+        "path": "assets/index-5tFizMQ1.js",
+        "bytes": 1245605,
+        "sha256": "30c31c6f2ae4fee18191cfd9bea09c9ee50f1a41b214c91e4b60fd1f60f0ef09"
+      },
+      "staticJsClosureBytes": 1245605,
+      "buildVersions": [
+        "1.0.0-review-gateway+20261012012502"
+      ],
+      "supabaseProjectRefs": [
+        "zroudsvpswqsjlyttkjf",
+        "mqqaykksadotbrghbexz"
+      ],
+      "serviceCredentialDetected": false,
+      "gatewayChunk": {
+        "path": "assets/admin-storage-access-BDVyqm_Y.js",
+        "bytes": 1223,
+        "sha256": "c8f7ecad9d30c5177406437d8a18ee9b62cfa7edc6a78c80aaeadbfd39a70631"
+      }
+    },
+    {
+      "surface": "user",
+      "status": "PASS",
+      "sourceScope": "entire preserved dirty worktree; validation only, NOT isolated release candidate",
+      "files": 77,
+      "artifactInventorySha256": "5de67d6b697087880741cd719e832ad7c7d5162754ec839354914fa8eebb8a71",
+      "manifestSha256": "f983a8a9b499acf68062157e2a080e663c42cd7638b8026aae0255742b79bc0d",
+      "entry": {
+        "path": "assets/index-BCoGjxae.js",
+        "bytes": 1245604,
+        "sha256": "fb82d258db7f9d5b67219badd9e568ce82fb62f7b8e820729646113f3a1e97a0"
+      },
+      "staticJsClosureBytes": 1245604,
+      "buildVersions": [
+        "1.0.0-review-gateway+20261012012559"
+      ],
+      "supabaseProjectRefs": [
+        "zroudsvpswqsjlyttkjf",
+        "mqqaykksadotbrghbexz"
+      ],
+      "serviceCredentialDetected": false,
+      "gatewayChunk": {
+        "path": "assets/admin-storage-access-2cPmA6Ec.js",
+        "bytes": 1223,
+        "sha256": "4dd58c6a8a768d67266d37fd90cbf9c1926b4b2acbc8283f28b5629b35a149f3"
+      }
+    }
+  ],
+  "buildInvocationFailure": {
+    "status": "FAIL",
+    "scope": "local npm/PowerShell argument forwarding",
+    "command": "npm run build -- --outDir .agent/frontend-readiness-20261012T011835Z/admin --manifest",
+    "result": "Output directory was forwarded as positional Vite root; zero modules transformed, entry module not found. Subsequent direct installed-Vite invocations passed."
+  },
+  "diffCheck": {
+    "command": "git diff --check",
+    "status": "PASS",
+    "exitCode": 0,
+    "note": "CRLF normalization warnings present; no whitespace errors"
+  },
+  "broaderTests": {
+    "status": "NOT TESTED",
+    "historicalBaseline": {
+      "passed": 2211,
+      "failed": 150
+    },
+    "baselineNotReclassified": true
+  },
+  "newProductionAuthOrBusinessTests": "NOT TESTED",
+  "completedOneTimeAcceptanceRerun": false,
+  "runtimeSourceModified": false,
+  "existingBuildFolderOverwritten": false,
+  "deploymentOrDatabaseWrites": false
+}

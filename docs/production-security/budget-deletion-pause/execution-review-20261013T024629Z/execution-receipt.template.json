@@ -1,0 +1,98 @@
+{
+  "recordType": "BUDGET_DELETION_PAUSE_EXECUTION_RECEIPT_TEMPLATE",
+  "status": "NOT_EXECUTED",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "port": 5432,
+  "database": "postgres",
+  "user": "postgres",
+  "route": "native-pg-direct-tls",
+  "sql": {
+    "path": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+    "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a",
+    "bytes": 11945
+  },
+  "adapter": {
+    "path": null,
+    "bundleSha256": null,
+    "driverVersion": null
+  },
+  "authorization": {
+    "reference": null,
+    "recordSha256": null,
+    "exclusiveWindowConfirmed": null,
+    "existingDeletionRequestsDrained": null
+  },
+  "tls": {
+    "serverName": "db.mqqaykksadotbrghbexz.supabase.co",
+    "chainVerified": null,
+    "hostnameVerified": null,
+    "protocol": null,
+    "independentlyTrustedCASha256": null,
+    "peerCertificateFingerprint256": null
+  },
+  "lock": {
+    "path": null,
+    "nonce": null,
+    "processId": null,
+    "ownershipVerifiedBeforeSubmission": null,
+    "ownershipVerifiedAfterVerification": null,
+    "released": null
+  },
+  "attempt": {
+    "markerPath": null,
+    "markerSha256": null,
+    "consumed": null,
+    "submissionCount": 0,
+    "automaticRetries": 0
+  },
+  "backend": {
+    "pid": null,
+    "startedAt": null,
+    "applicationName": null
+  },
+  "preflight": {
+    "capturedAt": null,
+    "catalogSha256": null,
+    "functionOID": null,
+    "functionDefinitionMd5": null,
+    "functionSourceMd5": null,
+    "migrations": null,
+    "storagePolicyFingerprint": null,
+    "foundationFingerprint": null,
+    "protectedInventoryCount": null,
+    "protectedInventorySha256": null,
+    "evidenceSha256": null
+  },
+  "transaction": {
+    "submittedAt": null,
+    "commitAcknowledged": null,
+    "rollbackAcknowledged": null,
+    "outcome": "NOT_SUBMITTED",
+    "driverCommandTags": null,
+    "sanitizedErrorCode": null
+  },
+  "postflight": {
+    "capturedAt": null,
+    "catalogSha256": null,
+    "functionContractMatches": null,
+    "functionOIDPreserved": null,
+    "all57InventoriesEqual": null,
+    "foundationUnchanged": null,
+    "storagePoliciesUnchanged": null,
+    "migrationHistoryUnchanged": null,
+    "evidenceSha256": null
+  },
+  "reconciliation": {
+    "readOnlyOnly": true,
+    "priorBackendFinished": null,
+    "classification": null,
+    "evidenceSha256": null,
+    "sqlResubmitted": false
+  },
+  "secretValuesRecorded": false,
+  "limitations": [
+    "Template only, not an installation authorization or execution receipt.",
+    "No adapter exists yet; null fields must not be interpreted as successful checks."
+  ]
+}

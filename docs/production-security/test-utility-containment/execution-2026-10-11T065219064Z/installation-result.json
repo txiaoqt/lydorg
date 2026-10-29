@@ -1,0 +1,55 @@
+{
+  "status": "COMMITTED_AND_VERIFIED",
+  "projectRef": "mqqaykksadotbrghbexz",
+  "authorizedSqlSha256": "abd2ea82587c9bbb0c18af68851faa7f83fd5a64bca113014c500b00abec8c65",
+  "receiptVersion": "20261011230000",
+  "attempts": 1,
+  "submittedAt": "2026-10-11T06:53:18.631Z",
+  "responseReceivedAt": "2026-10-11T06:53:25.397Z",
+  "authoritativeReadOnlyVerifiedAt": "2026-10-11T06:54:41.784567+00:00",
+  "transaction": {
+    "exactApprovedPayload": true,
+    "beginCommitInReviewedSql": true,
+    "lockTimeout": "5s",
+    "statementTimeout": "30s per statement",
+    "advisoryLockReleased": true,
+    "automaticRetry": false
+  },
+  "catalogAssertions": {
+    "passed": 48,
+    "failed": 0
+  },
+  "finalReceiptAssertions": {
+    "original_history": {
+      "count": 163,
+      "latest": "20261008174154",
+      "fingerprint": "380c842e791bfbcf5c7a939371e24738"
+    },
+    "private_schema_owner": "postgres",
+    "installer_lock_released": true,
+    "private_schema_routines": 1,
+    "private_schema_relations": 0
+  },
+  "dataAssertions": {
+    "relations": 57,
+    "unchanged": 57,
+    "differences": []
+  },
+  "productionTestMutationCalls": 0,
+  "statusOrSessionValidationRpcCalls": 0,
+  "excludedActions": [
+    "Auth password rotation",
+    "Auth ban",
+    "document-mutation hotfix",
+    "Storage policies/configuration",
+    "frontend deployment",
+    "staging writes",
+    "unrelated migration replay",
+    "Git push"
+  ],
+  "remaining": [
+    "Legacy Auth credential/session retirement requires separate authorization.",
+    "Standalone document-mutation hotfix requires a fresh catalog/history review and newly pinned SQL hash.",
+    "Broader Storage gateway/policy cutover remains a separate unexecuted release."
+  ]
+}

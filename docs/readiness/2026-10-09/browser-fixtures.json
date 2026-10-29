@@ -1,0 +1,1022 @@
+{
+  "scope": "Local production build with mocked empty Admin data and fixture session. Non-local traffic intercepted. Slow case simulated 200 ms latency / 200 KB/s download. Not authenticated E2E or physical PWA testing.",
+  "results": [
+    {
+      "mode": "anonymous",
+      "path": "/admin",
+      "finalPath": "/signin",
+      "title": "Y-TRACE",
+      "headings": [
+        "Welcome back"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin",
+      "finalPath": "/admin",
+      "title": "Y-TRACE",
+      "headings": [
+        "Overview",
+        "Needs Attention",
+        "Budget Monitoring",
+        "Recent Activity Log"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_dashboard_summary",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_dashboard_summary",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/registrations",
+      "finalPath": "/admin/registrations",
+      "title": "Y-TRACE",
+      "headings": [
+        "Registrations"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_list_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/required_document_types",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_list_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/renewals",
+      "finalPath": "/admin/renewals",
+      "title": "Y-TRACE",
+      "headings": [
+        "Renewals"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/required_document_types",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_renewal_queue_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/budget-utilization",
+      "finalPath": "/admin/budget-utilization",
+      "title": "Y-TRACE",
+      "headings": [
+        "Budget Requests"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_review_resource_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_annual_budget_allocations",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_review_resource_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/liquidation-monitoring",
+      "finalPath": "/admin/liquidation-monitoring",
+      "title": "Y-TRACE",
+      "headings": [
+        "Liquidation Reports"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_review_resource_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_annual_budget_allocations",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_review_resource_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/ypop-validation",
+      "finalPath": "/admin/ypop-validation",
+      "title": "Y-TRACE",
+      "headings": [
+        "YPOP Validation"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_ypop_validation_periods",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_ypop_validation_periods",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/yorp-registry",
+      "finalPath": "/admin/yorp-registry",
+      "title": "Y-TRACE",
+      "headings": [
+        "YORP Registry"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_section_state",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/budget-monitoring",
+      "finalPath": "/admin/budget-monitoring",
+      "title": "Y-TRACE",
+      "headings": [
+        "Budget Monitoring",
+        "Budget Monitoring",
+        "FY 2026 Budget Allocation Not Configured",
+        "Budget Allocation by Purpose",
+        "No Approved Budget Requests for Q4 2026"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_budget_monitoring_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_annual_budget_allocations",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/activity-logs",
+      "finalPath": "/admin/activity-logs",
+      "title": "Y-TRACE",
+      "headings": [
+        "Activity Logs"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_list_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_list_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/notifications",
+      "finalPath": "/admin/notifications",
+      "title": "Y-TRACE",
+      "headings": [
+        "Notifications",
+        "Recent activity"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/templates",
+      "finalPath": "/admin/templates",
+      "title": "Y-TRACE",
+      "headings": [
+        "Forms & Templates"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_section_state",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_template_categories",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/settings",
+      "finalPath": "/admin/settings",
+      "title": "Y-TRACE",
+      "headings": [
+        "System Settings",
+        "General",
+        "Appearance & Interface",
+        "System Information"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_system_settings",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-fixture",
+      "path": "/admin/backup-recovery",
+      "finalPath": "/admin/backup-recovery",
+      "title": "Y-TRACE",
+      "headings": [
+        "Backup & Recovery",
+        "Backup Protection",
+        "Backup information unavailable"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/functions/v1/admin-backup-control",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-chunk-failure",
+      "path": "/admin",
+      "finalPath": "/admin",
+      "title": "Y-TRACE",
+      "headings": [
+        "Unable to load this page"
+      ],
+      "errors": [],
+      "consoleErrorCount": 2,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": true,
+      "reloadButton": 1
+    },
+    {
+      "mode": "slow-admin-fixture",
+      "path": "/admin",
+      "finalPath": "/admin",
+      "title": "Y-TRACE",
+      "headings": [
+        "Overview",
+        "Needs Attention",
+        "Budget Monitoring",
+        "Recent Activity Log"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_refresh_session",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_dashboard_summary",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_dashboard_summary",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_dashboard_summary",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-version-fixture",
+      "path": "/admin/budget-utilization",
+      "finalPath": "/admin/budget-utilization",
+      "title": "Y-TRACE",
+      "headings": [
+        "Budget Requests"
+      ],
+      "errors": [],
+      "consoleErrorCount": 0,
+      "requests": [
+        {
+          "path": "/css2",
+          "method": "GET"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/validate_admin_session_token",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/get_admin_permission_context",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_review_resource_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_recent_notifications",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_annual_budget_allocations",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/list_admin_accounts_for_admin_portal",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_review_resource_page",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+          "method": "POST"
+        },
+        {
+          "path": "/rest/v1/rpc/admin_get_sidebar_counts",
+          "method": "POST"
+        }
+      ],
+      "chunkRecovery": false,
+      "reloadButton": 0
+    },
+    {
+      "mode": "admin-version-fixture",
+      "phases": [
+        {
+          "name": "unchanged version",
+          "requests": [
+            {
+              "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+              "method": "POST"
+            },
+            {
+              "path": "/rest/v1/rpc/admin_refresh_session",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "name": "relevant budget version changed",
+          "requests": [
+            {
+              "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+              "method": "POST"
+            },
+            {
+              "path": "/rest/v1/rpc/admin_get_review_resource_page",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "name": "unrelated registration version changed",
+          "requests": [
+            {
+              "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "name": "hidden tab",
+          "requests": []
+        },
+        {
+          "name": "visible again after change",
+          "requests": [
+            {
+              "path": "/rest/v1/rpc/admin_get_portal_change_versions",
+              "method": "POST"
+            },
+            {
+              "path": "/rest/v1/rpc/admin_get_review_resource_page",
+              "method": "POST"
+            }
+          ]
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

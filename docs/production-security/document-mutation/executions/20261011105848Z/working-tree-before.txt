@@ -1,0 +1,160 @@
+error: fsmonitor_ipc__send_query: unspecified error on '.git/fsmonitor--daemon.ipc'
+ M build/apple-touch-icon.png
+ D build/assets/About-BgE2NY5_.js
+ D build/assets/Contacts-PVxhRUkh.js
+ D build/assets/Faqs-C1BTPjfA.js
+ D build/assets/Index-CKmzLnSI.js
+ D build/assets/LegalPolicy-rOEY3vG8.js
+ D build/assets/NewsReleases-B8yw4yk-.js
+ D build/assets/PublicBudgetTransparency-DleAq-zl.js
+ D build/assets/PublicNewsReleaseCard-Bp70quGQ.js
+ D build/assets/PublicTemplates-BXSB9xGm.js
+ D build/assets/PwaUserPortal-BwzxXVpY.js
+ D build/assets/SiteMap-Bv3paW95.js
+ D build/assets/exceljs.min-CuiCxha2.js
+ D build/assets/facebook-CMEyvuS-.js
+ D build/assets/hero-image-_uJVR4fB.webp
+ M build/assets/html2canvas.esm-CBrSDip1.js
+ D build/assets/index-BcOz4wp7.js
+ D build/assets/index-CvrzG9oa.css
+ D build/assets/index.es-03HJTjHp.js
+ M build/assets/pdf.worker.min-D39lNQBd.mjs
+ M build/assets/purify.es-CPrKKeqe.js
+ D build/assets/ytrace-community-workshop-azmEJAYn.png
+ M build/favicon.ico
+ M build/icons/icon-192.png
+ M build/icons/icon-512.png
+ M build/index.html
+ M build/manifest-admin.webmanifest
+ M build/manifest.webmanifest
+ M build/sw.js
+ M build/y-trace-logo-blue.png
+ M index.html
+ M playwright.config.ts
+ M public/manifest-admin.webmanifest
+ M public/manifest.webmanifest
+ M public/sw.js
+ M src/App.tsx
+ M src/admin/components/AdminSettingsPage.tsx
+ M src/admin/components/RenewalTestEnvironmentPanel.tsx
+ M src/admin/renewal-test-environment.test.tsx
+ M src/components/portal/UserPortalRenewalWorkspaceView.tsx
+ M src/components/portal/UserPortalResponsiveWorkspace.test.tsx
+ M src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx
+ M src/components/public/PublicTemplatesCatalog.tsx
+ M src/lib/admin-lifecycle-user-sync.test.tsx
+ M src/lib/admin-system-settings.ts
+ M src/lib/audit-records-hardening.test.ts
+ M src/lib/lydo-connect-store.tsx
+ M src/lib/lydo-connect-supabase.ts
+ M src/lib/query-client.ts
+ M src/lib/renewal-realtime.test.ts
+ M src/lib/report-export.test.ts
+ M src/lib/section35-reporting.test.ts
+ M src/main.tsx
+ M src/test/setup.ts
+ M src/user/UserPortalEntry.tsx
+ M src/user/pwa/PwaAppShell.tsx
+ M src/user/pwa/PwaDocumentPreview.tsx
+ M src/user/pwa/PwaOrganizationAvatar.tsx
+ M src/user/pwa/renewals/PwaRenewalPage.tsx
+ M supabase/.temp/cli-latest
+ M supabase/config.toml
+ M vitest.config.ts
+?? build/assets/About-C942JfEI.js
+?? build/assets/AccountSuspendedScreen-XbRVcy7r.js
+?? build/assets/AdminPortal-DIgAc5TR.js
+?? build/assets/AdminPortal-VndWF7ip.css
+?? build/assets/Contacts-DDbX74zV.js
+?? build/assets/Faqs-D3Cbwsls.js
+?? build/assets/Index-CaofcQuU.js
+?? build/assets/LegalPolicy-D1iuO58O.js
+?? build/assets/NewsReleases-C3v-FRZH.js
+?? build/assets/PasigBudgetMap-DxPwFAwN.js
+?? build/assets/PasigBudgetMap-sa5bjIxU.css
+?? build/assets/PortalDocumentDrawer-C-giljH1.js
+?? build/assets/PublicBudgetOverview-RTtd-OMD.js
+?? build/assets/PublicBudgetTransparency-gRoKAx4v.js
+?? build/assets/PublicNewsReleaseCard-CSgDPcSa.js
+?? build/assets/PublicTemplates-B92lCP9n.js
+?? build/assets/PwaUserPortal-Di2_qdWZ.js
+?? build/assets/SiteMap-DFKfxslk.js
+?? build/assets/UserPortal-BMk7B0-F.js
+?? build/assets/UserPortalTemplatesWorkspaceView-Beh44bYg.js
+?? build/assets/YpopValidationComputationPopover-DxSEnHpn.js
+?? build/assets/admin-storage-access-D5LGl7KQ.js
+?? build/assets/banknote-CRgy8nba.js
+?? build/assets/calendar-CLXIoiTh.js
+?? build/assets/clock-Dh2uH4sq.js
+?? build/assets/exceljs.min-BncsUYbH.js
+?? build/assets/file-check-dB9YCeiH.js
+?? build/assets/hero-image-upscaled-DMBKzXU7.jpeg
+?? build/assets/index-C-E-cBVO.js
+?? build/assets/index-nn-gkKHN.css
+?? build/assets/index-tQXMZcH9.js
+?? build/assets/index.es-DTZQI8Jn.js
+?? build/assets/jszip.min-Ctvu7Ktp.js
+?? build/assets/layout-grid-C_bhk8sQ.js
+?? build/assets/leaflet-BvBxcL2W.js
+?? build/assets/leaflet-Dgihpmma.css
+?? build/assets/lock-D6NwgaLO.js
+?? build/assets/portal-ui-CzB-2UZC.js
+?? build/assets/search-CKMJq53-.js
+?? build/assets/send-DVhoNihC.js
+?? build/assets/sheet-DLRRZUTL.js
+?? build/assets/switch-CtwWGOXW.js
+?? build/assets/yorp-organization-report-D77REFpC.js
+?? build/assets/ytrace-overview-upscaled-BHODuOy5.jpeg
+?? build/icons/icon-maskable-512.png
+?? docs/performance/
+?? docs/production-security/
+?? docs/readiness/
+?? docs/staging-validation/
+?? docs/storage-remediation/
+?? scripts/create-ytrace-staging-storage-buckets.mjs
+?? scripts/generate-production-document-mutation-candidate.mjs
+?? scripts/generate-production-test-utility-containment.mjs
+?? scripts/performance-browser-audit.mjs
+?? scripts/performance-bundle-sizes.mjs
+?? scripts/readiness-browser-smoke.mjs
+?? scripts/rebaseline-production-document-mutation-candidate.mjs
+?? scripts/staging/
+?? src/components/RouteChunkBoundary.test.tsx
+?? src/components/RouteChunkBoundary.tsx
+?? src/components/public/PublicTemplatesCatalog.performance.test.tsx
+?? src/lib/admin-storage-access.test.ts
+?? src/lib/admin-storage-access.ts
+?? src/lib/admin-storage-resolver.integration.test.ts
+?? src/lib/document-mutation-sql.test.ts
+?? src/lib/private-query-cache.test.ts
+?? src/lib/public-system-settings.performance.test.ts
+?? src/lib/pwa-renewal-document-actions.test.ts
+?? src/lib/pwa-renewal-document-actions.ts
+?? src/lib/renewal-scenario-environment.test.ts
+?? src/lib/renewal-scenario-environment.ts
+?? src/lib/signed-storage-url-cache.test.ts
+?? src/lib/signed-storage-url-cache.ts
+?? src/lib/signed-storage-url.integration.test.ts
+?? src/test/env/
+?? src/test/production-supabase-network-guard.test.ts
+?? src/test/production-supabase-network-guard.ts
+?? src/user/UserPortalEntry.performance.test.tsx
+?? src/user/pwa/PwaDocumentPreview.account-switch.test.tsx
+?? src/user/pwa/PwaOrganizationAvatar.storage.test.tsx
+?? src/user/pwa/renewals/PwaRenewalPage.test.tsx
+?? supabase/functions/admin-storage-access/
+?? supabase/migrations/20261009114340_performance_auth_uid_initplans.sql
+?? supabase/migrations/20261009145634_storage_authorization_remediation.sql
+?? supabase/migrations/20261009150110_storage_authorization_cutover.sql
+?? supabase/migrations/20261010183922_document_mutation_lifecycle_guard.sql
+?? supabase/tests/document_mutation.local.test.mjs
+?? supabase/tests/performance_auth_uid.local.test.mjs
+?? supabase/tests/production_document_mutation_rebaseline.local.test.mjs
+?? supabase/tests/production_test_utility_containment.local.test.mjs
+?? supabase/tests/storage_admin_gateway_roles.local.test.mjs
+?? supabase/tests/storage_fixture_schema.mjs
+?? supabase/tests/storage_origin_portability.local.test.mjs
+?? supabase/tests/storage_policy_readiness.local.test.mjs
+?? supabase/tests/storage_remediation.local.test.mjs
+?? tmp/
+

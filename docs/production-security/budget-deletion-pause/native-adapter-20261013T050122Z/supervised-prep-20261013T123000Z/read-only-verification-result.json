@@ -1,0 +1,60 @@
+{
+  "status": "PASS",
+  "evidenceFile": "preflight-20261013T123403150Z-cc1a595c-9343-4788-9a1f-ad7d8060182a.json",
+  "preflightEvidenceSha256": "9332dd5567c39d61169779107e859186debc43af8dd9833f18ca606750769456",
+  "preflightStateSha256": "8d8a45ca4a229d17b8cd79c33b914791e8b435774e5f615cae364b3d319c80fc",
+  "controlPlaneProofSha256": "fafda4fbc5d54e357208d322478f7db265697cbdec05c6d3a9493cfc7771d7c7",
+  "proofVerifiedAt": "2026-10-13T12:33:34.351Z",
+  "proofExpiresAt": "2026-10-13T12:38:34.351Z",
+  "proofAges": {
+    "atStartSeconds": 19.655,
+    "atCaptureSeconds": 28.796,
+    "atFinishSeconds": 30.014
+  },
+  "capturedAt": "2026-10-13T12:34:03.147Z",
+  "tls": {
+    "protocol": "TLSv1.3",
+    "chainVerified": true,
+    "hostnameVerified": true,
+    "caSha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+    "peerCertificateFingerprint256": "6D:58:E8:D1:17:BE:04:F4:2A:59:0C:EE:98:3A:95:DA:A7:63:F7:D1:C9:C4:6E:75:5D:5A:72:28:14:83:6B:91",
+    "peerUnchangedFromHistorical": true
+  },
+  "postgresql": {
+    "serverVersion": "17.6",
+    "serverVersionNum": 170006,
+    "database": "postgres",
+    "currentUser": "postgres",
+    "sessionUser": "postgres",
+    "readOnly": "on"
+  },
+  "catalogSha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "functionOid": "32925",
+  "functionDefinitionMd5": "f6c36316ba941c9e0f76674754ac44ba",
+  "functionSourceMd5": "eb7b756964fd31efebfb39749f5c9e5b",
+  "originalUnpausedRpc": true,
+  "inventories": {
+    "captured": 57,
+    "matched": 57,
+    "changed": 0,
+    "sha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429",
+    "referenceSha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429"
+  },
+  "foundationStructureSha256": "eb9bf6a418438358fc9b6e8e72208e4b3ade1d798ac04fe91c7eb58c2b5063d9",
+  "foundationFullStableSha256": "770d3d419386094aa7be2cce8e1a5a47056fe2c972e4a043c8949652cd67dea5",
+  "environmentGuard": false,
+  "migrations": {
+    "count": 164,
+    "latest": "20261011230000",
+    "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+  },
+  "storagePolicies": 15,
+  "storageObjects": 378,
+  "driftFromHistoricalApprovedState": false,
+  "baselineAdopted": false,
+  "nativeAttempts": 1,
+  "automaticRetries": 0,
+  "installationActivated": false,
+  "authorizationCreated": false,
+  "approvedPreflightCreated": false
+}

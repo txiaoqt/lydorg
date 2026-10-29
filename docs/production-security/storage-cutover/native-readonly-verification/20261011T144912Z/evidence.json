@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 1,
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "decision": "NO-GO",
+  "environment": {
+    "fileExists": true,
+    "gitIgnored": true,
+    "tracked": false,
+    "requiredVariablesPresent": 3,
+    "requiredVariablesMissing": 0,
+    "loadingMechanism": "Node --env-file",
+    "aclInheritanceDisabled": true,
+    "aclEntries": 2,
+    "unexpectedAclEntries": 0,
+    "credentialValuesLogged": false
+  },
+  "caProvenance": {
+    "status": "PASS",
+    "configuredCaHashMatches": true,
+    "publishedCaCertificateMatches": true,
+    "publishedCaBytesMatch": true,
+    "officialSource": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+    "httpsCertificateVerification": true,
+    "credentialsForwarded": false,
+    "networkAttempts": 1
+  },
+  "controlPlane": {
+    "project": "mqqaykksadotbrghbexz",
+    "host": "db.mqqaykksadotbrghbexz.supabase.co",
+    "status": "ACTIVE_HEALTHY",
+    "platformVersion": "17.6.1.127",
+    "verifiedAt": "2026-10-11T14:46:21.031Z"
+  },
+  "nativeProbe": {
+    "status": "PASS",
+    "project": "mqqaykksadotbrghbexz",
+    "host": "db.mqqaykksadotbrghbexz.supabase.co",
+    "readOnly": true,
+    "tlsVerified": true,
+    "requestBytes": 424,
+    "result": {
+      "database": "postgres",
+      "current_user": "postgres",
+      "session_user": "postgres",
+      "read_only": "on",
+      "tls": true,
+      "tls_version": "TLSv1.3",
+      "foundation_present": false
+    },
+    "sqlInstallationSupported": false,
+    "exitCode": 0
+  },
+  "preflight": {
+    "status": "BLOCKED",
+    "project": "mqqaykksadotbrghbexz",
+    "error": {
+      "code": "PROTECTED_DATA_OR_REFERENCE_DRIFT",
+      "databaseCode": null
+    },
+    "automaticRetries": 0,
+    "action": "Stop; inspect sanitized evidence and any retained lock/attempt marker. Never automatically resubmit.",
+    "exitCode": 1,
+    "earlierGatesPassed": [
+      "native identity, PostgreSQL 17.6 and TLS",
+      "installation privileges",
+      "exact catalog compatibility and migration history",
+      "existing security trigger protections",
+      "foundation absence and quiescence"
+    ],
+    "earlierGateEvidence": "The unchanged runner executes these guards sequentially before its failing verifyData guard."
+  },
+  "driftDiagnostic": {
+    "status": "DRIFT_CONFIRMED",
+    "capturedAt": "2026-10-11T14:48:17.707Z",
+    "readOnly": true,
+    "project": "mqqaykksadotbrghbexz",
+    "host": "db.mqqaykksadotbrghbexz.supabase.co",
+    "identity": {
+      "database": "postgres",
+      "currentUser": "postgres",
+      "sessionUser": "postgres",
+      "serverVersionNum": 170006,
+      "serverVersion": null,
+      "readOnly": "on",
+      "tls": true,
+      "tlsVersion": "TLSv1.3"
+    },
+    "installationPrivilegesVerified": true,
+    "baselineCapturedAt": "2026-10-11 12:35:21.363922+00",
+    "protectedRelations": 57,
+    "unchangedRelations": 50,
+    "changedRelations": 7,
+    "exactSerializedInventoriesMatch": false,
+    "comparisons": [
+      {
+        "relation": "auth.identities_inventory",
+        "baselineRows": 95,
+        "currentRows": 96,
+        "rowCountMatches": false,
+        "contentFingerprintMatches": false
+      },
+      {
+        "relation": "auth.users_inventory",
+        "baselineRows": 94,
+        "currentRows": 95,
+        "rowCountMatches": false,
+        "contentFingerprintMatches": false
+      },
+      {
+        "relation": "public.activity_announcements",
+        "baselineRows": 6,
+        "currentRows": 6,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.activity_logs",
+        "baselineRows": 3333,
+        "currentRows": 3334,
+        "rowCountMatches": false,
+        "contentFingerprintMatches": false
+      },
+      {
+        "relation": "public.admin_accounts",
+        "baselineRows": 2,
+        "currentRows": 2,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.admin_portal_change_versions",
+        "baselineRows": 6,
+        "currentRows": 6,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.admin_sessions",
+        "baselineRows": 483,
+        "currentRows": 484,
+        "rowCountMatches": false,
+        "contentFingerprintMatches": false
+      },
+      {
+        "relation": "public.admin_system_settings",
+        "baselineRows": 68,
+        "currentRows": 68,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.admin_template_categories",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.admin_ypop_deletion_jobs",
+        "baselineRows": 4,
+        "currentRows": 4,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.annual_budget_allocations",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.barangays",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.budget_purpose_categories",
+        "baselineRows": 8,
+        "currentRows": 8,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.budget_request_files",
+        "baselineRows": 6,
+        "currentRows": 6,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.budget_requests",
+        "baselineRows": 90,
+        "currentRows": 90,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.compliance_remarks",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.disclosure_documents",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.document_submission_files",
+        "baselineRows": 547,
+        "currentRows": 547,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.document_submissions",
+        "baselineRows": 92,
+        "currentRows": 92,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.events",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.inquiries",
+        "baselineRows": 4,
+        "currentRows": 4,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.liquidation_report_files",
+        "baselineRows": 5,
+        "currentRows": 5,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.liquidation_reports",
+        "baselineRows": 62,
+        "currentRows": 62,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.move_applications",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.move_files",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.news_categories",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.news_releases",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.notifications",
+        "baselineRows": 173,
+        "currentRows": 173,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.organization_accreditations",
+        "baselineRows": 89,
+        "currentRows": 89,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.organization_contacts",
+        "baselineRows": 212,
+        "currentRows": 212,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.organization_profiles",
+        "baselineRows": 92,
+        "currentRows": 92,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.organization_reference_counters",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.organization_renewals",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.organization_urn_counters",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.organizations",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.policy_versions",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.programs",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.required_document_types",
+        "baselineRows": 13,
+        "currentRows": 13,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.roles",
+        "baselineRows": 4,
+        "currentRows": 4,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.transparency_posts",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.units",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.urn_review_history",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.user_policy_acceptance",
+        "baselineRows": 8,
+        "currentRows": 9,
+        "rowCountMatches": false,
+        "contentFingerprintMatches": false
+      },
+      {
+        "relation": "public.user_profiles",
+        "baselineRows": 94,
+        "currentRows": 95,
+        "rowCountMatches": false,
+        "contentFingerprintMatches": false
+      },
+      {
+        "relation": "public.user_roles",
+        "baselineRows": 94,
+        "currentRows": 95,
+        "rowCountMatches": false,
+        "contentFingerprintMatches": false
+      },
+      {
+        "relation": "public.yorp_sample_document_assets",
+        "baselineRows": 6,
+        "currentRows": 6,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_city_activities",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_entries",
+        "baselineRows": 5,
+        "currentRows": 5,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_event_files",
+        "baselineRows": 17,
+        "currentRows": 17,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_event_participations",
+        "baselineRows": 14,
+        "currentRows": 14,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_files",
+        "baselineRows": 0,
+        "currentRows": 0,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_org_activities",
+        "baselineRows": 3,
+        "currentRows": 3,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_org_activity_files",
+        "baselineRows": 4,
+        "currentRows": 4,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_periods",
+        "baselineRows": 1,
+        "currentRows": 1,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.ypop_submission_deletion_receipts",
+        "baselineRows": 2,
+        "currentRows": 2,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "storage.buckets",
+        "baselineRows": 10,
+        "currentRows": 10,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "storage.objects",
+        "baselineRows": 378,
+        "currentRows": 378,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      }
+    ],
+    "databaseWrites": 0,
+    "automaticRetries": 0,
+    "credentialValuesLogged": false
+  },
+  "pinnedArtifacts": {
+    "status": "PASS",
+    "reviewedInputs": [
+      {
+        "name": "sql",
+        "bytesMatch": true,
+        "sha256Matches": true
+      },
+      {
+        "name": "catalog",
+        "bytesMatch": true,
+        "sha256Matches": true
+      },
+      {
+        "name": "data",
+        "bytesMatch": true,
+        "sha256Matches": true
+      },
+      {
+        "name": "absence",
+        "bytesMatch": true,
+        "sha256Matches": true
+      },
+      {
+        "name": "post",
+        "bytesMatch": true,
+        "sha256Matches": true
+      },
+      {
+        "name": "dataBaseline",
+        "bytesMatch": true,
+        "sha256Matches": true
+      },
+      {
+        "name": "expectedFunctions",
+        "bytesMatch": true,
+        "sha256Matches": true
+      },
+      {
+        "name": "identity",
+        "bytesMatch": true,
+        "sha256Matches": true
+      }
+    ],
+    "runnerBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "sqlBytes": 47407
+  },
+  "completedCatalogGates": {
+    "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "migrationCount": 164,
+    "latestMigration": "20261011230000",
+    "migrationHistoryMd5": "1f5eca911f6e2057ae070a955eaca3dc",
+    "storagePolicies": 15,
+    "containmentMarkerTriggers": 4,
+    "documentSecurityTriggers": 3,
+    "foundationPresent": false
+  },
+  "operations": {
+    "nativeProbeInvocations": 1,
+    "runnerPreflightInvocations": 1,
+    "readOnlyDiagnosticConnections": 1,
+    "runnerInstallInvocations": 0,
+    "databaseWrites": 0,
+    "automaticDatabaseRetries": 0,
+    "installationAuthorizationRecordCreated": false,
+    "installationAttemptMarkerCreated": false,
+    "operationLockCreated": false,
+    "stagingAccess": false
+  },
+  "limitations": [
+    "Seven protected relation inventories differ from the reviewed baseline. Their legitimacy has not been established.",
+    "No baseline or reviewed runner input was modified or accepted automatically.",
+    "The initial public CA fetch encountered sandbox DNS failure; the supported network-permission fetch succeeded. No native database attempt was retried."
+  ]
+}

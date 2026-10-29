@@ -1,0 +1,303 @@
+{
+  "grants": [
+    {
+      "role": "anon",
+      "rpc_execute": false
+    },
+    {
+      "role": "authenticated",
+      "rpc_execute": false
+    },
+    {
+      "role": "service_role",
+      "rpc_execute": true
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_admin_manage",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_read_public",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "yorp_sample_seed_assets_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'template-files'::text) AND ytrace_storage_private.is_active_template(name))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_active_templates_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'news-release-images'::text) AND ytrace_storage_private.is_published_news_image(name))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_news_images_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'delete'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_delete",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_insert",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'insert'::text))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'read'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "ytrace_storage_private.is_public_avatar(bucket_id, name, (metadata ->> 'mimetype'::text), COALESCE(owner_id, (owner)::text))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_published_profile_avatar_read",
+      "schemaname": "storage",
+      "with_check": null
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "admin_authorize_storage_operation(text,text,text,text,uuid,text)",
+      "source_md5": "bc17ff58b1bcc636d0d6320ccc2e3b33",
+      "volatility": "v",
+      "definition_md5": "5d6b3160a32152819bf0ddc0a236a978",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.asset_reference_audit()",
+      "source_md5": "34e12e0f511faa800891c31d1051a18e",
+      "volatility": "s",
+      "definition_md5": "7d6f0f706d8df343945acd4650b8bddc",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.backfill_asset_bindings()",
+      "source_md5": "37d337efe6e9bf27b6887b5f84dbf382",
+      "volatility": "v",
+      "definition_md5": "dc754959b513b035c44bbefcea42b1d6",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.is_active_template(text)",
+      "source_md5": "d2727112234d5be6252328dc87983d54",
+      "volatility": "s",
+      "definition_md5": "2b6acc1735ae3526853c22e7d5772075",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.is_public_avatar(text,text,text,text)",
+      "source_md5": "ba4aa5d6994ee930ebeb1ef7b3faa672",
+      "volatility": "s",
+      "definition_md5": "34c6a8ac38d9bc01b5e1e942b982d6f9",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.is_published_news_image(text)",
+      "source_md5": "c41320784f654b0cf194728c0ba69c14",
+      "volatility": "s",
+      "definition_md5": "9a3982c347197abc9c29dfc11d8bc0b5",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.organization_object_access(text,text,text)",
+      "source_md5": "0fa5031b24cf2ad3495dbd97d1ebdc92",
+      "volatility": "s",
+      "definition_md5": "64e829bf12aa13c9d64bf4f4be159437",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.parent_context(text,text)",
+      "source_md5": "80e71dc4d74feab05144426185e344b2",
+      "volatility": "s",
+      "definition_md5": "17828a61687a6236d80b45a735c0bdc1",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.public_asset_reference(text,text)",
+      "source_md5": "9f49fdee112932949b326c54bad4d70c",
+      "volatility": "s",
+      "definition_md5": "ee204655a17a300ae2d70cd5b3b5dd59",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.register_trusted_storage_origin(text,text)",
+      "source_md5": "573bad51dd3c2b654a28ad35c736ca1a",
+      "volatility": "v",
+      "definition_md5": "f1086cced01738ee8c5ad2f7738a8c83",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.remember_asset_binding()",
+      "source_md5": "41e656072cb78d5ba312fff57966d2e3",
+      "volatility": "v",
+      "definition_md5": "e92cb716a49a985743355026a0c86d1e",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.remember_draft_cleanup()",
+      "source_md5": "bd447d36f28a8a771749f6d204499cd7",
+      "volatility": "v",
+      "definition_md5": "1ea0355d176fbdd09364cce91d14d9f1",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog, public"
+      ],
+      "signature": "ytrace_storage_private.resource_references(text,text)",
+      "source_md5": "528a6ea2e05c53505dd0106bf91081a7",
+      "volatility": "s",
+      "definition_md5": "f8ce7660b637af3c8104b1d50e64cc44",
+      "security_definer": true
+    },
+    {
+      "acl": "{postgres=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "signature": "ytrace_storage_private.url_decode(text)",
+      "source_md5": "fced7f9df7e65a9f48c3382e360819e6",
+      "volatility": "i",
+      "definition_md5": "3688ec994049536a5d867da5dc9b221d",
+      "security_definer": false
+    }
+  ],
+  "read_only": "on",
+  "captured_at": "2026-10-11T11:33:22.492571+00:00",
+  "origin_count": 1
+}

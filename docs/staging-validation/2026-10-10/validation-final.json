@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-10",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "typescript": "PASS: npx tsc --noEmit",
+  "build": "PASS: vite build --manifest --outDir tmp/y-trace-build (synthetic VITE_SUPABASE_URL/anon key)",
+  "diff_check": "PASS: git diff --check + new-file check; line-ending warnings only",
+  "focused_vitest": { "files": 20, "passed": 215, "failed": 0, "raw": "tmp/y-trace-final-focused.json", "level": "local unit/contract (mocks)" },
+  "isolated_postgresql": {
+    "level": "PGlite executing actual migration SQL with synthetic rows; not Storage API",
+    "tests": {
+      "storage_policy_readiness.local.test.mjs": "PASS (reproduces current live exposure)",
+      "storage_remediation.local.test.mjs": "PASS",
+      "storage_origin_portability.local.test.mjs": "PASS",
+      "storage_admin_gateway_roles.local.test.mjs": "PASS"
+    }
+  },
+  "production_read_only": {
+    "method": "supabase db query --linked, SELECT inside 'begin transaction read only'",
+    "migration_reconciliation": "migration-reconciliation.json",
+    "cutover_drift_guard_matches_live": true,
+    "legacy_reference_audit": "legacy-reference-audit.json",
+    "dependencies_missing_columns": 0,
+    "validator_identical_to_captured": true
+  },
+  "real_storage_api": "BLOCKED: no authorized isolated target",
+  "full_vitest": "NOT TESTED; prior baseline 151 failures unrelated",
+  "production_writes": false,
+  "cloud_resources_created": false,
+  "validation_flag_set_in_any_cloud_project": false
+}

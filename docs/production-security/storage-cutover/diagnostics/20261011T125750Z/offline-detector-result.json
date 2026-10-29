@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "offline": true,
+  "sqlBytes": 47407,
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "detectorSourceSha256": "f134bdcb66c6b87198fb4d72457890c78d8014ec802d56796d5f713b6beaaecc",
+  "currentUpstreamMarksCandidateDestructive": true,
+  "readOnlyControlMarksDestructive": false,
+  "detectedDeleteStatements": [
+    "DELETE FROM ytrace_storage_private.cleanup_receipts WHERE user_id=auth.uid() AND expires_at<=now()"
+  ],
+  "interpretation": "DELETE tokens are inside new routine definitions. The reviewed install does not execute those routine DELETEs. The current upstream textual detector can request confirmation for this artifact.",
+  "limitation": "Hosted MCP version, confirmation capabilities, emitted state, expiry and server rejection reason were not available."
+}

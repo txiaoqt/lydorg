@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "redactionScan": "PASS",
+  "jsonParse": "PASS",
+  "diffCheck": "PASS",
+  "restrictedRecordUnchanged": true,
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "authMutationRequests": 1,
+  "files": [
+    {
+      "name": "attempt.json",
+      "sha256": "36da68705c78e25ea166023768a6546b730787c3a3a7b5a243d35a6fb6a36765"
+    },
+    {
+      "name": "auth-log-initial-validation.json",
+      "sha256": "d173141516f04ef7da985604d1328a165d5c790dfbe22eab75076f4150324e88"
+    },
+    {
+      "name": "auth-operation-result.json",
+      "sha256": "6cf1ecd271537027625f81f9970ac8afebf9d6a245ca86467cd9f95327a91df6"
+    },
+    {
+      "name": "execution-gate.json",
+      "sha256": "09d22d033ea5ca0c8d3183ec2c5f6e9874e90e46559a3143d153844f54c82580"
+    },
+    {
+      "name": "preflight.json",
+      "sha256": "9332dd585026b468409ee7215ba7b1f8b8b10bbbc130e20e3b8dce74eb36eeb7"
+    },
+    {
+      "name": "retire-once.mjs",
+      "sha256": "91aee6201b7d0451a1c56827c321930bf890542a3724d6e42e335b7ddfaed742"
+    },
+    {
+      "name": "retirement-report.md",
+      "sha256": "642e41a1e0ff4ce2598bec7ab6274375a8fd4111bf9b597390a501dac1ce0620"
+    },
+    {
+      "name": "verification.json",
+      "sha256": "7dfc1c8a93c4dd72f418461fb114d6c88f955d7b30582db2711276270eacd0be"
+    }
+  ]
+}
+

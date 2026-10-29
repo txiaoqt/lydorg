@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "projectRef": "mqqaykksadotbrghbexz",
+  "preparedAt": "2026-10-11 09:36:39 UTC",
+  "preservationFingerprint": "be97b8c6beddc856216f6869a1cd4ab18eb66efd021704a619fa78af837273c9",
+  "requiredAuthVersion": "v2.197.0",
+  "targetSuffix": "941f85",
+  "recordSha256": "5f7f4312c0d27b40d21d8e2470789478c19a0273335c65ae59580a6628bfa98a",
+  "authorizedFields": [
+    "password",
+    "ban_duration"
+  ],
+  "banDuration": "876000h",
+  "maxAuthMutationRequests": 1
+}
+

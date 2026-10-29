@@ -1,0 +1,55 @@
+{
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "focused": {
+    "passed": 102,
+    "failed": 0
+  },
+  "baselineRerun": {
+    "passed": 47,
+    "failed": 4,
+    "failures": [
+      {
+        "file": "lib/admin-inactivity.test.ts",
+        "name": "Admin Session Inactivity Timeout Mechanics records user activity, throttles rapid writes, and extends session expiration"
+      },
+      {
+        "file": "lib/admin-inactivity.test.ts",
+        "name": "Admin Session Inactivity Timeout Mechanics detects continuous inactivity and expires session when timeout threshold is exceeded"
+      },
+      {
+        "file": "lib/organization-renewal-phase3e.test.ts",
+        "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4. Exactly 6 renewal documents are required in the renewal packet"
+      },
+      {
+        "file": "lib/organization-renewal-phase3e.test.ts",
+        "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4b. Reconciles canonical document identifiers with prompt shorthand aliases"
+      }
+    ],
+    "newFailureIdentities": 0
+  },
+  "localSQLAndInstaller": {
+    "passed": 35,
+    "failed": 0,
+    "scope": "PGlite synthetic schema, mocked Admin validator; mocked management API. Not live authorization."
+  },
+  "typescript": "PASS",
+  "build": "PASS",
+  "diffCheck": "PASS",
+  "stagingInventory": {
+    "authUsers": 4,
+    "identities": 4,
+    "organizations": 3,
+    "admins": 2,
+    "terms": 1,
+    "renewals": 0,
+    "buckets": 10,
+    "objects": 16,
+    "adaptationInstalled": false
+  },
+  "hashes": {
+    "staging-adaptation.sql": "b84b3b80c9045c11ca4e58c14c52c73018916b01235a71b829c8c66ef2029245",
+    "disable-scenario.sql": "ef194ed6470675b47677fedb51b198f4b44423e35b000995e3d2012e26f3b5ec",
+    "final-catalog-manifest.json": "5d0863cbc4597010245cea4753281391e8edd246f7384f6815e520f08924bd89"
+  }
+}

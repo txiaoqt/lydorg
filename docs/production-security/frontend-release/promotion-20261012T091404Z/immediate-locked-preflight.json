@@ -1,0 +1,124 @@
+{
+  "capturedAt": "2026-10-12T09:23:11.050Z",
+  "status": "PASS",
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "candidate": {
+    "id": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "url": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+    "readyState": "READY",
+    "target": "production",
+    "createdAt": 1791787673913,
+    "ready": 1791787763579
+  },
+  "provider": {
+    "capturedAt": "2026-10-12T09:23:00.988Z",
+    "status": "PASS",
+    "authenticatedProviderAccess": true,
+    "admin": {
+      "id": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "name": "lydorg",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "updatedAt": 1791787763905,
+      "productionId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "productionUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true
+    },
+    "organization": {
+      "id": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "name": "yorbms_user",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "updatedAt": 1791481871891,
+      "productionId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "productionUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoAssignCustomDomains": true,
+      "autoExposeSystemEnvs": true
+    },
+    "adminAlias": {
+      "alias": "y-trace-admin.vercel.app",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "deploymentId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "deploymentUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app"
+    },
+    "organizationAlias": {
+      "alias": "ytrace.app",
+      "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+    },
+    "concurrentDeployments": 0,
+    "adminDeploymentIds": [
+      "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS",
+      "dpl_645dxpV4ubKyVXast3rBHjy3mZhr",
+      "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "dpl_BhYo37WcJuwBVx6JLL7VBJ5mQRY6",
+      "dpl_7GrB5SNwBBREHPr4wCYmzyG9JyMC",
+      "dpl_G4yh2FunfypmupKLTi69ULcq7rrp",
+      "dpl_6FJw3ZhqGbJk3PGbkCoyf8mMKk4w",
+      "dpl_Bm1idFnT8mzBfPWLoKed1qSnDMyZ",
+      "dpl_3zoCdrToHb9cQJBugBBJJMbQ53Nx",
+      "dpl_AY8K99yX6Gur4xf56A45ENW7bLYW",
+      "dpl_DEo54GRRSteKryaVyBsRMYLRqFxX",
+      "dpl_AmSTtB6gTpHZTckbEtHcZAGRwxTd",
+      "dpl_78xkUPrmTK6quMLRhHwM8SdWHQiP",
+      "dpl_A694MmRxnnXFeTYxirYc4i5Nzbqz",
+      "dpl_2DnwRR2wAGzQq9BJ6DXXraywWdt2",
+      "dpl_4AzoYFKHbBowFghrG1XpRx83zneV",
+      "dpl_FBwEZMMFvqY9FzdVN9XxLuPztwnU"
+    ],
+    "organizationDeploymentIds": [
+      "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "dpl_4YfNAbqeFDknqHszpARV5QW7o1GV",
+      "dpl_Ba4GUi6zLuYgBY3dkuWdgAui9Vgi",
+      "dpl_BtuYhQdZKRuUMZpxhaG8nepDjWC5",
+      "dpl_7dxckuuhfsfUAmEMXvJz37Lr9wgo",
+      "dpl_B64ppKg2KFvh9vdTZuYNUeQCnbBT",
+      "dpl_H1eTRoovHmQFJH51LkQoYzdirg7Y",
+      "dpl_9JxrDNGYWC28MmzXsxAsmma9ZSdG",
+      "dpl_HzbzcQWbdyBJ6eqLkAr39oEPsdjD",
+      "dpl_AqUFnz1Agw76oVvuJuX4ZPA6NDgL",
+      "dpl_2tF5QmmhRiHCmKhrJhtmzMD6Crix",
+      "dpl_4j1sZTY7zyLkENqYDDxCa28zfCCB",
+      "dpl_7ecpsJuM4EwsnqJcnaWX6At6rgmb",
+      "dpl_HqjUHqKs8CLyLoFe58r952aexJqy",
+      "dpl_Frczi2sE9aTTkCB1CxQXLNE15FX3"
+    ]
+  },
+  "affectedProductionDomains": [
+    {
+      "alias": "y-trace-admin.vercel.app",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "deploymentId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "deploymentUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app"
+    }
+  ],
+  "candidateAliases": [
+    {
+      "alias": "lydorg-toffs-projects-81b2ce10.vercel.app"
+    }
+  ],
+  "lastAliasRequest": null,
+  "rollingReleaseEnabled": false,
+  "sourceRevision": "sha256:0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
+  "sourceArchiveSha256": "a6ba0e4e9dc4684a45dc8c86bdaf448311db571bc7156ea73dbf3cf62d36d465",
+  "staticInventorySha256": "1d47dc965081fab8d3b6c996f17835f960f7166e57bcf341c529891725e0348d",
+  "sourceFiles": 561,
+  "hostedSourceFiles": 560,
+  "staticFiles": 53,
+  "readOnly": true,
+  "operationLockOwnershipVerified": true
+}

@@ -1,0 +1,270 @@
+{
+  "capturedAt": "2026-10-12T12:33:42.922Z",
+  "readOnly": true,
+  "checks": [
+    {
+      "endpoint": "/v4/aliases/y-trace-admin.vercel.app",
+      "exitCode": 0,
+      "timedOut": false,
+      "outputLimitExceeded": false,
+      "responseSha256": "9c0ce74c7684462f7e19924020dfdd590e8b22fc7b6757833831608b530ac392",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "authenticationRequired": false,
+      "permissionDenied": false,
+      "notFound": false,
+      "networkFailure": false,
+      "rateLimited": false,
+      "providerErrorCode": null,
+      "alias": {
+        "name": "y-trace-admin.vercel.app",
+        "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+        "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA"
+      }
+    },
+    {
+      "endpoint": "/v4/aliases/ytrace.app",
+      "exitCode": 0,
+      "timedOut": false,
+      "outputLimitExceeded": false,
+      "responseSha256": "311630618ac80a2262334759466f3cf772b7d94d19a8e13a4a326465e1dbdd98",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "authenticationRequired": false,
+      "permissionDenied": false,
+      "notFound": false,
+      "networkFailure": false,
+      "rateLimited": false,
+      "providerErrorCode": null,
+      "alias": {
+        "name": "ytrace.app",
+        "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+        "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV"
+      }
+    },
+    {
+      "endpoint": "/v9/projects/prj_ywvIWJbULZOdCMtrt6JPcMqguA2N/domains",
+      "exitCode": 0,
+      "timedOut": false,
+      "outputLimitExceeded": false,
+      "responseSha256": "d6e283972ce7d5f45dadbbd4db22dcf90cb0630011399a63cf141986a665c8ea",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "authenticationRequired": false,
+      "permissionDenied": false,
+      "notFound": false,
+      "networkFailure": false,
+      "rateLimited": false,
+      "providerErrorCode": null,
+      "domains": [
+        {
+          "name": "ytrace.app",
+          "verified": true,
+          "redirect": null,
+          "redirectStatusCode": null
+        },
+        {
+          "name": "www.ytrace.app",
+          "verified": true,
+          "redirect": "ytrace.app",
+          "redirectStatusCode": 307
+        }
+      ]
+    },
+    {
+      "endpoint": "/v7/deployments?projectId=prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "exitCode": 0,
+      "timedOut": false,
+      "outputLimitExceeded": false,
+      "responseSha256": "7e3ad135bbb49069d8ea7f7fea132ac67cf1bcef4356b8b43fd263c7f4faf22a",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "authenticationRequired": false,
+      "permissionDenied": true,
+      "notFound": true,
+      "networkFailure": false,
+      "rateLimited": false,
+      "providerErrorCode": null,
+      "deployments": [
+        {
+          "id": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS",
+          "state": "ERROR",
+          "target": "production"
+        },
+        {
+          "id": "dpl_645dxpV4ubKyVXast3rBHjy3mZhr",
+          "state": "ERROR",
+          "target": "production"
+        },
+        {
+          "id": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_BhYo37WcJuwBVx6JLL7VBJ5mQRY6",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_7GrB5SNwBBREHPr4wCYmzyG9JyMC",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_G4yh2FunfypmupKLTi69ULcq7rrp",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_6FJw3ZhqGbJk3PGbkCoyf8mMKk4w",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_Bm1idFnT8mzBfPWLoKed1qSnDMyZ",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_3zoCdrToHb9cQJBugBBJJMbQ53Nx",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_AY8K99yX6Gur4xf56A45ENW7bLYW",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_DEo54GRRSteKryaVyBsRMYLRqFxX",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_AmSTtB6gTpHZTckbEtHcZAGRwxTd",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_78xkUPrmTK6quMLRhHwM8SdWHQiP",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_A694MmRxnnXFeTYxirYc4i5Nzbqz",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_2DnwRR2wAGzQq9BJ6DXXraywWdt2",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_4AzoYFKHbBowFghrG1XpRx83zneV",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_FBwEZMMFvqY9FzdVN9XxLuPztwnU",
+          "state": "READY",
+          "target": "production"
+        }
+      ]
+    },
+    {
+      "endpoint": "/v7/deployments?projectId=prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "exitCode": 0,
+      "timedOut": false,
+      "outputLimitExceeded": false,
+      "responseSha256": "ce26a32bed367d73bf323a6e47065b82f8db1ad23a077f4fec92d79a5584c79e",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "authenticationRequired": false,
+      "permissionDenied": true,
+      "notFound": true,
+      "networkFailure": false,
+      "rateLimited": false,
+      "providerErrorCode": null,
+      "deployments": [
+        {
+          "id": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_4YfNAbqeFDknqHszpARV5QW7o1GV",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_Ba4GUi6zLuYgBY3dkuWdgAui9Vgi",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_BtuYhQdZKRuUMZpxhaG8nepDjWC5",
+          "state": "CANCELED",
+          "target": "production"
+        },
+        {
+          "id": "dpl_7dxckuuhfsfUAmEMXvJz37Lr9wgo",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_B64ppKg2KFvh9vdTZuYNUeQCnbBT",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_H1eTRoovHmQFJH51LkQoYzdirg7Y",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_9JxrDNGYWC28MmzXsxAsmma9ZSdG",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_HzbzcQWbdyBJ6eqLkAr39oEPsdjD",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_AqUFnz1Agw76oVvuJuX4ZPA6NDgL",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_2tF5QmmhRiHCmKhrJhtmzMD6Crix",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_4j1sZTY7zyLkENqYDDxCa28zfCCB",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_7ecpsJuM4EwsnqJcnaWX6At6rgmb",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_HqjUHqKs8CLyLoFe58r952aexJqy",
+          "state": "READY",
+          "target": "production"
+        },
+        {
+          "id": "dpl_Frczi2sE9aTTkCB1CxQXLNE15FX3",
+          "state": "READY",
+          "target": "production"
+        }
+      ]
+    }
+  ],
+  "deploymentSubmitted": false
+}

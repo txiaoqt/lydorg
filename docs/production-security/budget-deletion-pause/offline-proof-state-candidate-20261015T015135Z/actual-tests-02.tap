@@ -1,0 +1,31 @@
+COMMAND: C:\Users\Christopher x Angel\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.exe -NoLogo -NoProfile -NonInteractive -File docs\production-security\budget-deletion-pause\offline-proof-state-candidate-20261015T015135Z\invoke-fixture-tests.ps1 STARTED_UTC: 2026-10-15T02:04:21.3512727+00:00 FINISHED_UTC: 2026-10-15T02:04:23.6308790+00:00 EXIT: 1 
+# FIXTURE_ROOT C:\Users\Christopher x Angel\AppData\Local\Packages\sandbox.{219a5613-d453-4974-adfc-c93aadedfd03}\AC\Temp\ytrace-proof-fixture-07f377750025421f985baccbe213e8e0
+ok 1 - per-run root is generated beneath Temp
+# ARCHIVE_DIAG status=UNRESOLVED_AFTER_SUBMISSION code=NATIVE_RENAME_FAILED nativeError=5 submissions=1
+not ok 2 - archive preserves bytes identity ACL owner and times [ARCHIVE_SUCCESS_CONTRACT_FAILED]
+ok 3 - pre-existing archive destination is retained
+ok 4 - changed source identity is rejected before submission
+ok 5 - binding from a different parent is rejected
+not ok 6 - replacement parent identity is rejected [ASSERTION_FAILED]
+not ok 7 - concurrent no-overwrite contenders preserve exactly one winner [ASSERTION_FAILED]
+not ok 8 - pre-submit stop leaves source and performs zero submissions [ASSERTION_FAILED]
+not ok 9 - post-kernel ambiguity is retained and never retried [ARCHIVE_UNCERTAIN_STATE_NOT_RETAINED]
+ok 10 - hardlink source rejected when unprivileged fixture is available # SKIP hardlink fixture unavailable without privilege
+not ok 11 - reparse directory rejected when unprivileged fixture is available [EXPECTED_REPARSE_DIRECTORY_REJECTED]
+ok 12 - proof accepts exact five fields and inherits fixture ACL read-only
+ok 13 - exact 300-second proof age is accepted
+ok 14 - 301-second proof age is rejected
+ok 15 - future proof timestamp is rejected
+ok 16 - timezone-free proof timestamp is rejected
+ok 17 - additional credential-like field is rejected before file creation
+ok 18 - create-new collision retains existing proof bytes
+ok 19 - pre-create stop writes nothing and has zero attempts
+ok 20 - failure after exclusive create retains empty file without retry
+ok 21 - partial proof write remains present and unresolved
+ok 22 - post-flush uncertainty retains complete proof without claiming success
+# retained synthetic fixture cases: proof-after-create,proof-after-flush,proof-partial
+# FIXTURE_ROOT_ENTRY_COUNT 18
+# FIXTURE_ROOT_ENTRIES archive-before-submit,archive-existing,archive-success,archive-uncertain,hardlink,parent-a,parent-b,parent-substitution,proof-after-create,proof-after-flush,proof-before-create,proof-collision,proof-extra-field,proof-partial,proof-success,race,reparse-target,source-changed
+1..22
+# SUMMARY pass=15 fail=6 blocked=1
+# FAILURE_CODES archive preserves bytes identity ACL owner and times:ARCHIVE_SUCCESS_CONTRACT_FAILED,replacement parent identity is rejected:ASSERTION_FAILED,concurrent no-overwrite contenders preserve exactly one winner:ASSERTION_FAILED,pre-submit stop leaves source and performs zero submissions:ASSERTION_FAILED,post-kernel ambiguity is retained and never retried:ARCHIVE_UNCERTAIN_STATE_NOT_RETAINED,reparse directory rejected when unprivileged fixture is available:EXPECTED_REPARSE_DIRECTORY_REJECTED

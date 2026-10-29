@@ -1,0 +1,380 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T10:55:39.227Z",
+  "results": [
+    {
+      "check": "Prepared own/cross/anonymous real Storage suite",
+      "status": "PASS"
+    },
+    {
+      "check": "Invalid parent denied",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "Invalid parent denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/4c6bae8d-51f0-4bd8-a1cf-2d747e36861b",
+          "status": 400,
+          "durationMs": 151
+        },
+        {
+          "actor": "A JWT",
+          "step": "Invalid parent denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 413
+        }
+      ]
+    },
+    {
+      "check": "Wrong organization upload denied",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "Wrong organization upload denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 400,
+          "durationMs": 167
+        },
+        {
+          "actor": "A JWT",
+          "step": "Wrong organization upload denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 154
+        }
+      ]
+    },
+    {
+      "check": "Wrong bucket upload denied",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "Wrong bucket upload denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/budget-request-files/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 144
+        },
+        {
+          "actor": "A JWT",
+          "step": "Wrong bucket upload denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/budget-request-files",
+          "status": 200,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "check": "Locked approved registration overwrite denied, original hash preserved",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "Locked approved registration overwrite denied, original hash preserved",
+          "method": "PUT",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 370
+        },
+        {
+          "actor": "A JWT",
+          "step": "Locked approved registration overwrite denied, original hash preserved",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 333
+        }
+      ]
+    },
+    {
+      "check": "Locked approved registration DELETE has no effect, original hash preserved",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "A JWT",
+          "step": "Locked approved registration DELETE has no effect, original hash preserved",
+          "method": "DELETE",
+          "endpoint": "/storage/v1/object/organization-documents",
+          "status": 200,
+          "durationMs": 137
+        },
+        {
+          "actor": "A JWT",
+          "step": "Locked approved registration DELETE has no effect, original hash preserved",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 30
+        }
+      ]
+    },
+    {
+      "check": "Suspended organization cannot upload to its own profile path",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Suspended JWT",
+          "step": "Suspended organization cannot upload to its own profile path",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/5580eebd-183e-4f49-b2e6-e9dd8be10185",
+          "status": 400,
+          "durationMs": 154
+        },
+        {
+          "actor": "Suspended JWT",
+          "step": "Suspended organization cannot upload to its own profile path",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/list/organization-documents",
+          "status": 200,
+          "durationMs": 128
+        }
+      ]
+    },
+    {
+      "check": "Prepared genuine Admin gateway suite including private files",
+      "status": "PASS"
+    },
+    {
+      "check": "Close only this test Auth session",
+      "status": "PASS"
+    },
+    {
+      "check": "Close only this test Auth session",
+      "status": "PASS"
+    },
+    {
+      "check": "Revoke only this test Admin session",
+      "status": "PASS"
+    },
+    {
+      "check": "Revoke only this test Admin session",
+      "status": "PASS"
+    },
+    {
+      "check": "Revoke only this test Admin session",
+      "status": "PASS"
+    },
+    {
+      "check": "Revoke only this test Admin session",
+      "status": "PASS"
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 599
+    },
+    {
+      "actor": "A JWT",
+      "step": "Invalid parent denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/4c6bae8d-51f0-4bd8-a1cf-2d747e36861b",
+      "status": 400,
+      "durationMs": 151
+    },
+    {
+      "actor": "A JWT",
+      "step": "Invalid parent denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 413
+    },
+    {
+      "actor": "A JWT",
+      "step": "Wrong organization upload denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 400,
+      "durationMs": 167
+    },
+    {
+      "actor": "A JWT",
+      "step": "Wrong organization upload denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 154
+    },
+    {
+      "actor": "A JWT",
+      "step": "Wrong bucket upload denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/budget-request-files/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 144
+    },
+    {
+      "actor": "A JWT",
+      "step": "Wrong bucket upload denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "A JWT",
+      "step": "Locked approved registration overwrite denied, original hash preserved",
+      "method": "PUT",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 370
+    },
+    {
+      "actor": "A JWT",
+      "step": "Locked approved registration overwrite denied, original hash preserved",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 333
+    },
+    {
+      "actor": "A JWT",
+      "step": "Locked approved registration DELETE has no effect, original hash preserved",
+      "method": "DELETE",
+      "endpoint": "/storage/v1/object/organization-documents",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "A JWT",
+      "step": "Locked approved registration DELETE has no effect, original hash preserved",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 30
+    },
+    {
+      "actor": "Suspended",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 519
+    },
+    {
+      "actor": "Suspended JWT",
+      "step": "Suspended organization cannot upload to its own profile path",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/5580eebd-183e-4f49-b2e6-e9dd8be10185",
+      "status": 400,
+      "durationMs": 154
+    },
+    {
+      "actor": "Suspended JWT",
+      "step": "Suspended organization cannot upload to its own profile path",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "Suspended JWT",
+      "step": "Suspended organization cannot upload to its own profile path",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 176
+    },
+    {
+      "actor": "Suspended JWT",
+      "step": "Suspended organization cannot upload to its own profile path",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 167
+    },
+    {
+      "actor": "Suspended JWT",
+      "step": "Suspended organization cannot upload to its own profile path",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 208
+    },
+    {
+      "actor": "Suspended JWT",
+      "step": "Suspended organization cannot upload to its own profile path",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 161
+    },
+    {
+      "actor": "Suspended JWT",
+      "step": "Suspended organization cannot upload to its own profile path",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Privileged expiry fixture",
+      "step": "Shorten only this genuine test session",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/admin_sessions",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Privileged expiry fixture",
+      "step": "Shorten only this genuine test session",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 149
+    },
+    {
+      "actor": "Privileged expiry fixture",
+      "step": "Shorten only this genuine test session",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 134
+    },
+    {
+      "actor": "Privileged expiry fixture",
+      "step": "Shorten only this genuine test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 169
+    },
+    {
+      "actor": "Privileged expiry fixture",
+      "step": "Shorten only this genuine test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 132
+    },
+    {
+      "actor": "Privileged expiry fixture",
+      "step": "Shorten only this genuine test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 129
+    },
+    {
+      "actor": "Privileged expiry fixture",
+      "step": "Shorten only this genuine test session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 130
+    }
+  ]
+}

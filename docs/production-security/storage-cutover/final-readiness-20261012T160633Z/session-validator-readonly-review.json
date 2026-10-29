@@ -1,0 +1,15 @@
+[
+  {
+    "signature": "validate_admin_session_token(text)",
+    "source_md5": "8b7040e3832ccfca2ea2f0ad9c0ebebf",
+    "sessionValidationRequires": [
+      "matching token hash",
+      "not revoked",
+      "future expires_at",
+      "active Admin account"
+    ],
+    "rolePermissionsChecked": false,
+    "validatorInvoked": false
+  }
+]
+

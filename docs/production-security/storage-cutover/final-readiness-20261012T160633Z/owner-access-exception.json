@@ -1,0 +1,21 @@
+{
+  "object_id": "d60a9a20-5ed2-443f-aef8-2a5468ca7840",
+  "read_only": "on",
+  "captured_at": "2026-10-12T16:14:58.000961+00:00",
+  "path_sha256": "ffebba77022e014337b6ef2ebaacac5effaca044746f76ec83270d3ee3d33a48",
+  "context_kind": "document",
+  "context_status": "rejected_red",
+  "linked_metadata": [
+    {
+      "reviewable": true,
+      "resource_kind": "registration",
+      "resource_organization_suspended": true,
+      "resource_organization_matches_path": true,
+      "resource_owner_matches_storage_owner": true
+    }
+  ],
+  "context_organization_exists": true,
+  "context_organization_suspended": true,
+  "context_owner_matches_storage_owner": true
+}
+

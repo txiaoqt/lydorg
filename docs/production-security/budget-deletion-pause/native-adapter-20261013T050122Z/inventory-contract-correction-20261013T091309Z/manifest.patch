@@ -1,0 +1,54 @@
+diff --git "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\reviewed-inputs.json" "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\reviewed-inputs.json"
+index 10f6ee9..c910ada 100644
+--- "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\reviewed-inputs.json"
++++ "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\reviewed-inputs.json"
+@@ -41,6 +41,11 @@
+       "bytes": 2646,
+       "sha256": "c36f888e263ee0f14676416eca0ce586527dbd2ff580422cf52795161ab9f2e3"
+     },
++    "originalProtectedDataSql": {
++      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql",
++      "bytes": 13900,
++      "sha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d"
++    },
+     "packageLock": {
+       "file": "package-lock.json",
+       "bytes": 374412,
+@@ -57,9 +62,9 @@
+       "sha256": "0feb7b7510621ec3c06e2ee12e751bd1982ef9d5070d5a3be70aceaecba66384"
+     },
+     "protectedDataSql": {
+-      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql",
+-      "bytes": 13900,
+-      "sha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d"
++      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-protected-data-readonly.sql",
++      "bytes": 13902,
++      "sha256": "459a48ea2fdaf0393063f3fe796b4a0302bf0f440485f82d3dedaae1c5e07c34"
+     },
+     "sql": {
+       "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+@@ -767,18 +772,18 @@
+   "codeIdentities": [
+     {
+       "file": "budget-runner-core.mjs",
+-      "bytes": 30610,
+-      "sha256": "fdd38e3a38b173760017ef666e3d03efe6d2c72a9467c682aceafd4a8cc6370c"
++      "bytes": 37676,
++      "sha256": "ade7a626bca8119d6b3a37b43e5888b7a43024002509088bce14b07c8fd6f2e7"
+     },
+     {
+       "file": "native-budget-pause-runner.mjs",
+-      "bytes": 30498,
+-      "sha256": "b67262d51dafc9e3f09ff056d760ef0901b2f0f43356684b6d62023e869cf9af"
++      "bytes": 30625,
++      "sha256": "84a7ec310e6363b77f2d03b1ed212a418cee2649936620e9e196135e9b7f9b98"
+     },
+     {
+       "file": "native-budget-pause.test.mjs",
+-      "bytes": 38717,
+-      "sha256": "f7e997e7667188341add9697a47aafa18a2bfda67b4ec173e5556d621deb5906"
++      "bytes": 49743,
++      "sha256": "3f5b8bed2ba9b5b8a25fcfd9705c17ddf4607678651740996a0e9b3cd6ea6dc6"
+     },
+     {
+       "file": "operation-acl.ps1",

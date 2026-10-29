@@ -1,0 +1,36 @@
+{
+  "status": "FAILED_READ_ONLY_PREFLIGHT_NO_RETRY",
+  "project": "mqqaykksadotbrghbexz",
+  "route": "native-pg-direct-tls",
+  "recordedAt": "2026-10-13T08:54:05.035Z",
+  "nativePreflightInvocations": 1,
+  "automaticRetries": 0,
+  "installationActivated": false,
+  "installationSqlSubmitted": false,
+  "productionBusinessMutationsRequested": 0,
+  "installationAuthorizationCreated": false,
+  "installationAttemptMarkerCreated": false,
+  "errorCode": "READ_ONLY_TERMINAL_TAG_MISMATCH",
+  "localDiagnosis": "PINNED_INVENTORY_SQL_ENDS_COMMIT_ADAPTER_REQUIRES_ROLLBACK",
+  "tlsEvidence": {
+    "status": "GUARD_PASSED_BEFORE_RESULT_PARSING_ERROR",
+    "evidenceType": "INFERENCE_FROM_PINNED_EXECUTION_PATH",
+    "protocolAndCertificateFingerprintPersisted": false
+  },
+  "databaseCatalogEvidence": "INCOMPLETE_NO_COMPLETED_SNAPSHOT",
+  "inventoryComparison": "BLOCKED_NO_CURRENT_57_INVENTORY_ARTIFACT",
+  "foundationVerification": "NOT_COMPLETED",
+  "referenceSnapshot": "docs/production-security/budget-deletion-pause/20261012T165000Z/protected-data-readonly.json",
+  "referenceSnapshotSha256": "2575aaa3634b4acb4b4d2782689d84d6a46d1ab7494237aa6449ce4dc86a74cc",
+  "referenceIsAdoptedInstallationBaseline": false,
+  "freshProofSha256": "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf",
+  "proofAgeAtFinishSeconds": 6.8200504,
+  "stateFiles": [
+    "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+    "control-plane-proof.json"
+  ],
+  "decision": "NO_GO_INSTALLATION_AUTHORIZATION",
+  "runnerBundleSha256": "0b7b75d13cb113c790e6373d304ef4990fd8591c0ebd98e3b7f5ad9a7280a0d9",
+  "manifestSha256": "8e59054cdbea2497decfd0a47582960129db21cb0ffd0757e8865f5d0e89f7b8",
+  "sqlSha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+}

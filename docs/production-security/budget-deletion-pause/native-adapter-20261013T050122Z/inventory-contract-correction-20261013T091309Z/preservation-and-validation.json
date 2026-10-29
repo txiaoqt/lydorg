@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "mode": "LOCAL_CORRECTION_AND_OFFLINE_TESTS_ONLY",
+  "bundleSha256": "58aed13a1099907460f74e9730afa8c8f22a1a0f0ee07fd6e77d609ac80a0e25",
+  "manifestSha256": "562f0b078c3ee29f17050e465ff3c1a87f9be71fac05642cd3e9e3863f19a3bb",
+  "dedicatedInventorySha256": "459a48ea2fdaf0393063f3fe796b4a0302bf0f440485f82d3dedaae1c5e07c34",
+  "originalInventorySha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d",
+  "inventoryDefinitionsPreserved": 57,
+  "originalFoundationVerifierUnchanged": true,
+  "approvedProductionSqlUnchanged": true,
+  "approvedSql": {
+    "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+    "bytes": 11945,
+    "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+  },
+  "aclHelperUnchanged": true,
+  "identityVerifierUnchanged": true,
+  "otherPinnedInputsUnchanged": true,
+  "priorArtifactsVerified": 13,
+  "operatorProofContentRead": false,
+  "operatorProofContentHashesRecomputed": false,
+  "operatorStateFilesUnchanged": true,
+  "operatorCreationAndWriteTimesUnchanged": true,
+  "operatorOwnershipAndAclUnchanged": true,
+  "observedOsLastAccessChanges": [
+    {
+      "artifact": ".ytrace-production-budget-deletion-pause",
+      "before": "2026-10-13T09:15:22.9103445Z",
+      "after": "2026-10-13T09:28:31.3186235Z"
+    }
+  ],
+  "operatorAuthLockMarkerOrApprovedPreflightCreated": false,
+  "focusedTests": {
+    "pass": 39,
+    "fail": 0,
+    "skip": 0,
+    "actualInputTests": 6
+  },
+  "offlineReview": "PASS",
+  "focusedDiffChecks": "PASS",
+  "unrelatedDirtyWorktreeDiffCheck": {
+    "status": "FAIL",
+    "diagnostic": "Existing trailing whitespace at src/lib/lydo-connect-supabase.ts:4535; outside this correction and unchanged."
+  },
+  "productionConnectionAttempted": false,
+  "nativePreflightInvoked": false,
+  "installationInvoked": false,
+  "liveTlsCatalogInventoryVerification": "NOT PERFORMED",
+  "readOnlyPreflightDecision": "GO_SUBJECT_TO_SEPARATE_AUTHORIZATION_AND_FRESH_PROOF",
+  "installationDecision": "NO_GO",
+  "previousNativeFailureFilesVerified": 11
+}

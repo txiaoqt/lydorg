@@ -1,0 +1,1 @@
+{"status":"PASS","variables":[{"name":"YTRACE_PRODUCTION_DB_PASSWORD","present":true},{"name":"YTRACE_PRODUCTION_DB_CA_FILE","present":true},{"name":"YTRACE_PRODUCTION_DB_CA_SHA256","present":true}],"caFileExists":true,"caSha256Matches":true,"networkAttempted":false}

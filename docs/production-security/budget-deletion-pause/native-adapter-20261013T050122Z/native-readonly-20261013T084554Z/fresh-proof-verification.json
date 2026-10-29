@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "verifiedAt": "2026-10-13T08:48:48.8470023Z",
+  "proofSha256": "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf",
+  "proofBytes": 200,
+  "createNew": true,
+  "effectiveAclVerified": true,
+  "archivePreserved": true
+}

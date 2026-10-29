@@ -1,0 +1,1635 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "at": "2026-10-10T19:29:16.120Z",
+  "results": [
+    {
+      "check": "Installed repaired state unchanged before assertions",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Privileged verification",
+          "step": "Installed repaired state unchanged before assertions",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 748
+        },
+        {
+          "actor": "Privileged verification",
+          "step": "Installed repaired state unchanged before assertions",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 127
+        },
+        {
+          "actor": "Privileged verification",
+          "step": "Installed repaired state unchanged before assertions",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 124
+        },
+        {
+          "actor": "Privileged verification",
+          "step": "Installed repaired state unchanged before assertions",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 121
+        }
+      ]
+    },
+    {
+      "check": "Genuine Super Admin permission context",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin",
+          "step": "Genuine Super Admin permission context",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+          "status": 200,
+          "durationMs": 136
+        }
+      ]
+    },
+    {
+      "check": "Owner terminal replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 400,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Owner",
+          "step": "Owner terminal replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+          "status": 400,
+          "durationMs": 161
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 398
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 121
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 121
+        }
+      ]
+    },
+    {
+      "check": "Owner optimistic replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 400,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Owner",
+          "step": "Owner optimistic replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 400,
+          "durationMs": 122
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 117
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 117
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 124
+        }
+      ]
+    },
+    {
+      "check": "Owner direct terminal content mutation denied",
+      "status": "PASS",
+      "httpStatus": 400,
+      "zeroRows": false,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Owner",
+          "step": "Owner direct terminal content mutation denied",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 400,
+          "durationMs": 128
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 126
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 121
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 118
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 122
+        }
+      ]
+    },
+    {
+      "check": "Other organization terminal replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 400,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Other organization",
+          "step": "Other organization terminal replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+          "status": 400,
+          "durationMs": 136
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 122
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 124
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 129
+        }
+      ]
+    },
+    {
+      "check": "Other organization optimistic replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 400,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Other organization",
+          "step": "Other organization optimistic replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 400,
+          "durationMs": 120
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 124
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 122
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 115
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 126
+        }
+      ]
+    },
+    {
+      "check": "Other organization direct terminal content mutation denied",
+      "status": "PASS",
+      "httpStatus": 200,
+      "zeroRows": true,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Other organization",
+          "step": "Other organization direct terminal content mutation denied",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 126
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 122
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Other organization",
+          "step": "Other organization direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 119
+        }
+      ]
+    },
+    {
+      "check": "Anonymous terminal replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 401,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous terminal replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+          "status": 401,
+          "durationMs": 120
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 122
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 121
+        }
+      ]
+    },
+    {
+      "check": "Anonymous optimistic replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 401,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous optimistic replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 401,
+          "durationMs": 123
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 122
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 122
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 118
+        }
+      ]
+    },
+    {
+      "check": "Anonymous direct terminal content mutation denied",
+      "status": "PASS",
+      "httpStatus": 200,
+      "zeroRows": true,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous direct terminal content mutation denied",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 123
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 130
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 121
+        },
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 125
+        }
+      ]
+    },
+    {
+      "check": "Custom Admin without organization JWT terminal replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 401,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+          "status": 401,
+          "durationMs": 121
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 118
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 120
+        }
+      ]
+    },
+    {
+      "check": "Custom Admin without organization JWT optimistic replacement RPC denied",
+      "status": "PASS",
+      "denialStatus": 401,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 401,
+          "durationMs": 126
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 116
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 120
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 117
+        }
+      ]
+    },
+    {
+      "check": "Custom Admin without organization JWT direct terminal content mutation denied",
+      "status": "PASS",
+      "httpStatus": 200,
+      "zeroRows": true,
+      "protectedStateUnchanged": true,
+      "http": [
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+          "method": "PATCH",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 125
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 130
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 118
+        },
+        {
+          "actor": "Custom Admin without organization JWT",
+          "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 118
+        }
+      ]
+    },
+    {
+      "check": "Owner original PDF bytes preserved",
+      "status": "PASS",
+      "sha256": "6e71339ae9f1ed382362a22da0ad7ae6f272a39e3ee565de51beb16f3e35103f",
+      "bytes": 673,
+      "http": [
+        {
+          "actor": "Owner",
+          "step": "Owner original PDF bytes preserved",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 797
+        }
+      ]
+    },
+    {
+      "check": "Owner corrected PDF download and hash",
+      "status": "PASS",
+      "sha256": "67bba8968f41f97923e82f9fcfcf2d90871de9605d1b897ff336d452652a4f0d",
+      "bytes": 674,
+      "http": [
+        {
+          "actor": "Owner",
+          "step": "Owner corrected PDF download and hash",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 200,
+          "durationMs": 781
+        }
+      ]
+    },
+    {
+      "check": "Owner signing and signed download hash",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Owner",
+          "step": "Owner signing and signed download hash",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 150
+        },
+        {
+          "actor": "Owner",
+          "step": "Owner signing and signed download hash",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 187
+        }
+      ]
+    },
+    {
+      "check": "Other organization private download denied",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Other organization",
+          "step": "Other organization private download denied",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 400,
+          "durationMs": 326
+        }
+      ]
+    },
+    {
+      "check": "Other organization private signing denied",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Other organization",
+          "step": "Other organization private signing denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 197
+        }
+      ]
+    },
+    {
+      "check": "Anonymous private download denied",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous private download denied",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+          "status": 400,
+          "durationMs": 324
+        }
+      ]
+    },
+    {
+      "check": "Anonymous private signing denied",
+      "status": "PASS",
+      "denialStatus": 404,
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous private signing denied",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Authorized Admin gateway signing and hash",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Admin",
+          "step": "Authorized Admin gateway signing and hash",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 770
+        },
+        {
+          "actor": "Admin",
+          "step": "Authorized Admin gateway signing and hash",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 330
+        }
+      ]
+    },
+    {
+      "check": "Zero-permission Admin gateway denied",
+      "status": "PASS",
+      "denialStatus": 403,
+      "http": [
+        {
+          "actor": "Zero-permission Admin",
+          "step": "Zero-permission Admin gateway denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 231
+        }
+      ]
+    },
+    {
+      "check": "Genuine revoked Admin gateway denied",
+      "status": "PASS",
+      "denialStatus": 403,
+      "http": [
+        {
+          "actor": "Revoked Admin",
+          "step": "Genuine revoked Admin gateway denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 536
+        }
+      ]
+    },
+    {
+      "check": "Forged parent/path gateway denied",
+      "status": "PASS",
+      "denialStatus": 403,
+      "http": [
+        {
+          "actor": "Admin",
+          "step": "Forged parent/path gateway denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 249
+        }
+      ]
+    },
+    {
+      "check": "Final protected rows unchanged after all denied mutations",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Privileged verification",
+          "step": "Final protected rows unchanged after all denied mutations",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 125
+        },
+        {
+          "actor": "Privileged verification",
+          "step": "Final protected rows unchanged after all denied mutations",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_renewals",
+          "status": 200,
+          "durationMs": 118
+        },
+        {
+          "actor": "Privileged verification",
+          "step": "Final protected rows unchanged after all denied mutations",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submissions",
+          "status": 200,
+          "durationMs": 119
+        },
+        {
+          "actor": "Privileged verification",
+          "step": "Final protected rows unchanged after all denied mutations",
+          "method": "GET",
+          "endpoint": "/rest/v1/organization_accreditations",
+          "status": 200,
+          "durationMs": 119
+        }
+      ]
+    },
+    {
+      "check": "Separate eligible positive revision state",
+      "status": "BLOCKED",
+      "candidateCount": 0,
+      "reason": "No existing draft/needs_revision document outside approved cycle; no fixture reopening authorized"
+    },
+    {
+      "check": "Expired genuine Admin session",
+      "status": "BLOCKED",
+      "reason": "No recorded expired test token available; no session expiry mutation or waiting for natural expiry in this scoped run"
+    },
+    {
+      "check": "Destructive Storage overwrite/deletion",
+      "status": "BLOCKED",
+      "reason": "No separately approved disposable objects/recovery plan; preserved evidence not used"
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "Privileged verification",
+      "step": "Installed repaired state unchanged before assertions",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 748
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Installed repaired state unchanged before assertions",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Installed repaired state unchanged before assertions",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Installed repaired state unchanged before assertions",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Recorded owner JWT",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 213
+    },
+    {
+      "actor": "Other organization JWT",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 209
+    },
+    {
+      "actor": "Other organization JWT",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "Other organization JWT",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "Admin",
+      "step": "Genuine Super Admin permission context",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner terminal replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+      "status": 400,
+      "durationMs": 161
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 398
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner optimistic replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 400,
+      "durationMs": 122
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 117
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 117
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner direct terminal content mutation denied",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 400,
+      "durationMs": 128
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization terminal replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+      "status": 400,
+      "durationMs": 136
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization optimistic replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 400,
+      "durationMs": 120
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 115
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization direct terminal content mutation denied",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous terminal replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+      "status": 401,
+      "durationMs": 120
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous optimistic replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 401,
+      "durationMs": 123
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous direct terminal content mutation denied",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/user_replace_document_submission_file",
+      "status": 401,
+      "durationMs": 121
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT terminal replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 401,
+      "durationMs": 126
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 116
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT optimistic replacement RPC denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 117
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+      "method": "PATCH",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Custom Admin without organization JWT",
+      "step": "Custom Admin without organization JWT direct terminal content mutation denied",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner original PDF bytes preserved",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 797
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner corrected PDF download and hash",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 781
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner signing and signed download hash",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 150
+    },
+    {
+      "actor": "Owner",
+      "step": "Owner signing and signed download hash",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 187
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization private download denied",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 400,
+      "durationMs": 326
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization private signing denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 197
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous private download denied",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 400,
+      "durationMs": 324
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous private signing denied",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 135
+    },
+    {
+      "actor": "Admin",
+      "step": "Authorized Admin gateway signing and hash",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 770
+    },
+    {
+      "actor": "Admin",
+      "step": "Authorized Admin gateway signing and hash",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 330
+    },
+    {
+      "actor": "Zero-permission Admin",
+      "step": "Zero-permission Admin gateway denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 231
+    },
+    {
+      "actor": "Zero-permission Admin",
+      "step": "Zero-permission Admin gateway denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Zero-permission Admin",
+      "step": "Zero-permission Admin gateway denied",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 120
+    },
+    {
+      "actor": "Revoked Admin",
+      "step": "Genuine revoked Admin gateway denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 536
+    },
+    {
+      "actor": "Admin",
+      "step": "Forged parent/path gateway denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 249
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 122
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 125
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 119
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 127
+    },
+    {
+      "actor": "Privileged verification",
+      "step": "Final protected rows unchanged after all denied mutations",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 124
+    }
+  ]
+}

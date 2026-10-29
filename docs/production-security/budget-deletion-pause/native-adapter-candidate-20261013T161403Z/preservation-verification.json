@@ -1,0 +1,1294 @@
+{
+  "status": "PASS_LOCAL_PRESERVATION",
+  "recordedAt": "2026-10-13T16:17:16.500Z",
+  "baseCandidate": {
+    "path": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z",
+    "bundleSha256": "5667c2cf30ce651aa47f55a9703f9b801b5688c6676e4b743a68b4b8be24ed5b",
+    "manifestSha256": "cc7345fabf63262c082bc332ec7ee526d8cb9c9f2d9c6a8a0abd841c7fc16b11",
+    "inventorySha256": "82520ef38e6f966cb611809f655112f0254ff66749daeb7976da77701061a1cb",
+    "saved77TapSha256": "dc10a967e13a7ac0bd8bba3f9e4ecf823f04d58d9c206734a7c75201e04d3905",
+    "independentlyReproduced77TapSha256": "5284e17b73fb7b3117e594c1dd63031b1f1a4a00636c5e8c2ef5e07b76fd5391",
+    "historicalTestsRerun": false
+  },
+  "review": {
+    "file": "docs/production-security/budget-deletion-pause/independent-remediation-review-20261013T153814Z.md",
+    "bytes": 39977,
+    "sha256": "3d9202482bae001c13a45b24db3a7f3524b9d8ed664bf8f3ee9410e83180cc66"
+  },
+  "unsuccessfulRevision": {
+    "path": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z",
+    "bundleSha256": "e9441c48881962782fbc28f223a2d23e4d84bc2fb33b7ec67b2675ffe7d49c18",
+    "manifestSha256": "d2b0263d0895a0871e1fdab224a29b48830407aeb8ad034cc3e144f0df7416dc",
+    "inventorySha256": "57fb9f313835bc578b7aeed8bd71e9e7e0fe23eeb788eacfe0f1ba556d6ea1d2",
+    "result": "102/103",
+    "rerun": false
+  },
+  "sql": {
+    "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+    "bytes": 11945,
+    "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+  },
+  "driver": {
+    "files": 138,
+    "sha256": "08b98ef8f7b3bba88c947bebededda974e18940645a9f2b61f2de7a050dfd736"
+  },
+  "unchangedControls": [
+    {
+      "name": "driver binding",
+      "sha256": "e2bfe4c666e350302848a8e4dee14029b51161b76e18e2191823b95228d5205e",
+      "unchanged": true
+    },
+    {
+      "name": "receipt and success gates",
+      "sha256": "a1195a1cf4cd0611827c22e538dba3d9cf9984551b3ed22eb2dfb475e18a6534",
+      "unchanged": true
+    },
+    {
+      "name": "reconciliation and UTC",
+      "sha256": "4133dfeb2fff0f1ca87137ff3fe13c6e595ed31ac45d95fe84b252638939580c",
+      "unchanged": true
+    },
+    {
+      "name": "TLS and environment",
+      "sha256": "0248f7cd56813bb5ae95a00dce113649810ed56c9ce54d0cdb3fb602a9eb916c",
+      "unchanged": true
+    }
+  ],
+  "files": [
+    {
+      "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/budget_deletion_pause_production.sql",
+      "bytes": 11945,
+      "sha256": "a9a49410d0a034191bd65bba2109b5c93dfd63eb15f8101edf5b8fb83eb44c8a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/post-install-readonly.sql",
+      "bytes": 5929,
+      "sha256": "5f226308872e2e613b07a93a9c6fdebfb52392532dafd3b4d84987099f621465"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/20261012T165000Z/pre-install-readonly.sql",
+      "bytes": 5927,
+      "sha256": "0feb7b7510621ec3c06e2ee12e751bd1982ef9d5070d5a3be70aceaecba66384"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/20261013T023224Z/frontend-tests.log",
+      "bytes": 3441,
+      "sha256": "8d81fa82741f3727b71cdfb82da23a23b26bb9c524e1857c666e731fbbb273f0"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/20261013T023224Z/sql-tests.tap",
+      "bytes": 5995,
+      "sha256": "430bac73f2b0bf85b389b8f4fafb494c665ee4460affa81c248b7f3b23980383"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/independent-candidate-review-20261013T142224Z.md",
+      "bytes": 12995,
+      "sha256": "524a140377d4d825a959369e1d6b33ca378c37a56bc3ca1e2ea3f6d2d94d283a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/independent-remediation-review-20261013T153814Z.md",
+      "bytes": 39977,
+      "sha256": "3d9202482bae001c13a45b24db3a7f3524b9d8ed664bf8f3ee9410e83180cc66"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/authorization-draft.json",
+      "bytes": 769,
+      "sha256": "f52615c773b372f63ff14f92f5a0c8e75ad274bb74af96cb63576557057cffdd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/budget-runner-core.mjs",
+      "bytes": 30610,
+      "sha256": "fdd38e3a38b173760017ef666e3d03efe6d2c72a9467c682aceafd4a8cc6370c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/execution-receipt.template.json",
+      "bytes": 1148,
+      "sha256": "7cfad471ece6a967d047177dcda3c52cfebea3c6e849b4d44f774af6695ae1cd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/focused-tests.tap",
+      "bytes": 7935,
+      "sha256": "32ab7732158a315d88b13300a7e069050d3cf02875cabb57fc564c64fa713251"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/native-budget-pause-runner.mjs",
+      "bytes": 30498,
+      "sha256": "b67262d51dafc9e3f09ff056d760ef0901b2f0f43356684b6d62023e869cf9af"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/native-budget-pause.test.mjs",
+      "bytes": 38717,
+      "sha256": "f7e997e7667188341add9697a47aafa18a2bfda67b4ec173e5556d621deb5906"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/offline-review.json",
+      "bytes": 540,
+      "sha256": "7489b230998d93f50de6af4d1d4681a4bb53fb9c45fa4c794926bc23ced63f81"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/operator-procedure.md",
+      "bytes": 5089,
+      "sha256": "136774239909cf563a5bf7d99f7821e2298afd5ef597f1e3170d51896da2dbb2"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/read-only-preflight-authorization-draft.md",
+      "bytes": 2894,
+      "sha256": "d5618f016aa6a39c88332c990dbbcf27bae87431957716cd0ab8a31bb1758587"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/readiness-report.md",
+      "bytes": 5739,
+      "sha256": "a8d69248805281297d0deaa637a961cdc058f4af33117c14debc6b09b1b5e844"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/corrected-artifacts/reviewed-inputs.json",
+      "bytes": 28971,
+      "sha256": "8e59054cdbea2497decfd0a47582960129db21cb0ffd0757e8865f5d0e89f7b8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/final-artifact-manifest.json",
+      "bytes": 2588,
+      "sha256": "e8a2393fa994f262db19d3e87417c0b7146181a3c608a27d52b0a8964ce74b7f"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/focused-tests-before-proof-history.tap",
+      "bytes": 7932,
+      "sha256": "32cfa19b6192e77ee626ac956aac841e6f07c16e644898bf98f70341c35f09f2"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/focused-tests-final.tap",
+      "bytes": 7935,
+      "sha256": "32ab7732158a315d88b13300a7e069050d3cf02875cabb57fc564c64fa713251"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/focused-tests-initial.tap",
+      "bytes": 9456,
+      "sha256": "351e411ae12f7678f3c3d8596f69795623d1e231dca387a4f9684d5928024d5a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/focused-tests-second.tap",
+      "bytes": 10017,
+      "sha256": "d7a44b9900ec361f9e2374cd1e7d7a44da3493dcf24b1f1c20a5ba006d9198cd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/offline-review-final.json",
+      "bytes": 540,
+      "sha256": "7489b230998d93f50de6af4d1d4681a4bb53fb9c45fa4c794926bc23ced63f81"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/old-cli-failure.json",
+      "bytes": 232,
+      "sha256": "beab7c350a7a47e79b9526ed718af6041011c0bfed5341b8f459341d4f435b5f"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/operation-acl.diff",
+      "bytes": 6828,
+      "sha256": "b2067b56bed27cca066ca864a8bc079d94e37860f1691664fa4109feb547cf80"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/operator-state-after.json",
+      "bytes": 573,
+      "sha256": "d39f410abbe9b5ac702a63c9da9a7346e8f4cbf2c509451cdb8e1a0ee6cb9e9b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/operator-state-before.json",
+      "bytes": 573,
+      "sha256": "d39f410abbe9b5ac702a63c9da9a7346e8f4cbf2c509451cdb8e1a0ee6cb9e9b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/preservation-result.json",
+      "bytes": 470,
+      "sha256": "e4b3bc9f33cb7a633f62c59baf3b5cac560ed794bc1c1eafaea27eb5023ae2e9"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/authorization-draft.json",
+      "bytes": 769,
+      "sha256": "5a2bf21e1a27dbd7cb58e9d1d465a2652e66614985c03f9cf2c6d45e0a91a194"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/budget-runner-core.mjs",
+      "bytes": 30610,
+      "sha256": "fdd38e3a38b173760017ef666e3d03efe6d2c72a9467c682aceafd4a8cc6370c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/execution-receipt.template.json",
+      "bytes": 1148,
+      "sha256": "b1488574575e838031fb4e8c335163d9aee3610e1603329980bcc5af10f5fb49"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/focused-tests.tap",
+      "bytes": 5316,
+      "sha256": "2411b0f54a92df28bd99a07289d9c917546419488c7a214ae1daa8489478039c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/native-budget-pause-runner.mjs",
+      "bytes": 30498,
+      "sha256": "b67262d51dafc9e3f09ff056d760ef0901b2f0f43356684b6d62023e869cf9af"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/native-budget-pause.test.mjs",
+      "bytes": 26964,
+      "sha256": "0c12b697dac10dc07c3da40917dfb9c6c1f789d191be5dd0e3a7958e4b90b9ec"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/offline-review.json",
+      "bytes": 540,
+      "sha256": "fe0754793a3a3c611cfda5e172b1192348ed61761ef9c963583efb0be8cf555f"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/operation-acl.ps1",
+      "bytes": 11538,
+      "sha256": "46364ee8294b7e1fa013c6602ca4f1c855c9b7aa8c663e9f35178ea8e43e0e6c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/operator-procedure.md",
+      "bytes": 8232,
+      "sha256": "711fe1d13075c0192e39ec72390b8786d6c0a578213e1ccf7350f0e412ade539"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/read-only-preflight-blocked-20261013T0754Z.md",
+      "bytes": 3671,
+      "sha256": "11876c67bdb391e9c9b8daf0ee0bdc5b402a1c2b0b8aab61c30b1b43df4910bb"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/readiness-report.md",
+      "bytes": 5912,
+      "sha256": "d5e7fa6ae4b5693c9aa3e0533854828a20b3e74707c95611ce0c1e95b56d9c25"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/acl-correction-20261013T080046Z/prior-artifacts/reviewed-inputs.json",
+      "bytes": 28971,
+      "sha256": "cdd186cc57911774f8f1a67d7a4cdd78c928b761c9dacbec041841bf38ec32eb"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/authorization-draft.json",
+      "bytes": 769,
+      "sha256": "f52615c773b372f63ff14f92f5a0c8e75ad274bb74af96cb63576557057cffdd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-identity-readonly.sql",
+      "bytes": 2646,
+      "sha256": "c36f888e263ee0f14676416eca0ce586527dbd2ff580422cf52795161ab9f2e3"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-protected-data-readonly.sql",
+      "bytes": 13902,
+      "sha256": "459a48ea2fdaf0393063f3fe796b4a0302bf0f440485f82d3dedaae1c5e07c34"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-runner-core.mjs",
+      "bytes": 37676,
+      "sha256": "ade7a626bca8119d6b3a37b43e5888b7a43024002509088bce14b07c8fd6f2e7"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/execution-receipt.template.json",
+      "bytes": 1148,
+      "sha256": "7cfad471ece6a967d047177dcda3c52cfebea3c6e849b4d44f774af6695ae1cd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/focused-tests.tap",
+      "bytes": 9755,
+      "sha256": "5e60b1329e361cb626be67110489992bf80f954d2c346b1b6cb4bcb55c020f89"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/authorization-proposal.md",
+      "bytes": 7248,
+      "sha256": "619b1b360383860c8d35b7374923587a21de2b6a0b757d954cca8ca7f541d542"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/capture-state-metadata.ps1",
+      "bytes": 2178,
+      "sha256": "b3c6f97571f1d4271df3e20c84119f4fc1c540b5d4ed2b8f219fd9122e8b811c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/final-review.md",
+      "bytes": 14420,
+      "sha256": "020fc6cdaf1538b3a6b0279ddcb99a1803e4478116c9ca3392a710d2558646fa"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/finalize-review.mjs",
+      "bytes": 5795,
+      "sha256": "7f4a77009be23c79466aafeda2f78b9010519915d60b16a77de8a4dcc1532869"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/git-status-after.txt",
+      "bytes": 7255,
+      "sha256": "390f314f3cbf13c94df53926716ded9b8cadc3c3070b9a949b36065fe4830668"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/git-status-before.txt",
+      "bytes": 7255,
+      "sha256": "390f314f3cbf13c94df53926716ded9b8cadc3c3070b9a949b36065fe4830668"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/independent-artifact-review.json",
+      "bytes": 6094,
+      "sha256": "20d02236d5b0314875866600e8106cfaa79a8b1f90abf009eb2d10a7d46f8e93"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/operator-checklist.md",
+      "bytes": 12736,
+      "sha256": "7364150635f8de11c5df2560cd8fdcf2920b3ef435fa57146ce6fe615ca896b0"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/operator-state-after.json",
+      "bytes": 2614,
+      "sha256": "06fe4e1ba67c7825b5c85c12dde9faaf7b05f881918e019d28ec2d39cacc4050"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/operator-state-before.json",
+      "bytes": 2614,
+      "sha256": "736da10460017107226ed3907c5039eca3dd6a65bbe7aa6b5677a04cf8f2886f"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/preservation-verification.json",
+      "bytes": 1748,
+      "sha256": "52dca963626bb283ccf262f235e3244b06df9e23edeae6e4d341efd9ee3b8efe"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/reconciliation-label-review.json",
+      "bytes": 948,
+      "sha256": "03eec330cdb404e97bd15f2bcebc0ed48783a4d6e42be956a79bfe7166921b27"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/reproduce-reconciliation-label.mjs",
+      "bytes": 2243,
+      "sha256": "f500bfc6978a36dda6c6d933bb5dcaed61cdebf0d506486b2a1099721c0ed1c1"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/review-artifact-manifest.json",
+      "bytes": 3201,
+      "sha256": "9bf643164fa30a060556c501f3d1dd84c5edb5500e6d2870203c6f08aca43a58"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/installation-readiness-20261013T112300Z/verify-reviewed-evidence.mjs",
+      "bytes": 6692,
+      "sha256": "328d4bcadd7d17ebe5f92cb374e4b0ff0802717ff868077b6220b55759be20ec"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/actual-input-tests.tap",
+      "bytes": 3941,
+      "sha256": "b504a87d051978cb41518b336816a3bb0e74368b4135bdb48875d23d42156596"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/capture-operator-metadata.ps1",
+      "bytes": 2189,
+      "sha256": "597812821dee5ea68d2997bb1763b45071b83a06a89523dc83c9c40328eebc8d"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/core.patch",
+      "bytes": 10301,
+      "sha256": "f0bcdf8e4f688cbad102243ad280483d23e0c747c2f4c4073374d8fbaf70986e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/authorization-draft.json",
+      "bytes": 769,
+      "sha256": "f52615c773b372f63ff14f92f5a0c8e75ad274bb74af96cb63576557057cffdd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/budget-identity-readonly.sql",
+      "bytes": 2646,
+      "sha256": "c36f888e263ee0f14676416eca0ce586527dbd2ff580422cf52795161ab9f2e3"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/budget-protected-data-readonly.sql",
+      "bytes": 13902,
+      "sha256": "459a48ea2fdaf0393063f3fe796b4a0302bf0f440485f82d3dedaae1c5e07c34"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/budget-runner-core.mjs",
+      "bytes": 37676,
+      "sha256": "ade7a626bca8119d6b3a37b43e5888b7a43024002509088bce14b07c8fd6f2e7"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/execution-receipt.template.json",
+      "bytes": 1148,
+      "sha256": "7cfad471ece6a967d047177dcda3c52cfebea3c6e849b4d44f774af6695ae1cd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/focused-tests.tap",
+      "bytes": 9755,
+      "sha256": "5e60b1329e361cb626be67110489992bf80f954d2c346b1b6cb4bcb55c020f89"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/native-budget-pause-runner.mjs",
+      "bytes": 30625,
+      "sha256": "84a7ec310e6363b77f2d03b1ed212a418cee2649936620e9e196135e9b7f9b98"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/native-budget-pause.test.mjs",
+      "bytes": 49743,
+      "sha256": "3f5b8bed2ba9b5b8a25fcfd9705c17ddf4607678651740996a0e9b3cd6ea6dc6"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/offline-review.json",
+      "bytes": 1817,
+      "sha256": "16dd8462ba10032cb4a19dd378aa2d9ed0445820b6b44ff3dc6ad3edcd169bd8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/operator-procedure.md",
+      "bytes": 5305,
+      "sha256": "55ccef1cf5d27030352e661e694c03ceb93ec4485c6cc22e65547ffdbaf71aac"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/read-only-preflight-authorization-draft.md",
+      "bytes": 3019,
+      "sha256": "dea4f9044180cb2ad983829bd81dbb2519de62bbda925203e6e7db4e1948f441"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/readiness-report.md",
+      "bytes": 2055,
+      "sha256": "2ba141290590bb9bdcf2f45e95c2737980961411904d755aacee1c45ee855328"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-artifacts/reviewed-inputs.json",
+      "bytes": 29248,
+      "sha256": "562f0b078c3ee29f17050e465ff3c1a87f9be71fac05642cd3e9e3863f19a3bb"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/corrected-identities.json",
+      "bytes": 3397,
+      "sha256": "e86a8920898b35d9d1f427a4d0cd47280acec61a81238aef821ec0fc19c6499c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/diff-checks-final.json",
+      "bytes": 4038383,
+      "sha256": "78fb316190b29a8ac30522b1ccd64329bb409e54d376808cdb7540345ba0d822"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/diff-checks-verified.json",
+      "bytes": 769,
+      "sha256": "6ef8493b8ea57460000b0de386ade26f59b4d3fbec40cfdfcedd54827fe52ca1"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/diff-checks.json",
+      "bytes": 7617,
+      "sha256": "ca6f50a8cc7c1722c03f07ecc408d5c2a0d4567ff86bc630b0e95c520f46e81c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/execution-report.md",
+      "bytes": 11555,
+      "sha256": "c7d3ba187a4df2511935f7469f44c9415124a8a435ba60854702ae769069f18b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/final-artifact-manifest.json",
+      "bytes": 9761,
+      "sha256": "d7ddba2a3065458350ab090245b0e3b16a65d7e41e58f4af6a4b940504de0050"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/finalize-local-evidence.mjs",
+      "bytes": 5493,
+      "sha256": "7bd3fbfeaa6b52e681bea7605c4c9c49dce96362018816d3733e310994b19caf"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/focused-tests-final.tap",
+      "bytes": 9755,
+      "sha256": "5e60b1329e361cb626be67110489992bf80f954d2c346b1b6cb4bcb55c020f89"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/git-status-after.txt",
+      "bytes": 7255,
+      "sha256": "390f314f3cbf13c94df53926716ded9b8cadc3c3070b9a949b36065fe4830668"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/git-status-before.txt",
+      "bytes": 7255,
+      "sha256": "390f314f3cbf13c94df53926716ded9b8cadc3c3070b9a949b36065fe4830668"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/initial-test-artifacts/corrected-identities.json",
+      "bytes": 3397,
+      "sha256": "d40f561c3034a88722c0a23a50107c3505ec5388452d5d5e3bce4ed82b6c3591"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/initial-test-artifacts/native-budget-pause.test.mjs",
+      "bytes": 49743,
+      "sha256": "64487e4cc2abeec6cf615eaa3dcc1a0d285aeec44550cc9f478b1e27725c76c8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/initial-test-artifacts/reviewed-inputs.json",
+      "bytes": 29248,
+      "sha256": "4aa922b8ca8e570e25c4e8c7f1e3da65575516cb54e129f9ff78f5d041a983ad"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/inventory.patch",
+      "bytes": 1001,
+      "sha256": "7b563b4f517c14e6533276f503401188ab389ed25a7f3164f31d718a39c94a57"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/manifest.patch",
+      "bytes": 2796,
+      "sha256": "648639d61307a967803977e8a3289c3a2ae7bf368d80cd35cb3a386b594b1354"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/offline-review-final.json",
+      "bytes": 1817,
+      "sha256": "16dd8462ba10032cb4a19dd378aa2d9ed0445820b6b44ff3dc6ad3edcd169bd8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/operator-acl-verification.json",
+      "bytes": 660,
+      "sha256": "f65d305dd410c1936cdbb1083fcdc7edd83e29d071116dd04d59dda5e0502c95"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/operator-metadata-after.json",
+      "bytes": 1744,
+      "sha256": "85ddc3ba98eb9f227e0a94a167d299b5050a0fe093a9e2a4cbc1c273a7e77b37"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/operator-metadata-before.json",
+      "bytes": 1744,
+      "sha256": "a15886fa44258e6e72ae2ef7270f071d3a994cc4cd307d2945749ee6432ca601"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/package-corrected-artifacts.mjs",
+      "bytes": 2341,
+      "sha256": "a795fb9a3791b3b61f28ab7236159b6cd17156269b337ee836d8afeaac1c3ca5"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/preservation-and-validation.json",
+      "bytes": 2123,
+      "sha256": "3b986955e526a1d8501466a4879d68ce67d386d6a615e878152f9b02bacffb13"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifact-manifest.json",
+      "bytes": 2340,
+      "sha256": "d9af7886ad2bf50ee1210a581c7a794599774c1c87f988088a66e6189ee22b3e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/authorization-draft.json",
+      "bytes": 769,
+      "sha256": "f52615c773b372f63ff14f92f5a0c8e75ad274bb74af96cb63576557057cffdd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/budget-identity-readonly.sql",
+      "bytes": 2646,
+      "sha256": "c36f888e263ee0f14676416eca0ce586527dbd2ff580422cf52795161ab9f2e3"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/budget-runner-core.mjs",
+      "bytes": 30610,
+      "sha256": "fdd38e3a38b173760017ef666e3d03efe6d2c72a9467c682aceafd4a8cc6370c"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/execution-receipt.template.json",
+      "bytes": 1148,
+      "sha256": "7cfad471ece6a967d047177dcda3c52cfebea3c6e849b4d44f774af6695ae1cd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/focused-tests.tap",
+      "bytes": 7935,
+      "sha256": "32ab7732158a315d88b13300a7e069050d3cf02875cabb57fc564c64fa713251"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/native-budget-pause-runner.mjs",
+      "bytes": 30498,
+      "sha256": "b67262d51dafc9e3f09ff056d760ef0901b2f0f43356684b6d62023e869cf9af"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/native-budget-pause.test.mjs",
+      "bytes": 38717,
+      "sha256": "f7e997e7667188341add9697a47aafa18a2bfda67b4ec173e5556d621deb5906"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/offline-review.json",
+      "bytes": 540,
+      "sha256": "7489b230998d93f50de6af4d1d4681a4bb53fb9c45fa4c794926bc23ced63f81"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/operator-procedure.md",
+      "bytes": 5089,
+      "sha256": "136774239909cf563a5bf7d99f7821e2298afd5ef597f1e3170d51896da2dbb2"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/read-only-preflight-authorization-draft.md",
+      "bytes": 2894,
+      "sha256": "d5618f016aa6a39c88332c990dbbcf27bae87431957716cd0ab8a31bb1758587"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/readiness-report.md",
+      "bytes": 5739,
+      "sha256": "a8d69248805281297d0deaa637a961cdc058f4af33117c14debc6b09b1b5e844"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/prior-artifacts/reviewed-inputs.json",
+      "bytes": 28971,
+      "sha256": "8e59054cdbea2497decfd0a47582960129db21cb0ffd0757e8865f5d0e89f7b8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/repin-reviewed-inputs.mjs",
+      "bytes": 3594,
+      "sha256": "6da11d275fa413d6aa1a0c9581ef81329e76653928e4745c9b2fcb42ae9a25db"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/runner.patch",
+      "bytes": 11323,
+      "sha256": "b5626e75f934a4f9d877f44a08cf532d75978bf7cca7ea9c65dbccfb82e14611"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/syntax-checks.json",
+      "bytes": 508,
+      "sha256": "97c2a0a098a4e32d82833472edd3b7ac96cc2a8c357a682504b912fcde657b73"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/tests.patch",
+      "bytes": 16153,
+      "sha256": "f4c2650515aa3fc99403f528dc015fe0d0b903674cbbc3d07b70613ba2df6368"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/inventory-contract-correction-20261013T091309Z/worktree-status-comparison.json",
+      "bytes": 201,
+      "sha256": "70e4026aba07957ca5cea7c3257d22b58b24dd8f605c3986debf3c9dc160634b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-budget-pause-runner.mjs",
+      "bytes": 30625,
+      "sha256": "84a7ec310e6363b77f2d03b1ed212a418cee2649936620e9e196135e9b7f9b98"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-budget-pause.test.mjs",
+      "bytes": 49743,
+      "sha256": "3f5b8bed2ba9b5b8a25fcfd9705c17ddf4607678651740996a0e9b3cd6ea6dc6"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/archive-acl-verification.json",
+      "bytes": 90,
+      "sha256": "6008a57a30f42715fccfd88b85db91053f56f31bdd0dedde10991eb958e7a21d"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/ca-trust-comparison.json",
+      "bytes": 50,
+      "sha256": "1eb86c742a376b8a1566716d9640c3f52c6d0f6fe74e3710ac7eba8bc1f7bcf5"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/environment-validation.json",
+      "bytes": 268,
+      "sha256": "c6e888c5fee297c95c691b0ea8c6d819c4c6dc03baf0b747b87aeac76e60444e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/execution-report.md",
+      "bytes": 3327,
+      "sha256": "185ef0b774ad3894d184fcd8cd87eefae5fdb32f228acbb026d779b03f677350"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/local-evidence-manifest.json",
+      "bytes": 1503,
+      "sha256": "229a5be75807b6d5eba12def7db41e1f173b4bd5db386db2ccfe9b678c32d5ea"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/local-proof-after-rename.json",
+      "bytes": 353,
+      "sha256": "7bd70b0b9685eea20b1c86b84c51e6b750b192e037ce01c22d2642996e99f60b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/local-proof-before-rename.json",
+      "bytes": 353,
+      "sha256": "e941338d4d9466b546870f6800425f6d5b384ab9cf5952d21715c686175ca114"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/ntfs-last-access-policy.txt",
+      "bytes": 73,
+      "sha256": "00cb3ca180c249427014898ea1f3c5751525381323843bca7bd04f9148d27a45"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/offline-review.json",
+      "bytes": 540,
+      "sha256": "7489b230998d93f50de6af4d1d4681a4bb53fb9c45fa4c794926bc23ced63f81"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T083651Z/read-only-stop-receipt.json",
+      "bytes": 1532,
+      "sha256": "b6fa66cc3d87602368e8d7623aa6c46707dc5d89f8dc7415a87a977f3d95fc47"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/archive-verification.json",
+      "bytes": 863,
+      "sha256": "f3c037cb9273209ca3140ba01c16a4a1b8cfb61502e042e2344fe54ecfcaabc9"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/ca-trust-comparison.json",
+      "bytes": 50,
+      "sha256": "1eb86c742a376b8a1566716d9640c3f52c6d0f6fe74e3710ac7eba8bc1f7bcf5"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/environment-validation.json",
+      "bytes": 268,
+      "sha256": "c6e888c5fee297c95c691b0ea8c6d819c4c6dc03baf0b747b87aeac76e60444e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/execution-report.md",
+      "bytes": 4757,
+      "sha256": "0b2c07d2ffed738d10f19f57f2ccd218da5060bc7632e1d5829ac3a69757b2d9"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/final-state-verification.json",
+      "bytes": 996,
+      "sha256": "ad29856ec0cc1c33a2e15012353ef6fe4c58d12f82abbfad0523a57335b34e73"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/fresh-proof-verification.json",
+      "bytes": 353,
+      "sha256": "3997556b5d0a81b4816228f858936dcbe43ba90d4038ec169f7004b815f2cfbe"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/local-evidence-manifest.json",
+      "bytes": 1833,
+      "sha256": "3dc1a6d9cf4be4d7625da79e06cb23347c5bb54f9013b53143a3d78afb33821d"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/native-preflight-output.json",
+      "bytes": 219,
+      "sha256": "dac65150d5f258c443573be6f4604b137da5c8d2d38690238c4702d03a6b6019"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/offline-review.json",
+      "bytes": 540,
+      "sha256": "7489b230998d93f50de6af4d1d4681a4bb53fb9c45fa4c794926bc23ced63f81"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/preflight-invocation.json",
+      "bytes": 375,
+      "sha256": "0d69170b4c6cb3d36a967c896a50e6366f8953bcd7d8171e8ac65802b6360a73"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/read-only-execution-receipt.json",
+      "bytes": 1814,
+      "sha256": "6eec2010a56f5a992f93c77d4e8bb57cf01329e91a5c202848ee596432165c22"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T084554Z/verifier-contract-review.json",
+      "bytes": 1552,
+      "sha256": "97075420f94e5cdf22633dcf0ab3cb714a3aa46c7596c6fa74b2af9f1339e42a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/archival-scope-readonly-verification.json",
+      "bytes": 944,
+      "sha256": "8d32509bc591aa939be212eedbe69f25cd2beaa89ad80647fb1ec17ddb72f857"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/archive-verification.json",
+      "bytes": 1818,
+      "sha256": "b3254d09d21df3b90f2a1301ac9d43afdb7fd95017f9b746f04e9cdf3928afcf"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/ca-and-reference-verification.json",
+      "bytes": 947,
+      "sha256": "2c9a1eafae4c85973ebf497b5330cab07e60f4b82630469378aa323872676ec9"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/compare-saved-preflight.mjs",
+      "bytes": 7753,
+      "sha256": "8da658fdecd0624f2a7f4cda086cfdcbca77faf9fed4626b21b8d19c58eb1d92"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/control-plane-evidence.json",
+      "bytes": 291,
+      "sha256": "6e6fe3032121474e7941bd907cf8b66405739dac3082d31e83a4f9ad058a5587"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/create-fresh-proof.ps1",
+      "bytes": 3557,
+      "sha256": "ea36e28172e5438140a303668e8e9bc9f26495ecccb77e5697bb88855ec66964"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/environment-validation.json",
+      "bytes": 269,
+      "sha256": "d65446fd653a960a563c925f0dc5486b7a44d04070fadbbf310063bfd4e370b8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/execution-report.md",
+      "bytes": 9367,
+      "sha256": "9b601eaf7bd414ed04afeb18e470e1907c0c637e00c45a2cdd4833f426e6e794"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/finalize-readonly-evidence.mjs",
+      "bytes": 5583,
+      "sha256": "4555c3e840eca3dc7b91d45f5cf70d860c8ba3873c824148154bd1f78ec70ed2"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/foundation-supplemental-comparison.json",
+      "bytes": 467,
+      "sha256": "814cae40a3176635066b9eae49fa219836d92e2e223105564e650343353a44c1"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/fresh-proof-verification.json",
+      "bytes": 470,
+      "sha256": "63305c16ba6832b84b089553633c3bb15a21ec97c72bcacd4f7b2c0f56155e20"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/inventory-comparison.json",
+      "bytes": 623,
+      "sha256": "bc5eaaff27daf2847b4549c7ed7fb2c99a815da9e649d2219bfee317dd848df1"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/local-evidence-manifest.json",
+      "bytes": 4612,
+      "sha256": "b966a8d10f4de0d6b1819b54e85e147190b5f321fde2bc7432c1dccc979bcc96"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/local-preconditions.json",
+      "bytes": 494,
+      "sha256": "681bcf9ec5be02cbe1860827b029c25931a535350d9a738a3fca0510224e966e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/native-preflight-evidence.json",
+      "bytes": 37159,
+      "sha256": "6e5869fcde18f45edfef0ba0a9709d4d0530204d89c6dfd548f55dc719dece81"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/native-preflight-output.json",
+      "bytes": 722,
+      "sha256": "d3bbce1236a19c82798adc9a38f0417a4c4aaa20a0ce4af2d60d6ea885e1d23e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/offline-review.json",
+      "bytes": 1817,
+      "sha256": "16dd8462ba10032cb4a19dd378aa2d9ed0445820b6b44ff3dc6ad3edcd169bd8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/operator-state-after.json",
+      "bytes": 3395,
+      "sha256": "911b5372f3ca333be5929d25ed4d84d28bc026e53ee9876119d5a9fa5da953e8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/operator-state-before.json",
+      "bytes": 2219,
+      "sha256": "e48305991894fc528459517a9d6f9dc27327861bb457d238c42cafa1a92d4a69"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/preflight-completion.json",
+      "bytes": 313,
+      "sha256": "770f9e53e3686b80baf0e2bea3d6716e7f5dd35ba202dffa5d218134c0a0e867"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/preflight-invocation.json",
+      "bytes": 349,
+      "sha256": "c61ebbdb1e17e8972846fa4be55a319730a9813bbd7b9e4ca7c943f816efa3e7"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/proof-freshness-independent.json",
+      "bytes": 836,
+      "sha256": "2fd1ea36c1e8dd5195d58526b8c3a71c75d12351c494f6384b2a445d6a71a25b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/read-only-execution-receipt.json",
+      "bytes": 4319,
+      "sha256": "04111e729992519fe3751a7b95ede8caed6fca1021faec350418ed06d5fa821e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/read-only-verification-result.json",
+      "bytes": 2332,
+      "sha256": "5078018039f51923748eb3522e7b09ec2c502a2f509b2f7d7fc7311e5ca96508"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/verify-and-archive-proofs.ps1",
+      "bytes": 6187,
+      "sha256": "5e9ae01a310a08758de944cc16ee0ccd74b8787c65a97fb2a19e201f4d368196"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/verify-ca-and-reference.mjs",
+      "bytes": 3352,
+      "sha256": "ddc5dee05a9067da39483b171e3174737ab2c651ab2a3b4db621321829f5d6d7"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-readonly-20261013T103131Z/wrapper-timestamp-diagnosis.json",
+      "bytes": 542,
+      "sha256": "2f1de87bc6cb242af5d080906c760beb5c19a4d536f95d07daf6ad5b9801b3ef"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/offline-review.json",
+      "bytes": 1817,
+      "sha256": "16dd8462ba10032cb4a19dd378aa2d9ed0445820b6b44ff3dc6ad3edcd169bd8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/operator-procedure.md",
+      "bytes": 5305,
+      "sha256": "55ccef1cf5d27030352e661e694c03ceb93ec4485c6cc22e65547ffdbaf71aac"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/read-only-preflight-authorization-draft.md",
+      "bytes": 3019,
+      "sha256": "dea4f9044180cb2ad983829bd81dbb2519de62bbda925203e6e7db4e1948f441"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/read-only-preflight-blocked-20261013T0754Z.md",
+      "bytes": 3671,
+      "sha256": "11876c67bdb391e9c9b8daf0ee0bdc5b402a1c2b0b8aab61c30b1b43df4910bb"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/readiness-report.md",
+      "bytes": 2055,
+      "sha256": "2ba141290590bb9bdcf2f45e95c2737980961411904d755aacee1c45ee855328"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/reviewed-inputs.json",
+      "bytes": 29248,
+      "sha256": "562f0b078c3ee29f17050e465ff3c1a87f9be71fac05642cd3e9e3863f19a3bb"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/archive-stale-proof.ps1",
+      "bytes": 5112,
+      "sha256": "da1fded81ec4c15d0e88b03deb2064bfd627f2c8a57064a2405859740e5299c1"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/archive-verification.json",
+      "bytes": 3165,
+      "sha256": "f765a3de766f9095b6b599731a90b5868d3faeccb4512f3129005ecfb68f6583"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/compare-fresh-preflight.mjs",
+      "bytes": 7644,
+      "sha256": "20a8fe4867fd06fb5386be470b74606f0ce94b738e826ce292ffcd363cbab1a4"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/control-plane-discrepancy-review.json",
+      "bytes": 2635,
+      "sha256": "0f924f6a2e356f658911a4e83d8b35be06ad9675f96164b76ddc3be3adde62fd"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/control-plane-evidence.json",
+      "bytes": 483,
+      "sha256": "6f2632c9c69855779bbbfb93be15043c8fc220ae729353754b39c4a3144ca569"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/create-fresh-proof.mjs",
+      "bytes": 3181,
+      "sha256": "618e2653b3a70ccaefb839b3ce0f1f13faf5e2443606951ac6acdd7f02ea9d57"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/fresh-proof-verification.json",
+      "bytes": 514,
+      "sha256": "0d566b244a9b458c25583301fdeb2ecef4c6b2fe9bbb91a88f13668f544808dc"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/native-preflight-evidence.json",
+      "bytes": 37158,
+      "sha256": "9332dd5567c39d61169779107e859186debc43af8dd9833f18ca606750769456"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/native-preflight-output.json",
+      "bytes": 721,
+      "sha256": "bc353d704fda08d63ab7faca55718932c45b2c6a71e36f10f08e70d3c3612db5"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/obtain-control-plane-evidence.mjs",
+      "bytes": 2139,
+      "sha256": "2a4a5a4582501633a5930041e6137872b1a49ab9ff5896cee94c42f70021d53a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/offline-verification.json",
+      "bytes": 1247,
+      "sha256": "01984b620d01cb16dedf26eca302fa965661dc068910984738ff6db5d092b5a6"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/operator-confirmation.json",
+      "bytes": 770,
+      "sha256": "5f0f7c988330b99f60ed81895b24fe21569063c23d541329139eeeaf5993d855"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/operator-state-before.json",
+      "bytes": 4646,
+      "sha256": "8ab351729b29ff94482f7e504415b0d3de644ac97592035eb5c0144098735c9e"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/preflight-completion.json",
+      "bytes": 407,
+      "sha256": "b077f1088744cd6d2d1ad599dc0e0dfaf9838833d0d3da6067f9cb2662eb6c64"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/preflight-invocation.json",
+      "bytes": 372,
+      "sha256": "b337cfac811a7766394562f0ca86c1127114f20f42a23b5d40a19c82bf5e9776"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/read-only-verification-result.json",
+      "bytes": 2364,
+      "sha256": "ad7eb459d9ecf3daaafdea2f220338fc103212028827408cb0dfd38914473419"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/run-readonly-preflight.mjs",
+      "bytes": 2644,
+      "sha256": "c7942d1df904a58a6d79cb1cbc338876a1f14d26eb371519ace28fe884262e1a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/verify-offline.mjs",
+      "bytes": 7049,
+      "sha256": "9b9004ee7fa8b9576fb67ce95c2cc64014c3e25e59e2e40a023f71bc876530b8"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/supervised-prep-20261013T123000Z/verify-operator-state.ps1",
+      "bytes": 5050,
+      "sha256": "07a32932f5c37d9ed237472a44c3b3711d4f5bb901f429bed25be0a6e16aafbc"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/budget-runner-core.mjs",
+      "bytes": 46357,
+      "sha256": "6181be1317389ba5dd4ff801e0ffcfd0b85ffad4bae4524ae35ebb2ee44e6f9b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/budget-safety-controls.test.mjs",
+      "bytes": 15120,
+      "sha256": "679284536020375873e0e6e2735cfd398ead084ef9492390b85ed4e8632f0be5"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/candidate-artifact-inventory.json",
+      "bytes": 2145,
+      "sha256": "636768c7703091a0588bf345bc466577b6808d9a3490bf8124874012c2414f6f"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/focused-tests-01.tap",
+      "bytes": 9670,
+      "sha256": "2e9a500fc6b032a946f4063f0cc3b7011adf633dcd8422cc5a9ed68f05460844"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/local-check-results-01.json",
+      "bytes": 509,
+      "sha256": "df3adc220de5601f43842ada87e7242e07466443c9e3ce8e0322af798f93b3dc"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/native-budget-pause-runner.mjs",
+      "bytes": 32972,
+      "sha256": "f0f13fff29fdee9d95ba84f9b5265c923ff917c088c743f86175a0ccc832b885"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/native-budget-pause-supervisor.mjs",
+      "bytes": 4609,
+      "sha256": "9ad5b0fb5cad52b7557f2a57289b544957283d8fab7ad4cc11190282313d19e3"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/original-preservation-verification.json",
+      "bytes": 25388,
+      "sha256": "0e19852ea3f35489df6fa46c903208e1e0f21052d662d35a790ec821dc78aee3"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/readiness-review.md",
+      "bytes": 7512,
+      "sha256": "d94ec16b154377af5f672506c6d84fa474fd690220938a7a9b71b752afbd7852"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "7099f8dce1a195aa7df8f6d279c45ba451b31ab46cd4e13114a2fea7b9bcfd1b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/security-correction.patch",
+      "bytes": 25337,
+      "sha256": "609f1e54a1711fcfad986ae43b4c706624c2197c02d4d628eebefd814a2cb206"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T133312Z/validation-summary.json",
+      "bytes": 3559,
+      "sha256": "e877ac172b43b8c91ce7e5a69600caa83d925443f3c4333535a81431d624b443"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/budget-runner-core.mjs",
+      "bytes": 51801,
+      "sha256": "4740e13bb9593c5135260f873fc7e9483d6a6135f97b0e37369b0df93d47a14a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/budget-safety-controls.test.mjs",
+      "bytes": 29481,
+      "sha256": "86d1af08b295791304029a0abca7225ecb01c3d53ff51c19bb8bf86726250d14"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/candidate-artifact-inventory.json",
+      "bytes": 1518,
+      "sha256": "1c62dab4b66004aefd0b2ab469a91db9ee3ea1d23375b09ebfc6baaaf36cb859"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/focused-tests-01.tap",
+      "bytes": 17027,
+      "sha256": "54de121c0bb47a393008e7a398803ec73d19c524e249d139bb940f2db264aae0"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/native-budget-pause-runner.mjs",
+      "bytes": 35726,
+      "sha256": "784e29decd2e692436a6a980fa31182b3523ac39188bc0510332ea29b655171a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/native-budget-pause-supervisor.mjs",
+      "bytes": 6806,
+      "sha256": "997d048b7f59debdfbc82f066e5926950ce54d1993f34b5cc10ba4c8b132809a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "24983dbdf52ca036dd648df0c0b88f962057384be07e00df8b4aa4c16f07c33b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T151801Z/validation-summary.json",
+      "bytes": 762,
+      "sha256": "3e81c3468e48d00dc31f05642e2da924683d807b9948a931987296062252fe27"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/budget-runner-core.mjs",
+      "bytes": 51801,
+      "sha256": "4740e13bb9593c5135260f873fc7e9483d6a6135f97b0e37369b0df93d47a14a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/budget-safety-controls.test.mjs",
+      "bytes": 29651,
+      "sha256": "c3f58a8cb349cb89f52ae8a275114b9b7b92d849092f5c8c3fbd136d4cada8e9"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/candidate-artifact-inventory.json",
+      "bytes": 2003,
+      "sha256": "82520ef38e6f966cb611809f655112f0254ff66749daeb7976da77701061a1cb"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/focused-tests-01.tap",
+      "bytes": 15460,
+      "sha256": "dc10a967e13a7ac0bd8bba3f9e4ecf823f04d58d9c206734a7c75201e04d3905"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/local-check-results.json",
+      "bytes": 5708,
+      "sha256": "ddc52ef327cd00dde1fccb00ca92d1eaf524b2a2ff821960fc245b3b78dbdd2a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/native-budget-pause-runner.mjs",
+      "bytes": 35726,
+      "sha256": "784e29decd2e692436a6a980fa31182b3523ac39188bc0510332ea29b655171a"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/native-budget-pause-supervisor.mjs",
+      "bytes": 6811,
+      "sha256": "234accc900f5e39f51b298994411be63a6efd833735ab5bc3d513ff652927aed"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/preservation-verification.json",
+      "bytes": 74522,
+      "sha256": "9b7bb8b5d6f8aef263d4e93403396f3d71f5e59b9029248e4f76dac60955f8ca"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/remediation-review.md",
+      "bytes": 8352,
+      "sha256": "2e55440cd35341a91baec555a24f9ed77075ef6b4b44e3e34be9a4ee1c41f58b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "cc7345fabf63262c082bc332ec7ee526d8cb9c9f2d9c6a8a0abd841c7fc16b11"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T152100Z/security-correction.patch",
+      "bytes": 63132,
+      "sha256": "81cf0c1e6187739c8e54a3bab507d821e30832af0733970ec484738557bfe7d5"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/budget-runner-core.mjs",
+      "bytes": 56813,
+      "sha256": "1a57f717e6aa0a9bf3fd6bc2115440f167760fab82b6fe690b897cade471cbe4"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/budget-safety-controls.test.mjs",
+      "bytes": 42798,
+      "sha256": "ce9b222dfd8119216f99ad4333cc17b76651efd3d5f1f9316eb42eb783988fcb"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/candidate-artifact-inventory.json",
+      "bytes": 1676,
+      "sha256": "57fb9f313835bc578b7aeed8bd71e9e7e0fe23eeb788eacfe0f1ba556d6ea1d2"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/focused-tests-01.tap",
+      "bytes": 22008,
+      "sha256": "c92e84cc4cd801fe9b8d3970073655b6ef26d02870d552a22393c5d6befc9577"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/local-check-results.json",
+      "bytes": 2477,
+      "sha256": "7ad8febc39abee7557ef4d2ffe2d94bd8f61d35d903f35ecd99141120ad0e76b"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/native-budget-pause-runner.mjs",
+      "bytes": 36455,
+      "sha256": "30ac1e54902c1b6ae44f2aa1c9111fc36457d481dbc35b242ebc4a82f172d0a6"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/native-budget-pause-supervisor.mjs",
+      "bytes": 7666,
+      "sha256": "14b725b6891294f8658403cca451efafda031a9eaaceb4e162212488a39a8d35"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/operation-acl.ps1",
+      "bytes": 14463,
+      "sha256": "4891d4c1c5a9d47ec91e01cb64c7951b6c5c3a3143f3f7ad1242820feb16f258"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/remediation-review.md",
+      "bytes": 1791,
+      "sha256": "2516df1f3f0bfa7efae331aba64bbdab548618908322d121ff7f3506e0595bad"
+    },
+    {
+      "file": "docs/production-security/budget-deletion-pause/native-adapter-candidate-20261013T160851Z/reviewed-inputs.json",
+      "bytes": 29420,
+      "sha256": "d2b0263d0895a0871e1fdab224a29b48830407aeb8ad034cc3e144f0df7416dc"
+    },
+    {
+      "file": "docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql",
+      "bytes": 13900,
+      "sha256": "ecf05439e94d078b63d7f5b4efc37f262425ed5a9ecc7904cd241efb5d4b249d"
+    },
+    {
+      "file": "docs/production-security/storage-cutover/final-readiness-20261012T160633Z/foundation-readonly.sql",
+      "bytes": 5923,
+      "sha256": "61c81752a121232734465e9cd3f4f0078d6bd1457ea4cd4d5ed981096bde4639"
+    },
+    {
+      "file": "docs/production-security/storage-cutover/native-executions/20261011T221428755Z/independent-postflight.json",
+      "bytes": 36906,
+      "sha256": "a549cf9bb3e8cd3c95d07ff71bf2d7417e9509f2d1ddcbd3e2f8572cf5c63b37"
+    },
+    {
+      "file": "docs/production-security/storage-cutover/native-runner-20261011T132539Z/runner-core.mjs",
+      "bytes": 14530,
+      "sha256": "90b0d860823507f11893312643b33c683fe9cb75f03ea19361d7b81bdd81fdae"
+    },
+    {
+      "file": "package-lock.json",
+      "bytes": 374412,
+      "sha256": "0ef6b3d79ec9ba0d6120a30237d37fccbeff3a70fc541223a24000b686b306bb"
+    },
+    {
+      "file": "scripts/security/verify-foundation-environment.mjs",
+      "bytes": 2466,
+      "sha256": "4881f45e1ff8723d38b5f64f12e05d4d77fef7afd0d625ee58d8fe4b6c13320b"
+    }
+  ]
+}

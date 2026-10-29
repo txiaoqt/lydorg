@@ -1,0 +1,224 @@
+TAP version 13
+# Subtest: reviewed artifact, exact contract and future cutover predicate preservation
+ok 1 - reviewed artifact, exact contract and future cutover predicate preservation
+  ---
+  duration_ms: 7.248
+  ...
+# Subtest: unmodified production artifact rejects a synthetic catalog before installation
+ok 2 - unmodified production artifact rejects a synthetic catalog before installation
+  ---
+  duration_ms: 2135.5173
+  ...
+# Subtest: atomic installer, unconditional role/session denial and unchanged protected rows
+    # Subtest: postgres: valid-super is paused
+    ok 1 - postgres: valid-super is paused
+      ---
+      duration_ms: 13.516
+      ...
+    # Subtest: postgres: valid-reviewer is paused
+    ok 2 - postgres: valid-reviewer is paused
+      ---
+      duration_ms: 9.1683
+      ...
+    # Subtest: postgres: valid-zero is paused
+    ok 3 - postgres: valid-zero is paused
+      ---
+      duration_ms: 9.0359
+      ...
+    # Subtest: postgres: invalid is paused
+    ok 4 - postgres: invalid is paused
+      ---
+      duration_ms: 8.712
+      ...
+    # Subtest: postgres: expired is paused
+    ok 5 - postgres: expired is paused
+      ---
+      duration_ms: 8.631
+      ...
+    # Subtest: postgres: revoked is paused
+    ok 6 - postgres: revoked is paused
+      ---
+      duration_ms: 10.9459
+      ...
+    # Subtest: postgres: inactive-admin is paused
+    ok 7 - postgres: inactive-admin is paused
+      ---
+      duration_ms: 8.2073
+      ...
+    # Subtest: postgres: null is paused
+    ok 8 - postgres: null is paused
+      ---
+      duration_ms: 9.5251
+      ...
+    # Subtest: anon: valid-super is paused
+    ok 9 - anon: valid-super is paused
+      ---
+      duration_ms: 10.0737
+      ...
+    # Subtest: anon: valid-reviewer is paused
+    ok 10 - anon: valid-reviewer is paused
+      ---
+      duration_ms: 9.2304
+      ...
+    # Subtest: anon: valid-zero is paused
+    ok 11 - anon: valid-zero is paused
+      ---
+      duration_ms: 9.6869
+      ...
+    # Subtest: anon: invalid is paused
+    ok 12 - anon: invalid is paused
+      ---
+      duration_ms: 8.6369
+      ...
+    # Subtest: anon: expired is paused
+    ok 13 - anon: expired is paused
+      ---
+      duration_ms: 8.9402
+      ...
+    # Subtest: anon: revoked is paused
+    ok 14 - anon: revoked is paused
+      ---
+      duration_ms: 13.3822
+      ...
+    # Subtest: anon: inactive-admin is paused
+    ok 15 - anon: inactive-admin is paused
+      ---
+      duration_ms: 7.8927
+      ...
+    # Subtest: anon: null is paused
+    ok 16 - anon: null is paused
+      ---
+      duration_ms: 8.0862
+      ...
+    # Subtest: authenticated: valid-super is paused
+    ok 17 - authenticated: valid-super is paused
+      ---
+      duration_ms: 7.9253
+      ...
+    # Subtest: authenticated: valid-reviewer is paused
+    ok 18 - authenticated: valid-reviewer is paused
+      ---
+      duration_ms: 8.1546
+      ...
+    # Subtest: authenticated: valid-zero is paused
+    ok 19 - authenticated: valid-zero is paused
+      ---
+      duration_ms: 8.4791
+      ...
+    # Subtest: authenticated: invalid is paused
+    ok 20 - authenticated: invalid is paused
+      ---
+      duration_ms: 9.1733
+      ...
+    # Subtest: authenticated: expired is paused
+    ok 21 - authenticated: expired is paused
+      ---
+      duration_ms: 7.8425
+      ...
+    # Subtest: authenticated: revoked is paused
+    ok 22 - authenticated: revoked is paused
+      ---
+      duration_ms: 11.0794
+      ...
+    # Subtest: authenticated: inactive-admin is paused
+    ok 23 - authenticated: inactive-admin is paused
+      ---
+      duration_ms: 8.6806
+      ...
+    # Subtest: authenticated: null is paused
+    ok 24 - authenticated: null is paused
+      ---
+      duration_ms: 9.3726
+      ...
+    # Subtest: service_role: valid-super is paused
+    ok 25 - service_role: valid-super is paused
+      ---
+      duration_ms: 9.3971
+      ...
+    # Subtest: service_role: valid-reviewer is paused
+    ok 26 - service_role: valid-reviewer is paused
+      ---
+      duration_ms: 13.1399
+      ...
+    # Subtest: service_role: valid-zero is paused
+    ok 27 - service_role: valid-zero is paused
+      ---
+      duration_ms: 14.441
+      ...
+    # Subtest: service_role: invalid is paused
+    ok 28 - service_role: invalid is paused
+      ---
+      duration_ms: 10.9804
+      ...
+    # Subtest: service_role: expired is paused
+    ok 29 - service_role: expired is paused
+      ---
+      duration_ms: 11.0052
+      ...
+    # Subtest: service_role: revoked is paused
+    ok 30 - service_role: revoked is paused
+      ---
+      duration_ms: 8.9902
+      ...
+    # Subtest: service_role: inactive-admin is paused
+    ok 31 - service_role: inactive-admin is paused
+      ---
+      duration_ms: 8.8646
+      ...
+    # Subtest: service_role: null is paused
+    ok 32 - service_role: null is paused
+      ---
+      duration_ms: 9.2655
+      ...
+    1..32
+ok 3 - atomic installer, unconditional role/session denial and unchanged protected rows
+  ---
+  duration_ms: 1917.8589
+  ...
+# Subtest: unrelated actual captured viewing, review and release SQL remains functional
+ok 4 - unrelated actual captured viewing, review and release SQL remains functional
+  ---
+  duration_ms: 1539.5112
+  ...
+# Subtest: unexpected contract, origin and catalog drift fail closed; injected failure rolls back
+not ok 5 - unexpected contract, origin and catalog drift fail closed; injected failure rolls back
+  ---
+  duration_ms: 1717.0403
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\budget_deletion_pause.local.test.mjs:127:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /INJECTED_BEFORE_COMMIT/. Input:
+    
+    'error: syntax error at or near "$"'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'syntax error at or near "$"'
+  stack: |-
+    pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+    pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+    pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+    N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+    file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+    wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+    wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+    wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+    wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+    wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/budget_deletion_pause.local.test.mjs:138:3)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+1..5
+# tests 37
+# suites 0
+# pass 36
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7513.6263

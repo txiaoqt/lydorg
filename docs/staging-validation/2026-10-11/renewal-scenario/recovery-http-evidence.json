@@ -1,0 +1,38 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T18:18:07.067Z",
+  "results": [
+    {
+      "check": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "status": "FAIL",
+      "code": null,
+      "reason": "Expected",
+      "http": [
+        {
+          "actor": "Controlled renewal recovery",
+          "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+          "method": "GET",
+          "endpoint": "/auth/v1/admin/users",
+          "status": 200,
+          "durationMs": 1215
+        }
+      ]
+    },
+    {
+      "check": "Recovery stopped",
+      "status": "BLOCKED",
+      "code": null,
+      "reason": "Expected"
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "Controlled renewal recovery",
+      "step": "Read-only recovery identities, permissions, registration, term, audits, files and saved IDs",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 1215
+    }
+  ]
+}

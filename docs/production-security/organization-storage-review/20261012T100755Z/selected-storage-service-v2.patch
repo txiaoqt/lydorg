@@ -1,0 +1,228 @@
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-review-20261012T100755Z\\baseline\\src\\lib\\lydo-connect-supabase.ts" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-review-20261012T100755Z\\candidate-v2\\src\\lib\\lydo-connect-supabase.ts"
+index d1540c9..be6ad99 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-review-20261012T100755Z\\baseline\\src\\lib\\lydo-connect-supabase.ts"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\.agent\\organization-storage-review-20261012T100755Z\\candidate-v2\\src\\lib\\lydo-connect-supabase.ts"	
+@@ -57,12 +57,13 @@ import {
+   normalizeTemplateCategoryKey,
+   isSystemTemplateCategory,
+ } from "./lydo-connect-data";
+-import { readAdminSession } from "./admin-auth";
++import { readAdminSession, ADMIN_SESSION_CHANGE_EVENT, ADMIN_SESSION_STORAGE_KEY } from "./admin-auth";
++import { SignedStorageUrlCache } from "./signed-storage-url-cache";
+ import { type AuditCategory } from "./admin-system-settings";
+ import { getAdminAppUrl } from "./auth-redirect";
+ import { resolveBudgetEligibility, type BudgetEligibility } from "./budget-eligibility";
+ import { calculateRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked } from "./revision-deadline";
+-import { supabase, supabaseUrl } from "./supabase";
++import { supabase, supabaseUrl, supabaseAuthStorageKey } from "./supabase";
+ import { connectionNeedsSlowMode, isTransientUploadError, registrationUploadError, runAdaptiveUploadQueue, uploadRegistrationObject, type UploadOptions, type UploadProgress } from "./registration-upload-transport";
+ import { getPasigDistrictForBarangay } from "./pasig-districts";
+ import { isCanonicalPurposeCategory } from "./budget-category-colors";
+@@ -4740,9 +4741,9 @@ const getAuthenticatedAdminSession = () => {
+ 
+ const uploadFileToStorage = async (bucket: string, pathPrefix: string, file: File) => {
+   const safeFileName = sanitizeFileName(file.name);
+-  const objectPath = `${pathPrefix}/${Date.now()}-${safeFileName}`;
++  const objectPath = `${pathPrefix}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+   const { error: uploadError } = await supabase!.storage.from(bucket).upload(objectPath, file, {
+-    upsert: true,
++    upsert: false,
+     contentType: file.type || "application/octet-stream",
+   });
+ 
+@@ -6345,86 +6346,95 @@ export const permanentlyDeleteTemplateRecordInSupabase = async (databaseId: stri
+   if (error) throw new Error(error.message);
+ };
+ 
+-const resolvedFileUrlCache = new Map<string, { url: string; expiresAt: number }>();
+-const pendingFileUrlResolutions = new Map<string, Promise<string>>();
+-const missingStorageObjectsCache = new Set<string>();
+-
+-export const resolveSupabaseFileUrl = async (value: string): Promise<string> => {
+-  if (!supabase || !value) return value || "";
+-  const trimmed = value.trim();
+-  if (!trimmed) return "";
+-  if (
+-    trimmed.startsWith("http://") ||
+-    trimmed.startsWith("https://") ||
+-    trimmed.startsWith("blob:") ||
+-    trimmed.startsWith("data:")
+-  ) {
+-    return trimmed;
+-  }
+-
+-  const parsed = parseStorageUri(trimmed);
+-  if (!parsed) {
+-    // If not a storage:// URI and not http/blob, don't return unresolvable storage scheme
+-    return trimmed.startsWith("storage://") ? "" : trimmed;
++const signedStorageUrlCache = new SignedStorageUrlCache();
++const invalidateSignedStorageUrls = () => {
++  signedStorageUrlCache.clear();
++  if (typeof window !== "undefined") window.dispatchEvent(new Event("lydo-storage-authorization-change"));
++};
++// Callbacks deliberately perform no Auth requests: Supabase dispatches them under
++// its auth lock. Context is read lazily when a file is actually opened.
++supabase?.auth?.onAuthStateChange?.((event) => {
++  if (["SIGNED_IN", "SIGNED_OUT", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)) {
++    invalidateSignedStorageUrls();
+   }
++});
++if (typeof window !== "undefined") {
++  window.addEventListener(ADMIN_SESSION_CHANGE_EVENT, () => invalidateSignedStorageUrls());
++  window.addEventListener("lydo-auth-reset", () => invalidateSignedStorageUrls());
++  window.addEventListener("storage", (event) => {
++    if (event.key === ADMIN_SESSION_STORAGE_KEY || event.key === supabaseAuthStorageKey || event.key === null) invalidateSignedStorageUrls();
++  });
++}
+ 
+-  const cacheKey = `${parsed.bucket}/${parsed.path}`;
+-
+-  // Check negative cache (known non-existent files)
+-  if (missingStorageObjectsCache.has(cacheKey)) {
+-    return "";
+-  }
++const isStorageAdminRoute = () =>
++  typeof window !== "undefined" && /^\/admin(?:\/|$)/.test(window.location.pathname);
+ 
+-  // Check valid active cache
+-  const cached = resolvedFileUrlCache.get(cacheKey);
+-  const now = Date.now();
+-  if (cached && cached.expiresAt > now + 60000) {
+-    return cached.url;
+-  }
++const readActiveStorageAdminSession = () => isStorageAdminRoute() ? readAdminSession() : null;
+ 
+-  const pendingResolution = pendingFileUrlResolutions.get(cacheKey);
+-  if (pendingResolution) return pendingResolution;
++const readStorageAuthorizationContext = async (requireAdminSession = false) => {
++  if (!supabase) return null;
++  const admin = readActiveStorageAdminSession();
++  if (admin) {
++    const expiresAt = Date.parse(admin.expiresAt);
++    if (typeof admin.sessionToken !== "string" || !admin.sessionToken.trim() || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) return null;
++    return { identity: JSON.stringify(["admin", admin.sessionToken]), expiresAt };
++  }
++  if (requireAdminSession) return null;
++  const { data, error } = await supabase.auth.getSession();
++  if (error) return null;
++  const session = data.session;
++  // Only the active authorization principal affects this context. Independent
++  // Admin sessions do not depend on an Organization Supabase JWT or refresh.
++  return {
++    identity: JSON.stringify([session?.user.id ?? "anonymous", session?.access_token ?? ""]),
++    expiresAt: session?.expires_at ? session.expires_at * 1000 : Infinity,
++  };
++};
+ 
+-  const resolution = (async () => {
++export const resolveSupabaseFileUrl = async (value: string): Promise<string> => {
++  if (!supabase || !value) return value || "";
++  const trimmed = value.trim();
++  if (!trimmed) return "";
++  let parsed = parseStorageUri(trimmed);
++  if (/^https?:/.test(trimmed)) {
++    // Legacy saved signed references must also reauthorize in the current context.
++    // Do not blindly reuse another session's bearer URL supplied as an HTTP link.
+     try {
+-      const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
+-      if (error) {
+-        const msg = (error.message || "").toLowerCase();
+-        const code = String((error as { statusCode?: string | number }).statusCode || "");
+-        if (
+-          code === "404" ||
+-          code === "400" ||
+-          msg.includes("not found") ||
+-          msg.includes("not_found") ||
+-          msg.includes("object not found") ||
+-          msg.includes("does not exist") ||
+-          msg.includes("bucket not found")
+-        ) {
+-          missingStorageObjectsCache.add(cacheKey);
+-          return "";
+-        }
+-        // Attempt canonical public URL fallback
+-        const { data: pubData } = supabase.storage.from(parsed.bucket).getPublicUrl(parsed.path);
+-        if (pubData?.publicUrl) {
+-          resolvedFileUrlCache.set(cacheKey, { url: pubData.publicUrl, expiresAt: now + 3500000 });
+-          return pubData.publicUrl;
+-        }
+-        return "";
+-      }
+-      if (data?.signedUrl) {
+-        resolvedFileUrlCache.set(cacheKey, { url: data.signedUrl, expiresAt: now + 3500000 });
+-        return data.signedUrl;
+-      }
+-      return "";
+-    } catch (err) {
+-      console.warn(`Storage URL resolution exception for ${cacheKey}:`, err);
+-      return "";
+-    } finally {
+-      pendingFileUrlResolutions.delete(cacheKey);
++      const url = new URL(trimmed);
++      const match = url.pathname.match(/^\/storage\/v1\/object\/(?:sign|authenticated)\/([^/]+)\/(.+)$/);
++      if (supabaseUrl && url.origin === new URL(supabaseUrl).origin && match) {
++        parsed = { bucket: decodeURIComponent(match[1]), path: decodeURIComponent(match[2]) };
++      } else return trimmed;
++    } catch { return ""; }
++  } else if (/^(blob:|data:)/.test(trimmed)) return trimmed;
++  if (!parsed) return trimmed.startsWith("storage://") ? "" : trimmed;
++  // Route intent is independent of session validity. A missing Admin session
++  // must never change a private Admin request into anonymous/organization signing.
++  const startedOnAdminRoute = isStorageAdminRoute();
++  const requiresAdminGateway = startedOnAdminRoute && [ORGANIZATION_DOCUMENTS_BUCKET, BUDGET_REQUEST_FILES_BUCKET,
++    LIQUIDATION_REPORT_FILES_BUCKET, YPOP_FILES_BUCKET, "move-files", TEMPLATE_FILES_BUCKET, NEWS_RELEASE_IMAGES_BUCKET].includes(parsed.bucket);
++  const adminToken = requiresAdminGateway ? readAdminSession()?.sessionToken : null;
++  if (requiresAdminGateway && (typeof adminToken !== "string" || !adminToken.trim())) return "";
++  const isRequestContextCurrent = () => isStorageAdminRoute() === startedOnAdminRoute &&
++    (!requiresAdminGateway || readActiveStorageAdminSession()?.sessionToken === adminToken);
++  const readContext = async () => {
++    if (!isRequestContextCurrent()) return null;
++    const context = await readStorageAuthorizationContext(requiresAdminGateway);
++    return isRequestContextCurrent() ? context : null;
++  };
++  const resolved = await signedStorageUrlCache.resolve(`${parsed.bucket}/${parsed.path}`, readContext, async () => {
++    if (!isRequestContextCurrent()) return "";
++    if (requiresAdminGateway) {
++      const { requestAdminStorageAccess } = await import("./admin-storage-access");
++      if (!isRequestContextCurrent()) return "";
++      return (await requestAdminStorageAccess("sign", parsed.bucket, parsed.path)).signedUrl ?? "";
+     }
+-  })();
+-  pendingFileUrlResolutions.set(cacheKey, resolution);
+-  return resolution;
++    const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, 3600);
++    // Never turn a denied private signing request into a public URL fallback.
++    return error ? "" : data?.signedUrl ?? "";
++  });
++  // Cached hits also cross an await boundary; recheck route/account before use.
++  return isRequestContextCurrent() ? resolved : "";
+ };
+ 
+ // ─── YPOP Org-side mutations ──────────────────────────────────
+@@ -8745,7 +8755,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
+     throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
+   }
+   const safeFileName = sanitizeFileName(params.file.name);
+-  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${safeFileName}`;
++  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+ 
+   // Check if an existing file is already registered for this document type
+   const { data: existingRows } = await supabase
+@@ -8768,7 +8778,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
+   const { error: uploadError } = await supabase.storage
+     .from(ORGANIZATION_DOCUMENTS_BUCKET)
+     .upload(objectPath, params.file, {
+-      upsert: true,
++      upsert: false,
+       contentType: params.file.type || "application/pdf",
+     });
+ 
+@@ -8830,7 +8840,7 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {
+     throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
+   }
+   const safeFileName = sanitizeFileName(params.file.name);
+-  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${safeFileName}`;
++  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+ 
+   const { error: uploadError } = await supabase.storage
+     .from(ORGANIZATION_DOCUMENTS_BUCKET)

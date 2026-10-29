@@ -1,0 +1,284 @@
+{
+  "capturedAt": "2026-10-12T10:33:28.713Z",
+  "status": "PASS",
+  "scope": "Local isolated production-mode Organization build; NOT a hosted Vercel artifact",
+  "sourceRevision": "sha256:c533d24868ee37300ff847ad696b1e290d83b67a034352269dcfa9bfcdd339fa",
+  "sourceZipSha256": "d67ef5c660521d4d65b638ae0495079d4dd1fc97ef53f3cb35e14e9f2e03d324",
+  "sourceZipBytes": 15415530,
+  "fixedVersion": "1.0.0-org-storage-rc2+20261012100755",
+  "node": "v22.14.0",
+  "publicConfigurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+  "privateEnvironmentPassed": false,
+  "envFilesLoaded": false,
+  "sourceFiles": 558,
+  "staticFiles": 53,
+  "staticInventorySha256": "da35da7fde70170bcee2a615be9e67d0e4f387554b98da5ebe53a1fa7f36fa37",
+  "files": [
+    {
+      "path": ".vite/manifest.json",
+      "bytes": 6004,
+      "sha256": "93f5640b253d3cde8a6244bc8412937d19a6f8c69fe403e1cedfdf1789045e29"
+    },
+    {
+      "path": "FullFooter.svg",
+      "bytes": 4073,
+      "sha256": "20732fef4c07569fb0f7f4525f7ec1e9d6d0c0a92b3b8d612b06fdd15d89c164"
+    },
+    {
+      "path": "FullNavbar.svg",
+      "bytes": 8944,
+      "sha256": "17cddead947c27f73b49853b94640f9efb343f9b7ac860ff0eced090f012ace6"
+    },
+    {
+      "path": "apple-touch-icon.png",
+      "bytes": 11211,
+      "sha256": "24bd4480ae38815dc1f85d590f4b5a1ae8946527f1f1ce74efcd0e1e3d503a20"
+    },
+    {
+      "path": "assets/About-EPKALds-.js",
+      "bytes": 21128,
+      "sha256": "0a21ebcc61951e62623388444c5aceaa857982dc7782ff5da334e4edbc7eee7f"
+    },
+    {
+      "path": "assets/Contacts-Deuxup4d.js",
+      "bytes": 7873,
+      "sha256": "cecfe99149b45bdbb652a90081a108cf5212ebd2c455fb9a7a88d332abf8dccd"
+    },
+    {
+      "path": "assets/Faqs-DgQEYWnl.js",
+      "bytes": 11684,
+      "sha256": "09f2d816a8d48ad2613235e5a311200977ba92392b37d765d7396321781805ee"
+    },
+    {
+      "path": "assets/Index-Cu3W_P9t.js",
+      "bytes": 31405,
+      "sha256": "ccd85bcb44f3af1cd4ce8bc44f9799654f0b451fb05a3fafa3e984e7884b56d1"
+    },
+    {
+      "path": "assets/LegalPolicy-CLFkP7xn.js",
+      "bytes": 2731,
+      "sha256": "0c3d7ee5652074b9c20071961cff5fd1f59343b6e40ad1ab64f91ff4eca4e8bb"
+    },
+    {
+      "path": "assets/NewsReleases-oKUSQn_H.js",
+      "bytes": 7859,
+      "sha256": "0d1d582193aa2fb39f83fb13f2904cf847b33ea1ca8ffed70be3adc8bb494579"
+    },
+    {
+      "path": "assets/PublicBudgetTransparency-u1cEPNK8.js",
+      "bytes": 7059,
+      "sha256": "0e165a0da636b5b26d3575bac61b719580409b4afede949e92babc2d234ae0b4"
+    },
+    {
+      "path": "assets/PublicNewsReleaseCard-CCzOk4DV.js",
+      "bytes": 3217,
+      "sha256": "7c40d98887467c7ff060edcdcd19c4ccad048a541e4cc13a522dd8052b7bcfe5"
+    },
+    {
+      "path": "assets/PublicTemplates-PjBlSZZd.js",
+      "bytes": 4322,
+      "sha256": "9ad7a6cb406e216f7c168158075075039b994960ba7bcdce9d2071703b3c6d1a"
+    },
+    {
+      "path": "assets/PwaUserPortal-Duwbob3u.js",
+      "bytes": 168003,
+      "sha256": "6bc3a412fb5b5f57a9e70b763ae6176e0c9cf56855bc6867818e4a5603ba5077"
+    },
+    {
+      "path": "assets/SiteMap-CYeTABfy.js",
+      "bytes": 3477,
+      "sha256": "931db86ce5808fe889f29b40f03d664c4daf7a30e8989341a34891e23d478c29"
+    },
+    {
+      "path": "assets/about-hero-CYTwmDDX.webp",
+      "bytes": 15042,
+      "sha256": "bd8bf997e25e3a09499438f8a9c2591737cea5133294275f209f55f8096f5c5c"
+    },
+    {
+      "path": "assets/admin-storage-access-B2x77Z7M.js",
+      "bytes": 614,
+      "sha256": "962a472f6e5da163b2a9f97ebcc187989dd1910c736a56cfa4816b5b4b9ab929"
+    },
+    {
+      "path": "assets/exceljs.min-C0-wprxQ.js",
+      "bytes": 938953,
+      "sha256": "a72547ebdc7071c7c4f718013f30c96c6c1354b4621271b2d99c70936ff813dc"
+    },
+    {
+      "path": "assets/hero-image-upscaled-DMBKzXU7.jpeg",
+      "bytes": 3367084,
+      "sha256": "e3c68597ac41c0b84cff0a6ce5496a82d4d7a9cfe37bbc8ca528ed755101d36b"
+    },
+    {
+      "path": "assets/html2canvas.esm-CBrSDip1.js",
+      "bytes": 202301,
+      "sha256": "b4f3add809a6d59f46260e8fd56cab240f3153def977386b230a839e8cb0b281"
+    },
+    {
+      "path": "assets/index-DQcqMBad.js",
+      "bytes": 60158,
+      "sha256": "185c0e435ef35f4de13dcc79f4ca90e71d138f6701819df4170d659c86cc5fa0"
+    },
+    {
+      "path": "assets/index-nVUCXF5z.css",
+      "bytes": 461647,
+      "sha256": "935b3678166468f49e4382c23bfa7f367a9eacf5e3f5d9ba7c87e6c12091ce51"
+    },
+    {
+      "path": "assets/index-z55XfgJQ.js",
+      "bytes": 5672117,
+      "sha256": "55d0849e888c89bfa419decf15e500f4cfabfa49b292ea5e3f6347eb22ad2607"
+    },
+    {
+      "path": "assets/index.es-BYKBi6y9.js",
+      "bytes": 150845,
+      "sha256": "2e5c0f1b34518b955e5533b5ddf9470507f346e893e300b6334193bdda5a7746"
+    },
+    {
+      "path": "assets/pdf.worker.min-D39lNQBd.mjs",
+      "bytes": 1299173,
+      "sha256": "630e9622a4e3b72ecc2e668b1d662bc83931482cbc31265c73992f8f6da5b070"
+    },
+    {
+      "path": "assets/purify.es-CPrKKeqe.js",
+      "bytes": 28072,
+      "sha256": "c423ba0449cbec5c46418b68c694f4f090d1761b5ed567fd2309b4a951a6f29d"
+    },
+    {
+      "path": "assets/yorp-organization-report-B7-xofEC.js",
+      "bytes": 5961,
+      "sha256": "70c820bdb85bb13c3f2e2a75f94309a1c48f62d286a0214ef0e70f7bc0ba96cf"
+    },
+    {
+      "path": "assets/ytrace-overview-upscaled-BHODuOy5.jpeg",
+      "bytes": 2415626,
+      "sha256": "b0524c2d71cb5d728017cd94d970cf892c6b0c1cbd570038eb74e9b9d9cbc7d3"
+    },
+    {
+      "path": "data/pasig-barangay-boundaries.geojson",
+      "bytes": 113197,
+      "sha256": "15e90f550ffa07c39248eb6716f47643b08ef531c4ba90a4463bd762c61b4114"
+    },
+    {
+      "path": "favicon.ico",
+      "bytes": 7719,
+      "sha256": "70be86306d9f8606daced09183809973d2cf743e465f2875db552abf1593cc6f"
+    },
+    {
+      "path": "fonts/segoeui.ttf",
+      "bytes": 959752,
+      "sha256": "8134dbcd09e7b123c9a7f229d49cffbcb01352cc72ea5e1076b65d0dca9f73cd"
+    },
+    {
+      "path": "fonts/segoeuib.ttf",
+      "bytes": 947092,
+      "sha256": "aeb9e4a6ec5cc59f4d72df8189032d7dbb28f45161cf1552174818b5465dac4e"
+    },
+    {
+      "path": "icons/icon-192.png",
+      "bytes": 12203,
+      "sha256": "4622c905e79026b34986468cfa5d26851bbaf25a51ad6dd312fc58e9bf13a71a"
+    },
+    {
+      "path": "icons/icon-512.png",
+      "bytes": 35387,
+      "sha256": "2af1fa14ce334220afc802de1bb10883f066781aad791cb30531b2ae3952a223"
+    },
+    {
+      "path": "icons/icon-maskable-512.png",
+      "bytes": 24947,
+      "sha256": "53582355239d66c5b515085f012bfa7e463b0d519ff4c1b6ffc9290516e4ed78"
+    },
+    {
+      "path": "index.html",
+      "bytes": 1923,
+      "sha256": "14100193eaa7f0b5f1703f4264fc9adc82fd10922a6d10750b1141587413eaae"
+    },
+    {
+      "path": "loginPageImages/image1.jpg",
+      "bytes": 478514,
+      "sha256": "530b225946862e9d95025fed01c7f50aca5e67ab7b53e489afd6dd7427d77dd6"
+    },
+    {
+      "path": "loginPageImages/image2.jpg",
+      "bytes": 181237,
+      "sha256": "1e4ae5e16d97a9d0fd2f5625862f7d86c5c505417e108f50f1af8732d4c1885e"
+    },
+    {
+      "path": "loginPageImages/image3.jpg",
+      "bytes": 383215,
+      "sha256": "de1756c3ba2f30b9439ab776122442174835bd52272012a8161191e7699d8e3b"
+    },
+    {
+      "path": "loginPageImages/image4.jpg",
+      "bytes": 378638,
+      "sha256": "acc870614aeb8271ebbff4e8766a90cc4c0b43debd517e0220d93cbca2a533e6"
+    },
+    {
+      "path": "logo.png",
+      "bytes": 720105,
+      "sha256": "f3be9998c42135c78212575bb7fbd8f58ffc57b3e9bf61835e65e95369ecae29"
+    },
+    {
+      "path": "lydo-connect-logo.svg",
+      "bytes": 991,
+      "sha256": "61f8f64af2b354b1760fbf3bc4b7aa62182420e4f00f37b58951e55db554d8ba"
+    },
+    {
+      "path": "lydo-letterhead-footer.jpg",
+      "bytes": 53620,
+      "sha256": "e4cb8a6011c203e4038b32b33310bb2c1b32103f351e33fed4a8ab6cbbb92a57"
+    },
+    {
+      "path": "lydo-letterhead-header.jpg",
+      "bytes": 54632,
+      "sha256": "bef27e996b3d6a8f0c0730711120f2529335d2a7d9df819cebaa53f15d67d90a"
+    },
+    {
+      "path": "manifest-admin.webmanifest",
+      "bytes": 831,
+      "sha256": "751a689f9e2c36cb055db20ddfb5656314feaed253728ef9114dd5ed637f7bea"
+    },
+    {
+      "path": "manifest.webmanifest",
+      "bytes": 852,
+      "sha256": "67a29f70a1db936a1cbcdee4eade656db71aed44d8b953027dab6b7d47a7e57e"
+    },
+    {
+      "path": "pwa-theme-init.js",
+      "bytes": 1257,
+      "sha256": "d89c8cde4fa13c309cd0abcd5403334f1a04ed04ef6b4f7b6870944ed61542f9"
+    },
+    {
+      "path": "robots.txt",
+      "bytes": 25,
+      "sha256": "1cbdbc6504be7abe1267d01d7f565bfcfe5851ba3f6a3754d1d61c8f8a2c6aa3"
+    },
+    {
+      "path": "sw.js",
+      "bytes": 2560,
+      "sha256": "36a1112722f4da3a1c88ab1c6a02ac25c0ae884325efda82ab1b82dc73f06a9c"
+    },
+    {
+      "path": "templates/pcydo-move-application-form.pdf",
+      "bytes": 188008,
+      "sha256": "6793c6da6bb3e3f02c722e4b3617edc5388e5ebe98742a9fa4917e1867c81442"
+    },
+    {
+      "path": "y-trace-logo-blue.png",
+      "bytes": 29873,
+      "sha256": "b5ea537fb23f03e04e4ea3b3396e38a22d0527f30856ddb5f4e43b5b8f6d265d"
+    },
+    {
+      "path": "y-trace-logo.png",
+      "bytes": 7815,
+      "sha256": "36e934aede49e22eda687caf2e924becaf090be8dcef4606421894485eabf9f8"
+    },
+    {
+      "path": "y-trace-logo.svg",
+      "bytes": 17823,
+      "sha256": "690f07c7c53a2ceeff615bec0ba345150b4841f6121ad47d4383f8098b388aa7"
+    }
+  ],
+  "hostedNode24Parity": "NOT TESTED; separate deterministic provider recipe and acceptance required"
+}

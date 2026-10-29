@@ -1,0 +1,160 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "sha256": "abd2ea82587c9bbb0c18af68851faa7f83fd5a64bca113014c500b00abec8c65",
+  "bytes": 134945,
+  "version": "20261011230000",
+  "disabledFunctions": [
+    "admin_cleanup_yorp_sample_dataset(text,text)",
+    "admin_ensure_renewal_test_account_profile(text)",
+    "admin_get_or_create_renewal_test_account(text)",
+    "admin_prepare_renewal_test_scenario(text,integer,date)",
+    "admin_reset_renewal_test_scenario(text)",
+    "admin_restore_renewal_test_scenario(text)",
+    "admin_seed_renewal_test_registration_documents(text)",
+    "admin_seed_yorp_sample_dataset(text,text)",
+    "admin_seed_yorp_sample_dataset_core(text,text)",
+    "diversify_yorp_seed_projects_and_budgets()",
+    "rebalance_yorp_seed_reporting_quarters()",
+    "repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)"
+  ],
+  "changedFunctions": [
+    {
+      "signature": "admin_cleanup_yorp_sample_dataset(text,text)",
+      "name": "admin_cleanup_yorp_sample_dataset",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_ensure_renewal_test_account_profile(text)",
+      "name": "admin_ensure_renewal_test_account_profile",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_get_or_create_renewal_test_account(text)",
+      "name": "admin_get_or_create_renewal_test_account",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_prepare_renewal_test_scenario(text,integer,date)",
+      "name": "admin_prepare_renewal_test_scenario",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_reset_renewal_test_scenario(text)",
+      "name": "admin_reset_renewal_test_scenario",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_restore_renewal_test_scenario(text)",
+      "name": "admin_restore_renewal_test_scenario",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_seed_renewal_test_registration_documents(text)",
+      "name": "admin_seed_renewal_test_registration_documents",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_seed_yorp_sample_dataset(text,text)",
+      "name": "admin_seed_yorp_sample_dataset",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "admin_seed_yorp_sample_dataset_core(text,text)",
+      "name": "admin_seed_yorp_sample_dataset_core",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "diversify_yorp_seed_projects_and_budgets()",
+      "name": "diversify_yorp_seed_projects_and_budgets",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "rebalance_yorp_seed_reporting_quarters()",
+      "name": "rebalance_yorp_seed_reporting_quarters",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "repair_yorp_seeded_fixture_relationships(uuid,uuid,uuid,jsonb,text)",
+      "name": "repair_yorp_seeded_fixture_relationships",
+      "source_md5": "6d670f664473257d4bf0b98e127337d1",
+      "security_definer": false,
+      "volatility": "v"
+    },
+    {
+      "signature": "is_development_or_test_environment()",
+      "name": "is_development_or_test_environment",
+      "source_md5": "7d69bbf21ad55293e15c24da50eaaa11",
+      "security_definer": false,
+      "volatility": "s"
+    },
+    {
+      "signature": "admin_get_yorp_sample_dataset_status(text,text)",
+      "name": "admin_get_yorp_sample_dataset_status",
+      "source_md5": "5bc2f180ec6d55ad22598412c1472022",
+      "security_definer": true,
+      "volatility": "v"
+    },
+    {
+      "signature": "enforce_accreditation_immutability()",
+      "name": "enforce_accreditation_immutability",
+      "source_md5": "19f9ecf4571f21795abc9160661f51b6",
+      "security_definer": true,
+      "volatility": "v"
+    },
+    {
+      "signature": "enforce_renewal_terminal_immutability()",
+      "name": "enforce_renewal_terminal_immutability",
+      "source_md5": "dd7f062b7a42f5cbc3782e225cc04d7d",
+      "security_definer": true,
+      "volatility": "v"
+    },
+    {
+      "signature": "guard_organization_identity_privileges()",
+      "name": "guard_organization_identity_privileges",
+      "source_md5": "ebe6884dd019667b7ac127f627b993ce",
+      "security_definer": false,
+      "volatility": "v"
+    }
+  ],
+  "newPrivateFunction": "ytrace_production_containment.freeze_fixture_markers()",
+  "newMarkerTriggers": [
+    {
+      "table": "budget_requests",
+      "name": "a_production_fixture_markers_guard"
+    },
+    {
+      "table": "liquidation_reports",
+      "name": "a_production_fixture_markers_guard"
+    },
+    {
+      "table": "document_submissions",
+      "name": "a_production_fixture_markers_guard"
+    },
+    {
+      "table": "document_submission_files",
+      "name": "a_production_fixture_markers_guard"
+    }
+  ]
+}

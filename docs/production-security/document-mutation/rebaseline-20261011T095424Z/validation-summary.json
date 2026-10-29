@@ -1,0 +1,44 @@
+{
+  "scope": "Local preparation and explicit READ ONLY production inspection only",
+  "productionProject": "mqqaykksadotbrghbexz",
+  "stagingWrites": false,
+  "productionWrites": false,
+  "decision": "CONDITIONAL GO; separate production authorization and immediate matching preflight required",
+  "focusedNodeTests": {
+    "status": "PASS",
+    "passed": 58,
+    "failed": 0,
+    "skipped": 0,
+    "log": "local-sql-run-07.tap",
+    "engine": "PostgreSQL 18.3 / PGlite 0.5.8"
+  },
+  "originalCandidateSha256": "86aec2c915f622bf343f2d4437c2e3f5e1cc8a8df9bdaf052719505dec95a785",
+  "newCandidateSha256": "bd06efbc326146cabf00ef005401a5bb7aa4a060927d7bffb63eafcf0f35f567",
+  "productionCatalog": {
+    "database": "postgres",
+    "read_only": "on",
+    "verified_at": "2026-10-11T10:24:59.529983+00:00",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "database_create": true,
+    "migration_records": 164,
+    "file_table_trigger": true,
+    "exact_catalog_match": true,
+    "public_schema_create": true,
+    "containment_marker_count": 4,
+    "submission_table_trigger": true,
+    "target_function_owners_match": true
+  },
+  "productionData": {
+    "relationsCompared": 57,
+    "changed": 0
+  },
+  "permissionsUnchanged": true,
+  "nodeSyntaxChecks": "PASS",
+  "trackedGitDiffCheck": "PASS; existing LF/CRLF conversion warnings retained",
+  "applicationsTests": "NOT TESTED; no application source changed",
+  "native17RuntimeTests": "NOT TESTED in this task; read-only native17 manifest passed, runtime body unchanged from historical real staging validation",
+  "multiSessionConcurrency": "NOT TESTED",
+  "installationStatus": "NOT INSTALLED",
+  "newMigrationReceipt": null
+}

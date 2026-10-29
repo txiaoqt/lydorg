@@ -1,0 +1,579 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "startedAt": "2026-10-10T20:21:29.003Z",
+  "steps": [
+    {
+      "name": "Fresh exact-target staging preflight",
+      "status": "PASS",
+      "authUsers": 5,
+      "organizations": 4,
+      "submissions": 4,
+      "submissionFiles": 19,
+      "renewals": 1,
+      "accreditationTerms": 3,
+      "storageObjects": 29,
+      "buckets": 10,
+      "requiredTestDocuments": 2,
+      "priorRevisionPhaseComplete": true,
+      "activeSuspendedFixturePreserved": true
+    },
+    {
+      "name": "Stopped without retry or cleanup",
+      "status": "BLOCKED",
+      "code": "EPERM",
+      "reason": "Sanitized operation failure"
+    }
+  ],
+  "http": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 930
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 400
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 406
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 398
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 405
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 631
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 150
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 147
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 178
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 151
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 153
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 175
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 158
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 158
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/budget-request-files",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/liquidation-report-files",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/ypop-files",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/move-files",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/template-files",
+      "status": 200,
+      "durationMs": 424
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/template-files",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/news-release-images",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/news-release-images",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/brand-logo",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/registration-seed-file",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/list/transparency-attachments",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/required_document_types",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 129
+    }
+  ],
+  "stopReason": {
+    "code": "EPERM",
+    "reason": "Sanitized operation failure"
+  },
+  "incompleteOrStopped": true,
+  "finishedAt": "2026-10-10T20:21:41.036Z"
+}

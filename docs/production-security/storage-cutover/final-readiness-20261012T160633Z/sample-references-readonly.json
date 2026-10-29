@@ -1,0 +1,9 @@
+{
+  "read_only": "on",
+  "captured_at": "2026-10-12T16:25:40.862171+00:00",
+  "distinct_objects": 6,
+  "all_objects_exist": true,
+  "sample_reference_rows": 510,
+  "allowed_by_retained_exact_name_policy": 510
+}
+

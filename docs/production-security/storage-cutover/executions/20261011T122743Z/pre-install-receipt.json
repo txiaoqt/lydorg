@@ -1,0 +1,27 @@
+{
+  "status": "READY_FOR_SINGLE_AUTHORIZED_SUBMISSION",
+  "project": "mqqaykksadotbrghbexz",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "sqlBytes": 47407,
+  "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "migrationHistory": {
+    "count": 164,
+    "latest": "20261011230000",
+    "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+  },
+  "exclusiveWindowConfirmed": true,
+  "cooperativeOperatorLockVerified": true,
+  "namespaceAbsent": true,
+  "gatewayRpcAbsent": true,
+  "foundationTriggersAbsent": true,
+  "competingDdlCount": 0,
+  "protectedDataRelations": 57,
+  "protectedDataUnchanged": true,
+  "storageObjects": 378,
+  "sourceReferenceInventoriesUnchanged": true,
+  "existingFunctionsPreserved": 296,
+  "existingTriggersPreserved": 90,
+  "protectedScope": "No Storage cutover, gateway, frontend, Auth, historical object or business record mutation",
+  "connectionVerification": "Explicit project-pinned control-plane metadata and independent native SQL identity/catalog verification. Optional local Windows DNS lookup was blocked with Access is denied; it is not used as project identity evidence.",
+  "noDbMigrationReceipt": true
+}

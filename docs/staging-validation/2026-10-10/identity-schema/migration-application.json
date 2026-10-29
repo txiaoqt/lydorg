@@ -1,0 +1,16 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "migrationName": "staging_missing_private_identity_schema_20261010",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"error\":{\"name\":\"HttpException\",\"message\":\"Failed to apply database migration: ERROR:  42501: permission denied to set parameter \\\"pg_trgm.similarity_threshold\\\"\\n\"}}"
+      }
+    ],
+    "structuredContent": {
+      "error_code": "INVALID_ARGUMENT"
+    },
+    "isError": true
+  }
+}

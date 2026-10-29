@@ -1,0 +1,34 @@
+{
+  "capturedAt": "2026-10-12T15:02:55.478Z",
+  "readOnly": true,
+  "promotionSubmissions": 0,
+  "branchAlias": {
+    "alias": "yorbmsuser-git-main-toffs-projects-81b2ce10.vercel.app",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "system": null,
+    "gitBranch": null,
+    "created": "2026-06-06T15:26:01.185Z",
+    "createdAt": 1780759561185,
+    "updatedAt": 1791481871745,
+    "redirect": null,
+    "redirectStatusCode": null
+  },
+  "deployment": {
+    "id": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "url": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+  },
+  "currentPromoteAliases": [
+    {
+      "alias": "ytrace.app",
+      "deploymentId": null,
+      "status": "pending"
+    },
+    {
+      "alias": "www.ytrace.app",
+      "deploymentId": null,
+      "status": "pending"
+    }
+  ],
+  "paginationComplete": true
+}

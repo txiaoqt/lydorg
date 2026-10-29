@@ -1,0 +1,11 @@
+{
+  "powerShellVersion": "7.6.5",
+  "jsonTimestampRuntimeType": "System.DateTime",
+  "jsonTimestampKind": "Utc",
+  "jsonTimestampRoundTrip": "2026-10-13T10:41:54.2330000Z",
+  "stringCastLosesTimezoneAndFractions": "10/13/2026 10:41:54",
+  "dateTimeOffsetReparseOffset": "08:00:00",
+  "effect": "Outer wrapper reparsed timezone-free text in local UTC+08:00. Native adapter uses original ISO JSON string and independently passed freshness validation.",
+  "originalCompletionReceiptModified": false,
+  "nativeAttemptRepeated": false
+}

@@ -1,0 +1,292 @@
+TAP version 13
+# Subtest: fixed synthetic scope; full context bound while the authorization key is stable
+ok 1 - fixed synthetic scope; full context bound while the authorization key is stable
+  ---
+  duration_ms: 4.8507
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: non-synthetic project
+ok 2 - invalid binding denied before fixture access: non-synthetic project
+  ---
+  duration_ms: 0.6127
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: changed purpose
+ok 3 - invalid binding denied before fixture access: changed purpose
+  ---
+  duration_ms: 0.2214
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: authorization case alias
+ok 4 - invalid binding denied before fixture access: authorization case alias
+  ---
+  duration_ms: 0.1919
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: authorization whitespace alias
+ok 5 - invalid binding denied before fixture access: authorization whitespace alias
+  ---
+  duration_ms: 0.2618
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: timezone-free timestamp
+ok 6 - invalid binding denied before fixture access: timezone-free timestamp
+  ---
+  duration_ms: 0.2081
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: future ordered interval ambiguity
+ok 7 - invalid binding denied before fixture access: future ordered interval ambiguity
+  ---
+  duration_ms: 0.2176
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: invalid calendar
+ok 8 - invalid binding denied before fixture access: invalid calendar
+  ---
+  duration_ms: 0.1784
+  type: 'test'
+  ...
+# Subtest: invalid binding denied before fixture access: unexpected context field
+ok 9 - invalid binding denied before fixture access: unexpected context field
+  ---
+  duration_ms: 0.2631
+  type: 'test'
+  ...
+# Subtest: property getters cannot supply a context field
+ok 10 - property getters cannot supply a context field
+  ---
+  duration_ms: 0.4463
+  type: 'test'
+  ...
+# Subtest: no production capability, alternate transport, or resume option is exposed
+ok 11 - no production capability, alternate transport, or resume option is exposed
+  ---
+  duration_ms: 1.0228
+  type: 'test'
+  ...
+# Subtest: non-fixture paths are rejected before filesystem inspection
+ok 12 - non-fixture paths are rejected before filesystem inspection
+  ---
+  duration_ms: 0.6517
+  type: 'test'
+  ...
+# Subtest: wrong disposable fixture identifier fails closed without consumption
+ok 13 - wrong disposable fixture identifier fails closed without consumption
+  ---
+  duration_ms: 39.163
+  type: 'test'
+  ...
+# Subtest: record create/write/sync/readback precede the sole in-memory observation
+ok 14 - record create/write/sync/readback precede the sole in-memory observation
+  ---
+  duration_ms: 42.4538
+  type: 'test'
+  ...
+# Subtest: 40 concurrent invocation objects dispatch at most once for one authorization
+ok 15 - 40 concurrent invocation objects dispatch at most once for one authorization
+  ---
+  duration_ms: 80.0331
+  type: 'test'
+  ...
+# Subtest: changing nonce cannot acquire a second allowance
+ok 16 - changing nonce cannot acquire a second allowance
+  ---
+  duration_ms: 40.6149
+  type: 'test'
+  ...
+# Subtest: changing proof hash cannot acquire a second allowance
+ok 17 - changing proof hash cannot acquire a second allowance
+  ---
+  duration_ms: 36.6573
+  type: 'test'
+  ...
+# Subtest: changing bundle cannot acquire a second allowance
+ok 18 - changing bundle cannot acquire a second allowance
+  ---
+  duration_ms: 35.9942
+  type: 'test'
+  ...
+# Subtest: changing approval timestamp cannot acquire a second allowance
+ok 19 - changing approval timestamp cannot acquire a second allowance
+  ---
+  duration_ms: 38.6727
+  type: 'test'
+  ...
+# Subtest: changing validity start cannot acquire a second allowance
+ok 20 - changing validity start cannot acquire a second allowance
+  ---
+  duration_ms: 36.8054
+  type: 'test'
+  ...
+# Subtest: changing validity end cannot acquire a second allowance
+ok 21 - changing validity end cannot acquire a second allowance
+  ---
+  duration_ms: 36.7476
+  type: 'test'
+  ...
+# Subtest: existing empty consumption is retained and never grants resume
+ok 22 - existing empty consumption is retained and never grants resume
+  ---
+  duration_ms: 30.4071
+  type: 'test'
+  ...
+# Subtest: existing partial consumption is retained and never grants resume
+ok 23 - existing partial consumption is retained and never grants resume
+  ---
+  duration_ms: 41.0362
+  type: 'test'
+  ...
+# Subtest: existing malformed consumption is retained and never grants resume
+ok 24 - existing malformed consumption is retained and never grants resume
+  ---
+  duration_ms: 37.3114
+  type: 'test'
+  ...
+# Subtest: existing conflict consumption is retained and never grants resume
+ok 25 - existing conflict consumption is retained and never grants resume
+  ---
+  duration_ms: 36.2804
+  type: 'test'
+  ...
+# Subtest: existing forged-not-sent consumption is retained and never grants resume
+ok 26 - existing forged-not-sent consumption is retained and never grants resume
+  ---
+  duration_ms: 41.364
+  type: 'test'
+  ...
+# Subtest: injected AFTER_CREATE burns the key and never retries
+ok 27 - injected AFTER_CREATE burns the key and never retries
+  ---
+  duration_ms: 33.1129
+  type: 'test'
+  ...
+# Subtest: injected PARTIAL_WRITE burns the key and never retries
+ok 28 - injected PARTIAL_WRITE burns the key and never retries
+  ---
+  duration_ms: 36.118
+  type: 'test'
+  ...
+# Subtest: injected AFTER_WRITE burns the key and never retries
+ok 29 - injected AFTER_WRITE burns the key and never retries
+  ---
+  duration_ms: 34.9501
+  type: 'test'
+  ...
+# Subtest: injected SYNC_UNCERTAIN burns the key and never retries
+ok 30 - injected SYNC_UNCERTAIN burns the key and never retries
+  ---
+  duration_ms: 36.7108
+  type: 'test'
+  ...
+# Subtest: injected AFTER_SYNC burns the key and never retries
+ok 31 - injected AFTER_SYNC burns the key and never retries
+  ---
+  duration_ms: 39.6194
+  type: 'test'
+  ...
+# Subtest: injected CLOSE_UNCERTAIN burns the key and never retries
+ok 32 - injected CLOSE_UNCERTAIN burns the key and never retries
+  ---
+  duration_ms: 47.1385
+  type: 'test'
+  ...
+# Subtest: injected READBACK_MISMATCH burns the key and never retries
+ok 33 - injected READBACK_MISMATCH burns the key and never retries
+  ---
+  duration_ms: 39.049
+  type: 'test'
+  ...
+# Subtest: injected AFTER_VERIFY burns the key and never retries
+ok 34 - injected AFTER_VERIFY burns the key and never retries
+  ---
+  duration_ms: 38.6889
+  type: 'test'
+  ...
+# Subtest: uncertain synthetic transport: UNCERTAIN_AFTER_ACCEPT
+ok 35 - uncertain synthetic transport: UNCERTAIN_AFTER_ACCEPT
+  ---
+  duration_ms: 36.9162
+  type: 'test'
+  ...
+# Subtest: uncertain synthetic transport: UNAVAILABLE
+ok 36 - uncertain synthetic transport: UNAVAILABLE
+  ---
+  duration_ms: 38.0427
+  type: 'test'
+  ...
+# Subtest: a genuinely different synthetic authorization has a distinct consumption key
+ok 37 - a genuinely different synthetic authorization has a distinct consumption key
+  ---
+  duration_ms: 40.6524
+  type: 'test'
+  ...
+# Subtest: six real disposable Windows children race one create-new key, one observation wins
+ok 38 - six real disposable Windows children race one create-new key, one observation wins
+  ---
+  duration_ms: 368.4043
+  type: 'test'
+  ...
+# Subtest: fresh real process after successful consumption cannot resume or redispatch
+ok 39 - fresh real process after successful consumption cannot resume or redispatch
+  ---
+  duration_ms: 285.0073
+  type: 'test'
+  ...
+# Subtest: terminated real child at CREATED retains consumption and restart denies
+ok 40 - terminated real child at CREATED retains consumption and restart denies
+  ---
+  duration_ms: 262.4534
+  type: 'test'
+  ...
+# Subtest: terminated real child at PARTIAL_WRITTEN retains consumption and restart denies
+ok 41 - terminated real child at PARTIAL_WRITTEN retains consumption and restart denies
+  ---
+  duration_ms: 251.1829
+  type: 'test'
+  ...
+# Subtest: terminated real child at SYNCED retains consumption and restart denies
+ok 42 - terminated real child at SYNCED retains consumption and restart denies
+  ---
+  duration_ms: 249.5177
+  type: 'test'
+  ...
+# Subtest: terminated real child at VERIFIED retains consumption and restart denies
+ok 43 - terminated real child at VERIFIED retains consumption and restart denies
+  ---
+  duration_ms: 255.6252
+  type: 'test'
+  ...
+# Subtest: terminated real child at OBSERVATION_CALLED retains consumption and restart denies
+ok 44 - terminated real child at OBSERVATION_CALLED retains consumption and restart denies
+  ---
+  duration_ms: 262.4314
+  type: 'test'
+  ...
+# Subtest: terminated real child at OBSERVATION_ACKNOWLEDGED retains consumption and restart denies
+ok 45 - terminated real child at OBSERVATION_ACKNOWLEDGED retains consumption and restart denies
+  ---
+  duration_ms: 259.768
+  type: 'test'
+  ...
+# Subtest: uncertain observation in one real child burns allowance for a fresh process
+ok 46 - uncertain observation in one real child burns allowance for a fresh process
+  ---
+  duration_ms: 248.6099
+  type: 'test'
+  ...
+# Subtest: nonce/proof/bundle/time changes across fresh processes cannot acquire another allowance
+ok 47 - nonce/proof/bundle/time changes across fresh processes cannot acquire another allowance
+  ---
+  duration_ms: 799.5703
+  type: 'test'
+  ...
+1..47
+# tests 47
+# suites 0
+# pass 47
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4380.0574

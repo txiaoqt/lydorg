@@ -1,0 +1,7 @@
+{
+  "existingTrackedStatusEntriesBefore": 62,
+  "existingTrackedStatusEntriesAfter": 62,
+  "addedTrackedChanges": [],
+  "removedTrackedChanges": [],
+  "scope": "Git status comparison; not a byte-by-byte hash of pre-existing untracked files. Application sources were not edited in this task."
+}

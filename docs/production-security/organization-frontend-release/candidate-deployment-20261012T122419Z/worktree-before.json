@@ -1,0 +1,251 @@
+{
+  "capturedAt": "2026-10-12T12:27:46.379Z",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "branch": "ui-refactor",
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "f0f95caa5bf36d267943607464738cc9a993f8152d3ec8278991d02e913f6bd8"
+    },
+    {
+      "path": "build/apple-touch-icon.png",
+      "sha256": "24bd4480ae38815dc1f85d590f4b5a1ae8946527f1f1ce74efcd0e1e3d503a20"
+    },
+    {
+      "path": "build/assets/About-BgE2NY5_.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/Contacts-PVxhRUkh.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/Faqs-C1BTPjfA.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/Index-CKmzLnSI.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/LegalPolicy-rOEY3vG8.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/NewsReleases-B8yw4yk-.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/PublicBudgetTransparency-DleAq-zl.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/PublicNewsReleaseCard-Bp70quGQ.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/PublicTemplates-BXSB9xGm.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/PwaUserPortal-BwzxXVpY.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/SiteMap-Bv3paW95.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/exceljs.min-CuiCxha2.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/facebook-CMEyvuS-.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/hero-image-_uJVR4fB.webp",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/index-BcOz4wp7.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/index-CvrzG9oa.css",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/index.es-03HJTjHp.js",
+      "deleted": true
+    },
+    {
+      "path": "build/assets/ytrace-community-workshop-azmEJAYn.png",
+      "deleted": true
+    },
+    {
+      "path": "build/favicon.ico",
+      "sha256": "70be86306d9f8606daced09183809973d2cf743e465f2875db552abf1593cc6f"
+    },
+    {
+      "path": "build/icons/icon-192.png",
+      "sha256": "4622c905e79026b34986468cfa5d26851bbaf25a51ad6dd312fc58e9bf13a71a"
+    },
+    {
+      "path": "build/icons/icon-512.png",
+      "sha256": "2af1fa14ce334220afc802de1bb10883f066781aad791cb30531b2ae3952a223"
+    },
+    {
+      "path": "build/index.html",
+      "sha256": "a88235b8eadabc0be8e3782c3efcbe14f9b1c46ae3376ef340e27065f57b2de9"
+    },
+    {
+      "path": "build/manifest-admin.webmanifest",
+      "sha256": "8aab6028802634f9111304da54a90dc1e4cdabff8c1bd39763c5bbbc471ea8f3"
+    },
+    {
+      "path": "build/manifest.webmanifest",
+      "sha256": "826be141d2293adfe2fd96e9b4bc77e654bd31446c23d24f5fa10db9dcfe5eb4"
+    },
+    {
+      "path": "build/sw.js",
+      "sha256": "d9e6455172ffe92f9c1c38620d236b832ddea3c8b4cce17bde7d615142bfab2e"
+    },
+    {
+      "path": "build/y-trace-logo-blue.png",
+      "sha256": "b5ea537fb23f03e04e4ea3b3396e38a22d0527f30856ddb5f4e43b5b8f6d265d"
+    },
+    {
+      "path": "index.html",
+      "sha256": "29cb7f28c85502261c1b21758045de9f07821f8d3ecdf0a87a8d8ae192bff9b4"
+    },
+    {
+      "path": "playwright.config.ts",
+      "sha256": "ae54eb71d68b8e54aaba1ee170065434774e0a0a6043fe0ffc5cb40778c402e8"
+    },
+    {
+      "path": "public/manifest-admin.webmanifest",
+      "sha256": "b72a83015ea675cdc88e5b7b64c002fd3a9e9685b29f3f8ba3b34f490516d9bb"
+    },
+    {
+      "path": "public/manifest.webmanifest",
+      "sha256": "215709a0ee1da2be4a84006fa1e53f1f4dd9e750b3db3c80d98f989c9340ef40"
+    },
+    {
+      "path": "public/sw.js",
+      "sha256": "95e694d2b115bba54e1ce658c61d317f80840dec1aca84bbf6347b2d4868d1e4"
+    },
+    {
+      "path": "src/App.tsx",
+      "sha256": "23964481ec3d4680dc80da47e570893fe939baa7474982ad42cf110120d7befd"
+    },
+    {
+      "path": "src/admin/components/AdminSettingsPage.tsx",
+      "sha256": "63a12185c23631b5b9d1f0fd83e1f0ff735fae4b7c2b043ce4bbde25e9c12d6a"
+    },
+    {
+      "path": "src/admin/components/RenewalTestEnvironmentPanel.tsx",
+      "sha256": "f9e7b07c951439a2c504cdfaaa7fac416413addf6cce78317b658aa2e85da4b4"
+    },
+    {
+      "path": "src/admin/renewal-test-environment.test.tsx",
+      "sha256": "eb8cd68ee337d70edcbe266b2b3779d353bb0bd30751babdc36abdc709f75b57"
+    },
+    {
+      "path": "src/components/portal/UserPortalRenewalWorkspaceView.tsx",
+      "sha256": "646b92385dc31cf703546737a574b8427fe9ce0ded58d621d400030dd6261e09"
+    },
+    {
+      "path": "src/components/portal/UserPortalResponsiveWorkspace.test.tsx",
+      "sha256": "9449e3fc3eca493c98b981a98b07b46e0eb91a38727641089314b39483413184"
+    },
+    {
+      "path": "src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx",
+      "sha256": "bcf464f03d9eb3906d74ec8024dd4eb48f9cc0fb70d8e0ecb273bc30759d8dad"
+    },
+    {
+      "path": "src/components/public/PublicTemplatesCatalog.tsx",
+      "sha256": "0f539ab2a0be82e2b6363d94fbe092e2dacdc4bba253e0a0673e9474a79e9119"
+    },
+    {
+      "path": "src/lib/admin-lifecycle-user-sync.test.tsx",
+      "sha256": "91c725d5cf2c1e203d4601a51a6f6b2fd2425535d2f18f16712b1a62f4e9ada9"
+    },
+    {
+      "path": "src/lib/admin-system-settings.ts",
+      "sha256": "be8a42fdb2c3999dda476b33148d0281f3ca64a1d605d5ca2a1b420dc1d50f13"
+    },
+    {
+      "path": "src/lib/audit-records-hardening.test.ts",
+      "sha256": "8e0375a3c78ddf589ae7e6681744fde70efb9d8c4d8dcb3571a8b14b1957b901"
+    },
+    {
+      "path": "src/lib/lydo-connect-store.tsx",
+      "sha256": "0e25a810735f13daccc1d5733c44894dc81b2a1f21a390fd1f99e40728d60e8c"
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "sha256": "c3a8b445e51178c061407b8f60d6793093769e6943514149f6346dcd8c386353"
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "sha256": "1c4a0e885e83172550fa4a1ef0a47278eaeb19c7aa23b12ea9a51a62a7422b63"
+    },
+    {
+      "path": "src/lib/renewal-realtime.test.ts",
+      "sha256": "299017f39f98756446ae9fee65d43f5848d0d5e7ec09e7faf28cfcd658b8415a"
+    },
+    {
+      "path": "src/lib/report-export.test.ts",
+      "sha256": "e35dcd7206e22e2e6ed911f3559a07daf75221b91a3672cca9f486ea0acd8ebf"
+    },
+    {
+      "path": "src/lib/section35-reporting.test.ts",
+      "sha256": "8aef0f84d12e719efe2741d7320cf847f42c7c0d1bc9ccb3651deaff3717c3c0"
+    },
+    {
+      "path": "src/main.tsx",
+      "sha256": "171ce6679b5cea99181cf58232ab183c3cc9343ed81228f18c9ee2946bbb6974"
+    },
+    {
+      "path": "src/test/setup.ts",
+      "sha256": "f8167f71d45378270c991a6e060ba87b2170c42382d79cd291ee962d01889962"
+    },
+    {
+      "path": "src/user/UserPortalEntry.tsx",
+      "sha256": "07839bc1523640b17dacf9f4e052ae7f8fc4380e17f90d391f029f4f32aa66ea"
+    },
+    {
+      "path": "src/user/pwa/PwaAppShell.tsx",
+      "sha256": "84ebab559f4952ea40fb8c51fe28939f29b01ab1e5ec900841b2147dcebcb2e8"
+    },
+    {
+      "path": "src/user/pwa/PwaDocumentPreview.tsx",
+      "sha256": "121107cbc49e707ddf2a70c9db6139b4b04d07f91608f4518344ae2f897aef28"
+    },
+    {
+      "path": "src/user/pwa/PwaOrganizationAvatar.tsx",
+      "sha256": "7604c43f92b89483ac444e0fb4108c56ddffd54f48c9508f495ae521c35ea544"
+    },
+    {
+      "path": "src/user/pwa/renewals/PwaRenewalPage.tsx",
+      "sha256": "ff46fa2104a07535f8cef365e9655c9c688752ae88da6f3250999c4b636d24cb"
+    },
+    {
+      "path": "supabase/.temp/cli-latest",
+      "sha256": "2f99ec07bad208b0108748390c2fe80fb0a91b1784a8f7bf1d303efda7deeaee"
+    },
+    {
+      "path": "supabase/config.toml",
+      "sha256": "aaef6d7cec8db676d19fa7bf34880677f805a90cc713541e7a136a9e8125f9a7"
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "af7a41680f23aa7c979c37c6b7aaea87ccccc75ee4cd78f50a896c8804a9f7ff"
+    },
+    {
+      "path": "vitest.config.ts",
+      "sha256": "7e552d3e24bb2f565c8df04f6aec4ad7f8437ab27d4f3e165e95ead2f564fb46"
+    }
+  ]
+}

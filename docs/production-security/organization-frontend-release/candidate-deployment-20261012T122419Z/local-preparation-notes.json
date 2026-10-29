@@ -1,0 +1,8 @@
+{
+  "capturedAt": "2026-10-12T13:02:20.725Z",
+  "initialReadFailurePreserved": true,
+  "postflightParser": "Initial local Python-evidence parser syntax error occurred before any request; corrected and node --check passed, then bounded provider GET inspection completed.",
+  "deployedSourceChanged": false,
+  "productionDeploymentRetries": 0,
+  "applicationTypecheck": "FAIL 651 existing errors; not rerun or suppressed in this task"
+}

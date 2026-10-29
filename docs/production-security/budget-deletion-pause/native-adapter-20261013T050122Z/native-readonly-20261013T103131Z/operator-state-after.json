@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "stateFiles": [
+    "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+    "control-plane-proof-history-2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf.json",
+    "control-plane-proof.json",
+    "preflight-20261013T104229359Z-a0bcdc9b-9465-4b70-8cbd-ae2f9a76058e.json"
+  ],
+  "metadata": [
+    {
+      "name": ".ytrace-production-budget-deletion-pause",
+      "directory": true,
+      "bytes": null,
+      "createdAt": "2026-10-13T07:52:10.7953315Z",
+      "lastWriteAt": "2026-10-13T10:42:29.3613121Z",
+      "lastAccessAt": "2026-10-13T10:48:22.5787584Z",
+      "attributes": "Directory",
+      "aclSha256": "f2b0d1128543ced61766e73d2d34374be2571800e9627a43bfe9a00e058a13b5",
+      "sha256": null,
+      "effectiveAclVerified": true
+    },
+    {
+      "name": "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+      "directory": false,
+      "bytes": 200,
+      "createdAt": "2026-10-13T07:53:03.1472310Z",
+      "lastWriteAt": "2026-10-13T07:53:03.1547868Z",
+      "lastAccessAt": "2026-10-13T10:48:42.4246777Z",
+      "attributes": "Archive",
+      "aclSha256": "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+      "sha256": "0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd",
+      "effectiveAclVerified": true
+    },
+    {
+      "name": "control-plane-proof-history-2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf.json",
+      "directory": false,
+      "bytes": 200,
+      "createdAt": "2026-10-13T08:48:48.8892004Z",
+      "lastWriteAt": "2026-10-13T08:48:48.8962340Z",
+      "lastAccessAt": "2026-10-13T10:48:45.3877107Z",
+      "attributes": "Archive",
+      "aclSha256": "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+      "sha256": "2c5c494289aec3af41befb52ced87eb962f83e7b8177abd5801dfba079fb66cf",
+      "effectiveAclVerified": true
+    },
+    {
+      "name": "control-plane-proof.json",
+      "directory": false,
+      "bytes": 197,
+      "createdAt": "2026-10-13T10:42:22.0831408Z",
+      "lastWriteAt": "2026-10-13T10:42:22.0921413Z",
+      "lastAccessAt": "2026-10-13T10:48:47.6526282Z",
+      "attributes": "Archive",
+      "aclSha256": "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+      "sha256": "79a508950d5a04eda66634e9ef8bb17eb51756abdcd979b6b996866a9077ced1",
+      "effectiveAclVerified": true
+    },
+    {
+      "name": "preflight-20261013T104229359Z-a0bcdc9b-9465-4b70-8cbd-ae2f9a76058e.json",
+      "directory": false,
+      "bytes": 37159,
+      "createdAt": "2026-10-13T10:42:29.3613121Z",
+      "lastWriteAt": "2026-10-13T10:42:29.3628083Z",
+      "lastAccessAt": "2026-10-13T10:48:49.6469872Z",
+      "attributes": "Archive",
+      "aclSha256": "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+      "sha256": "6e5869fcde18f45edfef0ba0a9709d4d0530204d89c6dfd548f55dc719dece81",
+      "effectiveAclVerified": true
+    }
+  ],
+  "authorizationExists": false,
+  "approvedPreflightExists": false,
+  "operationLockExists": false,
+  "installationAttemptMarkerExists": false,
+  "preflightEvidenceCopiedToApproval": false,
+  "automaticRetries": 0,
+  "productionConnectionAttempts": 1,
+  "recordedAt": "2026-10-13T10:48:49.6509336Z"
+}

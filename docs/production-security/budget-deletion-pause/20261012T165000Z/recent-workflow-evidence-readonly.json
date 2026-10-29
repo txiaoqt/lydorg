@@ -1,0 +1,86 @@
+{
+  "evidence": {
+    "activity_since_foundation": [
+      {
+        "action": "admin_sign_in",
+        "created_at": "2026-10-12T08:57:40.989092+00:00",
+        "actor_alias": "474aa5dbed68a654",
+        "related_type": "admin_session"
+      },
+      {
+        "action": "admin_sign_in",
+        "created_at": "2026-10-12T08:22:12.129869+00:00",
+        "actor_alias": "474aa5dbed68a654",
+        "related_type": "admin_session"
+      },
+      {
+        "action": "admin_sign_in",
+        "created_at": "2026-10-12T00:35:09.370549+00:00",
+        "actor_alias": "474aa5dbed68a654",
+        "related_type": "admin_session"
+      },
+      {
+        "action": "admin_sign_in",
+        "created_at": "2026-10-12T00:33:21.909485+00:00",
+        "actor_alias": "474aa5dbed68a654",
+        "related_type": "admin_session"
+      }
+    ],
+    "auth_users_updated_since_foundation": [
+      {
+        "role": "authenticated",
+        "provider": "email",
+        "created_at": "2026-10-03T03:51:22.54993+00:00",
+        "updated_at": "2026-10-12T14:32:24.124502+00:00",
+        "owner_alias": "4536e8ac780307ab",
+        "last_sign_in_at": "2026-10-12T14:32:24.038377+00:00"
+      },
+      {
+        "role": "authenticated",
+        "provider": "google",
+        "created_at": "2026-10-11T14:36:56.05982+00:00",
+        "updated_at": "2026-10-12T14:34:07.701269+00:00",
+        "owner_alias": "dc239fb97d3966e4",
+        "last_sign_in_at": "2026-10-12T14:34:07.693672+00:00"
+      }
+    ],
+    "admin_sessions_created_since_foundation": [
+      {
+        "revoked": false,
+        "created_at": "2026-10-12T00:35:09.370549+00:00",
+        "expires_at": "2026-10-12T01:35:12.126541+00:00",
+        "admin_alias": "474aa5dbed68a654",
+        "last_used_at": "2026-10-12T00:35:41.350161+00:00"
+      },
+      {
+        "revoked": false,
+        "created_at": "2026-10-12T08:22:12.129869+00:00",
+        "expires_at": "2026-10-12T09:26:33.780012+00:00",
+        "admin_alias": "474aa5dbed68a654",
+        "last_used_at": "2026-10-12T08:27:10.350922+00:00"
+      },
+      {
+        "revoked": false,
+        "created_at": "2026-10-12T08:57:40.989092+00:00",
+        "expires_at": "2026-10-12T09:58:52.13133+00:00",
+        "admin_alias": "474aa5dbed68a654",
+        "last_used_at": "2026-10-12T09:10:05.753563+00:00"
+      },
+      {
+        "revoked": false,
+        "created_at": "2026-10-12T00:33:21.909485+00:00",
+        "expires_at": "2026-10-12T02:00:45.34392+00:00",
+        "admin_alias": "474aa5dbed68a654",
+        "last_used_at": "2026-10-12T01:06:10.277346+00:00"
+      }
+    ],
+    "auth_identities_updated_since_foundation": [
+      {
+        "provider": "google",
+        "created_at": "2026-10-11T14:36:56.122017+00:00",
+        "updated_at": "2026-10-12T14:34:07.683201+00:00",
+        "owner_alias": "dc239fb97d3966e4"
+      }
+    ]
+  }
+}

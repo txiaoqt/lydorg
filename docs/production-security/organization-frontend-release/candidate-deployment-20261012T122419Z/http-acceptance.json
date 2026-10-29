@@ -1,0 +1,70 @@
+{
+  "capturedAt": "2026-10-12T12:48:46.097Z",
+  "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "origin": "https://yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+  "status": "BLOCKED",
+  "readOnly": true,
+  "requests": [
+    {
+      "path": "/",
+      "method": "GET",
+      "http": 302,
+      "bytes": 263,
+      "sha256": "078d44efe538819a52deef2d03cc221b5b81ea1ae1f577dc80710db061c3766f",
+      "headers": {
+        "content-type": "text/plain",
+        "x-frame-options": "DENY"
+      },
+      "redirectOrigin": "https://vercel.com",
+      "securityHeadersMatch": null
+    },
+    {
+      "path": "/api/sync-run-once",
+      "method": "GET",
+      "http": 302,
+      "bytes": 263,
+      "sha256": "078d44efe538819a52deef2d03cc221b5b81ea1ae1f577dc80710db061c3766f",
+      "headers": {
+        "content-type": "text/plain",
+        "x-frame-options": "DENY"
+      },
+      "redirectOrigin": "https://vercel.com",
+      "expectedStatus": 405,
+      "result": "BLOCKED"
+    },
+    {
+      "path": "/api/sync-run-once",
+      "method": "OPTIONS",
+      "http": 302,
+      "bytes": 263,
+      "sha256": "078d44efe538819a52deef2d03cc221b5b81ea1ae1f577dc80710db061c3766f",
+      "headers": {
+        "content-type": "text/plain",
+        "x-frame-options": "DENY"
+      },
+      "redirectOrigin": "https://vercel.com",
+      "expectedStatus": 204,
+      "result": "BLOCKED"
+    }
+  ],
+  "assets": {
+    "status": "BLOCKED",
+    "expected": 53,
+    "matched": 0
+  },
+  "secretScan": {
+    "status": "BLOCKED",
+    "files": 0,
+    "findings": 0,
+    "productionOriginPresent": false,
+    "fixedVersionPresent": false
+  },
+  "privateFileRequests": 0,
+  "authenticatedOwnerRequests": 0,
+  "newSessions": 0,
+  "externalSyncPostRequests": 0,
+  "protectionPageSignal": true,
+  "reason": "VERCEL_AUTHENTICATION_REQUIRED",
+  "routes": "BLOCKED",
+  "securityHeaders": "BLOCKED"
+}

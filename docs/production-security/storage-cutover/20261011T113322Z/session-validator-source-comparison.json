@@ -1,0 +1,25 @@
+{
+  "matches": true,
+  "scope": "Isolated captured validator plus explicit production grant fixture versus fresh read-only production catalog; no live validation RPC invocation",
+  "actual": {
+    "source_md5": "8b7040e3832ccfca2ea2f0ad9c0ebebf",
+    "security_definer": true,
+    "volatility": "v",
+    "config": [
+      "search_path=public"
+    ],
+    "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+  },
+  "expected": {
+    "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "owner": "postgres",
+    "config": [
+      "search_path=public"
+    ],
+    "signature": "validate_admin_session_token(text)",
+    "source_md5": "8b7040e3832ccfca2ea2f0ad9c0ebebf",
+    "volatility": "v",
+    "definition_md5": "50d5dcf06885fa593fe5355fc8892d69",
+    "security_definer": true
+  }
+}

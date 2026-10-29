@@ -1,0 +1,10 @@
+{
+  "originalResult": false,
+  "reason": "en_US.UTF-8 aggregate array ordering reverses admin_seed_yorp_sample_dataset_core(text,text) and admin_seed_yorp_sample_dataset(text,text) relative to the pinned array",
+  "catalogEntryDifferences": [],
+  "independentAllUnrelatedFunctionCatalogMd5Unchanged": true,
+  "reviewedVerifierFileModified": false,
+  "candidateModified": false,
+  "writesAfterInstall": 0
+}
+

@@ -1,0 +1,58 @@
+{
+  "capturedAt": "2026-10-11T22:36:57.074Z",
+  "preparationOnly": true,
+  "noDeployment": true,
+  "noDatabaseWrites": true,
+  "pinnedArtifacts": [
+    {
+      "path": "supabase/functions/admin-storage-access/index.ts",
+      "bytes": 1479,
+      "sha256": "97fba3f9c7a271860080b89f3f1c8710bdda3dccbe76961175d19d1154346248",
+      "expectedSha256": "97fba3f9c7a271860080b89f3f1c8710bdda3dccbe76961175d19d1154346248",
+      "pass": true
+    },
+    {
+      "path": "supabase/functions/admin-storage-access/control.ts",
+      "bytes": 4182,
+      "sha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21",
+      "expectedSha256": "e6f422e179ebf93a6f7a1d99e0b901fa4b44e16db6d82da87e9448ee47b79f21",
+      "pass": true
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/file-hashes.json",
+      "bytes": 4263,
+      "sha256": "f9dad701151f662044aa371595fb316b0d814a89b036bc932bab1131e7245668",
+      "expectedSha256": "f9dad701151f662044aa371595fb316b0d814a89b036bc932bab1131e7245668",
+      "pass": true
+    },
+    {
+      "path": "docs/production-security/storage-cutover/gateway-readiness-20261011T222225859Z/reviewed-deployment-payload.json",
+      "bytes": 6048,
+      "sha256": "3fe07c6f768703c23a4ad2fe36884fb9832c23826ae6712b159f189ffcb129b0",
+      "expectedSha256": "3fe07c6f768703c23a4ad2fe36884fb9832c23826ae6712b159f189ffcb129b0",
+      "pass": true
+    },
+    {
+      "path": "docs/production-security/storage-cutover/20261011T113322Z/production_storage_foundation_review.sql",
+      "bytes": 47407,
+      "sha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+      "expectedSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+      "pass": true
+    }
+  ],
+  "payloadIdentityAndExactSourcesMatch": true,
+  "reportLocalLinksValid": true,
+  "diffCheck": {
+    "command": "git diff --check",
+    "exitCode": 0,
+    "output": "error: fsmonitor_ipc__send_query: unspecified error on '.git/fsmonitor--daemon.ipc'\nwarning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'build/assets/html2canvas.esm-CBrSDip1.js', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'build/assets/pdf.worker.min-D39lNQBd.mjs', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'build/assets/purify.es-CPrKKeqe.js', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'build/index.html', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'build/manifest-admin.webmanifest', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'build/manifest.webmanifest', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'build/sw.js', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'index.html', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'playwright.config.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'public/manifest-admin.webmanifest', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'public/manifest.webmanifest', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'public/sw.js', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/App.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/admin/components/AdminSettingsPage.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/admin/components/RenewalTestEnvironmentPanel.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/admin/renewal-test-environment.test.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/components/portal/UserPortalRenewalWorkspaceView.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/components/portal/UserPortalResponsiveWorkspace.test.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/components/public/PublicTemplatesCatalog.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/admin-lifecycle-user-sync.test.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/admin-system-settings.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/audit-records-hardening.test.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/lydo-connect-store.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/query-client.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/renewal-realtime.test.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/report-export.test.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/lib/section35-reporting.test.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/test/setup.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/user/UserPortalEntry.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/user/pwa/PwaAppShell.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/user/pwa/renewals/PwaRenewalPage.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'supabase/config.toml', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'vitest.config.ts', LF will be replaced by CRLF the next time Git touches it\n"
+  },
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "workingTree": {
+    "trackedChanges": 64,
+    "untrackedEntries": 99
+  },
+  "testsReexecuted": false,
+  "reason": "No application source or gateway behavior changed; prior validated evidence reused."
+}

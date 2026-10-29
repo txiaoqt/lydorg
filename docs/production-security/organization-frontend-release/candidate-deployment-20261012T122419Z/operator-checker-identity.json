@@ -1,0 +1,19 @@
+{
+  "capturedAt": "2026-10-12T12:56:24.536Z",
+  "deploymentId": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "origin": "https://yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+  "sourceRevision": "0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+  "staticInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+  "files": 53,
+  "referenceScriptSha256": "688023bc5d94d16d54b7fd419dcaac48d7e97aab70519d02a443a01bd8583b81",
+  "checkerSha256": "02f37c21c749a846eca2fb96912641600204204b6802d41f80e7478de52bfde0",
+  "status": "PREPARED NOT EXECUTED",
+  "methods": [
+    "GET",
+    "OPTIONS"
+  ],
+  "privateFileRequests": 0,
+  "credentialReads": 0,
+  "postRequests": 0,
+  "serviceWorkerProvenance": "No claim of network bypass; operator must enable DevTools bypass or preserve the limitation."
+}

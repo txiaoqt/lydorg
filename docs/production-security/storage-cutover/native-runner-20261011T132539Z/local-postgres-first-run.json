@@ -1,0 +1,12 @@
+{
+  "scope": "Isolated local PGlite, no remote connections",
+  "passed": 2,
+  "failed": 1,
+  "failedTest": "untouched production candidate fails its real local catalog gate; runner rolls back without retry",
+  "failure": "Local test incorrectly expected PostgreSQL 17.x; actual existing runtime is PostgreSQL 18.3 (PGlite 0.5.8)",
+  "classification": "New local test fixture version assumption, corrected explicitly; production version gate remains 17.6 / 170006",
+  "correction": "Pin the actual existing local engine and describe these checks as transaction-semantics coverage, not native PostgreSQL 17.6 certification",
+  "rerun": {"passed": 3, "failed": 0},
+  "productionWrites": 0,
+  "stagingWrites": 0
+}

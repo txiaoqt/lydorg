@@ -1,0 +1,31 @@
+COMMAND: C:\Users\Christopher x Angel\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.exe -NoLogo -NoProfile -NonInteractive -File docs/production-security/budget-deletion-pause/offline-proof-state-candidate-20261015T015135Z/invoke-fixture-tests.ps1
+STARTED_UTC: 2026-10-15T02:00:55.4199408+00:00
+FINISHED_UTC: 2026-10-15T02:00:59.7518122+00:00
+EXIT: 1
+ok 1 - per-run root is generated beneath Temp
+not ok 2 - archive preserves bytes identity ACL owner and times [ARCHIVE_SUCCESS_CONTRACT_FAILED]
+not ok 3 - pre-existing archive destination is retained [EXPECTED_ARCHIVE_DESTINATION_ALREADY_EXISTS]
+not ok 4 - changed source identity is rejected before submission [EXPECTED_SOURCE_BINDING_MISMATCH]
+not ok 5 - binding from a different parent is rejected [EXPECTED_PARENT_BINDING_MISMATCH]
+not ok 6 - replacement parent identity is rejected [ASSERTION_FAILED]
+not ok 7 - concurrent no-overwrite contenders preserve exactly one winner [ASSERTION_FAILED]
+not ok 8 - pre-submit stop leaves source and performs zero submissions [ASSERTION_FAILED]
+not ok 9 - post-kernel ambiguity is retained and never retried [ARCHIVE_UNCERTAIN_STATE_NOT_RETAINED]
+ok 10 - hardlink source rejected when unprivileged fixture is available # SKIP hardlink fixture unavailable without privilege
+not ok 11 - reparse directory rejected when unprivileged fixture is available [EXPECTED_REPARSE_DIRECTORY_REJECTED]
+ok 12 - proof accepts exact five fields and inherits fixture ACL read-only
+ok 13 - exact 300-second proof age is accepted
+not ok 14 - 301-second proof age is rejected [EXPECTED_PROOF_TIMESTAMP_STALE_OR_FUTURE]
+not ok 15 - future proof timestamp is rejected [EXPECTED_PROOF_TIMESTAMP_STALE_OR_FUTURE]
+not ok 16 - timezone-free proof timestamp is rejected [EXPECTED_PROOF_TIMESTAMP_INVALID]
+ok 17 - additional credential-like field is rejected before file creation
+ok 18 - create-new collision retains existing proof bytes
+ok 19 - pre-create stop writes nothing and has zero attempts
+ok 20 - failure after exclusive create retains empty file without retry
+ok 21 - partial proof write remains present and unresolved
+ok 22 - post-flush uncertainty retains complete proof without claiming success
+# retained synthetic fixture cases: proof-after-create,proof-after-flush,proof-partial
+# retained root is under the per-run Windows TEMP directory
+1..22
+# SUMMARY pass=9 fail=12 blocked=1
+# FAILURE_CODES archive preserves bytes identity ACL owner and times:ARCHIVE_SUCCESS_CONTRACT_FAILED,pre-existing archive destination is retained:EXPECTED_ARCHIVE_DESTINATION_ALREADY_EXISTS,changed source identity is rejected before submission:EXPECTED_SOURCE_BINDING_MISMATCH,binding from a different parent is rejected:EXPECTED_PARENT_BINDING_MISMATCH,replacement parent identity is rejected:ASSERTION_FAILED,concurrent no-overwrite contenders preserve exactly one winner:ASSERTION_FAILED,pre-submit stop leaves source and performs zero submissions:ASSERTION_FAILED,post-kernel ambiguity is retained and never retried:ARCHIVE_UNCERTAIN_STATE_NOT_RETAINED,reparse directory rejected when unprivileged fixture is available:EXPECTED_REPARSE_DIRECTORY_REJECTED,301-second proof age is rejected:EXPECTED_PROOF_TIMESTAMP_STALE_OR_FUTURE,future proof timestamp is rejected:EXPECTED_PROOF_TIMESTAMP_STALE_OR_FUTURE,timezone-free proof timestamp is rejected:EXPECTED_PROOF_TIMESTAMP_INVALID

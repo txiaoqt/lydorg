@@ -1,0 +1,13 @@
+{
+  "elapsedMs": 7343,
+  "requestBytes": 47407,
+  "result": [
+    {
+      "database": "postgres",
+      "current_user": "postgres",
+      "session_user": "postgres",
+      "read_only": "on",
+      "request_bytes": 47407
+    }
+  ]
+}

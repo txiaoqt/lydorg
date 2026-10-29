@@ -1,0 +1,23 @@
+--- a/src/lib/organization-renewal.ts
++++ b/src/lib/organization-renewal.ts
+@@ -305,17 +305,7 @@
+   }
+ 
+-  // 2. Legacy Fallback (verifiedAt + 3 years)
+-  if (!expiresAt) {
+-    if (!profile?.verifiedAt) return null;
+-
+-    const verifiedAt = new Date(profile.verifiedAt);
+-    if (Number.isNaN(verifiedAt.getTime())) return null;
+-
+-    expiresAt = new Date(verifiedAt);
+-    expiresAt.setUTCFullYear(
+-      expiresAt.getUTCFullYear() + ORGANIZATION_REGISTRATION_VALIDITY_YEARS,
+-    );
+-  }
+-
++  // Verification is identity evidence, not an authoritative accreditation term.
++  if (!expiresAt || !profile?.currentAccreditationId) return null;
++
+   const millisecondsRemaining = expiresAt.getTime() - now.getTime();
+   const daysRemaining = Math.max(

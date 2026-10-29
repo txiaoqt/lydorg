@@ -1,0 +1,75 @@
+{
+  "format": "YTRACE_OFFLINE_REMEDIATION_DESIGN_INVENTORY_V1",
+  "classification": "NON-RUNNABLE — NOT AUTHORIZED",
+  "algorithm": "sha256",
+  "bundleSha256": "2dee359e3029a4cca9cc59bc9aafa26f52af90005d599bbffa20e400354e0159",
+  "manifestSha256": "0f911de82cf1daa3dffeceb63a75745e934769cae37b27b5494920f4f65d3749",
+  "selfExcluded": true,
+  "files": [
+    {
+      "file": "f1-design-options.md",
+      "bytes": 10744,
+      "sha256": "af6a47eada2db5dc637ce3b1845cdbc8c7ee78a50412400dc4b657b1ed78f5bf"
+    },
+    {
+      "file": "focused-tests-asia-manila.tap",
+      "bytes": 51329,
+      "sha256": "cd4a7f50439fb7310ed9568ca3dfbf7286ee608d7189781d9e7da987df334461"
+    },
+    {
+      "file": "focused-tests-utc.tap",
+      "bytes": 51309,
+      "sha256": "3d3a4c6d8f02938b941a345ed661c40bbbe4be61b7c6f4e12f330f6f048ff8be"
+    },
+    {
+      "file": "integration-engine.mjs",
+      "bytes": 15755,
+      "sha256": "8638de4638c4b66c1cc2ad4f8f1cbbe79a7c267dd2818cbfffc7546c4c70b7a8"
+    },
+    {
+      "file": "protocol-synthetic.test.mjs",
+      "bytes": 23246,
+      "sha256": "a1739d35e8328dabfb3c46accd0bc849778fb352d26877cc4bb7c5d402c53044"
+    },
+    {
+      "file": "provider-remediation-plan.md",
+      "bytes": 10421,
+      "sha256": "a229de4217ef17e3908ba33e71e92198b81dc1e41373fc59bad11856df64137a"
+    },
+    {
+      "file": "remediation-report.md",
+      "bytes": 16724,
+      "sha256": "e9b1ef2533777c020b4242a7808b021b00470fd2a6e17d9ef5863e5c1d79bc39"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 48259,
+      "sha256": "0f911de82cf1daa3dffeceb63a75745e934769cae37b27b5494920f4f65d3749"
+    },
+    {
+      "file": "safe-error-codes.mjs",
+      "bytes": 2761,
+      "sha256": "36a345dad73590ae03a59b2ba3467b46fcdc9a9be1180c695e11c2ad74cc15b1"
+    },
+    {
+      "file": "safe-error-codes.test.mjs",
+      "bytes": 4781,
+      "sha256": "9a2022215b2d13b14f8990c7a7c4c88fd337c329af29d6c63aabb7d029de29af"
+    },
+    {
+      "file": "trusted-io-integration.mjs",
+      "bytes": 1004,
+      "sha256": "3cf14f82c5e393b340758abc090c8e74db10869253696fa73126d72f08b3f19c"
+    },
+    {
+      "file": "validator-fixed.test.mjs",
+      "bytes": 10008,
+      "sha256": "f7662a464e0307aebb3bac1984eea8bc18db1e3c8e89497dad200354d3633092"
+    },
+    {
+      "file": "validator-synthetic-fixtures.mjs",
+      "bytes": 5080,
+      "sha256": "4ba43452ea8ee1561edb3e337ad1a0b40bcf0bf899d348be999ec72b566d55b7"
+    }
+  ]
+}

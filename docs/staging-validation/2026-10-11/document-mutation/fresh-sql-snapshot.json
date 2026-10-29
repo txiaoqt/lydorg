@@ -1,0 +1,178 @@
+{
+  "target": {
+    "id": "bf21c513-6466-44ac-9487-c791544ee4ad",
+    "file_url": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+    "file_name": "SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+    "file_size": 673,
+    "file_type": "application/pdf",
+    "created_at": "2026-10-10T17:53:07.309716+00:00",
+    "seed_batch": null,
+    "updated_at": "2026-10-10T18:26:42.585322+00:00",
+    "reviewed_at": null,
+    "uploaded_at": "2026-10-10T18:26:42.587189+00:00",
+    "admin_status": "submitted",
+    "admin_remarks": null,
+    "submission_id": "8e1f2447-5e3f-46a2-b35c-405d341d4ecb",
+    "revision_due_at": null,
+    "revision_locked": false,
+    "document_type_id": "729554c2-5b7c-4be3-8915-3b6fa12b992c",
+    "revision_history": [
+      {
+        "action": "replaced",
+        "replacedAt": "2026-10-10T18:26:34.254124+00:00",
+        "reviewedAt": "2026-10-10T17:53:10.461039+00:00",
+        "adminRemarks": "SYNTHETIC correct the dedicated renewal PDF",
+        "previousStatus": "needs_revision",
+        "previousFileUrl": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+        "previousFileName": "SYNTHETIC-renewal-729554c2-5b7c-4be3-8915-3b6fa12b992c.pdf",
+        "previousFileSize": 673,
+        "previousFileType": "application/pdf"
+      },
+      {
+        "action": "replaced",
+        "replacedAt": "2026-10-10T18:26:42.586987+00:00",
+        "reviewedAt": "2026-10-10T18:26:37.240878+00:00",
+        "adminRemarks": "SYNTHETIC controlled renewal recovery document approval",
+        "previousStatus": "approved_green",
+        "previousFileUrl": "storage://organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f/renewal/be35b31c-2bbe-42ab-a4aa-52e9c7123b65/729554c2-5b7c-4be3-8915-3b6fa12b992c/revisions/a6d8c2cc-df26-4c58-80af-babd59d7b3d5-SYNTHETIC-renewal-corrected.pdf",
+        "previousFileName": "SYNTHETIC-renewal-corrected.pdf",
+        "previousFileSize": 674,
+        "previousFileType": "application/pdf"
+      }
+    ],
+    "validation_status": "correct",
+    "revision_locked_at": null,
+    "revision_unlocked_at": null,
+    "revision_unlocked_by": null,
+    "is_seeded_sample_data": false,
+    "revision_requested_at": "2026-10-10T17:53:10.461039+00:00"
+  },
+  "policies": [
+    {
+      "cmd": "ALL",
+      "qual": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_admin_manage",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'transparency-attachments'::text)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "transparency_attachments_read_public",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "yorp_sample_seed_assets_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'template-files'::text) AND ytrace_storage_private.is_active_template(name))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_active_templates_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'news-release-images'::text) AND ytrace_storage_private.is_published_news_image(name))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_news_images_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'delete'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_delete",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_insert",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'insert'::text))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'read'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_private_organization_read",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "ytrace_storage_private.is_public_avatar(bucket_id, name, (metadata ->> 'mimetype'::text), COALESCE(owner_id, (owner)::text))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "ytrace_published_profile_avatar_read",
+      "schemaname": "storage",
+      "with_check": null
+    }
+  ],
+  "fingerprints": [
+    {
+      "md5": "ce30b4dff57a2fa1b7bf314c01e9fae6",
+      "name": "replace_organization_document_file"
+    },
+    {
+      "md5": "252754fd75505948c26afe27f6b0b760",
+      "name": "update_admin_document_submission_file_review"
+    },
+    {
+      "md5": "59370b100efed37d5975dc16983d786a",
+      "name": "user_replace_document_submission_file"
+    }
+  ]
+}

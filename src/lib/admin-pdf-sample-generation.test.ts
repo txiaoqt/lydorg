@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { tmpdir } from "node:os";
 import {
   generateReportPdfDocument,
 } from "@/lib/report-export";
@@ -15,20 +16,29 @@ import {
   type BudgetRequestExportRow,
   type BudgetMonitoringExportRow,
   type AllocationByBarangayExportRow,
+  type YorpRegistryExportRow,
 } from "@/lib/report-export-configs";
 import {
   activityLogExportConfig,
-  type ActivityLogExportRow,
+  type ExportActivityRow,
 } from "@/lib/activity-log-export";
-import type { YorpRegistration } from "@/lib/lydo-connect-data";
 
-const scratchDir = "C:\\Users\\Christopher x Angel\\.gemini\\antigravity-ide\\brain\\ad2ad959-7d14-4eae-bd6f-ad3ad5b92e58\\scratch";
+const scratchDir = fs.mkdtempSync(path.join(tmpdir(), "ytrace-admin-pdf-samples-"));
+afterAll(() => fs.rmSync(scratchDir, { recursive: true, force: true }));
 
 describe("Admin PDF Export System - Sample Generation & Verification", () => {
-  it("generates multi-page A4 portrait PDF for YORP Registry with official letterhead", async () => {
-    const sampleYorpRows: YorpRegistration[] = Array.from({ length: 25 }, (_, i) => ({
+  it("generates multi-page A4 landscape PDF for YORP Registry with official letterhead", async () => {
+    const sampleYorpRows: YorpRegistryExportRow[] = Array.from({ length: 25 }, (_, i) => ({
       id: `yorp-${i + 1}`,
       organizationName: `Pasig Youth Leadership Council ${i + 1} for Community Development`,
+      majorClassification: i % 2 === 0 ? "Youth Organization" : "Youth-Serving Organization",
+      address: `${i + 1} Sample Street, Pasig City`,
+      urn: `YORP-2026-${String(i + 1).padStart(4, "0")}`,
+      organizationHead: `Juan Dela Cruz ${i + 1}`,
+      contactNumber: `0917${String(i + 1).padStart(7, "0")}`,
+      email: `council.${i + 1}@pasigyouth.org.ph`,
+      registrationDate: "2026-01-10T08:00:00.000Z",
+      verifiedDate: "2026-03-15T08:00:00.000Z",
       yorpUniqueRegistrationNumber: `YORP-2026-${String(i + 1).padStart(4, "0")}`,
       classification: i % 2 === 0 ? "Youth Organization" : "Youth Serving Organization",
       subClassification: i % 3 === 0 ? "Community-Based" : "School-Based",
@@ -59,8 +69,8 @@ describe("Admin PDF Export System - Sample Generation & Verification", () => {
 
     const pageCount = doc.getNumberOfPages();
     expect(pageCount).toBeGreaterThan(1);
-    expect(doc.internal.pageSize.getWidth()).toBeCloseTo(595.28, 1);
-    expect(doc.internal.pageSize.getHeight()).toBeCloseTo(841.89, 1);
+    expect(doc.internal.pageSize.getWidth()).toBeCloseTo(841.89, 1);
+    expect(doc.internal.pageSize.getHeight()).toBeCloseTo(595.28, 1);
 
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
     fs.writeFileSync(path.join(scratchDir, "sample_yorp_registry.pdf"), pdfBuffer);
@@ -114,9 +124,9 @@ describe("Admin PDF Export System - Sample Generation & Verification", () => {
       budgetStatus: "Partially Released",
       liquidationStatus: "Pending Liquidation",
       releaseDate: "2026-06-01T00:00:00.000Z",
-      goSignalDate: "2026-06-05T00:00:00.000Z",
+      goSignalAt: "2026-06-05T00:00:00.000Z",
       deadlineAt: "2026-07-30T00:00:00.000Z",
-      hardCopyAt: "2026-07-25T00:00:00.000Z",
+      hardCopySubmittedAt: "2026-07-25T00:00:00.000Z",
       completedAt: "",
       remarks: "First tranche disbursed on schedule",
       riskLabel: i % 3 === 0 ? "High Risk" : i % 3 === 1 ? "Medium" : "Low Risk",
@@ -187,8 +197,9 @@ describe("Admin PDF Export System - Sample Generation & Verification", () => {
   });
 
   it("generates multi-page A4 portrait PDF for Activity Logs with official letterhead", async () => {
-    const sampleLogs: ActivityLogExportRow[] = Array.from({ length: 25 }, (_, i) => ({
+    const sampleLogs: ExportActivityRow[] = Array.from({ length: 25 }, (_, i) => ({
       logId: `LOG-${String(i + 1).padStart(4, "0")}`,
+      timestamp: "2026-06-28T14:32:00.000Z",
       date: "Jun 28, 2026",
       time: "14:32:00",
       action: i % 2 === 0 ? "Approved document submission" : "Updated budget request",

@@ -1,0 +1,316 @@
+TAP version 13
+# Subtest: synthetic protocol succeeds only after ordered gates and complete evidence
+ok 1 - synthetic protocol succeeds only after ordered gates and complete evidence
+  ---
+  duration_ms: 7.7797
+  type: 'test'
+  ...
+# Subtest: validity start/end and five-minute exact completion boundaries are inclusive
+ok 2 - validity start/end and five-minute exact completion boundaries are inclusive
+  ---
+  duration_ms: 2.4336
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: missing time
+ok 3 - context rejected before any I/O: missing time
+  ---
+  duration_ms: 0.356
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: timezone-free
+ok 4 - context rejected before any I/O: timezone-free
+  ---
+  duration_ms: 0.2498
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: numeric coercion
+ok 5 - context rejected before any I/O: numeric coercion
+  ---
+  duration_ms: 0.25
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: reversed
+ok 6 - context rejected before any I/O: reversed
+  ---
+  duration_ms: 0.283
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: not yet valid
+ok 7 - context rejected before any I/O: not yet valid
+  ---
+  duration_ms: 0.2759
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: expired window
+ok 8 - context rejected before any I/O: expired window
+  ---
+  duration_ms: 0.3254
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: future approval
+ok 9 - context rejected before any I/O: future approval
+  ---
+  duration_ms: 0.3268
+  type: 'test'
+  ...
+# Subtest: context rejected before any I/O: old authorization
+ok 10 - context rejected before any I/O: old authorization
+  ---
+  duration_ms: 0.3294
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous verifyArtifacts stops without retry
+ok 11 - approval expiry during asynchronous verifyArtifacts stops without retry
+  ---
+  duration_ms: 0.3344
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous verifyLocalSecurity stops without retry
+ok 12 - approval expiry during asynchronous verifyLocalSecurity stops without retry
+  ---
+  duration_ms: 1.0439
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous inspectProof stops without retry
+ok 13 - approval expiry during asynchronous inspectProof stops without retry
+  ---
+  duration_ms: 0.2893
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous getProject stops without retry
+ok 14 - approval expiry during asynchronous getProject stops without retry
+  ---
+  duration_ms: 0.3684
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous archiveProof stops without retry
+ok 15 - approval expiry during asynchronous archiveProof stops without retry
+  ---
+  duration_ms: 0.5108
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous createProof stops without retry
+ok 16 - approval expiry during asynchronous createProof stops without retry
+  ---
+  duration_ms: 0.5227
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous readNewProof stops without retry
+ok 17 - approval expiry during asynchronous readNewProof stops without retry
+  ---
+  duration_ms: 0.5027
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous launchNative stops without retry
+ok 18 - approval expiry during asynchronous launchNative stops without retry
+  ---
+  duration_ms: 0.5775
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous verifyEvidenceAcl stops without retry
+ok 19 - approval expiry during asynchronous verifyEvidenceAcl stops without retry
+  ---
+  duration_ms: 0.6548
+  type: 'test'
+  ...
+# Subtest: approval expiry during asynchronous readEvidence stops without retry
+ok 20 - approval expiry during asynchronous readEvidence stops without retry
+  ---
+  duration_ms: 0.7639
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous getProject stops and retains
+ok 21 - five-minute crossing during asynchronous getProject stops and retains
+  ---
+  duration_ms: 0.4299
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous inspectProof stops and retains
+ok 22 - five-minute crossing during asynchronous inspectProof stops and retains
+  ---
+  duration_ms: 0.3678
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous archiveProof stops and retains
+ok 23 - five-minute crossing during asynchronous archiveProof stops and retains
+  ---
+  duration_ms: 0.4324
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous createProof stops and retains
+ok 24 - five-minute crossing during asynchronous createProof stops and retains
+  ---
+  duration_ms: 0.3921
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous readNewProof stops and retains
+ok 25 - five-minute crossing during asynchronous readNewProof stops and retains
+  ---
+  duration_ms: 0.4163
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous launchNative stops and retains
+ok 26 - five-minute crossing during asynchronous launchNative stops and retains
+  ---
+  duration_ms: 1.7046
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous verifyEvidenceAcl stops and retains
+ok 27 - five-minute crossing during asynchronous verifyEvidenceAcl stops and retains
+  ---
+  duration_ms: 0.7317
+  type: 'test'
+  ...
+# Subtest: five-minute crossing during asynchronous readEvidence stops and retains
+ok 28 - five-minute crossing during asynchronous readEvidence stops and retains
+  ---
+  duration_ms: 0.6749
+  type: 'test'
+  ...
+# Subtest: later evidence read and ACL checkpoints are individually guarded
+ok 29 - later evidence read and ACL checkpoints are individually guarded
+  ---
+  duration_ms: 1.7102
+  type: 'test'
+  ...
+# Subtest: wrong project, host, status, scope or future observation cannot archive
+ok 30 - wrong project, host, status, scope or future observation cannot archive
+  ---
+  duration_ms: 2.1555
+  type: 'test'
+  ...
+# Subtest: unavailable scoped observation fails without an alternative or refresh
+ok 31 - unavailable scoped observation fails without an alternative or refresh
+  ---
+  duration_ms: 0.3547
+  type: 'test'
+  ...
+# Subtest: artifact drift, CA/TLS/loader/root failures stop before control-plane
+ok 32 - artifact drift, CA/TLS/loader/root failures stop before control-plane
+  ---
+  duration_ms: 1.1292
+  type: 'test'
+  ...
+# Subtest: proof hash/metadata/state/destination recheck must pass immediately before rename
+ok 33 - proof hash/metadata/state/destination recheck must pass immediately before rename
+  ---
+  duration_ms: 2.2265
+  type: 'test'
+  ...
+# Subtest: initial malformed or nonstale proof stops before scoped observation
+ok 34 - initial malformed or nonstale proof stops before scoped observation
+  ---
+  duration_ms: 0.7987
+  type: 'test'
+  ...
+# Subtest: archive receipt uncertainty retains actual synthetic rename and never creates new proof
+ok 35 - archive receipt uncertainty retains actual synthetic rename and never creates new proof
+  ---
+  duration_ms: 0.4377
+  type: 'test'
+  ...
+# Subtest: create-new failure retains archive and any partial synthetic proof
+ok 36 - create-new failure retains archive and any partial synthetic proof
+  ---
+  duration_ms: 0.4099
+  type: 'test'
+  ...
+# Subtest: new proof must be read back exactly; observation timestamp cannot be reset
+ok 37 - new proof must be read back exactly; observation timestamp cannot be reset
+  ---
+  duration_ms: 0.4355
+  type: 'test'
+  ...
+# Subtest: native timeout is blocked, retained and not relaunched
+ok 38 - native timeout is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.5368
+  type: 'test'
+  ...
+# Subtest: native cancellation is blocked, retained and not relaunched
+ok 39 - native cancellation is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.4166
+  type: 'test'
+  ...
+# Subtest: native process-error is blocked, retained and not relaunched
+ok 40 - native process-error is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.4293
+  type: 'test'
+  ...
+# Subtest: native unknown-outcome is blocked, retained and not relaunched
+ok 41 - native unknown-outcome is blocked, retained and not relaunched
+  ---
+  duration_ms: 0.573
+  type: 'test'
+  ...
+# Subtest: zero exit, stopped label, nonzero exit or signal cannot imply success
+ok 42 - zero exit, stopped label, nonzero exit or signal cannot imply success
+  ---
+  duration_ms: 5.2168
+  type: 'test'
+  ...
+# Subtest: incomplete, corrupt, missing or unstable synthetic evidence never passes
+ok 43 - incomplete, corrupt, missing or unstable synthetic evidence never passes
+  ---
+  duration_ms: 1.6282
+  type: 'test'
+  ...
+# Subtest: PASS label without a launch or complete evidence is rejected by coordinator
+ok 44 - PASS label without a launch or complete evidence is rejected by coordinator
+  ---
+  duration_ms: 0.4731
+  type: 'test'
+  ...
+# Subtest: wrong wrapper evidence hash or incomplete preservation receipt is rejected
+ok 45 - wrong wrapper evidence hash or incomplete preservation receipt is rejected
+  ---
+  duration_ms: 0.8127
+  type: 'test'
+  ...
+# Subtest: wall and monotonic clock changes fail closed between asynchronous stages
+ok 46 - wall and monotonic clock changes fail closed between asynchronous stages
+  ---
+  duration_ms: 0.3724
+  type: 'test'
+  ...
+# Subtest: one-use guard also prevents a concurrent second call of the same integration
+ok 47 - one-use guard also prevents a concurrent second call of the same integration
+  ---
+  duration_ms: 0.6698
+  type: 'test'
+  ...
+# Subtest: atomic archive CAS model permits one preflight across two modeled invocations
+ok 48 - atomic archive CAS model permits one preflight across two modeled invocations
+  ---
+  duration_ms: 1.1219
+  type: 'test'
+  ...
+# Subtest: public integration cannot replace the reviewed wrapper or validator
+ok 49 - public integration cannot replace the reviewed wrapper or validator
+  ---
+  duration_ms: 0.4877
+  type: 'test'
+  ...
+# Subtest: cleanup/reset/alternate-provider capabilities are excluded from the port set
+ok 50 - cleanup/reset/alternate-provider capabilities are excluded from the port set
+  ---
+  duration_ms: 0.1949
+  type: 'test'
+  ...
+# Subtest: fixed launch request is immutable and contains only reviewed native --preflight route
+ok 51 - fixed launch request is immutable and contains only reviewed native --preflight route
+  ---
+  duration_ms: 0.0909
+  type: 'test'
+  ...
+1..51
+# tests 51
+# suites 0
+# pass 51
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 218.8351

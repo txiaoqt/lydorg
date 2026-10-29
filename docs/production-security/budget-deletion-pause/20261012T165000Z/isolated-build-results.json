@@ -1,0 +1,23 @@
+{
+  "build": "PASS",
+  "buildExit": 0,
+  "typecheck": "FAIL",
+  "typecheckExit": 2,
+  "platform": "win32",
+  "node": "24.21.0",
+  "baseSourceIdentitiesVerified": 561,
+  "runtimeOverlay": [
+    "src/admin/AdminPortal.tsx",
+    "src/admin/components/BudgetRequestsTable.tsx",
+    "src/lib/lydo-connect-supabase.ts",
+    "src/lib/admin-budget-deletion-pause.ts"
+  ],
+  "unrelatedSourceIdentitiesPreserved": 558,
+  "publicConfigurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+  "publicKeyClass": "anon",
+  "privateEnvironmentFilesRead": false,
+  "productionWrites": 0,
+  "buildVersion": "Unchanged base version for local validation only; not a deployable release identity",
+  "generatedFiles": 53,
+  "generatedInventorySha256": "aa63b24d65aa1f08cb44166279f743bbd7a66e4c7425f5b5ae93388adfd42ebf"
+}

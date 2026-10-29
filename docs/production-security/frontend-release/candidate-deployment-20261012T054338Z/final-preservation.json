@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-10-12T06:03:55.591Z",
+  "status": "PASS",
+  "adminAlias": {
+    "alias": "y-trace-admin.vercel.app",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+    "deploymentId": "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+    "deploymentUrl": "lydorg-gdb25hm7m-toffs-projects-81b2ce10.vercel.app"
+  },
+  "organizationAlias": {
+    "alias": "ytrace.app",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+  },
+  "organizationDeploymentIdsUnchanged": true,
+  "newAdminDeploymentIds": [
+    "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS"
+  ],
+  "projectSettingsUnchanged": true,
+  "adminSettingsSha256": "34353d18ad3cba1ef1938b8242325aea371d3917593c15878d33765d7d2f9cb5",
+  "organizationSettingsSha256": "66514170cbaa35897badd78383c9bc971be29910376196403c0cc1835b5bf597",
+  "rootTrackedStatusUnchanged": true,
+  "priorFailedEvidenceFilesVerified": 18,
+  "approvedReviewEvidenceFilesVerified": 19,
+  "priorAttemptMarkerPreserved": true,
+  "currentAttemptMarkerPreserved": true,
+  "operationLockReleased": true,
+  "diffCheck": "PASS",
+  "gatewayUnchanged": true,
+  "supabaseDatabaseWrites": 0,
+  "storageWrites": 0,
+  "authOrAdminSessionsCreated": 0,
+  "externalSyncPostRequests": 0,
+  "candidateHTTPRequests": 0,
+  "privateFileRequests": 0,
+  "automaticRetries": 0,
+  "promotionAttempted": false
+}

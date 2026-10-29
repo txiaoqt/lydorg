@@ -1,0 +1,22 @@
+{
+  "capturedAt": "2026-10-12T09:23:00.988Z",
+  "allConfiguredDomains": [
+    {
+      "name": "y-trace-admin.vercel.app",
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "redirect": null,
+      "verified": true
+    }
+  ],
+  "productionDomains": [
+    "y-trace-admin.vercel.app"
+  ],
+  "candidateAliases": [
+    {
+      "alias": "lydorg-toffs-projects-81b2ce10.vercel.app"
+    }
+  ],
+  "promotionInProgress": null,
+  "rollingReleaseEnabled": false
+}

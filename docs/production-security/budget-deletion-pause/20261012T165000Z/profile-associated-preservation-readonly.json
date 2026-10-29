@@ -1,0 +1,30 @@
+{
+  "evidenceType": "READ_ONLY_PRODUCTION_METADATA",
+  "project": "mqqaykksadotbrghbexz",
+  "addedProfileAlias": "2c2732174d1111e4",
+  "addedContacts": 2,
+  "addedContactCreationUTC": "2026-10-12T14:25:31.999995+00:00",
+  "originalContacts": 212,
+  "originalContactFingerprint": "44b6275d26e3b12bc73b78506cf891f3",
+  "originalContactsExact": true,
+  "enabledProfileTriggers": [
+    "trg_a_identity_privileges",
+    "trg_admin_track_organization_profile_version",
+    "trg_generate_organization_reference_id",
+    "trg_identity_retained_deletion",
+    "trg_normalize_organization_contact_arrays",
+    "trg_notify_urn_review_change",
+    "trg_organization_profile_review_notify",
+    "trg_organization_profiles_updated_at",
+    "trg_protect_urn_review_fields",
+    "trg_sync_organization_contacts_from_profile",
+    "trg_sync_organization_profile_structured_fields",
+    "trg_sync_organization_urn",
+    "trg_z_enforce_organization_profile_headquarters_location",
+    "trg_zz_identity_verification",
+    "trigger_auto_generate_urn"
+  ],
+  "profileOwnershipPolicy": "current_user_is_admin() OR auth.uid() = user_id",
+  "ordinaryOwnerClient": "upsertOrganizationProfileInSupabase reads the genuine Auth session and binds profile user_id to session.user.id; it inserts for a first profile and updates the existing owner profile otherwise.",
+  "operatorAttribution": "Not independently proven; no names, emails, tokens, IPs or personal field values collected."
+}

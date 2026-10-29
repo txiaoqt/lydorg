@@ -1,0 +1,92 @@
+[
+  {
+    "signature": "admin_approve_renewal(text,uuid,text,text)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "calculate_organization_renewal_eligibility(uuid)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "derive_accreditation_status(text,date,date)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "enforce_accreditation_immutability()",
+    "definitionExact": false,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": "Previously reviewed staging sanitization removes the production designated-test-email alternative; flagged test-account guard retained. No changes made in this task."
+  },
+  {
+    "signature": "evaluate_and_apply_automatic_registration_verification(uuid,uuid)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "review_organization_urn(text,uuid,text,urn_review_status,text)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "sync_organization_accreditation_projection()",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "update_admin_document_submission_file_review(text,uuid,document_submission_status,text)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "update_admin_organization_profile_review(text,uuid,profile_status,timestamp with time zone)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  },
+  {
+    "signature": "user_start_or_get_renewal_draft(uuid)",
+    "definitionExact": true,
+    "securityDefinerExact": true,
+    "configExact": true,
+    "ownerExact": true,
+    "grantsEquivalent": true,
+    "difference": null
+  }
+]

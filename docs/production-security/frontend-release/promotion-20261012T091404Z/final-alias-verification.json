@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-10-12T09:29:36.890Z",
+  "status": "PASS",
+  "adminAlias": {
+    "name": "y-trace-admin.vercel.app",
+    "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI"
+  },
+  "organizationAlias": {
+    "name": "ytrace.app",
+    "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N"
+  },
+  "candidate": {
+    "id": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+    "url": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+    "readyState": "READY"
+  },
+  "readOnly": true
+}

@@ -1,0 +1,39 @@
+{
+  "status": "FAIL_LOCAL_VALIDATOR_FORMAT",
+  "evidence": [
+    {
+      "action": "user_modified",
+      "event_count": 1,
+      "http_status": "",
+      "matches_exact_target": 1,
+      "method": "",
+      "resource": "audit-only",
+      "source": "auth_audit_logs"
+    },
+    {
+      "action": "",
+      "event_count": 2,
+      "http_status": "200",
+      "matches_exact_target": 1,
+      "method": "GET",
+      "resource": "exact-recorded-auth-user",
+      "source": "auth_logs"
+    },
+    {
+      "action": "user_modified",
+      "event_count": 1,
+      "http_status": "200",
+      "matches_exact_target": 1,
+      "method": "PUT",
+      "resource": "exact-recorded-auth-user",
+      "source": "auth_logs"
+    }
+  ],
+  "expectedType": "JSON boolean true",
+  "actualType": "ClickHouse UInt8 1",
+  "actualSecurityMismatch": false,
+  "resolution": "Accepted only literal true or numeric 1 as true and revalidated the same saved read-only response.",
+  "authRequestsRepeatedForResolution": 0,
+  "authMutationsAfterThisCheck": 0
+}
+

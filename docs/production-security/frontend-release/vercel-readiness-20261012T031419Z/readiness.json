@@ -1,0 +1,49 @@
+{
+  "capturedAt": "2026-10-12T03:41:39.462Z",
+  "mode": "read-only provider review; no deployment or configuration writes",
+  "decision": "NO-GO for current default provider build route",
+  "checks": {
+    "authenticatedAccess": "PASS",
+    "projectAndAlias": "PASS",
+    "providerSettingsRetrieved": "PASS",
+    "pinnedBuildCompatibility": "FAIL",
+    "isolatedSourceIntegrity": "PASS",
+    "publicRuntimeEndpointAndKeyClass": "PASS",
+    "providerPublicEnvironmentParity": "FAIL (not established; differing variable sets)",
+    "previousDeploymentRetrievable": "PASS",
+    "securityPreservingRecovery": "BLOCKED",
+    "worktreePreservation": "PASS",
+    "diffCheck": {
+      "exitCode": 0,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "lineEndingWarnings": 0
+    }
+  },
+  "pendingOperations": {
+    "rollback": "NONE reported by official CLI",
+    "promotion": "NONE reported by official CLI",
+    "neitherInvoked": true
+  },
+  "tests": {
+    "reusedFocusedAssertions": "91/91",
+    "reusedTypeScript": "PASS",
+    "reusedIsolatedBuilds": "2 PASS",
+    "reusedReproducedFiles": "53/53",
+    "newBuildOrTestExecution": false
+  },
+  "restrictionsObserved": {
+    "noDeployment": true,
+    "noProviderSettingsChanges": true,
+    "noGitPush": true,
+    "noSupabaseRequests": true,
+    "noAcceptanceHelperRerun": true,
+    "noApplicationSourceEdits": true,
+    "noCandidateEdits": true
+  },
+  "remainingBlockers": [
+    "Provider-compatible deterministic build and install route",
+    "Public-variable parity and Python packaging/import verification",
+    "Compatible recovery artifact and fail-closed contingency"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "capturedAt": "2026-10-12T12:49:29.006Z",
+  "projectId": "mqqaykksadotbrghbexz",
+  "functions": [
+    {
+      "slug": "admin-backup-control",
+      "status": "ACTIVE",
+      "version": 4,
+      "ezbr_sha256": "5c921795b3a87923a4cfc3616b45ebbafd72e124254cf8a34d37fd1f31b0812f"
+    },
+    {
+      "slug": "admin-invite",
+      "status": "ACTIVE",
+      "version": 10,
+      "ezbr_sha256": "d3a11f555d8dd7a006715d8965634804c6181805b75d2233105b4dba7c60981f"
+    },
+    {
+      "slug": "admin-seed-yorp-sample-dataset",
+      "status": "ACTIVE",
+      "version": 7,
+      "ezbr_sha256": "86a3a0526cb66ecb3899b5b5a90b2d216294b2e30b33ec8d0b11a80ac584f92a"
+    },
+    {
+      "slug": "admin-storage-access",
+      "status": "ACTIVE",
+      "version": 1,
+      "ezbr_sha256": "88e6e86352cdb3718e5687c1287b0bc73717a48f21b8c65aa97310744ab260e2"
+    },
+    {
+      "slug": "delete-organization-account",
+      "status": "ACTIVE",
+      "version": 19,
+      "ezbr_sha256": "389ecf3b690703342d32db6873904dea3e6109489ec5db9588dfe7bde608022a"
+    },
+    {
+      "slug": "delete-ypop-submissions",
+      "status": "ACTIVE",
+      "version": 6,
+      "ezbr_sha256": "00b30c022c9218cd2c210ddceec29aa3050efbf8a5db3930ae50bcdea488e146"
+    },
+    {
+      "slug": "send-activity-announcement",
+      "status": "ACTIVE",
+      "version": 11,
+      "ezbr_sha256": "5d68e940587228d39141594f8c7837888a738b9f63172bb3fa57b69502abf579"
+    },
+    {
+      "slug": "send-admin-notification",
+      "status": "ACTIVE",
+      "version": 19,
+      "ezbr_sha256": "0ef6689c2a2eeb7cfc400599439c5ba28b6d78968424b222d671489012639f09"
+    },
+    {
+      "slug": "send-org-transactional-email",
+      "status": "ACTIVE",
+      "version": 8,
+      "ezbr_sha256": "ff4783f3205942ef93e8f1c44435a13094b67fc1901a05c9d2332863b739c519"
+    }
+  ]
+}

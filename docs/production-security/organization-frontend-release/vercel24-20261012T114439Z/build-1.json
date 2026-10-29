@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-10-12T11:54:47.226Z",
+  "status": "PASS",
+  "exitCode": 0,
+  "simulatedHostedMetadata": true,
+  "canariesInjected": true,
+  "configurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+  "publicValuesLogged": false,
+  "hostedExecution": false
+}

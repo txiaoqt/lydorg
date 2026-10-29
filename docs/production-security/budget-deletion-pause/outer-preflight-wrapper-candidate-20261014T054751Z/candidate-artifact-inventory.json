@@ -1,0 +1,69 @@
+{
+  "format": "YTRACE_OFFLINE_WRAPPER_INVENTORY_V1",
+  "candidateBundleSha256": "af8a4299c476969df5259889f69041ac855df528644fb54c0a37e15b72caceca",
+  "manifestSha256": "b36df23ff72ce16b49bb13157a2500365ac8fe0ba2d7030f7377ae1365b10f43",
+  "reviewVerdict": "PASS_OFFLINE_ONLY",
+  "excludesSelf": true,
+  "files": [
+    {
+      "file": "README.md",
+      "bytes": 6859,
+      "sha256": "4a0ff3e34e801be650fdf4c840dfb809d4f7222bb9c521447070c5e8e27e0ed1"
+    },
+    {
+      "file": "deadline-controls.mjs",
+      "bytes": 3482,
+      "sha256": "cf7c5a6a0542f219383159f02f34c3f7d5555ff80a5a8fe31ccdf8eba64600eb"
+    },
+    {
+      "file": "focused-tests-asia-manila.tap",
+      "bytes": 14017,
+      "sha256": "7cce8a3850c93d531d03dd320d84b8f0a9068e8590e92c3432511d13aba83eeb"
+    },
+    {
+      "file": "focused-tests-utc.tap",
+      "bytes": 14011,
+      "sha256": "11908670a6283513ef0c8cc0f1e2f37cc1df506438fce9b602b76cdbcf2bd18e"
+    },
+    {
+      "file": "independent-review.md",
+      "bytes": 2452,
+      "sha256": "c7a1928ae9a2e6c0d87fd462f70508d9d00b6c872aebb273116c5d171acf925b"
+    },
+    {
+      "file": "preflight-evidence.mjs",
+      "bytes": 8186,
+      "sha256": "6c1e7581a05975fc9c82d1f2987959272fb85410c7ec01912501bf6398ba9e97"
+    },
+    {
+      "file": "preflight-wrapper-engine.mjs",
+      "bytes": 6218,
+      "sha256": "d55edc561c5cacd6bae3befbd295795ca26408d515545ead175e7d41fe463f21"
+    },
+    {
+      "file": "preflight-wrapper.mjs",
+      "bytes": 665,
+      "sha256": "bd2fcef383f36eafaa1703945d823c34b356690c8b6337f0201ce00a4f85d4ce"
+    },
+    {
+      "file": "preflight-wrapper.test.mjs",
+      "bytes": 20051,
+      "sha256": "60ce2bd057faa0c31247f725d9e748d4530a195e6c54e1cfafa1221f84be2597"
+    },
+    {
+      "file": "rejected-inline-wrapper.ps1.txt",
+      "bytes": 1885,
+      "sha256": "d2a6a7f93cbb8a8a4190583db2a8a44535164cd3b58f802d53c8ee3e01fec99a"
+    },
+    {
+      "file": "remediation-report.md",
+      "bytes": 7426,
+      "sha256": "2eb81a5022896bb18d4c358ae18ca68b48e5aa824bc332b2b7cc37288feee2b4"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 36796,
+      "sha256": "b36df23ff72ce16b49bb13157a2500365ac8fe0ba2d7030f7377ae1365b10f43"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "scope": "Isolated PGlite; synthetic rows; URL shapes only. Not a live Storage API test.",
+  "cases": [
+    {
+      "label": "canonical storage://",
+      "resolves": true,
+      "exact": true
+    },
+    {
+      "label": "staging-generated public URL",
+      "resolves": true,
+      "exact": true
+    },
+    {
+      "label": "uppercase scheme/host, same origin",
+      "resolves": true,
+      "exact": true
+    },
+    {
+      "label": "local stack origin with port",
+      "resolves": true,
+      "exact": true
+    },
+    {
+      "label": "encodeURI path (space, unicode)",
+      "resolves": true,
+      "exact": true
+    },
+    {
+      "label": "query string / fragment stripped",
+      "resolves": true,
+      "exact": true
+    },
+    {
+      "label": "production-style URL = foreign project here",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "unknown/untrusted host",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "trusted host, wrong bucket",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "trusted host, signed path (not public)",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "trusted host as userinfo on foreign host",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "trusted host as path prefix on foreign host",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "trusted host with extra label",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "canonical with other bucket",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "canonical empty name",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "malformed",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "malformed percent escape stays literal",
+      "resolves": true,
+      "exact": true
+    },
+    {
+      "label": "invalid UTF-8 escape fails closed",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "external image URL",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "empty",
+      "resolves": false,
+      "exact": true
+    },
+    {
+      "label": "null",
+      "resolves": false,
+      "exact": true
+    }
+  ],
+  "auditSample": [
+    {
+      "resource_kind": "news",
+      "origin": "https://cdn.example",
+      "form": "external",
+      "published": true,
+      "resolvable": false,
+      "total": 1
+    },
+    {
+      "resource_kind": "news",
+      "origin": "https://mqqaykksadotbrghbexz.supabase.co",
+      "form": "legacy-public-url",
+      "published": true,
+      "resolvable": false,
+      "total": 1
+    },
+    {
+      "resource_kind": "news",
+      "origin": "https://stagingfixture.supabase.co",
+      "form": "legacy-public-url",
+      "published": false,
+      "resolvable": true,
+      "total": 1
+    },
+    {
+      "resource_kind": "news",
+      "origin": "https://stagingfixture.supabase.co",
+      "form": "legacy-public-url",
+      "published": true,
+      "resolvable": true,
+      "total": 1
+    },
+    {
+      "resource_kind": "news",
+      "origin": "storage://",
+      "form": "canonical",
+      "published": true,
+      "resolvable": true,
+      "total": 1
+    }
+  ]
+}

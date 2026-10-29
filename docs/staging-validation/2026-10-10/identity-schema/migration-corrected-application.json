@@ -1,0 +1,14 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "migrationName": "staging_missing_private_identity_schema_20261010",
+  "correction": "Read-only pg_trgm initialization in migration connection",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"success\":true}"
+      }
+    ],
+    "isError": false
+  }
+}

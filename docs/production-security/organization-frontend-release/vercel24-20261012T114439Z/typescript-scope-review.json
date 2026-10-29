@@ -1,0 +1,665 @@
+{
+  "capturedAt": "2026-10-12T11:56:04.190Z",
+  "typecheckStatus": "FAIL",
+  "exitCode": 2,
+  "baselineErrors": 651,
+  "candidateErrors": 651,
+  "rawNewDiagnosticCount": 1,
+  "normalization": "Known absolute workspace prefixes before node_modules only; codes, messages, files and counts retained.",
+  "newDiagnosticCount": 1,
+  "removedDiagnosticCount": 1,
+  "newDiagnostics": [
+    {
+      "file": "src/lib/report-export.ts",
+      "code": "TS2352",
+      "message": "Conversion of type '{ default: typeof import(\"<dependency-root>/node_modules/exceljs/index\"); ... 10 more ...; stream: typeof stream; }' to type 'ExcelJsModuleShape' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.",
+      "count": 1
+    }
+  ],
+  "removedDiagnostics": [
+    {
+      "file": "src/lib/report-export.ts",
+      "code": "TS2352",
+      "message": "Conversion of type '{ default: typeof import(\"<dependency-root>/node_modules/exceljs/index\"); RelationshipType: typeof RelationshipType; DocumentType: typeof DocumentType; ... 8 more ...; stream: typeof stream; }' to type 'ExcelJsModuleShape' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.",
+      "count": 1
+    }
+  ],
+  "dependencyClosureFiles": 26,
+  "dependencyClosure": [
+    "src/components/portal/PortalDocumentPreviewModal.tsx",
+    "src/components/ui/button.tsx",
+    "src/components/ui/dialog.tsx",
+    "src/lib/admin-auth.ts",
+    "src/lib/admin-storage-access.ts",
+    "src/lib/admin-system-settings.ts",
+    "src/lib/auth-redirect.ts",
+    "src/lib/budget-category-colors.ts",
+    "src/lib/budget-eligibility.ts",
+    "src/lib/lydo-connect-data.ts",
+    "src/lib/lydo-connect-store.tsx",
+    "src/lib/lydo-connect-supabase.ts",
+    "src/lib/organization-profile-domain.ts",
+    "src/lib/pasig-districts.ts",
+    "src/lib/pwa-document-preview.ts",
+    "src/lib/query-client.ts",
+    "src/lib/registration-upload-transport.ts",
+    "src/lib/revision-deadline.ts",
+    "src/lib/signed-storage-url-cache.ts",
+    "src/lib/supabase.ts",
+    "src/lib/urn-registration.ts",
+    "src/lib/user-workflow-eligibility.ts",
+    "src/lib/utils.ts",
+    "src/lib/ypop-submission-deletion.ts",
+    "src/user/pwa/PwaDocumentPreview.tsx",
+    "src/user/pwa/PwaOrganizationAvatar.tsx"
+  ],
+  "directRuntimeErrors": 22,
+  "localDependencyErrors": 45,
+  "directRuntimeDiagnostics": [
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 781,
+      "column": 15,
+      "code": "TS2339",
+      "message": "Property 'replace' does not exist on type 'never'.",
+      "function": "mapTemplate",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 860,
+      "column": 3,
+      "code": "TS2353",
+      "message": "Object literal may only specify known properties, and 'seedSourceYear' does not exist in type 'BudgetRequest'.",
+      "function": "mapBudgetRequest",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 919,
+      "column": 3,
+      "code": "TS2353",
+      "message": "Object literal may only specify known properties, and 'seedSourceYear' does not exist in type 'LiquidationReport'.",
+      "function": "mapLiquidationReport",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 2661,
+      "column": 46,
+      "code": "TS2345",
+      "message": "Argument of type '(this: undefined, row: Record<string, unknown>) => { request: BudgetRequest; organization: OrganizationProfile; }[] | { report: LiquidationReport; budgetRequest: BudgetRequest; organization: OrganizationProfile; }[]' is not assignable to parameter of type '(this: undefined, value: Record<string, unknown>, index: number, array: Record<string, unknown>[]) => { request: BudgetRequest; organization: OrganizationProfile; } | readonly { ...; }[]'.",
+      "function": "fetchAdminReviewResourcePage",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 2685,
+      "column": 5,
+      "code": "TS2322",
+      "message": "Type 'unknown[]' is not assignable to type '(AdminBudgetReviewRow | AdminLiquidationReviewRow)[]'.",
+      "function": "fetchAdminReviewResourcePage",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 3052,
+      "column": 73,
+      "code": "TS2345",
+      "message": "Argument of type '(payload: any) => void' is not assignable to parameter of type '() => void'.",
+      "function": "subscribeToOrganizationStatusChangesInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 3066,
+      "column": 73,
+      "code": "TS2345",
+      "message": "Argument of type '(payload: any) => void' is not assignable to parameter of type '() => void'.",
+      "function": "subscribeToOrganizationStatusChangesInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 3085,
+      "column": 78,
+      "code": "TS2345",
+      "message": "Argument of type '(payload: any) => void' is not assignable to parameter of type '() => void'.",
+      "function": "subscribeToOrganizationStatusChangesInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 3089,
+      "column": 65,
+      "code": "TS2345",
+      "message": "Argument of type '(payload: any) => void' is not assignable to parameter of type '() => void'.",
+      "function": "subscribeToOrganizationStatusChangesInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 3095,
+      "column": 72,
+      "code": "TS2345",
+      "message": "Argument of type '(payload: any) => void' is not assignable to parameter of type '() => void'.",
+      "function": "subscribeToOrganizationStatusChangesInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 3099,
+      "column": 65,
+      "code": "TS2345",
+      "message": "Argument of type '(payload: any) => void' is not assignable to parameter of type '() => void'.",
+      "function": "subscribeToOrganizationStatusChangesInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 4808,
+      "column": 45,
+      "code": "TS2551",
+      "message": "Property 'profileImageUrl' does not exist on type 'OrganizationProfileRow'. Did you mean 'profile_image_url'?",
+      "function": "uploadOrganizationProfileImageInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 4822,
+      "column": 45,
+      "code": "TS2551",
+      "message": "Property 'profileImageUrl' does not exist on type 'OrganizationProfileRow'. Did you mean 'profile_image_url'?",
+      "function": "removeOrganizationProfileImageInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 4954,
+      "column": 7,
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types 'BudgetRequestStatus' and '\"approved\"' have no overlap.",
+      "function": "updateBudgetRequestInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 4956,
+      "column": 11,
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types '\"needs_revision\" | \"draft\" | \"submitted\" | \"rejected_red\" | \"under_review\" | \"budget_released\"' and '\"rejected\"' have no overlap.",
+      "function": "updateBudgetRequestInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 6109,
+      "column": 40,
+      "code": "TS2339",
+      "message": "Property 'remarks' does not exist on type '{ id: any; status: any; revision_due_at: any; revision_locked: any; revision_locked_at: any; revision_unlocked_at: any; }'.",
+      "function": "updateLiquidationReportInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 6546,
+      "column": 14,
+      "code": "TS2304",
+      "message": "Cannot find name 'YPOPEventParticipationStatus'.",
+      "function": "createYpopEventParticipationInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 6680,
+      "column": 52,
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types '\"needs_revision\" | \"rejected\" | \"verified\" | \"draft\" | \"pending_evaluation\"' and '\"submitted\"' have no overlap.",
+      "function": "updateYpopEventParticipationInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 7607,
+      "column": 13,
+      "code": "TS2367",
+      "message": "This comparison appears to be unintentional because the types '\"needs_revision\" | \"verified\" | \"draft\" | \"pending_evaluation\" | \"pending_verification\"' and '\"approved\"' have no overlap.",
+      "function": "adminUpdateYpopEventParticipationInSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 9145,
+      "column": 73,
+      "code": "TS2304",
+      "message": "Cannot find name 'BudgetPurposeCategory'.",
+      "function": "getBudgetPurposeCategoriesFromSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 9172,
+      "column": 78,
+      "code": "TS2304",
+      "message": "Cannot find name 'BudgetPurposeCategory'.",
+      "function": "adminGetBudgetPurposeCategoriesFromSupabase",
+      "scope": "seven-file runtime subset"
+    },
+    {
+      "file": "src/lib/lydo-connect-supabase.ts",
+      "line": 9192,
+      "column": 13,
+      "code": "TS2304",
+      "message": "Cannot find name 'BudgetPurposeCategory'.",
+      "function": "adminSaveBudgetPurposeCategoryInSupabase",
+      "scope": "seven-file runtime subset"
+    }
+  ],
+  "dependencyDiagnostics": [
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 764,
+      "column": 48,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "getDefaultSystemSettingsMap",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 769,
+      "column": 28,
+      "code": "TS2304",
+      "message": "Cannot find name 'AdminSystemSettingsValues'.",
+      "function": "getDefaultSystemSettingsMap",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 772,
+      "column": 46,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 849,
+      "column": 45,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "readCachedSystemSettings",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 862,
+      "column": 64,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "writeCachedSystemSettings",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 993,
+      "column": 47,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "getEffectiveSystemSettings",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1006,
+      "column": 38,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "getEffectiveSystemSetting",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1017,
+      "column": 38,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "useSystemSettings",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1018,
+      "column": 44,
+      "code": "TS2304",
+      "message": "Cannot find name 'AdminSystemSettingsValues'.",
+      "function": "useSystemSettings",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1040,
+      "column": 38,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "useSystemSetting",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1062,
+      "column": 68,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "fetchPublicSystemSettings",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1094,
+      "column": 31,
+      "code": "TS2304",
+      "message": "Cannot find name 'AdminSystemSettingsValues'.",
+      "function": "fetchPublicSystemSettings",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1229,
+      "column": 15,
+      "code": "TS2552",
+      "message": "Cannot find name 'AdminSystemSettingsValues'. Did you mean 'AdminSystemSettingKey'?",
+      "function": "shouldNotifyAdmin",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1244,
+      "column": 59,
+      "code": "TS2304",
+      "message": "Cannot find name 'AdminSystemSettingsValues'.",
+      "function": "shouldNotifyAdmin",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1275,
+      "column": 30,
+      "code": "TS2304",
+      "message": "Cannot find name 'AdminSystemSettingsValues'.",
+      "function": "shouldNotifyOrganization",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/admin-system-settings.ts",
+      "line": 1310,
+      "column": 30,
+      "code": "TS2304",
+      "message": "Cannot find name 'AdminSystemSettingsValues'.",
+      "function": "computeWorkflowItemTiming",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 718,
+      "column": 52,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 724,
+      "column": 72,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 725,
+      "column": 68,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 732,
+      "column": 57,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 733,
+      "column": 46,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 739,
+      "column": 52,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 745,
+      "column": 54,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 772,
+      "column": 44,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 779,
+      "column": 60,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 780,
+      "column": 44,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 781,
+      "column": 54,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 788,
+      "column": 61,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 789,
+      "column": 69,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 790,
+      "column": 60,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 797,
+      "column": 58,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 804,
+      "column": 54,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 805,
+      "column": 46,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 812,
+      "column": 46,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 813,
+      "column": 54,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 814,
+      "column": 54,
+      "code": "TS2322",
+      "message": "Type 'ForwardRefExoticComponent<Omit<LucideProps, \"ref\"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; strokeWidth?: number; }>'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2127,
+      "column": 5,
+      "code": "TS2740",
+      "message": "Type '{ id: string; userId: string; organizationName: string; organizationEmail: string; contactNumber: string; district: string; barangay: string; isExistingOrganization: false; organizationIdentifierNumber: string; ... 20 more ...; updatedAt: string; }' is missing the following properties from type 'OrganizationProfile': referenceId, registrationType, urn, urnNormalized, and 5 more.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2159,
+      "column": 5,
+      "code": "TS2740",
+      "message": "Type '{ id: string; userId: string; organizationName: string; organizationEmail: string; contactNumber: string; district: string; barangay: string; isExistingOrganization: true; organizationIdentifierNumber: string; ... 20 more ...; updatedAt: string; }' is missing the following properties from type 'OrganizationProfile': referenceId, registrationType, urn, urnNormalized, and 5 more.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2191,
+      "column": 5,
+      "code": "TS2740",
+      "message": "Type '{ id: string; userId: string; organizationName: string; organizationEmail: string; contactNumber: string; district: string; barangay: string; isExistingOrganization: false; organizationIdentifierNumber: string; ... 20 more ...; updatedAt: string; }' is missing the following properties from type 'OrganizationProfile': referenceId, registrationType, urn, urnNormalized, and 5 more.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2384,
+      "column": 5,
+      "code": "TS2741",
+      "message": "Property 'adminRemarks' is missing in type '{ id: string; organizationId: string; submittedBy: string; activityTitle: string; activityDescription: string; activityDate: string; venue: string; requestedAmount: number; approvedAmount: number; ... 10 more ...; revisionHistory: { ...; }[]; }' but required in type 'BudgetRequest'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2411,
+      "column": 5,
+      "code": "TS2741",
+      "message": "Property 'adminRemarks' is missing in type '{ id: string; organizationId: string; submittedBy: string; activityTitle: string; activityDescription: string; activityDate: string; venue: string; requestedAmount: number; approvedAmount: number; ... 10 more ...; revisionHistory: undefined[]; }' but required in type 'BudgetRequest'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2433,
+      "column": 5,
+      "code": "TS2741",
+      "message": "Property 'adminRemarks' is missing in type '{ id: string; organizationId: string; submittedBy: string; activityTitle: string; activityDescription: string; activityDate: string; venue: string; requestedAmount: number; approvedAmount: number; ... 10 more ...; revisionHistory: { ...; }[]; }' but required in type 'BudgetRequest'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2458,
+      "column": 5,
+      "code": "TS2741",
+      "message": "Property 'adminRemarks' is missing in type '{ id: string; organizationId: string; submittedBy: string; activityTitle: string; activityDescription: string; activityDate: string; venue: string; requestedAmount: number; approvedAmount: number; ... 12 more ...; ypopEntryId: string; }' but required in type 'BudgetRequest'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/lydo-connect-data.ts",
+      "line": 2482,
+      "column": 5,
+      "code": "TS2741",
+      "message": "Property 'adminRemarks' is missing in type '{ id: string; organizationId: string; submittedBy: string; activityTitle: string; activityDescription: string; activityDate: string; venue: string; requestedAmount: number; approvedAmount: number; ... 9 more ...; revisionHistory: { ...; }[]; }' but required in type 'BudgetRequest'.",
+      "function": "<module>",
+      "scope": "local import dependency"
+    },
+    {
+      "file": "src/lib/organization-profile-domain.ts",
+      "line": 265,
+      "column": 3,
+      "code": "TS2741",
+      "message": "Property 'referenceId' is missing in type '{ id: string; userId: string; organizationName: string; organizationEmail: string; additionalEmails: string[]; contactNumber: string; additionalContactNumbers: string[]; district: string; barangay: string; ... 38 more ...; updatedAt: string; }' but required in type 'OrganizationProfile'.",
+      "function": "createBlankOrganizationProfile",
+      "scope": "local import dependency"
+    }
+  ]
+}

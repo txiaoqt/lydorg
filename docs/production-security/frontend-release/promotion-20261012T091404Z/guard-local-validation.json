@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "checks": 6,
+  "evidenceType": "LOCAL_MOCK_DRY_RUN_OF_SUBMISSION_GUARD",
+  "realProviderRequests": 0,
+  "approvedDispatches": 1,
+  "duplicateAndOtherMutationsBlocked": true,
+  "automaticRetries": 0
+}

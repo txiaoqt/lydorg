@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "archivedName": "control-plane-proof-history-0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd.json",
+  "bytes": 200,
+  "sha256": "0435d3d45351ed5879a40ad3d5e1c3f48b33e2de667e14ac1550bca46dff40fd",
+  "creationUtc": "2026-10-13T07:53:03.1472310Z",
+  "lastWriteUtc": "2026-10-13T07:53:03.1547868Z",
+  "observedLastAccessUtc": "2026-10-13T08:45:53.8077377Z",
+  "lastAccessUpdatesAccepted": true,
+  "securityDescriptorSha256": "e2f492c6e51b0fc8eeecef545d47902e52a93df7ecc026fd01114233bea053a1",
+  "directorySecurityDescriptorSha256": "f2b0d1128543ced61766e73d2d34374be2571800e9627a43bfe9a00e058a13b5",
+  "effectiveAclVerified": true,
+  "stateFileCount": 1,
+  "activeProofExists": false,
+  "authorizationExists": false,
+  "approvedPreflightExists": false,
+  "lockExists": false,
+  "attemptMarkerExists": false
+}

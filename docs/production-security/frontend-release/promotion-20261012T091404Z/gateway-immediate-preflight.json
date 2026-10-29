@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-10-12T09:22:01.742Z",
+  "projectId": "mqqaykksadotbrghbexz",
+  "status": "PASS",
+  "functionCount": 9,
+  "gateway": {
+    "id": "8ea84d1d-ab6b-40b3-8cc4-d78262fb182f",
+    "name": "admin-storage-access",
+    "slug": "admin-storage-access",
+    "status": "ACTIVE",
+    "version": 1,
+    "verify_jwt": false,
+    "updated_at": 1791759427880
+  },
+  "readOnly": true
+}

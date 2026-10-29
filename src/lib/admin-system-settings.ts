@@ -1106,7 +1106,7 @@ let pendingPublicSystemSettings: ReturnType<typeof loadPublicSystemSettings> | n
 
 /** Share concurrent consumers (e.g. home page and footer) without caching
  * settled results: later mounts still read freshly published public settings. */
-export const fetchPublicSystemSettings = () => {
+export const fetchPublicSystemSettings = (): Promise<Partial<AdminSystemSettingsValues>> => {
   if (!pendingPublicSystemSettings) {
     pendingPublicSystemSettings = loadPublicSystemSettings().finally(() => {
       pendingPublicSystemSettings = null;

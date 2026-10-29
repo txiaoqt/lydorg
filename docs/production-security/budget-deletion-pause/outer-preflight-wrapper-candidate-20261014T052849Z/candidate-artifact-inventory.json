@@ -1,0 +1,74 @@
+{
+  "format": "YTRACE_OFFLINE_WRAPPER_INVENTORY_V1",
+  "candidateBundleSha256": "69f3e47faa9945cfd4c9d7ee29bbeb49ed8fa7b0657ab88af64c870742836e9c",
+  "manifestSha256": "7d9e36d702d72daee95e211acbcb70be9ac45c065f285011d0a7ce9ba7422e90",
+  "reviewVerdict": "BLOCKED",
+  "excludesSelf": true,
+  "files": [
+    {
+      "file": "README.md",
+      "bytes": 5597,
+      "sha256": "ad0ff36d2abe9880c8f179e69334b43f149ca165820a387544215458d21b46fd"
+    },
+    {
+      "file": "deadline-controls.mjs",
+      "bytes": 3482,
+      "sha256": "cf7c5a6a0542f219383159f02f34c3f7d5555ff80a5a8fe31ccdf8eba64600eb"
+    },
+    {
+      "file": "focused-tests-asia-manila.tap",
+      "bytes": 12663,
+      "sha256": "f639ca742c977b00fc47a40f950a9c7cf33533bcb3d5b23cbc942998979de238"
+    },
+    {
+      "file": "focused-tests-utc.tap",
+      "bytes": 12665,
+      "sha256": "61e20f9083b514e9813593e76438b158f90d6cc9c2585e4b153fdfe7457d4892"
+    },
+    {
+      "file": "independent-review.md",
+      "bytes": 2845,
+      "sha256": "82939deb7ff4bb80aa65028d46807b6b9043ee027d7e9886622b2b603ec93693"
+    },
+    {
+      "file": "parser-end-boundary-probe.json",
+      "bytes": 480,
+      "sha256": "8964fb273c774d55d40a1759894ad5351779fe2f605f08c4f842e91f85ffbb65"
+    },
+    {
+      "file": "preflight-evidence.mjs",
+      "bytes": 7506,
+      "sha256": "1d089ceb24e9d102b6c0d355dab07a073c52e2da428d18b0953a6144f2380557"
+    },
+    {
+      "file": "preflight-wrapper-engine.mjs",
+      "bytes": 5872,
+      "sha256": "1823bdbbbd4b211937cfc87896555e48830612a36bbcdc94c1a34e9345cd6a46"
+    },
+    {
+      "file": "preflight-wrapper.mjs",
+      "bytes": 665,
+      "sha256": "bd2fcef383f36eafaa1703945d823c34b356690c8b6337f0201ce00a4f85d4ce"
+    },
+    {
+      "file": "preflight-wrapper.test.mjs",
+      "bytes": 17030,
+      "sha256": "af1e3d63e05da5ed337c435dc793257a9bc6c471b3cf7bd9be0985a17ec78a73"
+    },
+    {
+      "file": "rejected-inline-wrapper.ps1.txt",
+      "bytes": 1885,
+      "sha256": "d2a6a7f93cbb8a8a4190583db2a8a44535164cd3b58f802d53c8ee3e01fec99a"
+    },
+    {
+      "file": "reviewed-inputs.json",
+      "bytes": 32708,
+      "sha256": "7d9e36d702d72daee95e211acbcb70be9ac45c065f285011d0a7ce9ba7422e90"
+    },
+    {
+      "file": "reviewer-regression-probe.json",
+      "bytes": 455,
+      "sha256": "8e7cb568ee143ae0646a7e9914b3d59c3419548157c4509df1a6f6335d8fa4d1"
+    }
+  ]
+}

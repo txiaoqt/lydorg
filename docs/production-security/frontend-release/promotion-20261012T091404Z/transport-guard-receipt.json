@@ -1,0 +1,13 @@
+{
+  "recordedAt": "2026-10-12T09:23:17.098Z",
+  "cliVersion": "63.1.2",
+  "clientModuleSha256": "d09cbde148f869762f51b35b7cf0fd5defdd450094e288b81cefa93e6cd40914",
+  "commandsModuleSha256": "a7f2f57caf3f42d10c370ea36efca693948e5fa04856ef040784558f44a01cf5",
+  "credentialsReadByLocalGuard": false,
+  "cliAuthentication": "Existing official CLI credential handling; no manual token extraction",
+  "promotionFetchInvocations": 1,
+  "promotionRequestsDispatched": 1,
+  "blockedMutationCalls": 0,
+  "automaticRetriesConfigured": 0,
+  "promotionHttp": 201
+}

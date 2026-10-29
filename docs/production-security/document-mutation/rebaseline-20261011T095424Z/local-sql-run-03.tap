@@ -1,0 +1,385 @@
+TAP version 13
+# Subtest: rebaselined artifact scope and body integrity
+ok 1 - rebaselined artifact scope and body integrity
+  ---
+  duration_ms: 6.3251
+  ...
+# Subtest: post-containment document lifecycle actual PostgreSQL matrix
+    # Subtest: unmodified production candidate rejects this synthetic catalog
+    ok 1 - unmodified production candidate rejects this synthetic catalog
+      ---
+      duration_ms: 80.1949
+      ...
+    # Subtest: exact patch bodies install with unchanged business rows, containment and migration history
+    ok 2 - exact patch bodies install with unchanged business rows, containment and migration history
+      ---
+      duration_ms: 119.8391
+      ...
+    # Subtest: requested renewal revision changes one file, preserves five peers and resubmits
+    ok 3 - requested renewal revision changes one file, preserves five peers and resubmits
+      ---
+      duration_ms: 25.6605
+      ...
+    # Subtest: approved renewal and associated documents deny both replacement RPCs and direct writes
+    ok 4 - approved renewal and associated documents deny both replacement RPCs and direct writes
+      ---
+      duration_ms: 178.6714
+      ...
+    # Subtest: rejected renewal and associated documents deny both replacement RPCs and direct writes
+    ok 5 - rejected renewal and associated documents deny both replacement RPCs and direct writes
+      ---
+      duration_ms: 143.7553
+      ...
+    # Subtest: approved_green submission blocks content mutations and owner deletion
+    not ok 6 - approved_green submission blocks content mutations and owner deletion
+      ---
+      duration_ms: 53.0289
+      location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\production_document_mutation_rebaseline.local.test.mjs:144:39'
+      failureType: 'testCodeFailure'
+      error: |-
+        The input did not match the regular expression /immutable|locked|terminal|editable|authorized|authentication|required|permission denied|disabled|review|deadline|expired|cutoff/i. Input:
+        
+        'error: Use the supported revision workflow'
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual:
+      error: 'Use the supported revision workflow'
+      stack: |-
+        pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+        pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+        pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+        N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+        file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+        wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+        wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+        wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+        wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+        wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+      operator: 'rejects'
+      stack: |-
+        async deniedUnchanged (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:39:2)
+        async file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:164:99
+        async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:144:86)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async run (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:144:31)
+        async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:162:59)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+      ...
+    # Subtest: rejected_red submission blocks content mutations and owner deletion
+    not ok 7 - rejected_red submission blocks content mutations and owner deletion
+      ---
+      duration_ms: 44.0198
+      location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\production_document_mutation_rebaseline.local.test.mjs:144:39'
+      failureType: 'testCodeFailure'
+      error: |-
+        The input did not match the regular expression /immutable|locked|terminal|editable|authorized|authentication|required|permission denied|disabled|review|deadline|expired|cutoff/i. Input:
+        
+        'error: Use the supported revision workflow'
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual:
+      error: 'Use the supported revision workflow'
+      stack: |-
+        pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+        pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+        pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+        N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+        file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+        wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+        wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+        wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+        wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+        wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+      operator: 'rejects'
+      stack: |-
+        async deniedUnchanged (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:39:2)
+        async file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:164:99
+        async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:144:86)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async run (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:144:31)
+        async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:162:59)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+      ...
+    # Subtest: under_admin_review file content is immutable through owner replacement
+    ok 8 - under_admin_review file content is immutable through owner replacement
+      ---
+      duration_ms: 30.1181
+      ...
+    # Subtest: approved_green file content is immutable through owner replacement
+    ok 9 - approved_green file content is immutable through owner replacement
+      ---
+      duration_ms: 28.4713
+      ...
+    # Subtest: rejected_red file content is immutable through owner replacement
+    ok 10 - rejected_red file content is immutable through owner replacement
+      ---
+      duration_ms: 30.2014
+      ...
+    # Subtest: cross-organization and anonymous RPC mutation denied without changed rows
+    ok 11 - cross-organization and anonymous RPC mutation denied without changed rows
+      ---
+      duration_ms: 81.3137
+      ...
+    # Subtest: direct cross-organization RLS updates affect zero rows
+    ok 12 - direct cross-organization RLS updates affect zero rows
+      ---
+      duration_ms: 28.4967
+      ...
+    # Subtest: suspended owner replacement and resubmission denied
+    ok 13 - suspended owner replacement and resubmission denied
+      ---
+      duration_ms: 53.0101
+      ...
+    # Subtest: genuine captured Admin validator accepts active reviewer and denies invalid/expired/revoked sessions
+    ok 14 - genuine captured Admin validator accepts active reviewer and denies invalid/expired/revoked sessions
+      ---
+      duration_ms: 89.4647
+      ...
+    # Subtest: inactive Admin is denied and no review state changes
+    ok 15 - inactive Admin is denied and no review state changes
+      ---
+      duration_ms: 34.0995
+      ...
+    # Subtest: normal full Admin approval creates one next term then terminal replacement stays denied
+    ok 16 - normal full Admin approval creates one next term then terminal replacement stays denied
+      ---
+      duration_ms: 55.4316
+      ...
+    # Subtest: authenticated: budget_requests fixture markers remain protected after patch
+    ok 17 - authenticated: budget_requests fixture markers remain protected after patch
+      ---
+      duration_ms: 51.6707
+      ...
+    # Subtest: authenticated: liquidation_reports fixture markers remain protected after patch
+    ok 18 - authenticated: liquidation_reports fixture markers remain protected after patch
+      ---
+      duration_ms: 52.5903
+      ...
+    # Subtest: authenticated: document_submissions fixture markers remain protected after patch
+    not ok 19 - authenticated: document_submissions fixture markers remain protected after patch
+      ---
+      duration_ms: 14.9011
+      location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\production_document_mutation_rebaseline.local.test.mjs:144:39'
+      failureType: 'testCodeFailure'
+      error: |-
+        The input did not match the regular expression /fixture markers/. Input:
+        
+        'error: Submission review fields are server controlled'
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual:
+      error: 'Submission review fields are server controlled'
+      stack: |-
+        pe.Ue (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:17959)
+        pe.tt (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:15347)
+        pe.parse (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/chunk-2BOC2OMW.js:1:14021)
+        N.qe (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1762)
+        file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/tmp/organization-identity-db/node_modules/@electric-sql/pglite/dist/index.js:5:1155
+        wasm://wasm/0267bb86:wasm-function[10930]:0x5a5ccf
+        wasm://wasm/0267bb86:wasm-function[3585]:0x27eaeb
+        wasm://wasm/0267bb86:wasm-function[3627]:0x2869d1
+        wasm://wasm/0267bb86:wasm-function[3637]:0x286c2d
+        wasm://wasm/0267bb86:wasm-function[9914]:0x54fd4d
+      operator: 'rejects'
+      stack: |-
+        async deniedUnchanged (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:39:2)
+        async file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:200:4
+        async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:144:86)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async run (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:144:31)
+        async TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/supabase/tests/production_document_mutation_rebaseline.local.test.mjs:198:162)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+      ...
+    # Subtest: authenticated: document_submission_files fixture markers remain protected after patch
+    ok 20 - authenticated: document_submission_files fixture markers remain protected after patch
+      ---
+      duration_ms: 59.1671
+      ...
+    # Subtest: postgres: budget_requests fixture markers remain protected after patch
+    ok 21 - postgres: budget_requests fixture markers remain protected after patch
+      ---
+      duration_ms: 51.1483
+      ...
+    # Subtest: postgres: liquidation_reports fixture markers remain protected after patch
+    ok 22 - postgres: liquidation_reports fixture markers remain protected after patch
+      ---
+      duration_ms: 53.2663
+      ...
+    # Subtest: postgres: document_submissions fixture markers remain protected after patch
+    ok 23 - postgres: document_submissions fixture markers remain protected after patch
+      ---
+      duration_ms: 51.1072
+      ...
+    # Subtest: postgres: document_submission_files fixture markers remain protected after patch
+    ok 24 - postgres: document_submission_files fixture markers remain protected after patch
+      ---
+      duration_ms: 55.248
+      ...
+    # Subtest: identity markers and test GUC cannot bypass accreditation/renewal immutability
+    ok 25 - identity markers and test GUC cannot bypass accreditation/renewal immutability
+      ---
+      duration_ms: 82.3518
+      ...
+    # Subtest: anon: all 12 test mutation RPCs remain disabled
+    ok 26 - anon: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 301.5497
+      ...
+    # Subtest: authenticated: all 12 test mutation RPCs remain disabled
+    ok 27 - authenticated: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 303.605
+      ...
+    # Subtest: service_role: all 12 test mutation RPCs remain disabled
+    ok 28 - service_role: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 304.5115
+      ...
+    # Subtest: postgres: all 12 test mutation RPCs remain disabled
+    ok 29 - postgres: all 12 test mutation RPCs remain disabled
+      ---
+      duration_ms: 295.5226
+      ...
+    # Subtest: retained sample status retains Super Admin enforcement over anon transport
+    ok 30 - retained sample status retains Super Admin enforcement over anon transport
+      ---
+      duration_ms: 48.1062
+      ...
+    # Subtest: replacement audit failure rolls back file/history/parent changes
+    ok 31 - replacement audit failure rolls back file/history/parent changes
+      ---
+      duration_ms: 26.5221
+      ...
+    # Subtest: second installation is rejected without data changes
+    ok 32 - second installation is rejected without data changes
+      ---
+      duration_ms: 54.7572
+      ...
+    1..32
+not ok 2 - post-containment document lifecycle actual PostgreSQL matrix
+  ---
+  duration_ms: 5447.6965
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\supabase\\tests\\production_document_mutation_rebaseline.local.test.mjs:132:1'
+  failureType: 'subtestsFailed'
+  error: '3 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: new exact gates and atomic rollback
+    # Subtest: migration version/name fails closed before installation
+    ok 1 - migration version/name fails closed before installation
+      ---
+      duration_ms: 104.3951
+      ...
+    # Subtest: migration statements fails closed before installation
+    ok 2 - migration statements fails closed before installation
+      ---
+      duration_ms: 86.7017
+      ...
+    # Subtest: missing migration receipt fails closed before installation
+    ok 3 - missing migration receipt fails closed before installation
+      ---
+      duration_ms: 63.5639
+      ...
+    # Subtest: RPC function body fails closed before installation
+    ok 4 - RPC function body fails closed before installation
+      ---
+      duration_ms: 87.2664
+      ...
+    # Subtest: RPC ACL fails closed before installation
+    ok 5 - RPC ACL fails closed before installation
+      ---
+      duration_ms: 83.1553
+      ...
+    # Subtest: fixture trigger disabled fails closed before installation
+    ok 6 - fixture trigger disabled fails closed before installation
+      ---
+      duration_ms: 83.5891
+      ...
+    # Subtest: fixture trigger missing fails closed before installation
+    ok 7 - fixture trigger missing fails closed before installation
+      ---
+      duration_ms: 84.4433
+      ...
+    # Subtest: containment helper grant fails closed before installation
+    ok 8 - containment helper grant fails closed before installation
+      ---
+      duration_ms: 85.1259
+      ...
+    # Subtest: containment private schema grant fails closed before installation
+    ok 9 - containment private schema grant fails closed before installation
+      ---
+      duration_ms: 95.5887
+      ...
+    # Subtest: test-only RPC reenabled fails closed before installation
+    ok 10 - test-only RPC reenabled fails closed before installation
+      ---
+      duration_ms: 84.122
+      ...
+    # Subtest: environment guard changed fails closed before installation
+    ok 11 - environment guard changed fails closed before installation
+      ---
+      duration_ms: 96.2638
+      ...
+    # Subtest: RLS disabled fails closed before installation
+    ok 12 - RLS disabled fails closed before installation
+      ---
+      duration_ms: 87.7503
+      ...
+    # Subtest: table column changed fails closed before installation
+    ok 13 - table column changed fails closed before installation
+      ---
+      duration_ms: 93.8086
+      ...
+    # Subtest: table constraint changed fails closed before installation
+    ok 14 - table constraint changed fails closed before installation
+      ---
+      duration_ms: 84.3606
+      ...
+    # Subtest: Storage policy changed fails closed before installation
+    ok 15 - Storage policy changed fails closed before installation
+      ---
+      duration_ms: 87.8902
+      ...
+    # Subtest: role inheritance changed fails closed before installation
+    ok 16 - role inheritance changed fails closed before installation
+      ---
+      duration_ms: 86.1362
+      ...
+    # Subtest: namespace collision fails closed before installation
+    ok 17 - namespace collision fails closed before installation
+      ---
+      duration_ms: 83.5227
+      ...
+    # Subtest: guard trigger-name collision fails closed before installation
+    ok 18 - guard trigger-name collision fails closed before installation
+      ---
+      duration_ms: 84.0487
+      ...
+    # Subtest: failure after all new functions/triggers/grants restores full original catalog and rows
+    ok 19 - failure after all new functions/triggers/grants restores full original catalog and rows
+      ---
+      duration_ms: 107.3557
+      ...
+    1..19
+ok 3 - new exact gates and atomic rollback
+  ---
+  duration_ms: 3448.1901
+  ...
+1..3
+# tests 54
+# suites 0
+# pass 50
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9146.9697

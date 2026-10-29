@@ -1,0 +1,474 @@
+TAP version 13
+# (node:44792) [PERM0002] SecurityWarning: The flag --allow-child-process must be used with extreme caution. It could invalidate the permission model.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: complete receipt proves terminal COMMIT, one attempt and all preservation bindings
+ok 1 - complete receipt proves terminal COMMIT, one attempt and all preservation bindings
+  ---
+  duration_ms: 14.8913
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit UNRESOLVED cannot be accepted as installation success
+ok 2 - stopped zero-exit UNRESOLVED cannot be accepted as installation success
+  ---
+  duration_ms: 2.9997
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit COMMITTED_POSTFLIGHT_FAILED cannot be accepted as installation success
+ok 3 - stopped zero-exit COMMITTED_POSTFLIGHT_FAILED cannot be accepted as installation success
+  ---
+  duration_ms: 0.9552
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit COMMITTED_WITH_DRIFT cannot be accepted as installation success
+ok 4 - stopped zero-exit COMMITTED_WITH_DRIFT cannot be accepted as installation success
+  ---
+  duration_ms: 1.6229
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit NOT_INSTALLED_VERIFIED cannot be accepted as installation success
+ok 5 - stopped zero-exit NOT_INSTALLED_VERIFIED cannot be accepted as installation success
+  ---
+  duration_ms: 1.3143
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit INSTALLED_AND_PRESERVED cannot be accepted as installation success
+ok 6 - stopped zero-exit INSTALLED_AND_PRESERVED cannot be accepted as installation success
+  ---
+  duration_ms: 0.8214
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit INSTALLED_WITH_DRIFT cannot be accepted as installation success
+ok 7 - stopped zero-exit INSTALLED_WITH_DRIFT cannot be accepted as installation success
+  ---
+  duration_ms: 0.8438
+  type: 'test'
+  ...
+# Subtest: stopped zero-exit PASS cannot be accepted as installation success
+ok 8 - stopped zero-exit PASS cannot be accepted as installation success
+  ---
+  duration_ms: 0.7745
+  type: 'test'
+  ...
+# Subtest: a real harmless child exiting zero with UNRESOLVED remains stopped
+ok 9 - a real harmless child exiting zero with UNRESOLVED remains stopped
+  ---
+  duration_ms: 92.3804
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent commitAcknowledged=false
+ok 10 - success rejects inconsistent commitAcknowledged=false
+  ---
+  duration_ms: 2.3038
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent submissionCount=0
+ok 11 - success rejects inconsistent submissionCount=0
+  ---
+  duration_ms: 0.9654
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent submissionCount=2
+ok 12 - success rejects inconsistent submissionCount=2
+  ---
+  duration_ms: 0.8572
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent automaticRetries=1
+ok 13 - success rejects inconsistent automaticRetries=1
+  ---
+  duration_ms: 0.8152
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent rollbackStatementsSent=1
+ok 14 - success rejects inconsistent rollbackStatementsSent=1
+  ---
+  duration_ms: 3.8216
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent retainLock=false
+ok 15 - success rejects inconsistent retainLock=false
+  ---
+  duration_ms: 0.8539
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent retainAttemptMarker=false
+ok 16 - success rejects inconsistent retainAttemptMarker=false
+  ---
+  duration_ms: 1.7614
+  type: 'test'
+  ...
+# Subtest: success rejects inconsistent stopForHumanReview=true
+ok 17 - success rejects inconsistent stopForHumanReview=true
+  ---
+  duration_ms: 0.8139
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for missing event
+ok 18 - receipt fails closed for missing event
+  ---
+  duration_ms: 0.8775
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for duplicate event
+ok 19 - receipt fails closed for duplicate event
+  ---
+  duration_ms: 0.938
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for wrong terminal tag
+ok 20 - receipt fails closed for wrong terminal tag
+  ---
+  duration_ms: 0.9895
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for wrong function fingerprint
+ok 21 - receipt fails closed for wrong function fingerprint
+  ---
+  duration_ms: 3.6227
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for wrong function owner
+ok 22 - receipt fails closed for wrong function owner
+  ---
+  duration_ms: 2.8979
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed inventories
+ok 23 - receipt fails closed for changed inventories
+  ---
+  duration_ms: 5.1411
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed foundation
+ok 24 - receipt fails closed for changed foundation
+  ---
+  duration_ms: 2.2903
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed migrations
+ok 25 - receipt fails closed for changed migrations
+  ---
+  duration_ms: 2.438
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed Storage count
+ok 26 - receipt fails closed for changed Storage count
+  ---
+  duration_ms: 2.6321
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for changed backend
+ok 27 - receipt fails closed for changed backend
+  ---
+  duration_ms: 4.009
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for mismatched marker hash
+ok 28 - receipt fails closed for mismatched marker hash
+  ---
+  duration_ms: 1.9583
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for mismatched nonce
+ok 29 - receipt fails closed for mismatched nonce
+  ---
+  duration_ms: 1.6983
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for different candidate bundle
+ok 30 - receipt fails closed for different candidate bundle
+  ---
+  duration_ms: 1.4164
+  type: 'test'
+  ...
+# Subtest: receipt fails closed for secret-shaped evidence
+ok 31 - receipt fails closed for secret-shaped evidence
+  ---
+  duration_ms: 1.1864
+  type: 'test'
+  ...
+# Subtest: partial journal and timezone-free event timestamps fail closed
+ok 32 - partial journal and timezone-free event timestamps fail closed
+  ---
+  duration_ms: 1.4463
+  type: 'test'
+  ...
+# Subtest: supervisor independently verifies bytes and matching child receipt hashes
+ok 33 - supervisor independently verifies bytes and matching child receipt hashes
+  ---
+  duration_ms: 5.534
+  type: 'test'
+  ...
+# Subtest: forged receipt PASS or changed durable bytes cannot pass supervisor
+ok 34 - forged receipt PASS or changed durable bytes cannot pass supervisor
+  ---
+  duration_ms: 4.4773
+  type: 'test'
+  ...
+# Subtest: ambiguous child exception has one launch and zero automatic retries
+ok 35 - ambiguous child exception has one launch and zero automatic retries
+  ---
+  duration_ms: 1.0134
+  type: 'test'
+  ...
+# Subtest: nonzero exit, signal and malformed output are unresolved
+ok 36 - nonzero exit, signal and malformed output are unresolved
+  ---
+  duration_ms: 4.0318
+  type: 'test'
+  ...
+# Subtest: raw original fingerprints with preservation false determine presence independently
+ok 37 - raw original fingerprints with preservation false determine presence independently
+  ---
+  duration_ms: 0.4824
+  type: 'test'
+  ...
+# Subtest: raw original fingerprints with preservation true determine presence independently
+ok 38 - raw original fingerprints with preservation true determine presence independently
+  ---
+  duration_ms: 0.1531
+  type: 'test'
+  ...
+# Subtest: raw new fingerprints with preservation false determine presence independently
+ok 39 - raw new fingerprints with preservation false determine presence independently
+  ---
+  duration_ms: 0.1474
+  type: 'test'
+  ...
+# Subtest: raw new fingerprints with preservation true determine presence independently
+ok 40 - raw new fingerprints with preservation true determine presence independently
+  ---
+  duration_ms: 0.1447
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for unknown catalog
+ok 41 - reconciliation remains unresolved for unknown catalog
+  ---
+  duration_ms: 0.1937
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for unknown function
+ok 42 - reconciliation remains unresolved for unknown function
+  ---
+  duration_ms: 0.1841
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for inconsistent views
+ok 43 - reconciliation remains unresolved for inconsistent views
+  ---
+  duration_ms: 0.3365
+  type: 'test'
+  ...
+# Subtest: reconciliation remains unresolved for wrong owner
+ok 44 - reconciliation remains unresolved for wrong owner
+  ---
+  duration_ms: 0.1694
+  type: 'test'
+  ...
+# Subtest: active backend, unknown preservation and missing raw views cannot infer installation
+ok 45 - active backend, unknown preservation and missing raw views cannot infer installation
+  ---
+  duration_ms: 0.2312
+  type: 'test'
+  ...
+# Subtest: UTC freshness parses original ISO JSON equally for explicit offsets
+ok 46 - UTC freshness parses original ISO JSON equally for explicit offsets
+  ---
+  duration_ms: 0.5551
+  type: 'test'
+  ...
+# Subtest: five-minute freshness cannot be removed or extended and future proofs fail
+ok 47 - five-minute freshness cannot be removed or extended and future proofs fail
+  ---
+  duration_ms: 0.8263
+  type: 'test'
+  ...
+# Subtest: forced native driver is denied even when the variable is an empty string
+ok 48 - forced native driver is denied even when the variable is an empty string
+  ---
+  duration_ms: 0.306
+  type: 'test'
+  ...
+# Subtest: candidate pins unchanged SQL, eleven inputs and the same 138 dependency files
+ok 49 - candidate pins unchanged SQL, eleven inputs and the same 138 dependency files
+  ---
+  duration_ms: 228.2119
+  type: 'test'
+  ...
+# Subtest: worker never owns/releases the lock; supervisor verifies before its sole release
+ok 50 - worker never owns/releases the lock; supervisor verifies before its sole release
+  ---
+  duration_ms: 2.4944
+  type: 'test'
+  ...
+# Subtest: supervisor holds the actual claim continuously through worker exit and independent receipt verification
+ok 51 - supervisor holds the actual claim continuously through worker exit and independent receipt verification
+  ---
+  duration_ms: 19.1982
+  type: 'test'
+  ...
+# Subtest: lock and marker remain on read failure; no SQL/worker retry
+ok 52 - lock and marker remain on read failure; no SQL/worker retry
+  ---
+  duration_ms: 2.553
+  type: 'test'
+  ...
+# Subtest: lock and marker remain on corrupt receipt; no SQL/worker retry
+ok 53 - lock and marker remain on corrupt receipt; no SQL/worker retry
+  ---
+  duration_ms: 3.8749
+  type: 'test'
+  ...
+# Subtest: lock and marker remain on child signal; no SQL/worker retry
+ok 54 - lock and marker remain on child signal; no SQL/worker retry
+  ---
+  duration_ms: 1.4115
+  type: 'test'
+  ...
+# Subtest: lock and marker remain on child uncertain; no SQL/worker retry
+ok 55 - lock and marker remain on child uncertain; no SQL/worker retry
+  ---
+  duration_ms: 1.0422
+  type: 'test'
+  ...
+# Subtest: lock and marker remain on owner changed; no SQL/worker retry
+ok 56 - lock and marker remain on owner changed; no SQL/worker retry
+  ---
+  duration_ms: 2.5069
+  type: 'test'
+  ...
+# Subtest: lock and marker remain on supervisor interruption; no SQL/worker retry
+ok 57 - lock and marker remain on supervisor interruption; no SQL/worker retry
+  ---
+  duration_ms: 3.5189
+  type: 'test'
+  ...
+# Subtest: an independently mismatched child proof cannot release the actual claim
+ok 58 - an independently mismatched child proof cannot release the actual claim
+  ---
+  duration_ms: 3.6007
+  type: 'test'
+  ...
+# Subtest: release requires the exact owner and independently complete receipt proof
+ok 59 - release requires the exact owner and independently complete receipt proof
+  ---
+  duration_ms: 2.493
+  type: 'test'
+  ...
+# Subtest: worker has only a verification lease and cannot unlink a live or dead supervisor lock
+ok 60 - worker has only a verification lease and cannot unlink a live or dead supervisor lock
+  ---
+  duration_ms: 1.1651
+  type: 'test'
+  ...
+# Subtest: worker rejects wrong parent, bundle or changed claim before arming
+ok 61 - worker rejects wrong parent, bundle or changed claim before arming
+  ---
+  duration_ms: 0.8757
+  type: 'test'
+  ...
+# Subtest: dead supervisor state permits only read-only classification after the recorded writer finishes
+ok 62 - dead supervisor state permits only read-only classification after the recorded writer finishes
+  ---
+  duration_ms: 1.3114
+  type: 'test'
+  ...
+# Subtest: real harmless IPC child receives one parent lease; lock persists through process exit
+ok 63 - real harmless IPC child receives one parent lease; lock persists through process exit
+  ---
+  duration_ms: 96.7896
+  type: 'test'
+  ...
+# Subtest: expected pinned pg resolution binds real entry/package paths and hashed identity
+ok 64 - expected pinned pg resolution binds real entry/package paths and hashed identity
+  ---
+  duration_ms: 1.1094
+  type: 'test'
+  ...
+# Subtest: rejects candidate shadow resolution before reading/loading driver bytes
+ok 65 - rejects candidate shadow resolution before reading/loading driver bytes
+  ---
+  duration_ms: 0.3691
+  type: 'test'
+  ...
+# Subtest: rejects ancestor shadow resolution before reading/loading driver bytes
+ok 66 - rejects ancestor shadow resolution before reading/loading driver bytes
+  ---
+  duration_ms: 0.1789
+  type: 'test'
+  ...
+# Subtest: rejects outside root resolution before reading/loading driver bytes
+ok 67 - rejects outside root resolution before reading/loading driver bytes
+  ---
+  duration_ms: 0.1589
+  type: 'test'
+  ...
+# Subtest: rejects wrong entry resolution before reading/loading driver bytes
+ok 68 - rejects wrong entry resolution before reading/loading driver bytes
+  ---
+  duration_ms: 0.1742
+  type: 'test'
+  ...
+# Subtest: rejects symlink/junction at node_modules
+ok 69 - rejects symlink/junction at node_modules
+  ---
+  duration_ms: 0.238
+  type: 'test'
+  ...
+# Subtest: rejects symlink/junction at node_modules/pg
+ok 70 - rejects symlink/junction at node_modules/pg
+  ---
+  duration_ms: 0.1818
+  type: 'test'
+  ...
+# Subtest: rejects symlink/junction at node_modules/pg/lib/index.js
+ok 71 - rejects symlink/junction at node_modules/pg/lib/index.js
+  ---
+  duration_ms: 0.2216
+  type: 'test'
+  ...
+# Subtest: rejects realpath escape even when lstat appears regular
+ok 72 - rejects realpath escape even when lstat appears regular
+  ---
+  duration_ms: 0.2825
+  type: 'test'
+  ...
+# Subtest: rejects package version mismatch even with synthetic matching byte pin
+ok 73 - rejects package version mismatch even with synthetic matching byte pin
+  ---
+  duration_ms: 0.3336
+  type: 'test'
+  ...
+# Subtest: rejects package name mismatch even with synthetic matching byte pin
+ok 74 - rejects package name mismatch even with synthetic matching byte pin
+  ---
+  duration_ms: 0.2405
+  type: 'test'
+  ...
+# Subtest: rejects absent pin or changed entry bytes
+ok 75 - rejects absent pin or changed entry bytes
+  ---
+  duration_ms: 0.4269
+  type: 'test'
+  ...
+# Subtest: actual Node metadata resolution matches the verified repository closure; no Client is constructed
+ok 76 - actual Node metadata resolution matches the verified repository closure; no Client is constructed
+  ---
+  duration_ms: 178.6647
+  type: 'test'
+  ...
+# Subtest: all connection sites load only the reverified absolute entry and closure
+ok 77 - all connection sites load only the reverified absolute entry and closure
+  ---
+  duration_ms: 1.0475
+  type: 'test'
+  ...
+1..77
+# tests 77
+# suites 0
+# pass 77
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 920.1584

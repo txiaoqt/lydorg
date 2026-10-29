@@ -1,0 +1,4 @@
+{
+  "stage": "Offline evidence loading",
+  "message": "Initial oversized local JSON output was truncated; no production mutation was attempted. Replaced with bounded local file reads; authorized SQL bytes/hash verified."
+}

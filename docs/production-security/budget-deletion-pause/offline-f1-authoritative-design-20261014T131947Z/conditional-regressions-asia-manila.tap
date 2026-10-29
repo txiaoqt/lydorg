@@ -1,0 +1,250 @@
+TAP version 13
+# Subtest: positive current UNUSED enrollment is usable exactly once
+ok 1 - positive current UNUSED enrollment is usable exactly once
+  ---
+  duration_ms: 38.3467
+  type: 'test'
+  ...
+# Subtest: absence is not a new grant and never creates enrollment
+ok 2 - absence is not a new grant and never creates enrollment
+  ---
+  duration_ms: 0.3645
+  type: 'test'
+  ...
+# Subtest: a wrong context cannot overwrite positive enrollment
+ok 3 - a wrong context cannot overwrite positive enrollment
+  ---
+  duration_ms: 0.3796
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: root A
+ok 4 - caller cannot choose another store or allowance dimension: root A
+  ---
+  duration_ms: 0.3171
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: root B
+ok 5 - caller cannot choose another store or allowance dimension: root B
+  ---
+  duration_ms: 0.2751
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: authority
+ok 6 - caller cannot choose another store or allowance dimension: authority
+  ---
+  duration_ms: 0.2957
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: endpoint
+ok 7 - caller cannot choose another store or allowance dimension: endpoint
+  ---
+  duration_ms: 0.3279
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: nonce
+ok 8 - caller cannot choose another store or allowance dimension: nonce
+  ---
+  duration_ms: 0.292
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: hash
+ok 9 - caller cannot choose another store or allowance dimension: hash
+  ---
+  duration_ms: 0.2973
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: bundle
+ok 10 - caller cannot choose another store or allowance dimension: bundle
+  ---
+  duration_ms: 0.6055
+  type: 'test'
+  ...
+# Subtest: caller cannot choose another store or allowance dimension: timestamp
+ok 11 - caller cannot choose another store or allowance dimension: timestamp
+  ---
+  duration_ms: 0.3289
+  type: 'test'
+  ...
+# Subtest: broker construction rejects caller-admitted root: SYNTHETIC-ROOT-A
+ok 12 - broker construction rejects caller-admitted root: SYNTHETIC-ROOT-A
+  ---
+  duration_ms: 0.5918
+  type: 'test'
+  ...
+# Subtest: broker construction rejects caller-admitted root: SYNTHETIC-ROOT-B
+ok 13 - broker construction rejects caller-admitted root: SYNTHETIC-ROOT-B
+  ---
+  duration_ms: 0.2204
+  type: 'test'
+  ...
+# Subtest: two caller brokers with no selectable roots share the same authority
+ok 14 - two caller brokers with no selectable roots share the same authority
+  ---
+  duration_ms: 0.4695
+  type: 'test'
+  ...
+# Subtest: 50 interleaved clients share one atomic model commit
+ok 15 - 50 interleaved clients share one atomic model commit
+  ---
+  duration_ms: 2.8656
+  type: 'test'
+  ...
+# Subtest: modeled broker restart does not resume a spent authorization
+ok 16 - modeled broker restart does not resume a spent authorization
+  ---
+  duration_ms: 0.3977
+  type: 'test'
+  ...
+# Subtest: returned status is not a transferable dispatch permit
+ok 17 - returned status is not a transferable dispatch permit
+  ---
+  duration_ms: 0.4348
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: LOSS_LOCAL_BEFORE
+ok 18 - loss/uncertainty/stop remains terminal under the checkpoint contract: LOSS_LOCAL_BEFORE
+  ---
+  duration_ms: 0.6799
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: LOSS_LOCAL_AFTER
+ok 19 - loss/uncertainty/stop remains terminal under the checkpoint contract: LOSS_LOCAL_AFTER
+  ---
+  duration_ms: 0.3399
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: UNKNOWN_COMMITTED
+ok 20 - loss/uncertainty/stop remains terminal under the checkpoint contract: UNKNOWN_COMMITTED
+  ---
+  duration_ms: 0.3487
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: UNKNOWN_NOT_COMMITTED
+ok 21 - loss/uncertainty/stop remains terminal under the checkpoint contract: UNKNOWN_NOT_COMMITTED
+  ---
+  duration_ms: 0.4038
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: PARTIAL_PRIMARY
+ok 22 - loss/uncertainty/stop remains terminal under the checkpoint contract: PARTIAL_PRIMARY
+  ---
+  duration_ms: 0.6542
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: STOP_AFTER_COMMIT
+ok 23 - loss/uncertainty/stop remains terminal under the checkpoint contract: STOP_AFTER_COMMIT
+  ---
+  duration_ms: 0.4118
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: STOP_AFTER_DISPATCH
+ok 24 - loss/uncertainty/stop remains terminal under the checkpoint contract: STOP_AFTER_DISPATCH
+  ---
+  duration_ms: 0.4143
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: OBSERVATION_UNCERTAIN
+ok 25 - loss/uncertainty/stop remains terminal under the checkpoint contract: OBSERVATION_UNCERTAIN
+  ---
+  duration_ms: 1.5153
+  type: 'test'
+  ...
+# Subtest: loss/uncertainty/stop remains terminal under the checkpoint contract: DROP_PRIMARY_BEFORE_DISPATCH
+ok 26 - loss/uncertainty/stop remains terminal under the checkpoint contract: DROP_PRIMARY_BEFORE_DISPATCH
+  ---
+  duration_ms: 0.4988
+  type: 'test'
+  ...
+# Subtest: local receipts may disappear; authoritative SPENT still denies
+ok 27 - local receipts may disappear; authoritative SPENT still denies
+  ---
+  duration_ms: 0.5343
+  type: 'test'
+  ...
+# Subtest: lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: losePrimaryRow
+ok 28 - lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: losePrimaryRow
+  ---
+  duration_ms: 0.5466
+  type: 'test'
+  ...
+# Subtest: lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: loseAllPrimary
+ok 29 - lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: loseAllPrimary
+  ---
+  duration_ms: 0.2583
+  type: 'test'
+  ...
+# Subtest: lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: rollbackPrimaryOnly
+ok 30 - lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: rollbackPrimaryOnly
+  ---
+  duration_ms: 0.3314
+  type: 'test'
+  ...
+# Subtest: lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: rollbackCheckpointOnly
+ok 31 - lost/rolled-back primary evidence cannot look unused with a surviving checkpoint: rollbackCheckpointOnly
+  ---
+  duration_ms: 0.2374
+  type: 'test'
+  ...
+# Subtest: missing checkpoint denies even a positive unused record
+ok 32 - missing checkpoint denies even a positive unused record
+  ---
+  duration_ms: 0.2323
+  type: 'test'
+  ...
+# Subtest: unverifiable authority never falls back to another root: corruptIdentity
+ok 33 - unverifiable authority never falls back to another root: corruptIdentity
+  ---
+  duration_ms: 0.2052
+  type: 'test'
+  ...
+# Subtest: unverifiable authority never falls back to another root: corruptEpoch
+ok 34 - unverifiable authority never falls back to another root: corruptEpoch
+  ---
+  duration_ms: 0.2455
+  type: 'test'
+  ...
+# Subtest: unverifiable authority never falls back to another root: corruptPartialState
+ok 35 - unverifiable authority never falls back to another root: corruptPartialState
+  ---
+  duration_ms: 0.3269
+  type: 'test'
+  ...
+# Subtest: unavailable primary fences the namespace in the model; reopening flag is not recovery
+ok 36 - unavailable primary fences the namespace in the model; reopening flag is not recovery
+  ---
+  duration_ms: 0.2922
+  type: 'test'
+  ...
+# Subtest: unknown noncommitted outcome cannot be cleared by a later healthy flag
+ok 37 - unknown noncommitted outcome cannot be cleared by a later healthy flag
+  ---
+  duration_ms: 0.3282
+  type: 'test'
+  ...
+# Subtest: a distinct positively enrolled authorization is not confused with the first
+ok 38 - a distinct positively enrolled authorization is not confused with the first
+  ---
+  duration_ms: 0.3255
+  type: 'test'
+  ...
+# Subtest: public broker API cannot enroll, reset, recover or choose a backend
+ok 39 - public broker API cannot enroll, reset, recover or choose a backend
+  ---
+  duration_ms: 1.2087
+  type: 'test'
+  ...
+# Subtest: request accessors are not used as authority metadata
+ok 40 - request accessors are not used as authority metadata
+  ---
+  duration_ms: 0.2456
+  type: 'test'
+  ...
+1..40
+# tests 40
+# suites 0
+# pass 40
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 228.2502

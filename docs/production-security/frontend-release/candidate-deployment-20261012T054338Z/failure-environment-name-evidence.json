@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-10-12T05:56:52.450Z",
+  "metadataOnly": true,
+  "envFieldType": "array",
+  "publicEnvironmentNamesInDeploymentMetadata": [
+    "VITE_ADMIN_APP_URL",
+    "VITE_DEPLOY_SURFACE",
+    "VITE_SUPABASE_ANON_KEY",
+    "VITE_SUPABASE_URL",
+    "VITE_VERCEL_OBSERVABILITY_CLIENT_CONFIG"
+  ],
+  "outsideReviewedNameAllowlist": [],
+  "serverValuesRequested": false,
+  "valuesPersisted": false,
+  "limitation": "Deployment metadata names need not include all process variables injected during hosted builds."
+}

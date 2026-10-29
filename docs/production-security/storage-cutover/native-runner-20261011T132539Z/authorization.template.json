@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "approved": false,
+  "project": "mqqaykksadotbrghbexz",
+  "host": "db.mqqaykksadotbrghbexz.supabase.co",
+  "route": "native-pg-direct-tls",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "sqlBytes": 47407,
+  "runnerBundleSha256": "REPLACE_ONLY_AFTER_INDEPENDENT_RUNNER_REVIEW",
+  "caSha256": "REPLACE_ONLY_AFTER_INDEPENDENT_CA_VERIFICATION",
+  "authorizationReference": "REPLACE_WITH_NEW_HUMAN_APPROVAL_REFERENCE",
+  "approvedAt": "NOT_AUTHORIZED",
+  "expiresAt": "NOT_AUTHORIZED",
+  "exclusiveWindowConfirmed": false
+}

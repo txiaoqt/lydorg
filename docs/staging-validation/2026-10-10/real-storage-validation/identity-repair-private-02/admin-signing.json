@@ -1,0 +1,1242 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "results": [
+    {
+      "case": "Authorized Admin signs fixture 1; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 890,
+      "downloadMs": 346,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 1; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 881
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 1; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 345
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 1 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 545,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 1 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 545
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 1 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 249,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 1 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 249
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 1 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 227,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 1 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 226
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 1 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 214,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 1 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 213
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 2; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 286,
+      "downloadMs": 385,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 2; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 284
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 2; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 384
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 2 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 248,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 2 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 247
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 2 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 251,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 2 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 251
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 2 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 224,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 2 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 223
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 2 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 235,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 2 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 235
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 3; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 274,
+      "downloadMs": 355,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 3; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 273
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 3; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 200,
+          "durationMs": 355
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 3 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 232,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 3 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 232
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 3 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 265,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 3 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 265
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 3 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 224,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 3 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 223
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 3 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 252,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 3 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 251
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 4; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 264,
+      "downloadMs": 341,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 4; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 263
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 4; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 200,
+          "durationMs": 340
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 4 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 225,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 4 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 225
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 4 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 251,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 4 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 251
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 4 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 266,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 4 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 266
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 4 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 240,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 4 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 239
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 5; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 289,
+      "downloadMs": 348,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 5; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 288
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 5; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 200,
+          "durationMs": 348
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 5 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 210,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 5 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 210
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 5 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 134,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 5 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 5 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 217,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 5 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 217
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 5 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 256,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 5 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 256
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 6; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 274,
+      "downloadMs": 322,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 6; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 272
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 6; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 200,
+          "durationMs": 322
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 6 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 131,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 6 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 131
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 6 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 242,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 6 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 242
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 6 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 279,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 6 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 279
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 6 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 238,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 6 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 238
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 7; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 261,
+      "downloadMs": 376,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 7; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 261
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 7; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 200,
+          "durationMs": 376
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 7 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 256,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 7 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 256
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 7 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 222,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 7 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 222
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 7 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 237,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 7 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 236
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 7 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 233,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 7 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 233
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 8; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 260,
+      "downloadMs": 360,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 8; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 260
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 8; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 200,
+          "durationMs": 359
+        }
+      ]
+    },
+    {
+      "case": "UNAUTHORIZED: fixture 8 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 147,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "UNAUTHORIZED: fixture 8 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 147
+        }
+      ]
+    },
+    {
+      "case": "REVOKED: fixture 8 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 227,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "REVOKED: fixture 8 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 227
+        }
+      ]
+    },
+    {
+      "case": "EXPIRED: fixture 8 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 233,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "EXPIRED: fixture 8 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 232
+        }
+      ]
+    },
+    {
+      "case": "INVALID: fixture 8 signing denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 172,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "INVALID: fixture 8 signing denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 172
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 9; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 278,
+      "downloadMs": 584,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 9; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 277
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 9; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/template-files",
+          "status": 200,
+          "durationMs": 584
+        }
+      ]
+    },
+    {
+      "case": "Authorized Admin signs fixture 10; hash matches",
+      "expected": "allow",
+      "result": "PASS",
+      "authorizationMs": 270,
+      "downloadMs": 478,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 10; hash matches",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 270
+        },
+        {
+          "actor": "Admin gateway",
+          "step": "Authorized Admin signs fixture 10; hash matches",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/news-release-images",
+          "status": 200,
+          "durationMs": 478
+        }
+      ]
+    },
+    {
+      "case": "Forged B parent path for A document is denied",
+      "expected": "deny",
+      "result": "PASS",
+      "authorizationMs": 255,
+      "downloadMs": null,
+      "http": [
+        {
+          "actor": "Admin gateway",
+          "step": "Forged B parent path for A document is denied",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 255
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 1; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 881
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 1; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 345
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 1 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 545
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 1 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 249
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 1 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 226
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 1 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 213
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 2; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 284
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 2; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 384
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 2 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 247
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 2 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 251
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 2 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 223
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 2 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 235
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 3; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 273
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 3; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 200,
+      "durationMs": 355
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 3 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 232
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 3 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 265
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 3 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 223
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 3 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 251
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 4; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 263
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 4; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 200,
+      "durationMs": 340
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 4 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 225
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 4 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 251
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 4 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 266
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 4 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 239
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 5; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 288
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 5; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 200,
+      "durationMs": 348
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 5 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 210
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 5 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 134
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 5 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 217
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 5 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 256
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 6; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 272
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 6; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 200,
+      "durationMs": 322
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 6 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 131
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 6 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 242
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 6 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 279
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 6 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 238
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 7; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 261
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 7; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 200,
+      "durationMs": 376
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 7 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 256
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 7 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 222
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 7 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 236
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 7 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 233
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 8; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 260
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 8; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 200,
+      "durationMs": 359
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "UNAUTHORIZED: fixture 8 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 147
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "REVOKED: fixture 8 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 227
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "EXPIRED: fixture 8 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 232
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "INVALID: fixture 8 signing denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 172
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 9; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 277
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 9; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/template-files",
+      "status": 200,
+      "durationMs": 584
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 10; hash matches",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 270
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Authorized Admin signs fixture 10; hash matches",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/news-release-images",
+      "status": 200,
+      "durationMs": 478
+    },
+    {
+      "actor": "Admin gateway",
+      "step": "Forged B parent path for A document is denied",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 255
+    }
+  ]
+}

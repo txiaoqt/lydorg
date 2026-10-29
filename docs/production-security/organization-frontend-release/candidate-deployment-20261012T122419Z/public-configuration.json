@@ -1,0 +1,17 @@
+{
+  "capturedAt": "2026-10-12T12:37:50.757Z",
+  "status": "PASS",
+  "publicNames": [
+    "VITE_DEPLOY_SURFACE",
+    "VITE_ENABLE_STANDALONE_USER_PWA_UI",
+    "VITE_SUPABASE_ANON_KEY",
+    "VITE_SUPABASE_URL"
+  ],
+  "projectRef": "mqqaykksadotbrghbexz",
+  "keyClass": "anon",
+  "surface": "user",
+  "standalonePwaUi": true,
+  "configurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+  "valuesLogged": false,
+  "serverSecretsRetrieved": false
+}

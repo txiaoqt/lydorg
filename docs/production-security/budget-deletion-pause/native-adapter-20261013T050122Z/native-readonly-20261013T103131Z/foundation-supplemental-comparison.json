@@ -1,0 +1,12 @@
+{
+  "structureMatches": true,
+  "completeStableFoundationMatches": true,
+  "reviewedFullFoundationSha256": "770d3d419386094aa7be2cce8e1a5a47056fe2c972e4a043c8949652cd67dea5",
+  "currentFullFoundationSha256": "770d3d419386094aa7be2cce8e1a5a47056fe2c972e4a043c8949652cd67dea5",
+  "functionCount": 14,
+  "tableCount": 4,
+  "triggerCount": 8,
+  "policyCount": 15,
+  "environmentGuard": false,
+  "comparisonScope": "Saved native evidence only; no additional connection"
+}

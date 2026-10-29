@@ -1,0 +1,16 @@
+{
+  "database": "postgres",
+  "read_only": "on",
+  "verified_at": "2026-10-11T10:58:50.911899+00:00",
+  "current_user": "postgres",
+  "session_user": "postgres",
+  "database_create": true,
+  "migration_records": 164,
+  "file_table_trigger": true,
+  "exact_catalog_match": true,
+  "public_schema_create": true,
+  "containment_marker_count": 4,
+  "submission_table_trigger": true,
+  "target_function_owners_match": true
+}
+

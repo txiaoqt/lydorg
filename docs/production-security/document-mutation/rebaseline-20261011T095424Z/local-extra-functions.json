@@ -1,0 +1,18 @@
+[
+  {
+    "acl": "{postgres=X/postgres}",
+    "md5": "0f5766e8fe835c30681dab0ea86571db",
+    "name": "authorize_reviewer",
+    "owner": "postgres",
+    "signature": "ytrace_identity.authorize_reviewer(text)",
+    "definition": "CREATE OR REPLACE FUNCTION ytrace_identity.authorize_reviewer(_token text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\r\ndeclare _admin uuid; _role text; _permissions text[];\r\nbegin\r\n select s.admin_id,r.code,r.permission_codes into _admin,_role,_permissions\r\n from public.validate_admin_session_token(_token) s join public.admin_accounts a on a.id=s.admin_id and a.is_active\r\n join public.roles r on r.id=a.role_id limit 1;\r\n if _admin is null or (_role<>'super_admin' and not('registrations_management'=any(coalesce(_permissions,array[]::text[])))) then\r\n   raise exception 'An authorized registration reviewer is required.';\r\n end if;\r\n return _admin;\r\nend $function$\n"
+  },
+  {
+    "acl": "{postgres=X/postgres}",
+    "md5": "608aaefe8b604986f752ea289ebed5f5",
+    "name": "has_retained_history",
+    "owner": "postgres",
+    "signature": "ytrace_identity.has_retained_history(uuid)",
+    "definition": "CREATE OR REPLACE FUNCTION ytrace_identity.has_retained_history(_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public', 'ytrace_identity'\nAS $function$\n select exists(select 1 from public.organization_profiles where id=_id and (profile_status::text='verified' or verified_at is not null))\n or exists(select 1 from public.organization_accreditations where organization_id=_id)\n or exists(select 1 from public.organization_renewals where organization_id=_id)\n or exists(select 1 from public.budget_requests where organization_id=_id and status::text<>'draft')\n or exists(select 1 from public.liquidation_reports where organization_id=_id)\n or exists(select 1 from ytrace_identity.cases where canonical_organization_id=_id\n   or (organization_id=_id and outcome in ('CONFIRMED_EXISTING','MORE_INFORMATION','REJECTED')));\n$function$\n"
+  }
+]

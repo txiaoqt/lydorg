@@ -1,0 +1,73 @@
+TAP version 13
+# Subtest: actual SQL inventory copy preserves the original bytes and all 57 ordered definitions
+ok 1 - actual SQL inventory copy preserves the original bytes and all 57 ordered definitions
+  ---
+  duration_ms: 21.7715
+  type: 'test'
+  ...
+# Subtest: actual SQL inputs each satisfy their declared isolation, timeout, result and terminal contract
+not ok 2 - actual SQL inputs each satisfy their declared isolation, timeout, result and terminal contract
+  ---
+  duration_ms: 248.7625
+  type: 'test'
+  location: 'C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause.test.mjs:102:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /READ_ONLY_SQL_STATEMENT_COUNT_MISMATCH/. Input:
+    
+    'Error: READ_ONLY_SQL_UNSUPPORTED_LEXICAL_FORM'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'READ_ONLY_SQL_UNSUPPORTED_LEXICAL_FORM'
+  stack: |-
+    requireGuard (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/storage-cutover/native-runner-20261011T132539Z/runner-core.mjs:15:66)
+    verifierStatements (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-runner-core.mjs:130:5)
+    verifyReadOnlySqlContract (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/budget-runner-core.mjs:151:20)
+    file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-budget-pause.test.mjs:117:21
+    getActual (node:assert:611:5)
+    strict.throws (node:assert:759:24)
+    TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-budget-pause.test.mjs:117:10)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Christopher%20x%20Angel/Documents/lydo-connect-org-focused/docs/production-security/budget-deletion-pause/native-adapter-20261013T050122Z/native-budget-pause.test.mjs:117:10)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: actual SQL regression reproduces the original terminal mismatch and retains the inventory row envelope
+ok 3 - actual SQL regression reproduces the original terminal mismatch and retains the inventory row envelope
+  ---
+  duration_ms: 6.6702
+  type: 'test'
+  ...
+# Subtest: actual SQL contract drift and data-changing statements are rejected before a mocked native connection
+ok 4 - actual SQL contract drift and data-changing statements are rejected before a mocked native connection
+  ---
+  duration_ms: 247.9145
+  type: 'test'
+  ...
+# Subtest: actual SQL result parsing refuses alternate terminal tags, command sequences and duplicate envelopes
+ok 5 - actual SQL result parsing refuses alternate terminal tags, command sequences and duplicate envelopes
+  ---
+  duration_ms: 218.6753
+  type: 'test'
+  ...
+# Subtest: actual SQL runner snapshot uses all four executable preflight inputs with mocked pg row shapes
+ok 6 - actual SQL runner snapshot uses all four executable preflight inputs with mocked pg row shapes
+  ---
+  duration_ms: 259.4309
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1186.9966

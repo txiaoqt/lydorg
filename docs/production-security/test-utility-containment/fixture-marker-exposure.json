@@ -1,0 +1,121 @@
+{
+  "marker_columns": [
+    {
+      "type": "bool",
+      "table": "budget_requests",
+      "column": "is_seeded_sample_data",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "budget_requests",
+      "column": "seed_batch",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bool",
+      "table": "document_submission_files",
+      "column": "is_seeded_sample_data",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "document_submission_files",
+      "column": "seed_batch",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bool",
+      "table": "document_submissions",
+      "column": "is_seeded_sample_data",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "document_submissions",
+      "column": "seed_batch",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bool",
+      "table": "liquidation_reports",
+      "column": "is_seeded_sample_data",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "liquidation_reports",
+      "column": "seed_batch",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bool",
+      "table": "organization_profiles",
+      "column": "is_renewal_test_account",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "bool",
+      "table": "organization_profiles",
+      "column": "is_seeded_sample_data",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "organization_profiles",
+      "column": "seed_batch",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "int4",
+      "table": "organization_profiles",
+      "column": "seed_source_record_number",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "int4",
+      "table": "organization_profiles",
+      "column": "seed_source_year",
+      "default": null,
+      "nullable": "YES"
+    }
+  ],
+  "owner_write_policies": [
+    {
+      "name": "budget_requests_self_or_admin",
+      "check": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = budget_requests.organization_id) AND (op.user_id = auth.uid())))))",
+      "roles": "{public}",
+      "table": "budget_requests",
+      "using": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = budget_requests.organization_id) AND (op.user_id = auth.uid())))))",
+      "command": "ALL"
+    },
+    {
+      "name": "document_submissions_self_or_admin",
+      "check": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = document_submissions.organization_id) AND (op.user_id = auth.uid())))))",
+      "roles": "{public}",
+      "table": "document_submissions",
+      "using": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = document_submissions.organization_id) AND (op.user_id = auth.uid())))))",
+      "command": "ALL"
+    },
+    {
+      "name": "liquidation_reports_self_or_admin",
+      "check": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = liquidation_reports.organization_id) AND (op.user_id = auth.uid())))))",
+      "roles": "{public}",
+      "table": "liquidation_reports",
+      "using": "(current_user_is_admin() OR (submitted_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM organization_profiles op\n  WHERE ((op.id = liquidation_reports.organization_id) AND (op.user_id = auth.uid())))))",
+      "command": "ALL"
+    }
+  ]
+}

@@ -1,0 +1,203 @@
+{
+  "type": "frontend-readiness-review-not-deployment-authorization",
+  "generatedAt": "2026-10-12T01:38:47.762Z",
+  "branch": "ui-refactor",
+  "baseCommit": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "worktree": "dirty and preserved",
+  "productionProject": "mqqaykksadotbrghbexz",
+  "decision": "NO-GO",
+  "blockingCorrection": "Fail closed for gateway-supported buckets on Admin routes without a valid custom Admin session; do not fall back to direct organization/anonymous Storage signing.",
+  "firstTarget": {
+    "scope": "toffs-projects-81b2ce10",
+    "project": "lydorg",
+    "domain": "y-trace-admin.vercel.app",
+    "surface": "admin"
+  },
+  "separateTarget": {
+    "project": "yorbms_user",
+    "domain": "ytrace.app",
+    "surface": "user",
+    "applications": [
+      "organization website",
+      "public website",
+      "user PWA"
+    ]
+  },
+  "runtimeFiles": [
+    {
+      "path": "src/lib/admin-storage-access.ts",
+      "bytes": 2008,
+      "sha256": "c7b5eee5076ad8a4095ed0afbeefc5f42c85ba462200dc14cae8b8c08e198fdb",
+      "previousStorageReviewMatch": true
+    },
+    {
+      "path": "src/lib/signed-storage-url-cache.ts",
+      "bytes": 2935,
+      "sha256": "961d9786467553ef0f7b14972db12523f6ac9609b07d610978f734d7d992f883",
+      "previousStorageReviewMatch": true
+    },
+    {
+      "path": "src/lib/lydo-connect-supabase.ts",
+      "bytes": 435689,
+      "sha256": "5fb485bcbd0e587e8c45cc653631ac9bafbb99b428cc442e0a6d08f779ddd514",
+      "previousStorageReviewMatch": true
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "bytes": 3571,
+      "sha256": "1c4a0e885e83172550fa4a1ef0a47278eaeb19c7aa23b12ea9a51a62a7422b63",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "src/lib/lydo-connect-store.tsx",
+      "bytes": 73446,
+      "sha256": "0e25a810735f13daccc1d5733c44894dc81b2a1f21a390fd1f99e40728d60e8c",
+      "previousStorageReviewMatch": null
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "src/lib/admin-auth.ts",
+      "bytes": 7243,
+      "sha256": "b7ce15684dff395663a9c8a431b04b352012d6e472eef55b88bca777be2d0d8c",
+      "previousStorageReviewMatch": true
+    },
+    {
+      "path": "src/lib/supabase.ts",
+      "bytes": 2124,
+      "sha256": "6fcf16b40c4b378ec268798f77fd5743fd6750831d3c08941b73d6a03ab7e843",
+      "previousStorageReviewMatch": true
+    },
+    {
+      "path": "src/lib/deployment-surface.ts",
+      "bytes": 817,
+      "sha256": "378da148e659acb0c2bbdf1e01debaf8db592af43a692cf8126e988ba8239827",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "package.json",
+      "bytes": 3565,
+      "sha256": "e92e90051143adf0d62c5daac86fef0b9188ef817398de89913560f527ac10c9",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 374412,
+      "sha256": "0ef6b3d79ec9ba0d6120a30237d37fccbeff3a70fc541223a24000b686b306bb",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "vercel.json",
+      "bytes": 1652,
+      "sha256": "e597d9b783e913df2c3ef389f29e0c3ebaab9c07f7158d417d0019310eb6dd02",
+      "previousStorageReviewMatch": null
+    },
+    {
+      "path": "vite.config.ts",
+      "bytes": 1891,
+      "sha256": "af7a41680f23aa7c979c37c6b7aaea87ccccc75ee4cd78f50a896c8804a9f7ff",
+      "previousStorageReviewMatch": null
+    }
+  ],
+  "sharedServiceHunks": [
+    {
+      "header": "@@ -57,12 +57,13 @@ import {",
+      "oldStart": 57,
+      "sha256": "63a331e44b9fc0cedc4f96744d976547e12b9f78e18a86d085e418dce1ddae33",
+      "includeInMinimalAdminCandidate": true
+    },
+    {
+      "header": "@@ -3137,17 +3138,43 @@ export const subscribeToOrganizationYpopFileChangesInSupabase = (",
+      "oldStart": 3137,
+      "sha256": "7ec54cd198767bb5d5de82eb33cd5a7905089586239a7374b68451bb0b14d3b5",
+      "includeInMinimalAdminCandidate": false
+    },
+    {
+      "header": "@@ -4740,9 +4767,9 @@ const getAuthenticatedAdminSession = () => {",
+      "oldStart": 4740,
+      "sha256": "747b82178039cc6a279875f9a5168c4ba9d098882cd7ce022f602e2eb32f1233",
+      "includeInMinimalAdminCandidate": false
+    },
+    {
+      "header": "@@ -5124,9 +5151,12 @@ export const deleteBudgetRequestInSupabase = async (budgetRequestId: string) =>",
+      "oldStart": 5124,
+      "sha256": "3487d35a427434b30f94b8820bd1c79fee65c0962d941751b0b2ad1bad289bff",
+      "includeInMinimalAdminCandidate": true
+    },
+    {
+      "header": "@@ -5146,14 +5176,8 @@ export const uploadNewsReleasePreviewImageToSupabase = async (file: File) => {",
+      "oldStart": 5146,
+      "sha256": "b3f0d4cd7cbaf1e19a9bee07a40a31571b9b9b1f8a637d0477d2b2053fb2773c",
+      "includeInMinimalAdminCandidate": true
+    },
+    {
+      "header": "@@ -5165,12 +5189,12 @@ export const deleteNewsReleasePreviewImageFromSupabase = async (value: string) =",
+      "oldStart": 5165,
+      "sha256": "0c0e8c0c435e0d68a4a664f45cbdf27cdfcaafa33aed3c66642375b315baef53",
+      "includeInMinimalAdminCandidate": true
+    },
+    {
+      "header": "@@ -6128,17 +6152,8 @@ export const uploadTemplateDocumentToSupabase = async (params: {",
+      "oldStart": 6128,
+      "sha256": "0f60129544d7effa4fe782844223c0f2cbbc3e8aaf81f1cb291af5d787b58714",
+      "includeInMinimalAdminCandidate": true
+    },
+    {
+      "header": "@@ -6345,86 +6360,71 @@ export const permanentlyDeleteTemplateRecordInSupabase = async (databaseId: stri",
+      "oldStart": 6345,
+      "sha256": "f3321b6e36b9178a669156b934c29c05dea6f0e7756fa672271c133712831ef4",
+      "includeInMinimalAdminCandidate": true
+    },
+    {
+      "header": "@@ -8745,7 +8745,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {",
+      "oldStart": 8745,
+      "sha256": "01a2cf4c557fb7aa64f73dbf461a1a1bd9b94c77d6e50a00ae79e80a87c59838",
+      "includeInMinimalAdminCandidate": false
+    },
+    {
+      "header": "@@ -8768,7 +8768,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {",
+      "oldStart": 8768,
+      "sha256": "a4f59fbe507c15dead51ea50fa954bb74ef4dd96c245fdfb0113ae91ed890cda",
+      "includeInMinimalAdminCandidate": false
+    },
+    {
+      "header": "@@ -8830,7 +8830,7 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {",
+      "oldStart": 8830,
+      "sha256": "4ab21d6069d6419c7bd1cd11ffe9d32222f4f1dc2185dabc84b97caff0ae261e",
+      "includeInMinimalAdminCandidate": false
+    }
+  ],
+  "testsAndQaOnly": [
+    "src/lib/admin-storage-access.test.ts",
+    "src/lib/admin-storage-resolver.integration.test.ts",
+    "src/lib/signed-storage-url-cache.test.ts",
+    "src/lib/signed-storage-url.integration.test.ts",
+    "src/lib/private-query-cache.test.ts",
+    "src/admin/components/AdminRenewalDocumentPreview.test.tsx",
+    "src/test/production-supabase-network-guard.ts",
+    "src/test/setup.ts",
+    "src/test/env/",
+    "vitest.config.ts"
+  ],
+  "exclusions": [
+    "all SQL/migrations and backend deployment",
+    "staging renewal test utilities and fixture reconciliation",
+    "credentials and operator state",
+    "dirty build/ outputs",
+    "PWA corrections from the independently reviewed release",
+    "unrelated lazy-loading/public-settings/polling/Realtime changes",
+    "organization upload hunks until separately scoped"
+  ],
+  "expectedProductionArtifact": {
+    "status": "NOT GENERATED",
+    "reason": "Required resolver correction and isolated exact source revision not yet implemented/reviewed; current full-worktree builds are validation only."
+  },
+  "publicConfiguration": {
+    "VITE_DEPLOY_SURFACE": "admin (first release); user (separate release)",
+    "VITE_SUPABASE_URL": "https://mqqaykksadotbrghbexz.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "securely configured public project key; value intentionally omitted",
+    "testedKeyClass": "anon",
+    "serviceCredentialsInFrontend": "forbidden"
+  },
+  "reviewBuildsAreDeploymentArtifacts": false
+}

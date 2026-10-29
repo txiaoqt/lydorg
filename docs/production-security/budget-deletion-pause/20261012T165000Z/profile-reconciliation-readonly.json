@@ -1,0 +1,72 @@
+{
+  "reconciliation": {
+    "read_only": "on",
+    "captured_at": "2026-10-12T16:52:11.503034+00:00",
+    "current_count": 93,
+    "added_profiles": [
+      {
+        "auth": {
+          "aud": "authenticated",
+          "role": "authenticated",
+          "banned": null,
+          "exists": true,
+          "deleted": false,
+          "provider": "google",
+          "providers": [
+            "google"
+          ],
+          "created_at": "2026-10-11T14:36:56.05982+00:00",
+          "updated_at": "2026-10-12T14:34:07.701269+00:00",
+          "super_admin": null,
+          "last_sign_in_at": "2026-10-12T14:34:07.693672+00:00"
+        },
+        "roles": [
+          {
+            "code": "youth",
+            "assigned_at": "2026-10-11T14:36:56.049075+00:00",
+            "assigned_by_self": null
+          }
+        ],
+        "created_at": "2026-10-12T14:25:31.999995+00:00",
+        "identities": [
+          {
+            "provider": "google",
+            "created_at": "2026-10-11T14:36:56.122017+00:00",
+            "updated_at": "2026-10-12T14:34:07.683201+00:00",
+            "last_sign_in_at": "2026-10-11T14:36:56.121973+00:00",
+            "email_matches_auth": true
+          }
+        ],
+        "updated_at": "2026-10-12T14:25:31.968554+00:00",
+        "auth_audits": null,
+        "owner_alias": "dc239fb97d3966e4",
+        "seed_marker": false,
+        "test_marker": false,
+        "urn_present": false,
+        "user_profile": {
+          "created_at": "2026-10-11T14:36:56.049075+00:00",
+          "updated_at": "2026-10-11T14:36:56.049075+00:00",
+          "email_matches_auth": true
+        },
+        "profile_alias": "2c2732174d1111e4",
+        "profile_status": "pending_review",
+        "policy_acceptance": [
+          {
+            "created_at": "2026-10-11T14:37:02.25832+00:00",
+            "accepted_at": "2026-10-11T14:37:02.25832+00:00",
+            "accepted_terms": true,
+            "accepted_privacy": true
+          }
+        ],
+        "application_audits": null,
+        "admin_account_linked": false,
+        "accreditation_present": false,
+        "identity_fields_complete": true
+      }
+    ],
+    "original_count": 92,
+    "missing_original_profiles": 0,
+    "original_identity_changes": 0,
+    "original_reviewed_field_changes": 0
+  }
+}

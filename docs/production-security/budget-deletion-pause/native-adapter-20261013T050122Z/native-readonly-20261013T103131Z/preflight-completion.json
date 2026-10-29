@@ -1,0 +1,11 @@
+{
+  "mode": "READ_ONLY_PREFLIGHT",
+  "invocations": 1,
+  "exitCode": 0,
+  "startedAt": "2026-10-13T10:42:22.7871082Z",
+  "finishedAt": "2026-10-13T10:42:30.2550605Z",
+  "durationSeconds": 7.4679523,
+  "proofAgeAtFinishSeconds": 28836.2550605,
+  "automaticRetries": 0,
+  "installationActivated": false
+}

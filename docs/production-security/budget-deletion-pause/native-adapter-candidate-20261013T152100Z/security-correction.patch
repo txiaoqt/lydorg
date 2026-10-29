@@ -1,0 +1,785 @@
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\budget-runner-core.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-runner-core.mjs"
+index 748a852..2c78816 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\budget-runner-core.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-runner-core.mjs"	
+@@ -1,7 +1,7 @@
+ // Pure, budget-specific controls. No database, network, environment-file, or
+ // filesystem side effects occur when this module is imported.
+ import {createHash,randomUUID} from 'node:crypto';
+-import {open,readFile,stat,lstat,unlink} from 'node:fs/promises';
++import {open,readFile,stat,lstat,realpath,unlink} from 'node:fs/promises';
+ import {resolve,relative,isAbsolute,sep} from 'node:path';
+ import {
+   sha256,requireGuard,safeError,connectionConfiguration,connectClientOnce,
+@@ -333,21 +333,66 @@ export async function durableAppendJsonLine(path,value){
+ 
+ export async function readJson(path){return JSON.parse(await readFile(path,'utf8'));}
+ 
+-export async function claimBudgetLock(path){
+-  const claim={project:TARGET.project,route:TARGET.route,sqlSha256:SQL_SHA,pid:process.pid,nonce:randomUUID(),createdAt:new Date().toISOString()};
+-  await durableCreateJson(path,claim);
++// The supervisor alone creates and can remove this claim. A worker receives only
++// a verification lease; the persistent file survives either process crashing.
++export function verifySupervisorClaim(claim,expectedBundleSha256){
++  requireGuard(claim?.recordType==='YTRACE_BUDGET_SUPERVISOR_LOCK'&&claim.version===2&&claim.project===TARGET.project&&claim.route===TARGET.route&&claim.sqlSha256===SQL_SHA&&claim.runnerBundleSha256===expectedBundleSha256,'SUPERVISOR_LOCK_SCOPE_MISMATCH');
++  requireGuard(Number.isSafeInteger(claim.pid)&&claim.pid>0&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(claim.nonce),'SUPERVISOR_LOCK_IDENTITY_INVALID');
++  parseExplicitIso(claim.createdAt);
++  return claim;
++}
++function processAlive(pid){try{process.kill(pid,0);return true;}catch{return false;}}
++export async function claimBudgetLock(path,{bundleSha256,pid=process.pid,io={createJson:durableCreateJson,readJson,unlink,alive:processAlive}}={}){
++  requireGuard(/^[a-f0-9]{64}$/.test(bundleSha256),'SUPERVISOR_BUNDLE_REQUIRED');
++  const claim={recordType:'YTRACE_BUDGET_SUPERVISOR_LOCK',version:2,project:TARGET.project,route:TARGET.route,sqlSha256:SQL_SHA,runnerBundleSha256:bundleSha256,pid,nonce:randomUUID(),createdAt:new Date().toISOString()};
++  verifySupervisorClaim(claim,bundleSha256);
++  await io.createJson(path,claim); // Exclusive create-new, durable before spawning.
+   return {claim,async verify(aclVerifier){
+-    const current=await readJson(path);
++    const current=await io.readJson(path);
+     requireGuard(canonicalJson(current)===canonicalJson(claim),'BUDGET_LOCK_OWNERSHIP_MISMATCH');
+-    try{process.kill(process.pid,0);}catch{requireGuard(false,'BUDGET_LOCK_PROCESS_NOT_ALIVE');}
++    requireGuard(io.alive(pid)===true,'BUDGET_LOCK_PROCESS_NOT_ALIVE');
+     if(aclVerifier)await aclVerifier(path);
+-  },async release(aclVerifier){
++  },async releaseAfterVerification(proof,aclVerifier){
++    requireGuard(proof?.status==='PASS'&&proof.terminalCommand==='COMMIT'&&proof.eventCount===4&&proof.protectedInventories===57&&proof.catalogSha256===POST_CATALOG_SHA&&proof.supervisorLockSha256===hashJson(claim)&&['receiptSha256','markerSha256','preflightSha256'].every(key=>/^[a-f0-9]{64}$/.test(proof[key])),'SUPERVISOR_RELEASE_REQUIRES_VERIFIED_RECEIPT');
+     await this.verify(aclVerifier);
+-    const current=await readFile(path,'utf8');
+-    requireGuard(canonicalJson(JSON.parse(current))===canonicalJson(claim),'BUDGET_LOCK_OWNERSHIP_MISMATCH');
+-    await unlink(path);
++    requireGuard(canonicalJson(await io.readJson(path))===canonicalJson(claim),'BUDGET_LOCK_OWNERSHIP_MISMATCH');
++    await io.unlink(path); // The sole removal path, after independent verification.
+   }};
+ }
++export async function attachWorkerLock(path,{claim,bundleSha256,parentPid=process.ppid,io={readJson,alive:processAlive}}={}){
++  verifySupervisorClaim(claim,bundleSha256);
++  requireGuard(claim.pid===parentPid,'WORKER_PARENT_IDENTITY_MISMATCH');
++  const lease={claim,async verify(aclVerifier){
++    requireGuard(io.alive(claim.pid)===true,'SUPERVISOR_PROCESS_NOT_ALIVE');
++    requireGuard(canonicalJson(await io.readJson(path))===canonicalJson(claim),'BUDGET_LOCK_OWNERSHIP_MISMATCH');
++    if(aclVerifier)await aclVerifier(path);
++  }};
++  await lease.verify();
++  return lease; // Deliberately no release or mutation capability.
++}
++
++// Resolve first, verify paths and bytes, then load the absolute verified entry.
++// Injectable IO is used only by in-memory offline tests.
++export async function verifyPgDriverBinding({root,manifest,resolution,io={lstat,realpath,readFile}}){
++  const normalize=p=>process.platform==='win32'?resolve(p).toLowerCase():resolve(p);
++  const expectedPackage=resolve(root,'node_modules/pg/package.json');
++  const expectedEntry=resolve(root,'node_modules/pg/lib/index.js');
++  requireGuard(resolution&&normalize(resolution.packagePath)===normalize(expectedPackage)&&normalize(resolution.entryPath)===normalize(expectedEntry),'PG_RESOLUTION_NOT_PINNED');
++  for(const path of [resolve(root,'node_modules'),resolve(root,'node_modules/pg'),resolve(root,'node_modules/pg/lib'),expectedPackage,expectedEntry]){
++    const info=await io.lstat(path);
++    requireGuard(!info.isSymbolicLink()&&((path===expectedPackage||path===expectedEntry)?info.isFile():info.isDirectory()),'PG_RESOLUTION_LINK_OR_TYPE_INVALID');
++    requireGuard(normalize(await io.realpath(path))===normalize(path),'PG_REALPATH_NOT_PINNED');
++  }
++  for(const [path,pinPath] of [[expectedPackage,'node_modules/pg/package.json'],[expectedEntry,'node_modules/pg/lib/index.js']]){
++    const pin=manifest.driverTree.inventory.find(item=>item.path===pinPath);
++    requireGuard(pin,'PG_RESOLUTION_PIN_MISSING');
++    const data=await io.readFile(path);
++    requireGuard(data.length===pin.bytes&&sha256(data)===pin.sha256,'PG_RESOLUTION_BYTES_DRIFT');
++  }
++  const pkg=JSON.parse((await io.readFile(expectedPackage)).toString('utf8'));
++  requireGuard(pkg.name==='pg'&&pkg.version===manifest.driverVersion&&manifest.driverVersion==='8.23.0','PG_PACKAGE_IDENTITY_MISMATCH');
++  return {entryPath:expectedEntry,packagePath:expectedPackage,name:pkg.name,version:pkg.version,closureSha256:manifest.driverTree.sha256};
++}
+ 
+ export async function runOneShot({client,sqlBytes,markerPath,receiptPath,lock,preflight,preflightEvidence,postflight,applicationIdentity,verifyStatePath=async()=>{},write=durableAppendJsonLine}){
+   const sql=verifyBudgetSql(sqlBytes);
+@@ -375,7 +420,7 @@ export async function runOneShot({client,sqlBytes,markerPath,receiptPath,lock,pr
+     await write(receiptPath,{event:'COMMIT_ACKNOWLEDGED',project:TARGET.project,sqlSha256:SQL_SHA,commands:commitAckAcknowledgementList(client),capturedAt:new Date().toISOString()});
+     await postflight(preflight);
+     await write(receiptPath,{event:'POSTFLIGHT_VERIFIED',project:TARGET.project,sqlSha256:SQL_SHA,commitAcknowledged:true,capturedAt:new Date().toISOString()});
+-    return {status:'COMMITTED_AND_VERIFIED',commitAcknowledged:true,retainLock:false,retainAttemptMarker:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0};
++    return {status:'COMMITTED_AWAITING_SUPERVISOR_VERIFICATION',commitAcknowledged:true,retainLock:true,retainAttemptMarker:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0};
+   }catch(error){
+     try{await write(receiptPath,{event:'COMMITTED_POSTFLIGHT_FAILED',project:TARGET.project,sqlSha256:SQL_SHA,commitAcknowledged,error:safeError(error),capturedAt:new Date().toISOString(),retainLock:true,retainAttemptMarker:true});}catch{}
+     return {status:'COMMITTED_POSTFLIGHT_FAILED',commitAcknowledged:true,retainLock:true,retainAttemptMarker:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0};
+@@ -450,8 +495,10 @@ export function verifyControlPlaneProofJson(bytes,{now=Date.now()}={}){
+   return {proof,sha256:sha256(bytes),ageSeconds:(now-parseExplicitIso(proof.verifiedAt))/1000};
+ }
+ 
+-export function verifyInstallationReceipt({result,receiptBytes,markerBytes,preflightBytes,expectedBundleSha256,expectedRelations,expectedFoundation}){
+-  requireGuard(result?.status==='COMMITTED_AND_VERIFIED'&&result.commitAcknowledged===true&&result.submissionCount===1&&result.automaticRetries===0&&result.rollbackStatementsSent===0&&result.retainLock===false&&result.retainAttemptMarker===true&&result.stopForHumanReview!==true,'INSTALL_RESULT_NOT_VERIFIED_SUCCESS');
++export function verifyInstallationReceipt({result,receiptBytes,markerBytes,preflightBytes,expectedBundleSha256,expectedRelations,expectedFoundation,expectedLockClaim}){
++  verifySupervisorClaim(expectedLockClaim,expectedBundleSha256);
++  requireGuard(result?.supervisorLockSha256===hashJson(expectedLockClaim),'RECEIPT_SUPERVISOR_LOCK_MISMATCH');
++  requireGuard(result?.status==='COMMITTED_AWAITING_SUPERVISOR_VERIFICATION'&&result.commitAcknowledged===true&&result.submissionCount===1&&result.automaticRetries===0&&result.rollbackStatementsSent===0&&result.retainLock===true&&result.retainAttemptMarker===true&&result.stopForHumanReview!==true,'INSTALL_RESULT_NOT_VERIFIED_SUCCESS');
+   requireGuard(/^[a-f0-9]{64}$/.test(expectedBundleSha256)&&result.project===TARGET.project&&result.sqlSha256===SQL_SHA&&result.runnerBundleSha256===expectedBundleSha256,'INSTALL_RESULT_SCOPE_MISMATCH');
+   requireGuard(Buffer.isBuffer(receiptBytes)&&receiptBytes.length>0&&receiptBytes.length<=1048576,'RECEIPT_SIZE_INVALID');
+   const text=receiptBytes.toString('utf8');
+@@ -472,6 +519,7 @@ export function verifyInstallationReceipt({result,receiptBytes,markerBytes,prefl
+   parseExplicitIso(app.backendStart);
+   requireGuard(marker.project===TARGET.project&&marker.route===TARGET.route&&marker.sqlSha256===SQL_SHA&&marker.runnerBundleSha256===expectedBundleSha256&&marker.attempt===1&&marker.submissionMayHaveOccurred===true,'RECEIPT_MARKER_SCOPE_MISMATCH');
+   requireGuard(marker.nonce===app.nonce&&marker.applicationName===app.applicationName&&marker.backendPid===app.backendPid&&marker.backendStart===app.backendStart&&Number.isSafeInteger(marker.lockPid)&&marker.lockPid>0&&typeof marker.lockNonce==='string'&&marker.lockNonce.length>0,'RECEIPT_MARKER_IDENTITY_MISMATCH');
++  requireGuard(marker.lockPid===expectedLockClaim.pid&&marker.lockNonce===expectedLockClaim.nonce,'RECEIPT_LOCK_OWNER_MISMATCH');
+   const markerTime=parseExplicitIso(marker.startedAt);
+   requireGuard(markerTime>=times[0]&&markerTime<=times[1],'RECEIPT_MARKER_TIME_MISMATCH');
+   requireGuard(marker.preflightFile==='install-preflight-'+app.nonce+'.json'&&result.preflightFile===marker.preflightFile&&result.evidenceFile==='execution-'+app.nonce+'.jsonl'&&marker.preflightSha256===sha256(preflightBytes)&&marker.preflightStateSha256===pre.approvalFingerprint,'RECEIPT_PREFLIGHT_BINDING_MISMATCH');
+@@ -489,15 +537,21 @@ export function verifyInstallationReceipt({result,receiptBytes,markerBytes,prefl
+   requireGuard(canonicalJson(post.migrationHistory)===canonicalJson(HISTORY)&&post.storagePolicyCount===15&&post.storageObjects===pre.budget.storage_objects&&post.organizationProfiles===pre.budget.organization_profiles,'RECEIPT_POSTFLIGHT_COUNTS_MISMATCH');
+   requireGuard(post.protectedInventoryCount===57&&post.protectedInventoriesSha256===protectedData.sha256&&post.foundationSha256===pre.foundation.sha256,'RECEIPT_POSTFLIGHT_PRESERVATION_MISMATCH');
+   requireGuard(post.backend?.pid===app.backendPid&&post.backend.startedAt===app.backendStart&&post.backend.applicationName===app.applicationName,'RECEIPT_POSTFLIGHT_BACKEND_MISMATCH');
+-  return {status:'PASS',receiptSha256:sha256(receiptBytes),markerSha256:sha256(markerBytes),preflightSha256:sha256(preflightBytes),terminalCommand:'COMMIT',eventCount:4,protectedInventories:57,catalogSha256:POST_CATALOG_SHA};
++  return {status:'PASS',supervisorLockSha256:hashJson(expectedLockClaim),receiptSha256:sha256(receiptBytes),markerSha256:sha256(markerBytes),preflightSha256:sha256(preflightBytes),terminalCommand:'COMMIT',eventCount:4,protectedInventories:57,catalogSha256:POST_CATALOG_SHA};
+ }
+ 
+ export function resultExitCode(mode,result){
+   if(mode==='--review')return result?.status==='PASS'&&result.mode==='OFFLINE_REVIEW'&&result.installationActivated===false?0:2;
+   if(mode==='--preflight')return result?.status==='PASS'&&result.mode==='READ_ONLY_PREFLIGHT'&&result.installationActivated===false?0:2;
++  if(mode==='--install-worker')return workerReadyForVerification(result)?0:2;
+   if(mode!=='--install')return 2; // Reconciliation always stops for human review.
+   const proof=result?.receiptVerification;
+-  return result?.status==='COMMITTED_AND_VERIFIED'&&result.commitAcknowledged===true&&result.submissionCount===1&&result.automaticRetries===0&&result.rollbackStatementsSent===0&&result.retainLock===false&&result.retainAttemptMarker===true&&result.stopForHumanReview!==true&&proof?.status==='PASS'&&proof.terminalCommand==='COMMIT'&&proof.eventCount===4&&proof.protectedInventories===57&&proof.catalogSha256===POST_CATALOG_SHA&&['receiptSha256','markerSha256','preflightSha256'].every(key=>/^[a-f0-9]{64}$/.test(proof[key]))?0:2;
++  return result?.status==='COMMITTED_AND_VERIFIED'&&result.supervisorVerified===true&&result.lockReleased===true&&result.commitAcknowledged===true&&result.submissionCount===1&&result.automaticRetries===0&&result.rollbackStatementsSent===0&&result.retainLock===false&&result.retainAttemptMarker===true&&result.stopForHumanReview!==true&&proof?.status==='PASS'&&proof.terminalCommand==='COMMIT'&&proof.eventCount===4&&proof.protectedInventories===57&&proof.catalogSha256===POST_CATALOG_SHA&&proof.supervisorLockSha256===result.supervisorLockSha256&&/^[a-f0-9]{64}$/.test(result.supervisorLockSha256)&&['receiptSha256','markerSha256','preflightSha256'].every(key=>/^[a-f0-9]{64}$/.test(proof[key]))?0:2;
++}
++
++export function workerReadyForVerification(result){
++  const proof=result?.receiptVerification;
++  return result?.status==='COMMITTED_AWAITING_SUPERVISOR_VERIFICATION'&&result.commitAcknowledged===true&&result.submissionCount===1&&result.automaticRetries===0&&result.rollbackStatementsSent===0&&result.retainLock===true&&result.retainAttemptMarker===true&&result.stopForHumanReview!==true&&proof?.status==='PASS'&&proof.terminalCommand==='COMMIT'&&proof.eventCount===4&&proof.protectedInventories===57&&proof.catalogSha256===POST_CATALOG_SHA&&proof.supervisorLockSha256===result.supervisorLockSha256&&/^[a-f0-9]{64}$/.test(result.supervisorLockSha256)&&['receiptSha256','markerSha256','preflightSha256'].every(key=>/^[a-f0-9]{64}$/.test(proof[key]));
+ }
+ 
+ export async function pathExists(path){try{await lstat(path);return true;}catch(error){if(error?.code==='ENOENT')return false;throw error;}}
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\budget-safety-controls.test.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-safety-controls.test.mjs"
+index f36315b..1306859 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\budget-safety-controls.test.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\budget-safety-controls.test.mjs"	
+@@ -4,15 +4,18 @@ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import {readFile} from 'node:fs/promises';
+ import {fileURLToPath} from 'node:url';
+-import {spawnSync} from 'node:child_process';
++import {spawnSync,spawn} from 'node:child_process';
++import {resolve} from 'node:path';
++import {createRequire} from 'node:module';
+ import {
+   TARGET,SQL_SHA,SQL_BYTES,PRE_CATALOG_SHA,POST_CATALOG_SHA,
+   EXPECTED_FUNCTION,EXPECTED_PAUSED_FUNCTION,sha256,hashJson,
+   preflightStateFingerprint,expectedRelationsFromSql,foundationStructure,
+   verifyInstallationReceipt,resultExitCode,classifyReconciliation,
+   verifyControlPlaneProofJson,verifyControlPlaneProof,environmentSafety,
++  claimBudgetLock,attachWorkerLock,verifySupervisorClaim,verifyPgDriverBinding,workerReadyForVerification,verifyOriginalBackendFinished,canonicalJson,
+ } from './budget-runner-core.mjs';
+-import {superviseInstallation} from './native-budget-pause-supervisor.mjs';
++import {superviseInstallation as realSupervise,launchWorkerOnce} from './native-budget-pause-supervisor.mjs';
+ import {loadReviewedInputs} from './native-budget-pause-runner.mjs';
+ 
+ const readRelative=relative=>readFile(fileURLToPath(new URL(relative,import.meta.url)));
+@@ -24,13 +27,14 @@ const bundle='c'.repeat(64),nonce='11111111-2222-4333-8444-555555555555';
+ const stamp=seconds=>'2026-10-13T13:00:'+String(seconds).padStart(2,'0')+'.000Z';
+ function fixture(){
+   const pre=clone(historical);
++  const expectedLockClaim={recordType:'YTRACE_BUDGET_SUPERVISOR_LOCK',version:2,project:TARGET.project,route:TARGET.route,sqlSha256:SQL_SHA,runnerBundleSha256:bundle,pid:4242,nonce,createdAt:stamp(0)};
+   const app={nonce,applicationName:'ytrace-budget-pause-i-'+nonce,runnerBundleSha256:bundle,caSha256:pre.tls.caSha256,backendPid:31337,backendStart:stamp(0)};
+   pre.runnerBundleSha256=bundle;
+   pre.capturedAt=stamp(1);
+   pre.identity.backend_pid=app.backendPid;pre.identity.backend_start=app.backendStart;pre.identity.application_name=app.applicationName;
+   pre.approvalFingerprint=preflightStateFingerprint(pre);
+   const preflightBytes=bytes(pre);
+-  const marker={project:TARGET.project,route:TARGET.route,sqlSha256:SQL_SHA,runnerBundleSha256:bundle,preflightFile:'install-preflight-'+nonce+'.json',preflightSha256:sha256(preflightBytes),preflightStateSha256:pre.approvalFingerprint,attempt:1,submissionMayHaveOccurred:true,nonce,applicationName:app.applicationName,backendPid:app.backendPid,backendStart:app.backendStart,lockPid:4242,lockNonce:'offline-lock-identity',startedAt:stamp(3)};
++  const marker={project:TARGET.project,route:TARGET.route,sqlSha256:SQL_SHA,runnerBundleSha256:bundle,preflightFile:'install-preflight-'+nonce+'.json',preflightSha256:sha256(preflightBytes),preflightStateSha256:pre.approvalFingerprint,attempt:1,submissionMayHaveOccurred:true,nonce,applicationName:app.applicationName,backendPid:app.backendPid,backendStart:app.backendStart,lockPid:4242,lockNonce:expectedLockClaim.nonce,startedAt:stamp(3)};
+   const scoped={project:TARGET.project,sqlSha256:SQL_SHA};
+   const events=[
+     {...scoped,event:'ATTEMPT_ARMED',applicationIdentity:app,capturedAt:stamp(2)},
+@@ -38,8 +42,8 @@ function fixture(){
+     {...scoped,event:'POSTFLIGHT_EVIDENCE',status:'PASS',runnerBundleSha256:bundle,capturedAt:stamp(5),catalogSha256:POST_CATALOG_SHA,function:clone(EXPECTED_PAUSED_FUNCTION),migrationHistory:clone(pre.budget.migration_history),protectedInventoryCount:57,protectedInventoriesSha256:pre.protectedData.sha256,foundationSha256:pre.foundation.sha256,storagePolicyCount:15,storageObjects:pre.budget.storage_objects,organizationProfiles:pre.budget.organization_profiles,backend:{pid:app.backendPid,startedAt:app.backendStart,applicationName:app.applicationName}},
+     {...scoped,event:'POSTFLIGHT_VERIFIED',commitAcknowledged:true,capturedAt:stamp(6)},
+   ];
+-  const result={status:'COMMITTED_AND_VERIFIED',commitAcknowledged:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0,retainLock:false,retainAttemptMarker:true,project:TARGET.project,sqlSha256:SQL_SHA,runnerBundleSha256:bundle,evidenceFile:'execution-'+nonce+'.jsonl',preflightFile:marker.preflightFile};
+-  return {pre,marker,events,result,expectedBundleSha256:bundle,expectedRelations:relations,expectedFoundation:{structure:foundationStructure(pre.foundation.value),sha256:hashJson(foundationStructure(pre.foundation.value))}};
++  const result={status:'COMMITTED_AWAITING_SUPERVISOR_VERIFICATION',supervisorLockSha256:hashJson(expectedLockClaim),commitAcknowledged:true,submissionCount:1,automaticRetries:0,rollbackStatementsSent:0,retainLock:true,retainAttemptMarker:true,project:TARGET.project,sqlSha256:SQL_SHA,runnerBundleSha256:bundle,evidenceFile:'execution-'+nonce+'.jsonl',preflightFile:marker.preflightFile};
++  return {pre,marker,events,result,expectedLockClaim,expectedBundleSha256:bundle,expectedRelations:relations,expectedFoundation:{structure:foundationStructure(pre.foundation.value),sha256:hashJson(foundationStructure(pre.foundation.value))}};
+ }
+ function argumentsFor(f){
+   return {...f,receiptBytes:Buffer.from(f.events.map(event=>JSON.stringify(event)).join('\n')+'\n'),markerBytes:bytes(f.marker),preflightBytes:bytes(f.pre)};
+@@ -59,13 +63,23 @@ function rawViews(installed=false){
+   return {preState:pre,postState:post};
+ }
+ 
++// Wrapper for the earlier receipt-focused cases: lock/marker state stays in
++// memory and is continuously checked by the actual supervisor implementation.
++async function superviseInstallation(args){
++  const claim=args.expectedLockClaim??fixture().expectedLockClaim;
++  let present=true;
++  const lock=args.lock??{claim,async verify(){assert.equal(present,true);},async releaseAfterVerification(proof){assert.equal(present,true);assert.equal(proof.supervisorLockSha256,hashJson(claim));present=false;}};
++  return realSupervise({...args,lock});
++}
++
+ test('complete receipt proves terminal COMMIT, one attempt and all preservation bindings',()=>{
+   const f=fixture(),verification=verifyInstallationReceipt(argumentsFor(f));
+   assert.equal(verification.status,'PASS');
+   assert.equal(verification.terminalCommand,'COMMIT');
+   assert.equal(verification.eventCount,4);
+   assert.equal(verification.protectedInventories,57);
+-  assert.equal(resultExitCode('--install',{...f.result,receiptVerification:verification}),0);
++  assert.equal(resultExitCode('--install',{...f.result,receiptVerification:verification}),2);
++  assert.equal(workerReadyForVerification({...f.result,receiptVerification:verification}),true);
+ });
+ 
+ for(const status of ['UNRESOLVED','COMMITTED_POSTFLIGHT_FAILED','COMMITTED_WITH_DRIFT','NOT_INSTALLED_VERIFIED','INSTALLED_AND_PRESERVED','INSTALLED_WITH_DRIFT','PASS']){
+@@ -90,7 +104,7 @@ test('a real harmless child exiting zero with UNRESOLVED remains stopped',async(
+   assert.equal(launches,1);assert.equal(result.status,'UNRESOLVED');
+ });
+ 
+-for(const [field,value] of [['commitAcknowledged',false],['submissionCount',0],['submissionCount',2],['automaticRetries',1],['rollbackStatementsSent',1],['retainLock',true],['retainAttemptMarker',false],['stopForHumanReview',true]]){
++for(const [field,value] of [['commitAcknowledged',false],['submissionCount',0],['submissionCount',2],['automaticRetries',1],['rollbackStatementsSent',1],['retainLock',false],['retainAttemptMarker',false],['stopForHumanReview',true]]){
+   test('success rejects inconsistent '+field+'='+value,()=>{
+     const f=fixture();f.result[field]=value;
+     assert.throws(()=>verifyInstallationReceipt(argumentsFor(f)),/INSTALL_RESULT_NOT_VERIFIED_SUCCESS/);
+@@ -223,10 +237,199 @@ test('candidate pins unchanged SQL, eleven inputs and the same 138 dependency fi
+   assert.equal(loaded.codeHashes.length,5);
+ });
+ 
+-test('receipt validation is wired before success lock release and stopped results are nonzero',async()=>{
++test('worker never owns/releases the lock; supervisor verifies before its sole release',async()=>{
+   const runner=(await readRelative('./native-budget-pause-runner.mjs')).toString('utf8');
+-  const guarded=runner.slice(runner.indexOf("if(result.status==='COMMITTED_AND_VERIFIED')"),runner.indexOf('async function runReconcile'));
+-  assert.ok(guarded.indexOf('verifyInstallationReceipt(')<guarded.indexOf('retainLock=false'));
+-  assert.ok(guarded.includes("status:'COMMITTED_POSTFLIGHT_FAILED',retainLock:true"));
++  const supervisor=(await readRelative('./native-budget-pause-supervisor.mjs')).toString('utf8');
++  assert.equal(runner.includes('claimBudgetLock('),false);
++  assert.equal(runner.includes('lock.release'),false);
++  assert.ok(runner.includes('attachWorkerLock('));
++  assert.ok(supervisor.indexOf('verifyInstallationReceipt(')<supervisor.indexOf('await lock.releaseAfterVerification('));
++  assert.ok(supervisor.indexOf('await prepareInstallation(loaded)')<supervisor.indexOf('await claimBudgetLock('));
+   assert.ok(runner.includes("process.exitCode=resultExitCode(process.argv[2]??'--review',result)"));
+ });
++
++async function ownedMemoryLock(){
++  const state={current:null,present:false,marker:true,alive:true,releaseCalls:0,claims:0};
++  const io={
++    async createJson(path,value){if(state.present)throw Error('EEXIST');state.present=true;state.current=clone(value);state.claims++;},
++    async readJson(){if(!state.present)throw Error('ENOENT');return clone(state.current);},
++    async unlink(){assert.equal(state.present,true);state.present=false;state.releaseCalls++;},
++    alive:()=>state.alive,
++  };
++  const lock=await claimBudgetLock(':memory-only:',{bundleSha256:bundle,pid:4242,io});
++  const f=fixture();
++  f.expectedLockClaim=lock.claim;f.marker.lockNonce=lock.claim.nonce;
++  f.result.supervisorLockSha256=hashJson(lock.claim);
++  return {state,io,lock,f};
++}
++
++test('supervisor holds the actual claim continuously through worker exit and independent receipt verification',async()=>{
++  const {state,io,lock,f}=await ownedMemoryLock(),steps=[];
++  const cannotAcquire=async label=>{
++    steps.push(label);assert.equal(state.present,true);
++    await assert.rejects(claimBudgetLock(':memory-only:',{bundleSha256:bundle,io}),/EEXIST/);
++  };
++  const result=await realSupervise({...f,lock,
++    launchOnce:async()=>{await cannotAcquire('worker-start');await cannotAcquire('worker-exit');return {status:0,stdout:JSON.stringify(validResult(f))};},
++    readEvidence:async()=>{await cannotAcquire('supervisor-read');return argumentsFor(f);},
++  });
++  assert.equal(result.status,'COMMITTED_AND_VERIFIED');assert.equal(result.supervisorVerified,true);
++  assert.equal(resultExitCode('--install',result),0);
++  assert.deepEqual(steps,['worker-start','worker-exit','supervisor-read']);
++  assert.equal(state.releaseCalls,1);assert.equal(state.present,false);assert.equal(state.marker,true);assert.equal(state.claims,1);
++});
++
++for(const scenario of ['read failure','corrupt receipt','child signal','child uncertain','owner changed','supervisor interruption']){
++  test('lock and marker remain on '+scenario+'; no SQL/worker retry',async()=>{
++    const {state,lock,f}=await ownedMemoryLock();let launches=0;
++    const result=await realSupervise({...f,lock,
++      launchOnce:async()=>{
++        launches++;
++        if(scenario==='child uncertain')throw Error('uncertain');
++        if(scenario==='child signal')return {status:null,signal:'SIGTERM',stdout:''};
++        return {status:0,stdout:JSON.stringify(validResult(f))};
++      },
++      readEvidence:async()=>{
++        assert.equal(state.present,true);
++        if(scenario==='read failure')throw Error('EACCES');
++        if(scenario==='supervisor interruption'){state.alive=false;throw Error('simulated supervisor terminated');}
++        if(scenario==='corrupt receipt')f.events[2].function.source_md5='0'.repeat(32);
++        if(scenario==='owner changed')state.current.nonce='00000000-0000-4000-8000-000000000000';
++        return argumentsFor(f);
++      },
++    });
++    assert.equal(result.status,'UNRESOLVED');assert.equal(result.automaticRetries,0);assert.equal(launches,1);
++    assert.equal(state.present,true);assert.equal(state.marker,true);assert.equal(state.releaseCalls,0);
++  });
++}
++
++test('an independently mismatched child proof cannot release the actual claim',async()=>{
++  const {state,lock,f}=await ownedMemoryLock(),reported=validResult(f);
++  reported.receiptVerification.receiptSha256='0'.repeat(64);
++  const result=await realSupervise({...f,lock,launchOnce:()=>({status:0,stdout:JSON.stringify(reported)}),readEvidence:()=>argumentsFor(f)});
++  assert.equal(result.status,'UNRESOLVED');assert.equal(state.present,true);assert.equal(state.releaseCalls,0);
++});
++
++test('release requires the exact owner and independently complete receipt proof',async()=>{
++  const {state,lock,f}=await ownedMemoryLock();
++  await assert.rejects(lock.releaseAfterVerification({status:'PASS'}),/SUPERVISOR_RELEASE_REQUIRES_VERIFIED_RECEIPT/);
++  const proof=verifyInstallationReceipt(argumentsFor(f));
++  await assert.rejects(lock.releaseAfterVerification({...proof,supervisorLockSha256:'0'.repeat(64)}),/SUPERVISOR_RELEASE_REQUIRES_VERIFIED_RECEIPT/);
++  state.current.nonce='00000000-0000-4000-8000-000000000000';
++  await assert.rejects(lock.releaseAfterVerification(proof),/BUDGET_LOCK_OWNERSHIP_MISMATCH/);
++  assert.equal(state.present,true);assert.equal(state.releaseCalls,0);
++});
++
++test('worker has only a verification lease and cannot unlink a live or dead supervisor lock',async()=>{
++  const {state,lock,io}=await ownedMemoryLock();
++  const lease=await attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,io});
++  assert.deepEqual(Object.keys(lease).sort(),['claim','verify']);
++  await lease.verify();state.alive=false;
++  await assert.rejects(lease.verify(),/SUPERVISOR_PROCESS_NOT_ALIVE/);
++  assert.equal(state.present,true);assert.equal(state.marker,true);assert.equal(state.releaseCalls,0);
++});
++
++test('worker rejects wrong parent, bundle or changed claim before arming',async()=>{
++  const {state,lock,io}=await ownedMemoryLock();
++  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:5555,io}),/WORKER_PARENT_IDENTITY_MISMATCH/);
++  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:'d'.repeat(64),parentPid:4242,io}),/SUPERVISOR_LOCK_SCOPE_MISMATCH/);
++  state.current.nonce='00000000-0000-4000-8000-000000000000';
++  await assert.rejects(attachWorkerLock(':memory-only:',{claim:lock.claim,bundleSha256:bundle,parentPid:4242,io}),/BUDGET_LOCK_OWNERSHIP_MISMATCH/);
++});
++
++test('dead supervisor state permits only read-only classification after the recorded writer finishes',async()=>{
++  const {state,lock}=await ownedMemoryLock();state.alive=false;
++  assert.equal(verifySupervisorClaim(state.current,bundle),state.current);
++  let calls=0;const commands=[];
++  const client={async query(query){
++    calls++;commands.push(typeof query==='string'?query:query.text);
++    if(calls===2)return {command:'SELECT',rows:[{reconciliation_state:{read_only:'on',database:'postgres',current_user:'postgres',session_user:'postgres',can_inspect_activity:true,prior_backend_active:false,matching_application_sessions:0}}]};
++    return {command:calls===1?'SET':'ROLLBACK',rows:[]};
++  }};
++  const finished=await verifyOriginalBackendFinished(client,{backendPid:31337,backendStart:stamp(0),applicationName:'ytrace-budget-pause-i-'+nonce});
++  assert.equal(finished.finished,true);assert.equal(calls,3);
++  assert.ok(commands[0].includes('READ ONLY'));assert.equal(commands[2],'ROLLBACK;');
++  assert.equal(classifyReconciliation({priorBackendFinished:finished.finished,...rawViews(true),preservationMatches:true}).installationPresence,'PRESENT');
++  assert.equal(classifyReconciliation({priorBackendFinished:false,...rawViews(true),preservationMatches:true}).classification,'UNRESOLVED');
++  assert.equal(state.present,true);assert.equal(state.marker,true);assert.equal(state.releaseCalls,0);
++});
++
++test('real harmless IPC child receives one parent lease; lock persists through process exit',async()=>{
++  const {state,lock}=await ownedMemoryLock();lock.claim.pid=process.pid;state.current.pid=process.pid;
++  let spawns=0;
++  const program='process.once("message",m=>{if(m.protocol!=="YTRACE_BUDGET_SUPERVISOR_LEASE_V1"||m.claim.pid!==process.ppid)process.exit(2);process.disconnect();console.log(JSON.stringify({status:"UNRESOLVED"}));});process.send({protocol:"YTRACE_BUDGET_WORKER_READY_V1",pid:process.pid,bundleSha256:"'+bundle+'"});';
++  const beforeNodeOptions=process.env.NODE_OPTIONS;
++  const child=await launchWorkerOnce({runner:':not-executed:',lock,bundleSha256:bundle,
++    spawnProcess:(file,args,options)=>{spawns++;return spawn(file,['-e',program],{...options,cwd:fileURLToPath(new URL('.',import.meta.url))});},
++  });
++  assert.equal(spawns,1);assert.equal(child.status,0);assert.equal(child.leaseSent,true);
++  assert.equal(JSON.parse(child.stdout).status,'UNRESOLVED');
++  assert.equal(process.env.NODE_OPTIONS,beforeNodeOptions,'child launch must not mutate the supervisor environment');
++  assert.equal(state.present,true);assert.equal(state.releaseCalls,0);
++});
++
++function driverFixture(){
++  const root=resolve('offline-pinned-root'),packagePath=resolve(root,'node_modules/pg/package.json'),entryPath=resolve(root,'node_modules/pg/lib/index.js');
++  const pkg=bytes({name:'pg',version:'8.23.0'}),entry=Buffer.from('module.exports={Client:class{}};');
++  const data=new Map([[packagePath,pkg],[entryPath,entry]]),links=new Set(),redirects=new Map();
++  const manifest={driverVersion:'8.23.0',driverTree:{sha256:'b'.repeat(64),inventory:[{path:'node_modules/pg/package.json',bytes:pkg.length,sha256:sha256(pkg)},{path:'node_modules/pg/lib/index.js',bytes:entry.length,sha256:sha256(entry)}]}};
++  let reads=0;
++  const io={async lstat(path){return {isSymbolicLink:()=>links.has(path),isFile:()=>data.has(path),isDirectory:()=>!data.has(path)};},async realpath(path){return redirects.get(path)??path;},async readFile(path){reads++;if(!data.has(path))throw Error('ENOENT');return data.get(path);}};
++  return {root,manifest,resolution:{packagePath,entryPath},io,data,links,redirects,reads:()=>reads};
++}
++test('expected pinned pg resolution binds real entry/package paths and hashed identity',async()=>{
++  const f=driverFixture(),verified=await verifyPgDriverBinding(f);
++  assert.equal(verified.entryPath,f.resolution.entryPath);assert.equal(verified.packagePath,f.resolution.packagePath);assert.equal(verified.name,'pg');assert.equal(verified.version,'8.23.0');
++});
++for(const scenario of ['candidate shadow','ancestor shadow','outside root','wrong entry']){
++  test('rejects '+scenario+' resolution before reading/loading driver bytes',async()=>{
++    const f=driverFixture();
++    const base=scenario==='candidate shadow'?resolve(f.root,'docs/node_modules/pg'):scenario==='ancestor shadow'?resolve(f.root,'../node_modules/pg'):resolve(f.root,'../outside/pg');
++    f.resolution.entryPath=scenario==='wrong entry'?resolve(f.root,'node_modules/pg/esm/index.mjs'):resolve(base,'lib/index.js');
++    if(scenario!=='wrong entry')f.resolution.packagePath=resolve(base,'package.json');
++    await assert.rejects(verifyPgDriverBinding(f),/PG_RESOLUTION_NOT_PINNED/);assert.equal(f.reads(),0);
++  });
++}
++for(const part of ['node_modules','node_modules/pg','node_modules/pg/lib/index.js']){
++  test('rejects symlink/junction at '+part,async()=>{
++    const f=driverFixture();f.links.add(resolve(f.root,part));
++    await assert.rejects(verifyPgDriverBinding(f),/PG_RESOLUTION_LINK_OR_TYPE_INVALID/);assert.equal(f.reads(),0);
++  });
++}
++test('rejects realpath escape even when lstat appears regular',async()=>{
++  const f=driverFixture();f.redirects.set(f.resolution.entryPath,resolve(f.root,'../escaped.js'));
++  await assert.rejects(verifyPgDriverBinding(f),/PG_REALPATH_NOT_PINNED/);assert.equal(f.reads(),0);
++});
++for(const [name,value] of [['version','8.22.0'],['name','shadow-pg']]){
++  test('rejects package '+name+' mismatch even with synthetic matching byte pin',async()=>{
++    const f=driverFixture(),pkg=bytes({...JSON.parse(f.data.get(f.resolution.packagePath)),[name]:value});
++    f.data.set(f.resolution.packagePath,pkg);
++    f.manifest.driverTree.inventory[0]={...f.manifest.driverTree.inventory[0],bytes:pkg.length,sha256:sha256(pkg)};
++    await assert.rejects(verifyPgDriverBinding(f),/PG_PACKAGE_IDENTITY_MISMATCH/);
++  });
++}
++test('rejects absent pin or changed entry bytes',async()=>{
++  for(const tamper of ['pin','bytes']){
++    const f=driverFixture();
++    if(tamper==='pin')f.manifest.driverTree.inventory.pop();else f.data.set(f.resolution.entryPath,Buffer.from('different'));
++    await assert.rejects(verifyPgDriverBinding(f),tamper==='pin'?/PG_RESOLUTION_PIN_MISSING/:/PG_RESOLUTION_BYTES_DRIFT/);
++  }
++});
++test('actual Node metadata resolution matches the verified repository closure; no Client is constructed',async()=>{
++  const loaded=await loadReviewedInputs(),resolver=createRequire(import.meta.url);
++  assert.equal(resolver.resolve('pg'),loaded.pgBinding.entryPath);
++  assert.equal(resolver.resolve('pg/package.json'),loaded.pgBinding.packagePath);
++  assert.equal(loaded.pgBinding.closureSha256,loaded.driver.sha256);assert.equal(loaded.driver.files.length,138);
++  assert.equal(resolver.cache[loaded.pgBinding.entryPath],undefined);
++});
++test('all connection sites load only the reverified absolute entry and closure',async()=>{
++  const runner=(await readRelative('./native-budget-pause-runner.mjs')).toString('utf8');
++  assert.equal(runner.includes("createRequire(import.meta.url)('pg')"),false);
++  assert.equal(runner.includes("createRequire(import.meta.url)('pg/package.json')"),false);
++  assert.ok(runner.includes('resolver(binding.entryPath)'));
++  const guard=runner.slice(runner.indexOf('async function getPinnedPgClient'),runner.indexOf('function safeEnvironmentForPowerShell'));
++  assert.ok(guard.indexOf('verifyPgDriverBinding(')<guard.indexOf('resolver(binding.entryPath)'));
++  assert.ok(guard.indexOf('computePgRuntimeClosure(')<guard.indexOf('resolver(binding.entryPath)'));
++  assert.ok(runner.includes("if(mode==='--install-worker')requireGuard(process.connected===true"));
++  assert.equal(runner.includes("if(mode==='--install')"),false);
++});
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\native-budget-pause-runner.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-runner.mjs"
+index a3f20cc..cffbf1c 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\native-budget-pause-runner.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-runner.mjs"	
+@@ -15,7 +15,7 @@ import {
+   protectedDataDigest,verifyBudgetState,stableFoundation,foundationStructure,
+   verifyFoundationReceipt,comparePreservation,verifyNativeIdentity,
+   verifyControlPlaneProof,verifyAuthorization,validateBudgetStateShape,canonicalJson,durableCreateJson,durableAppendJsonLine,
+-  readJson,claimBudgetLock,runOneShot,verifyOriginalBackendFinished,classifyReconciliation,
++  readJson,attachWorkerLock,verifySupervisorClaim,verifyPgDriverBinding,runOneShot,verifyOriginalBackendFinished,classifyReconciliation,
+   verifyTlsSocket,environmentSafety,createInstallApplicationName,checkManifestShape,
+   bundleSha256,pathExists,preflightStateFingerprint,scrubReceiptValue,checkNoSymlink,
+   REVIEWED_CODE_FILES,verifyInstallationReceipt,resultExitCode,
+@@ -127,6 +127,7 @@ async function readCodeHashes(){
+ }
+ 
+ async function loadReviewedInputs(){
++  environmentSafety(process.env);
+   requireGuard(process.version==='v24.21.0','PINNED_NODE_VERSION_REQUIRED');
+   const manifestBytes=await readFile(manifestPath);
+   const manifest=JSON.parse(manifestBytes.toString('utf8'));
+@@ -141,8 +142,8 @@ async function loadReviewedInputs(){
+   loaded.relations=expectedRelationsFromSql(loaded.inputs.protectedDataSql);
+   loaded.foundationReceipt=JSON.parse(loaded.inputs.foundationReceipt.toString('utf8'));
+   loaded.foundationExpected=verifyFoundationReceipt(loaded.foundationReceipt);
+-  const driverPackage=createRequire(import.meta.url)('pg/package.json');
+-  requireGuard(driverPackage.version===manifest.driverVersion,'PG_DRIVER_VERSION_MISMATCH');
++  const resolver=createRequire(import.meta.url);
++  loaded.pgBinding=await verifyPgDriverBinding({root,manifest,resolution:{entryPath:resolver.resolve('pg'),packagePath:resolver.resolve('pg/package.json')}});
+   loaded.driver=await computePgRuntimeClosure();
+   requireGuard(loaded.driver.files.length===manifest.driverTree.files&&loaded.driver.sha256===manifest.driverTree.sha256,'PG_DRIVER_TREE_DRIFT');
+   requireGuard(canonicalJson(loaded.driver.files)===canonicalJson(manifest.driverTree.inventory),'PG_DRIVER_FILE_IDENTITY_DRIFT');
+@@ -152,6 +153,19 @@ async function loadReviewedInputs(){
+   return loaded;
+ }
+ 
++async function getPinnedPgClient(loaded){
++  environmentSafety(process.env);
++  const resolver=createRequire(import.meta.url);
++  const binding=await verifyPgDriverBinding({root,manifest:loaded.manifest,resolution:{entryPath:resolver.resolve('pg'),packagePath:resolver.resolve('pg/package.json')}});
++  requireGuard(canonicalJson(binding)===canonicalJson(loaded.pgBinding),'PG_BINDING_CHANGED');
++  const closure=await computePgRuntimeClosure();
++  requireGuard(closure.sha256===loaded.manifest.driverTree.sha256&&canonicalJson(closure.files)===canonicalJson(loaded.manifest.driverTree.inventory),'PG_DRIVER_TREE_DRIFT');
++  requireGuard(!resolver.cache[binding.entryPath],'PG_DRIVER_ALREADY_LOADED');
++  const driver=resolver(binding.entryPath); // Absolute verified CommonJS entry; never a bare load.
++  requireGuard(typeof driver.Client==='function','PG_CLIENT_EXPORT_INVALID');
++  return driver.Client;
++}
++
+ function safeEnvironmentForPowerShell(){
+   // Do not inherit PSModulePath: Windows PowerShell initializes its trusted
+   // system module path itself. A caller-controlled module path could shadow
+@@ -210,9 +224,9 @@ function buildConnectionConfiguration(env,{readOnly,applicationName}){
+   });
+ }
+ 
+-async function connectOnce(readOnly,applicationName){
++async function connectOnce(loaded,readOnly,applicationName){
++  const Client=await getPinnedPgClient(loaded);
+   const configuration=await buildConnectionConfiguration(process.env,{readOnly,applicationName});
+-  const {Client}=createRequire(import.meta.url)('pg');
+   const connection=await connectClientOnce(Client,configuration);
+   const tls=verifyTlsSocket(connection.client,{expectedCaSha256:process.env.YTRACE_PRODUCTION_DB_CA_SHA256.toLowerCase()});
+   return {...connection,tls};
+@@ -279,7 +293,7 @@ async function runPreflight(loaded){
+   const control=await verifyControlPlaneFile();
+   await verifyStateAcl([stateDir]);
+   const appName=readOnlyApplicationName();
+-  const connection=await connectOnce(true,appName);
++  const connection=await connectOnce(loaded,true,appName);
+   let snapshot;
+   try{
+     snapshot=await captureSnapshot(connection.client,loaded,{applicationName:appName,readOnly:true,caSha256:process.env.YTRACE_PRODUCTION_DB_CA_SHA256.toLowerCase(),peerTls:connection.tls,controlPlaneSha256:control.sha256});
+@@ -300,25 +314,54 @@ async function verifyInstallQuiescence(client,loaded,applicationName){
+   return identity;
+ }
+ 
+-async function runInstall(loaded){
++// Called by the supervisor before it claims a lock, and again by its worker.
++// Does not generate or approve any operator records.
++export async function prepareInstallation(loaded,{workerClaim}={}){
+   const control=await verifyControlPlaneFile();
+   const environment=await verifyFoundationEnvironment(process.env);
+   requireGuard(environment.status==='PASS','SECURE_NATIVE_ENVIRONMENT_BLOCKED');
+   const caSha=process.env.YTRACE_PRODUCTION_DB_CA_SHA256.toLowerCase();
+   const records=await readApprovedRecords(loaded,control.sha256,caSha);
+   requireGuard(!(await pathExists(statePath(STATE_FILES.marker))),'BUDGET_ATTEMPT_ALREADY_CONSUMED');
+-  requireGuard(!(await pathExists(statePath(STATE_FILES.lock))),'BUDGET_OPERATION_LOCK_ALREADY_EXISTS');
++  if(workerClaim){
++    verifySupervisorClaim(workerClaim,loaded.bundleSha256);
++    requireGuard(canonicalJson(await readJson(statePath(STATE_FILES.lock)))===canonicalJson(workerClaim),'BUDGET_LOCK_OWNERSHIP_MISMATCH');
++  }else requireGuard(!(await pathExists(statePath(STATE_FILES.lock))),'BUDGET_OPERATION_LOCK_ALREADY_EXISTS');
+   await verifyStateAcl([stateDir,statePath(STATE_FILES.authorization),statePath(STATE_FILES.approvedPreflight)]);
+-  const lock=await claimBudgetLock(statePath(STATE_FILES.lock));
+-  let client,connection,attemptConsumed=false,retainLock=false;
++  return {control,caSha,records};
++}
++
++async function receiveSupervisorClaim(loaded){
++  requireGuard(process.connected===true&&typeof process.send==='function','SUPERVISOR_IPC_REQUIRED');
++  return await new Promise((accept,reject)=>{
++    const fail=()=>{cleanup();reject(new Error('SUPERVISOR_LEASE_UNAVAILABLE'));};
++    const cleanup=()=>{clearTimeout(timer);process.off('message',onMessage);process.off('disconnect',fail);if(process.connected)process.disconnect();};
++    const onMessage=message=>{
++      try{
++        requireGuard(message?.protocol==='YTRACE_BUDGET_SUPERVISOR_LEASE_V1','SUPERVISOR_LEASE_PROTOCOL_INVALID');
++        verifySupervisorClaim(message.claim,loaded.bundleSha256);
++        requireGuard(message.claim.pid===process.ppid,'WORKER_PARENT_IDENTITY_MISMATCH');
++        cleanup();accept(message.claim);
++      }catch{fail();}
++    };
++    const timer=setTimeout(fail,5000);
++    process.once('message',onMessage);process.once('disconnect',fail);
++    process.send({protocol:'YTRACE_BUDGET_WORKER_READY_V1',pid:process.pid,bundleSha256:loaded.bundleSha256},error=>{if(error)fail();});
++  });
++}
++
++async function runInstallWorker(loaded,claim){
++  const lock=await attachWorkerLock(statePath(STATE_FILES.lock),{claim,bundleSha256:loaded.bundleSha256});
++  const {control,caSha,records}=await prepareInstallation(loaded,{workerClaim:claim});
++  let client;
+   try{
+     await lock.verify(path=>invokeAcl('Verify',path));
+     const applicationIdentity=createInstallApplicationName();
+     applicationIdentity.runnerBundleSha256=loaded.bundleSha256;
+     applicationIdentity.caSha256=caSha;
++    const Client=await getPinnedPgClient(loaded);
+     const config=await buildConnectionConfiguration(process.env,{readOnly:false,applicationName:applicationIdentity.applicationName});
+-    const {Client}=createRequire(import.meta.url)('pg');
+-    connection=await connectClientOnce(Client,config);
++    const connection=await connectClientOnce(Client,config);
+     client=connection.client;
+     const peerTls=verifyTlsSocket(client,{expectedCaSha256:caSha});
+     const fresh=await captureSnapshot(client,loaded,{applicationName:applicationIdentity.applicationName,readOnly:false,caSha256:caSha,peerTls,controlPlaneSha256:control.sha256});
+@@ -341,7 +384,6 @@ async function runInstall(loaded){
+     await verifyStateAcl([preflightPath]);
+     const receiptFilename=`execution-${nonce}.jsonl`;
+     const receiptPath=statePath(receiptFilename);
+-    attemptConsumed=true;
+     const result=await runOneShot({
+       client,sqlBytes:loaded.inputs.sql,markerPath:statePath(STATE_FILES.marker),receiptPath,lock,
+       preflight:fresh,preflightEvidence:{file:preflightFilename,sha256:preflightSha,stateSha256:fresh.approvalFingerprint},
+@@ -364,10 +406,9 @@ async function runInstall(loaded){
+         await invokeAcl('Verify',receiptPath);
+       },
+     });
+-    const outcome={...result,project:TARGET.project,runnerBundleSha256:loaded.bundleSha256,sqlSha256:SQL_SHA,attemptMarkerRetained:true,evidenceFile:receiptFilename,preflightFile:preflightFilename};
+-    if(result.status==='COMMITTED_AND_VERIFIED'){
+-      // Verify the durable bytes before releasing the owned lock or reporting success.
+-      retainLock=true;
++    const outcome={...result,project:TARGET.project,runnerBundleSha256:loaded.bundleSha256,sqlSha256:SQL_SHA,attemptMarkerRetained:true,supervisorLockSha256:hashJson(claim),evidenceFile:receiptFilename,preflightFile:preflightFilename};
++    if(result.status==='COMMITTED_AWAITING_SUPERVISOR_VERIFICATION'){
++      // Worker verification is provisional. Only the supervisor can release the lock.
+       try{
+         await verifyStateAcl([receiptPath,preflightPath,statePath(STATE_FILES.marker)]);
+         await lock.verify(path=>invokeAcl('Verify',path));
+@@ -376,24 +417,18 @@ async function runInstall(loaded){
+         ]);
+         const receiptVerification=verifyInstallationReceipt({
+           result:outcome,receiptBytes,markerBytes,preflightBytes,
+-          expectedBundleSha256:loaded.bundleSha256,expectedRelations:loaded.relations,expectedFoundation:loaded.foundationExpected,
++          expectedBundleSha256:loaded.bundleSha256,expectedRelations:loaded.relations,expectedFoundation:loaded.foundationExpected,expectedLockClaim:claim,
+         });
+-        retainLock=false;
+         return {...outcome,receiptVerification};
+       }catch(error){
+         try{await durableAppendJsonLine(receiptPath,{event:'COMMITTED_POSTFLIGHT_FAILED',project:TARGET.project,sqlSha256:SQL_SHA,commitAcknowledged:true,error:safeError(error),retainLock:true,retainAttemptMarker:true,capturedAt:new Date().toISOString()});}catch{}
+         return {...outcome,status:'COMMITTED_POSTFLIGHT_FAILED',retainLock:true,stopForHumanReview:true,error:safeError(error)};
+       }
+     }
+-    retainLock=result.retainLock;
+     return {...outcome,stopForHumanReview:true};
+-  } catch(error){
+-    if(attemptConsumed){retainLock=true;}
+-    throw error;
+   } finally {
+     if(client)await client.end().catch(()=>{});
+-    if(lock&&!retainLock&&!attemptConsumed)await lock.release(path=>invokeAcl('Verify',path)).catch(()=>{});
+-    if(lock&&!retainLock&&attemptConsumed)await lock.release(path=>invokeAcl('Verify',path));
++    // No worker release path, including before submission or after COMMIT.
+   }
+ }
+ 
+@@ -404,6 +439,7 @@ async function runReconcile(loaded){
+   requireGuard(marker.project===TARGET.project&&marker.route===TARGET.route&&marker.sqlSha256===SQL_SHA&&marker.runnerBundleSha256===loaded.bundleSha256&&marker.attempt===1&&marker.submissionMayHaveOccurred===true,'BUDGET_MARKER_SCOPE_MISMATCH');
+   requireGuard(typeof marker.preflightFile==='string'&&/^install-preflight-[a-f0-9-]{36}\.json$/.test(marker.preflightFile),'BUDGET_MARKER_PREFLIGHT_REFERENCE_INVALID');
+   const lock=await readJson(statePath(STATE_FILES.lock));
++  verifySupervisorClaim(lock,loaded.bundleSha256); // Dead supervisor is allowed for read-only recovery; the recorded writer must be finished.
+   requireGuard(lock.project===TARGET.project&&lock.route===TARGET.route&&lock.sqlSha256===SQL_SHA&&lock.pid===marker.lockPid&&lock.nonce===marker.lockNonce,'BUDGET_LOCK_MARKER_MISMATCH');
+   const preBytes=await readFile(statePath(marker.preflightFile));
+   requireGuard(sha256(preBytes)===marker.preflightSha256,'INSTALL_PREFLIGHT_EVIDENCE_MISMATCH');
+@@ -411,7 +447,7 @@ async function runReconcile(loaded){
+   requireGuard(pre.runnerBundleSha256===loaded.bundleSha256&&pre.approvalFingerprint===marker.preflightStateSha256,'INSTALL_PREFLIGHT_BUNDLE_MISMATCH');
+   const control=await verifyControlPlaneFile();
+   const appName=readOnlyApplicationName();
+-  const connection=await connectOnce(true,appName);
++  const connection=await connectOnce(loaded,true,appName);
+   try{
+     const readIdentity=verifierRow(await connection.client.query(loaded.inputs.identitySql.toString('utf8')),'identitySql');
+     verifyNativeIdentity(readIdentity,{applicationName:appName,readOnly:true});
+@@ -454,13 +490,14 @@ async function runReconcile(loaded){
+ 
+ async function main(){
+   const args=process.argv.slice(2);
+-  requireGuard(args.length<=1&&(!args[0]||['--review','--preflight','--install','--reconcile'].includes(args[0])),'UNSUPPORTED_ARGUMENT');
++  requireGuard(args.length<=1&&(!args[0]||['--review','--preflight','--install-worker','--reconcile'].includes(args[0])),'UNSUPPORTED_ARGUMENT');
+   const mode=args[0]??'--review';
++  if(mode==='--install-worker')requireGuard(process.connected===true&&typeof process.send==='function','SUPERVISOR_IPC_REQUIRED');
+   const loaded=await loadReviewedInputs();
+   await ensureDriverAndInputs(loaded);
+   if(mode==='--review')return {status:'PASS',mode:'OFFLINE_REVIEW',project:TARGET.project,host:TARGET.host,sqlBytes:SQL_BYTES,sqlSha256:SQL_SHA,runnerBundleSha256:loaded.bundleSha256,driverVersion:loaded.manifest.driverVersion,driverRuntimeFiles:loaded.driver.files.length,protectedInventoryRelations:loaded.relations.length,readOnlyContracts:loaded.readOnlyContracts,foundationStructureSha256:loaded.foundationExpected.sha256,connectionAttempted:false,installationActivated:false};
+   if(mode==='--preflight')return await runPreflight(loaded);
+-  if(mode==='--install')return await runInstall(loaded);
++  if(mode==='--install-worker')return await runInstallWorker(loaded,await receiveSupervisorClaim(loaded));
+   return await runReconcile(loaded);
+ }
+ 
+diff --git "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\native-budget-pause-supervisor.mjs" "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-supervisor.mjs"
+index 39d76e8..bcf97db 100644
+--- "a/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T133312Z\\native-budget-pause-supervisor.mjs"	
++++ "b/C:\\Users\\Christopher x Angel\\Documents\\lydo-connect-org-focused\\docs\\production-security\\budget-deletion-pause\\native-adapter-candidate-20261013T152100Z\\native-budget-pause-supervisor.mjs"	
+@@ -1,35 +1,72 @@
+-// Versioned candidate only. Default --review is offline.
+-// A future --install still requires separately approved records enforced by the runner.
++// Versioned local candidate. Default --review is offline.
++// Only this supervisor can own/release the future installation lock.
+ import {readFile} from 'node:fs/promises';
+ import {resolve,isAbsolute} from 'node:path';
+ import {fileURLToPath,pathToFileURL} from 'node:url';
+-import {spawnSync} from 'node:child_process';
++import {spawn} from 'node:child_process';
+ import {
+   TARGET,STATE_REL,STATE_FILES,SQL_SHA,canonicalJson,requireGuard,safeError,
+-  scrubReceiptValue,environmentSafety,verifyControlPlaneProofJson,
+-  verifyInstallationReceipt,resultExitCode,
++  scrubReceiptValue,environmentSafety,verifyInstallationReceipt,resultExitCode,
++  workerReadyForVerification,claimBudgetLock,
+ } from './budget-runner-core.mjs';
+-import {loadReviewedInputs,invokeAcl} from './native-budget-pause-runner.mjs';
++import {loadReviewedInputs,invokeAcl,prepareInstallation} from './native-budget-pause-runner.mjs';
+ 
+-// Injected callbacks are only for offline unit tests. The CLI fixes both below.
+-export async function superviseInstallation({launchOnce,readEvidence,expectedBundleSha256,expectedRelations,expectedFoundation}){
+-  let child;
+-  try{child=await launchOnce();}
+-  catch{return {status:'UNRESOLVED',code:'CHILD_OUTCOME_UNCERTAIN',automaticRetries:0,stopForHumanReview:true};}
+-  let result;
++// Injectable process factory is used only by offline tests. The CLI fixes the
++// executable, worker path and arguments and never accepts arbitrary commands.
++export async function launchWorkerOnce({runner,lock,bundleSha256,spawnProcess=spawn,verifyLock}){
++  await lock.verify(verifyLock);
++  return await new Promise(resolveChild=>{
++    let stdout='',settled=false,leaseSent=false;
++    const child=spawnProcess(process.execPath,[runner,'--install-worker'],{
++      cwd:resolve(fileURLToPath(new URL('.',import.meta.url)),'../../../..'),
++      windowsHide:true,env:{...process.env},stdio:['ignore','pipe','ignore','ipc'],
++    });
++    const finish=result=>{if(settled)return;settled=true;clearTimeout(timer);resolveChild(result);};
++    const fail=()=>{try{child.kill();}catch{}finish({status:null,error:true,stdout:''});};
++    const timer=setTimeout(fail,5000);
++    child.stdout.setEncoding('utf8');
++    child.stdout.on('data',chunk=>{stdout+=chunk;if(stdout.length>65536)fail();});
++    child.stdout.on('error',fail);
++    child.on('error',fail);
++    child.on('message',async message=>{
++      if(leaseSent||message?.protocol!=='YTRACE_BUDGET_WORKER_READY_V1'||message.pid!==child.pid||message.bundleSha256!==bundleSha256){fail();return;}
++      leaseSent=true; // At most one IPC lease and one worker launch, including failures.
++      try{
++        await lock.verify(verifyLock);
++        if(settled)return;
++        child.send({protocol:'YTRACE_BUDGET_SUPERVISOR_LEASE_V1',claim:lock.claim},error=>{if(error)fail();});
++        clearTimeout(timer);
++      }catch{fail();}
++    });
++    child.on('close',(status,signal)=>finish({status,signal,stdout,leaseSent}));
++  });
++}
++
++// The lock is already exclusively owned before launch. No catch/finally releases
++// it. A dead supervisor leaves the durable claim and marker for read-only review.
++export async function superviseInstallation({lock,verifyLock,launchOnce,readEvidence,expectedBundleSha256,expectedRelations,expectedFoundation}){
++  let launches=0;
+   try{
++    requireGuard(lock&&typeof lock.verify==='function'&&typeof lock.releaseAfterVerification==='function','SUPERVISOR_OWNED_LOCK_REQUIRED');
++    await lock.verify(verifyLock);
++    launches++;
++    const child=await launchOnce();
++    await lock.verify(verifyLock);
+     requireGuard(child&&child.status===0&&!child.signal&&!child.error,'CHILD_DID_NOT_EXIT_SUCCESSFULLY');
+     requireGuard(typeof child.stdout==='string'&&child.stdout.length>0&&child.stdout.length<=65536,'CHILD_RESULT_SIZE_INVALID');
+-    result=scrubReceiptValue(JSON.parse(child.stdout));
+-    requireGuard(resultExitCode('--install',result)===0,'CHILD_RESULT_NOT_VERIFIED_SUCCESS');
++    const result=scrubReceiptValue(JSON.parse(child.stdout));
++    requireGuard(workerReadyForVerification(result),'CHILD_RESULT_NOT_VERIFIED_SUCCESS');
+     const {receiptBytes,markerBytes,preflightBytes}=await readEvidence(result);
++    await lock.verify(verifyLock);
+     const receiptVerification=verifyInstallationReceipt({
+-      result,receiptBytes,markerBytes,preflightBytes,expectedBundleSha256,expectedRelations,expectedFoundation,
++      result,receiptBytes,markerBytes,preflightBytes,expectedBundleSha256,expectedRelations,expectedFoundation,expectedLockClaim:lock.claim,
+     });
+     requireGuard(canonicalJson(result.receiptVerification)===canonicalJson(receiptVerification),'CHILD_RECEIPT_PROOF_MISMATCH');
+-    return {...result,receiptVerification,supervisorVerified:true,automaticRetries:0};
++    await lock.verify(verifyLock);
++    await lock.releaseAfterVerification(receiptVerification,verifyLock);
++    return {...result,status:'COMMITTED_AND_VERIFIED',retainLock:false,receiptVerification,supervisorVerified:true,lockReleased:true,automaticRetries:0};
+   }catch(error){
+-    return {status:'UNRESOLVED',code:'INSTALLATION_SUCCESS_NOT_ESTABLISHED',error:safeError(error),automaticRetries:0,stopForHumanReview:true};
++    return {status:'UNRESOLVED',code:'INSTALLATION_SUCCESS_NOT_ESTABLISHED',error:safeError(error),workerLaunches:launches,automaticRetries:0,retainLock:true,preserveOperationState:true,stopForHumanReview:true};
+   }
+ }
+ 
+@@ -42,18 +79,16 @@ async function main(){
+   if(mode==='--review')return {status:'PASS',mode:'OFFLINE_REVIEW',project:TARGET.project,runnerBundleSha256:loaded.bundleSha256,installationActivated:false,connectionAttempted:false};
+   requireGuard(typeof process.env.USERPROFILE==='string'&&isAbsolute(process.env.USERPROFILE),'SECURE_USER_PROFILE_UNAVAILABLE');
+   const state=resolve(process.env.USERPROFILE,STATE_REL);
+-  await invokeAcl('Verify',state);
+-  const proofPath=resolve(state,STATE_FILES.controlPlane);
+-  await invokeAcl('Verify',proofPath);
+-  verifyControlPlaneProofJson(await readFile(proofPath)); // Raw ISO JSON; maximum age is five minutes.
++  // Exact existing operator authorization, fresh proof, reviewed preflight and
++  // trusted environment are mandatory before claiming the exclusive lock.
++  await prepareInstallation(loaded);
++  const lock=await claimBudgetLock(resolve(state,STATE_FILES.lock),{bundleSha256:loaded.bundleSha256});
++  const verifyLock=path=>invokeAcl('Verify',path);
+   const directory=fileURLToPath(new URL('.',import.meta.url));
+-  const runner=resolve(directory,'native-budget-pause-runner.mjs');
+   return superviseInstallation({
++    lock,verifyLock,
+     expectedBundleSha256:loaded.bundleSha256,expectedRelations:loaded.relations,expectedFoundation:loaded.foundationExpected,
+-    launchOnce:()=>spawnSync(process.execPath,[runner,'--install'],{
+-      cwd:resolve(directory,'../../../..'),encoding:'utf8',windowsHide:true,
+-      stdio:['ignore','pipe','pipe'],maxBuffer:1048576,env:process.env,
+-    }),
++    launchOnce:()=>launchWorkerOnce({runner:resolve(directory,'native-budget-pause-runner.mjs'),lock,bundleSha256:loaded.bundleSha256,verifyLock}),
+     readEvidence:async result=>{
+       requireGuard(/^execution-[a-f0-9-]{36}\.jsonl$/.test(result.evidenceFile)&&/^install-preflight-[a-f0-9-]{36}\.json$/.test(result.preflightFile),'CHILD_EVIDENCE_PATH_INVALID');
+       const receiptPath=resolve(state,result.evidenceFile),preflightPath=resolve(state,result.preflightFile),markerPath=resolve(state,STATE_FILES.marker);
+@@ -63,13 +98,12 @@ async function main(){
+     },
+   });
+ }
+-
+ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+   main().then(result=>{
+     console.log(JSON.stringify(scrubReceiptValue(result)));
+     process.exitCode=resultExitCode(process.argv[2]??'--review',result);
+   }).catch(error=>{
+-    console.log(JSON.stringify({status:'BLOCKED',project:TARGET.project,sqlSha256:SQL_SHA,error:safeError(error),automaticRetries:0,stopForHumanReview:true}));
++    console.log(JSON.stringify({status:'BLOCKED',project:TARGET.project,sqlSha256:SQL_SHA,error:safeError(error),automaticRetries:0,preserveOperationState:true,stopForHumanReview:true}));
+     process.exitCode=2;
+   });
+ }

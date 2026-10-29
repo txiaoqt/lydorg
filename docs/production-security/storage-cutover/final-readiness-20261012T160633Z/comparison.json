@@ -1,0 +1,109 @@
+{
+  "capturedAt": "2026-10-12T16:17:56.123Z",
+  "scope": "Local comparisons of fresh production read-only evidence; no policy installation or live authorization tests.",
+  "status": "FAIL",
+  "checks": {
+    "readOnlySnapshots": true,
+    "exactCatalog": true,
+    "migrationHistory": true,
+    "foundationFunctions": true,
+    "foundationFunctionGate": true,
+    "foundationTables": true,
+    "foundationTriggers": true,
+    "foundationSchemaGrants": true,
+    "trustedOrigin": true,
+    "containmentMarkers": false,
+    "documentSecurityTriggers": true,
+    "productionTestGuardDisabled": true,
+    "exact15PolicyGate": true,
+    "exactCutoverArtifact": true,
+    "policyTransition": false,
+    "storageObjectsUnchanged": true,
+    "bucketsUnchanged": true,
+    "unmatchedInventoryUnchanged": true,
+    "linkedOwnerAccess": true,
+    "currentPublicAssetsResolved": true
+  },
+  "artifact": {
+    "file": "docs/production-security/storage-cutover/20261011T113322Z/production_storage_policy_cutover_review.sql",
+    "bytes": 37926,
+    "sha256": "3f98f268be5a0815873802f6c4f284cd9acf381c65140fb904b9c0c0255a432c",
+    "modified": false
+  },
+  "fingerprints": {
+    "existingCatalogSha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "migrationHistory": {
+      "count": 164,
+      "latest": "20261011230000",
+      "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+    },
+    "foundationFunctionsSha256": "31c658a5d692e03262bf1952b1b493bce67e96f8d06da307da10e928a59af55a",
+    "foundationTablesSha256": "e8a99cced6798451a93d4aca4eac5ca1a209ef3869cd367ac454215ec32eb85f",
+    "foundationTriggersSha256": "ab8eaa2be4f9dd4dfbb993f61cb42b99c41ad198c8af1345eb5ec5fc40b4416f",
+    "storagePoliciesSha256": "7e1b100bafecd97a5d7ae26cf2416999c5f0940a60acc1499bc970a94e975ee6",
+    "containmentTriggersSha256": "134c036655c997919a9cc0b873ae7f521419b746ef4521858e4dd3a8b7be4b38",
+    "documentSecurityTriggersSha256": "7c6ac12418623c36145f617917db808b65565ed2ea68c81352504a8b92961abf",
+    "currentCatalogSha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5"
+  },
+  "policyTransition": {
+    "existing": 15,
+    "dropped": [],
+    "created": [
+      "ytrace_private_organization_read",
+      "ytrace_published_profile_avatar_read",
+      "ytrace_private_organization_insert",
+      "ytrace_private_organization_delete",
+      "ytrace_active_templates_read",
+      "ytrace_news_images_read"
+    ],
+    "retained": [
+      "budget_request_files_manage_own",
+      "budget_request_files_read_portal",
+      "liquidation_report_files_manage_own",
+      "liquidation_report_files_read_portal",
+      "move_files_manage_own",
+      "move_files_read_portal",
+      "news_release_images_admin_manage",
+      "organization_documents_manage_own",
+      "organization_documents_read_portal",
+      "template_files_admin_manage",
+      "transparency_attachments_admin_manage",
+      "transparency_attachments_read_public",
+      "yorp_sample_seed_assets_read",
+      "ypop_files_manage_own",
+      "ypop_files_read_portal"
+    ],
+    "final": 9
+  },
+  "decisionGroups": {
+    "legacy-test-owner": 128,
+    "no-surviving-owner-organization": 85,
+    "unreferenced-template-version": 56,
+    "current-nontest-owner": 2
+  },
+  "supportedPrivateObjects": 71,
+  "ownerReadEligible": 70,
+  "intendedSuspensionDenials": 1,
+  "preservationComparison": {
+    "relations": 21,
+    "unchanged": 20,
+    "changes": [
+      {
+        "relation": "public.organization_profiles",
+        "previous": {
+          "relation": "public.organization_profiles",
+          "row_count": 92,
+          "content_fingerprint": "52f00b0d86d0c583a56143629fd7409a"
+        },
+        "current": {
+          "relation": "public.organization_profiles",
+          "row_count": 93,
+          "content_fingerprint": "a3d0cedda53960f18b94f97f59779489"
+        }
+      }
+    ],
+    "baselineReplaced": false
+  },
+  "historicalEvidenceLimitation": "Storage metadata fingerprints do not constitute new physical-content hash verification. No private files were downloaded.",
+  "historicalDisposition": "No unmatched object is established as verified unused by these checks."
+}

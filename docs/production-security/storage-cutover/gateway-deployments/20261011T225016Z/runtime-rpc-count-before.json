@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "project": "mqqaykksadotbrghbexz",
+  "phase": "before",
+  "readOnly": true,
+  "capturedAt": "2026-10-11T22:59:52.733Z",
+  "stats": [
+    {
+      "rolname": "postgres",
+      "calls": "5"
+    }
+  ],
+  "onlyAggregateCounters": true
+}

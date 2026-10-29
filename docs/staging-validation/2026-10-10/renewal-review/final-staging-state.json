@@ -1,0 +1,134 @@
+{
+  "terms": [
+    {
+      "status": "active",
+      "endDate": "2029-10-10",
+      "startDate": "2026-10-10",
+      "lateCutoff": "2030-04-08",
+      "windowOpens": "2029-07-12",
+      "legacyInferred": false
+    }
+  ],
+  "admins": 2,
+  "buckets": 10,
+  "objects": 16,
+  "policies": [
+    {
+      "cmd": "ALL",
+      "name": "transparency_attachments_admin_manage",
+      "check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "roles": [
+        "public"
+      ],
+      "using": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "transparency_attachments_read_public",
+      "check": null,
+      "roles": [
+        "public"
+      ],
+      "using": "(bucket_id = 'transparency-attachments'::text)"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "yorp_sample_seed_assets_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_active_templates_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "((bucket_id = 'template-files'::text) AND ytrace_storage_private.is_active_template(name))"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_news_images_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "((bucket_id = 'news-release-images'::text) AND ytrace_storage_private.is_published_news_image(name))"
+    },
+    {
+      "cmd": "DELETE",
+      "name": "ytrace_private_organization_delete",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'delete'::text))"
+    },
+    {
+      "cmd": "INSERT",
+      "name": "ytrace_private_organization_insert",
+      "check": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'insert'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_private_organization_read",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'read'::text))"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_published_profile_avatar_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "ytrace_storage_private.is_public_avatar(bucket_id, name, (metadata ->> 'mimetype'::text), COALESCE(owner_id, (owner)::text))"
+    }
+  ],
+  "profiles": [
+    {
+      "status": "verified",
+      "termCount": 1,
+      "registrationType": "new_organization",
+      "currentTermPresent": true,
+      "verificationMethod": "documents",
+      "expiryProjectionPresent": true
+    },
+    {
+      "status": "verified",
+      "termCount": 0,
+      "registrationType": "existing_urn",
+      "currentTermPresent": false,
+      "verificationMethod": "urn",
+      "expiryProjectionPresent": false
+    },
+    {
+      "status": "suspended_inactive",
+      "termCount": 0,
+      "registrationType": "new_organization",
+      "currentTermPresent": false,
+      "verificationMethod": null,
+      "expiryProjectionPresent": false
+    }
+  ],
+  "renewals": 0,
+  "authUsers": 4,
+  "organizations": 3,
+  "accreditations": 1,
+  "authIdentities": 4,
+  "activeAdminSessions": 0
+}

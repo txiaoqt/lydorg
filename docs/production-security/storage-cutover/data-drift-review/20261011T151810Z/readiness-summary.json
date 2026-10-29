@@ -1,0 +1,117 @@
+{
+  "status": "CONDITIONAL GO",
+  "scope": "Read-only verification and local baseline preparation only; no installation authorized.",
+  "project": "mqqaykksadotbrghbexz",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "reviewedActivity": {
+    "newGoogleAuthUser": 1,
+    "newGoogleIdentity": 1,
+    "newDefaultYouthProfileAndRole": 1,
+    "newOwnerPolicyConsent": 1,
+    "separateExistingSuperAdminLogin": 1,
+    "newSigninAudit": 1,
+    "preexistingCohortsMatch": 7,
+    "privilegeEscalationFound": false,
+    "deniedPasswordAttempts": [
+      "invalid_credentials",
+      "user_banned"
+    ],
+    "deniedRequestHumanIntent": "Not established; no access granted."
+  },
+  "baseline": {
+    "status": "REVIEWED_BASELINE_CAPTURED",
+    "project": "mqqaykksadotbrghbexz",
+    "capturedAt": "2026-10-11T15:31:27.305Z",
+    "oldBaselinePath": "docs/production-security/storage-cutover/executions/20261011T122743Z/immediate-data-before.json",
+    "newBaselinePath": "docs/production-security/storage-cutover/data-drift-review/20261011T151810Z/protected-data-baseline.json",
+    "oldBaselineSha256": "36a039bb6455aeea0d31c2e9920c7279f5ad3144b9a132071fa8218b4249a771",
+    "newBaselineSha256": "60a25f959aa2e45ab384cb41702f5eb13b93bdfe9ef71049b99eeceb5bde5d9a",
+    "oldBaselineBytes": 8427,
+    "newBaselineBytes": 8422,
+    "originalManifestSha256": "031c8c19c02ae311422d6e4248e44132ef15dd91ec976a0457fe8fe4d85471c7",
+    "originalBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+    "originalRunnerSha256": "92fa9d993cc6b57dd691bbbcb537712de5e3a479298759d0b73a457ae4fb481b",
+    "originalCoreSha256": "90b0d860823507f11893312643b33c683fe9cb75f03ea19361d7b81bdd81fdae",
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "sqlBytes": 47407,
+    "catalogSha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "migrationHistory": {
+      "count": 164,
+      "latest": "20261011230000",
+      "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+    },
+    "protectedRelations": 57,
+    "unchangedRelations": 50,
+    "reviewedAppendRelations": 7,
+    "preexistingCohortsMatch": 7,
+    "reviewedActivityMatches": true,
+    "reviewedActorMatches": true,
+    "foundationAbsent": true,
+    "databaseWrites": 0
+  },
+  "runner": {
+    "status": "BASELINE_BINDING_UPDATED_ONLY",
+    "oldBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+    "newBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+    "newManifestSha256": "3eedbeb5bf7ae0623bdbecfad23878caeac5d492246b21621ddf98094c0cc3a6",
+    "newRunnerSha256": "08d9bcc7843efe69ec0ef0ec9e606c92c79b546166bfc665c52b318357edc2bb",
+    "coreUnchanged": true,
+    "changedManifestInputs": [
+      "dataBaseline"
+    ],
+    "changedRunnerLogic": false,
+    "changedRunnerBinding": "dataBaseline:prior+'immediate-data-before.json' -> fixed reviewed baseline file",
+    "newBaselinePath": "docs/production-security/storage-cutover/data-drift-review/20261011T151810Z/protected-data-baseline.json",
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "installationActivated": false
+  },
+  "preflight": {
+    "status": "PASS",
+    "mode": "READ_ONLY_PREFLIGHT",
+    "project": "mqqaykksadotbrghbexz",
+    "host": "db.mqqaykksadotbrghbexz.supabase.co",
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "runnerBundleSha256": "481a2f5372bf28dd9b8bc04d8691aa5555ca9c5454cf07346012aaf065700fd9",
+    "identity": {
+      "database": "postgres",
+      "current_user": "postgres",
+      "session_user": "postgres",
+      "server_version_num": 170006,
+      "backend_pid": 2703977,
+      "server_port": 5432,
+      "tls": true,
+      "tls_version": "TLSv1.3"
+    },
+    "tlsPeerFingerprint256": "6D:58:E8:D1:17:BE:04:F4:2A:59:0C:EE:98:3A:95:DA:A7:63:F7:D1:C9:C4:6E:75:5D:5A:72:28:14:83:6B:91",
+    "compatibilitySha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+    "migrations": {
+      "count": 164,
+      "latest": "20261011230000",
+      "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+    },
+    "protectedRelations": 57,
+    "installationActivated": false,
+    "controlPlaneVerifiedAt": "2026-10-11T15:35:05.945Z",
+    "exitCode": 0
+  },
+  "tests": {
+    "passed": 36,
+    "failed": 0,
+    "skipped": 0,
+    "existingRunnerTests": 25,
+    "isolatedPostgreSqlTests": 3,
+    "newBaselineReviewTests": 8,
+    "liveMutationsTested": false
+  },
+  "databaseWrites": 0,
+  "stagingAccess": false,
+  "installationActivated": false,
+  "installationAuthorizationRecordCreated": false,
+  "remainingPrerequisites": [
+    "Independent review of the new baseline/bundle and separate human installation authorization.",
+    "Exclusive low-traffic window covering new Auth activity, Admin login/refresh, consent, business/Storage writes and schema/privilege operations.",
+    "Fresh control-plane proof and exact native preflight immediately before any separately authorized attempt.",
+    "Stop on any future drift; no automatic baseline refresh or retry."
+  ]
+}

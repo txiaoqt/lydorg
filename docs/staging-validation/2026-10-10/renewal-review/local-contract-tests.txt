@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: current missing-ledger/profile-expiry mismatch is reproducible in isolated PostgreSQL
+ok 1 - current missing-ledger/profile-expiry mismatch is reproducible in isolated PostgreSQL
+  ---
+  duration_ms: 2252.2034
+  ...
+# Subtest: actual current B-shaped state without ledger or projection denies preview and creation
+ok 2 - actual current B-shaped state without ledger or projection denies preview and creation
+  ---
+  duration_ms: 1563.3253
+  ...
+# Subtest: current revoked and suspended preview discrepancies; draft safeguards remain enforced
+ok 3 - current revoked and suspended preview discrepancies; draft safeguards remain enforced
+  ---
+  duration_ms: 1762.3037
+  ...
+# Subtest: review-only proposal rejects projected-only history, revoked and suspended prerequisites
+ok 4 - review-only proposal rejects projected-only history, revoked and suspended prerequisites
+  ---
+  duration_ms: 1613.1422
+  ...
+# Subtest: review-only proposal preserves 90-day early and 180-day late boundaries with genuine local ledger
+ok 5 - review-only proposal preserves 90-day early and 180-day late boundaries with genuine local ledger
+  ---
+  duration_ms: 1616.1508
+  ...
+# Subtest: proposal is not a complete draft guarantee: terminal cycle and cross-owner guards still reject
+ok 6 - proposal is not a complete draft guarantee: terminal cycle and cross-owner guards still reject
+  ---
+  duration_ms: 1684.4099
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10688.6325

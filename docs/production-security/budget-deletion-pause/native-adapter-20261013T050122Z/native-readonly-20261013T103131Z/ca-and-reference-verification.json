@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "caBytesMatchConfiguredAndIndependentlyReviewedFingerprint": true,
+  "certificateIsCa": true,
+  "selfSignatureValid": true,
+  "certificateCurrentlyValid": true,
+  "trustSource": "Previously approved Supabase published prod-ca-2021 certificate, independently HTTPS-verified and recorded in production foundation preflight",
+  "trustReference": "docs/production-security/storage-cutover/native-executions/20261011T221428755Z/preflight.json",
+  "referenceSnapshot": "docs/production-security/budget-deletion-pause/20261012T165000Z/protected-data-readonly.json",
+  "referenceSnapshotSha256": "2575aaa3634b4acb4b4d2782689d84d6a46d1ab7494237aa6449ce4dc86a74cc",
+  "referenceInventoryCount": 57,
+  "referenceInventoriesSha256": "eabcb583b5a2417de666793aa86b26f53f6c32e4369d83e577f0fe70153f7429",
+  "nativeTlsVerification": "PENDING_ACTUAL_CONNECTION",
+  "productionConnectionAttempted": false,
+  "credentialValuesLogged": false
+}

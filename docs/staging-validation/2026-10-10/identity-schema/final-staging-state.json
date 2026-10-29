@@ -1,0 +1,158 @@
+{
+  "roles": [
+    {
+      "code": "admin",
+      "permissions": [
+        "registrations_management",
+        "yorp_registry_view",
+        "news_releases_management"
+      ]
+    },
+    {
+      "code": "organization_user",
+      "permissions": []
+    },
+    {
+      "code": "youth",
+      "permissions": []
+    },
+    {
+      "code": "super_admin",
+      "permissions": [
+        "registrations_management",
+        "yorp_registry_view",
+        "ypop_validation_review",
+        "budget_requests_review",
+        "liquidation_reports_review",
+        "budget_monitoring_view",
+        "news_releases_management",
+        "forms_templates_management",
+        "inquiries_management",
+        "administrators_management",
+        "activity_logs_view",
+        "system_settings_view",
+        "system_settings_manage",
+        "backup_recovery_view",
+        "backup_recovery_manage"
+      ]
+    }
+  ],
+  "bucketCount": 10,
+  "objectCount": 16,
+  "projectHost": "zroudsvpswqsjlyttkjf",
+  "profileCount": 3,
+  "authUserCount": 4,
+  "schemaMissing": false,
+  "globalDefaults": [],
+  "storagePolicies": [
+    {
+      "cmd": "ALL",
+      "name": "transparency_attachments_admin_manage",
+      "check": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())",
+      "roles": [
+        "public"
+      ],
+      "using": "((bucket_id = 'transparency-attachments'::text) AND current_user_is_admin())"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "transparency_attachments_read_public",
+      "check": null,
+      "roles": [
+        "public"
+      ],
+      "using": "(bucket_id = 'transparency-attachments'::text)"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "yorp_sample_seed_assets_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "((bucket_id = 'registration-seed-file'::text) AND (name = ANY (ARRAY['Constitution and By-Laws.pdf'::text, 'Endorsement.pdf'::text, 'NYC YORP Registration Form (Form B).pdf'::text, 'Pasig City YORP Registration Form (Form A).pdf'::text, 'YORP Directory of Officers and Adviser.pdf'::text, 'YORP List of Members in Good Standing.pdf'::text])))"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_active_templates_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "((bucket_id = 'template-files'::text) AND ytrace_storage_private.is_active_template(name))"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_news_images_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "((bucket_id = 'news-release-images'::text) AND ytrace_storage_private.is_published_news_image(name))"
+    },
+    {
+      "cmd": "DELETE",
+      "name": "ytrace_private_organization_delete",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'delete'::text))"
+    },
+    {
+      "cmd": "INSERT",
+      "name": "ytrace_private_organization_insert",
+      "check": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'insert'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_private_organization_read",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((bucket_id = ANY (ARRAY['organization-documents'::text, 'budget-request-files'::text, 'liquidation-report-files'::text, 'ypop-files'::text, 'move-files'::text])) AND (COALESCE(owner_id, (owner)::text) = (( SELECT auth.uid() AS uid))::text) AND ytrace_storage_private.organization_object_access(bucket_id, name, 'read'::text))"
+    },
+    {
+      "cmd": "SELECT",
+      "name": "ytrace_published_profile_avatar_read",
+      "check": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "using": "ytrace_storage_private.is_public_avatar(bucket_id, name, (metadata ->> 'mimetype'::text), COALESCE(owner_id, (owner)::text))"
+    }
+  ],
+  "authIdentityCount": 4,
+  "activeAdminSessions": 0,
+  "publicIdentityTriggers": [
+    "CREATE TRIGGER trg_a_identity_privileges BEFORE INSERT OR UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION guard_organization_identity_privileges()",
+    "CREATE TRIGGER trg_admin_track_organization_profile_version AFTER INSERT OR UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION admin_track_organization_profile_version()",
+    "CREATE TRIGGER trg_generate_organization_reference_id BEFORE INSERT ON organization_profiles FOR EACH ROW EXECUTE FUNCTION generate_organization_reference_id()",
+    "CREATE TRIGGER trg_identity_retained_deletion BEFORE DELETE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION guard_retained_organization_deletion()",
+    "CREATE TRIGGER trg_normalize_organization_contact_arrays BEFORE INSERT OR UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION normalize_organization_contact_arrays()",
+    "CREATE TRIGGER trg_notify_urn_review_change AFTER UPDATE OF urn_review_status ON organization_profiles FOR EACH ROW WHEN (old.urn_review_status IS DISTINCT FROM new.urn_review_status) EXECUTE FUNCTION notify_urn_review_change()",
+    "CREATE TRIGGER trg_organization_profile_review_notify AFTER UPDATE ON organization_profiles FOR EACH ROW WHEN (old.profile_status IS DISTINCT FROM new.profile_status) EXECUTE FUNCTION notify_organization_profile_review_change()",
+    "CREATE TRIGGER trg_organization_profiles_updated_at BEFORE UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION set_updated_at()",
+    "CREATE TRIGGER trg_protect_urn_review_fields BEFORE UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION protect_urn_review_fields()",
+    "CREATE TRIGGER trg_sync_organization_contacts_from_profile AFTER INSERT OR UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION sync_organization_contacts_from_profile()",
+    "CREATE TRIGGER trg_sync_organization_profile_structured_fields BEFORE INSERT OR UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION sync_organization_profile_structured_fields()",
+    "CREATE TRIGGER trg_sync_organization_urn BEFORE INSERT OR UPDATE OF registration_type, urn ON organization_profiles FOR EACH ROW EXECUTE FUNCTION sync_organization_urn()",
+    "CREATE TRIGGER trg_z_enforce_organization_profile_headquarters_location BEFORE INSERT OR UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION enforce_organization_profile_headquarters_location()",
+    "CREATE TRIGGER trg_zz_identity_verification BEFORE INSERT OR UPDATE ON organization_profiles FOR EACH ROW EXECUTE FUNCTION guard_organization_identity_verification()",
+    "CREATE TRIGGER trigger_auto_generate_urn BEFORE INSERT ON organization_profiles FOR EACH ROW EXECUTE FUNCTION handle_organization_profile_urn_auto_gen()"
+  ],
+  "preservation": {
+    "storagePolicies": true,
+    "roles": true,
+    "publicIdentityTriggers": true
+  }
+}

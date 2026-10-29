@@ -1,0 +1,249 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T10:10:47.135Z",
+  "results": [
+    {
+      "check": "Provision fictional Organization B Auth identity only",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Privileged fixture setup",
+          "step": "Provision fictional Organization B Auth identity only",
+          "method": "POST",
+          "endpoint": "/auth/v1/admin/users",
+          "status": 200,
+          "durationMs": 233
+        },
+        {
+          "actor": "Privileged fixture setup",
+          "step": "Provision fictional Organization B Auth identity only",
+          "method": "GET",
+          "endpoint": "/auth/v1/admin/users/:id",
+          "status": 200,
+          "durationMs": 143
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 230
+        },
+        {
+          "actor": "B",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 139
+        }
+      ]
+    },
+    {
+      "check": "Provision fictional Organization S Auth identity only",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Privileged fixture setup",
+          "step": "Provision fictional Organization S Auth identity only",
+          "method": "POST",
+          "endpoint": "/auth/v1/admin/users",
+          "status": 200,
+          "durationMs": 223
+        },
+        {
+          "actor": "Privileged fixture setup",
+          "step": "Provision fictional Organization S Auth identity only",
+          "method": "GET",
+          "endpoint": "/auth/v1/admin/users/:id",
+          "status": 200,
+          "durationMs": 146
+        },
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/token",
+          "status": 200,
+          "durationMs": 224
+        },
+        {
+          "actor": "S",
+          "step": "Normal Auth password login",
+          "method": "POST",
+          "endpoint": "/auth/v1/logout",
+          "status": 204,
+          "durationMs": 148
+        }
+      ]
+    },
+    {
+      "check": "Organization A profile and dependent workflows",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Organization B profile and dependent workflows",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Organization S profile and dependent workflows",
+      "status": "BLOCKED",
+      "reason": "Missing staging ytrace_identity schema and assess helper; profile insert SQLSTATE 3F000"
+    },
+    {
+      "check": "Revoke fixture-setup Admin session",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Revoke fixture-setup Admin session",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+          "status": 204,
+          "durationMs": 146
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/settings",
+      "status": 200,
+      "durationMs": 507
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 429
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 154
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 159
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 147
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "HEAD",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 356
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Normal custom Admin login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/get_admin_permission_context",
+      "status": 200,
+      "durationMs": 434
+    },
+    {
+      "actor": "Privileged fixture setup",
+      "step": "Provision fictional Organization B Auth identity only",
+      "method": "POST",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 233
+    },
+    {
+      "actor": "Privileged fixture setup",
+      "step": "Provision fictional Organization B Auth identity only",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 230
+    },
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 139
+    },
+    {
+      "actor": "Privileged fixture setup",
+      "step": "Provision fictional Organization S Auth identity only",
+      "method": "POST",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 223
+    },
+    {
+      "actor": "Privileged fixture setup",
+      "step": "Provision fictional Organization S Auth identity only",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users/:id",
+      "status": 200,
+      "durationMs": 146
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 224
+    },
+    {
+      "actor": "S",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 148
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Revoke fixture-setup Admin session",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 146
+    }
+  ]
+}

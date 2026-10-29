@@ -1,0 +1,320 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "timestamp": "2026-10-10T11:01:29.962Z",
+  "results": [
+    {
+      "check": "Admin requests revision through existing review RPC",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Super Admin",
+          "step": "Admin requests revision through existing review RPC",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+          "status": 200,
+          "durationMs": 152
+        },
+        {
+          "actor": "Super Admin",
+          "step": "Admin requests revision through existing review RPC",
+          "method": "GET",
+          "endpoint": "/rest/v1/document_submission_files",
+          "status": 200,
+          "durationMs": 173
+        }
+      ]
+    },
+    {
+      "check": "B uploads corrected PDF with genuine owner JWT",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B JWT",
+          "step": "B uploads corrected PDF with genuine owner JWT",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 200,
+          "durationMs": 271
+        }
+      ]
+    },
+    {
+      "check": "B replaces metadata with supported optimistic-lock RPC",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B JWT",
+          "step": "B replaces metadata with supported optimistic-lock RPC",
+          "method": "POST",
+          "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+          "status": 200,
+          "durationMs": 141
+        }
+      ]
+    },
+    {
+      "check": "B corrected download matches hash; original bytes preserved",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "B JWT",
+          "step": "B corrected download matches hash; original bytes preserved",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 200,
+          "durationMs": 686
+        },
+        {
+          "actor": "B JWT",
+          "step": "B corrected download matches hash; original bytes preserved",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 200,
+          "durationMs": 1029
+        }
+      ]
+    },
+    {
+      "check": "Other organization denied corrected private download",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Other organization",
+          "step": "Other organization denied corrected private download",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 400,
+          "durationMs": 342
+        }
+      ]
+    },
+    {
+      "check": "Anonymous denied corrected private download",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Anonymous",
+          "step": "Anonymous denied corrected private download",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 400,
+          "durationMs": 339
+        }
+      ]
+    },
+    {
+      "check": "Authorized Admin: corrected-file gateway authorization",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Authorized Admin",
+          "step": "Authorized Admin: corrected-file gateway authorization",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 200,
+          "durationMs": 760
+        },
+        {
+          "actor": "Authorized Admin",
+          "step": "Authorized Admin: corrected-file gateway authorization",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 348
+        }
+      ]
+    },
+    {
+      "check": "Unauthorized Admin: corrected-file gateway authorization",
+      "status": "PASS",
+      "http": [
+        {
+          "actor": "Unauthorized Admin",
+          "step": "Unauthorized Admin: corrected-file gateway authorization",
+          "method": "POST",
+          "endpoint": "/functions/v1/admin-storage-access",
+          "status": 403,
+          "durationMs": 251
+        }
+      ]
+    },
+    {
+      "check": "Close revision test Auth session",
+      "status": "PASS"
+    },
+    {
+      "check": "Close revision test Auth session",
+      "status": "PASS"
+    },
+    {
+      "check": "Revoke revision test Admin session",
+      "status": "PASS"
+    },
+    {
+      "check": "Revoke revision test Admin session",
+      "status": "PASS"
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "B",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 1057
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 427
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 156
+    },
+    {
+      "actor": "A",
+      "step": "Normal Auth password login",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/authenticate_admin_account",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Admin requests revision through existing review RPC",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/update_admin_document_submission_file_review",
+      "status": 200,
+      "durationMs": 152
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Admin requests revision through existing review RPC",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 173
+    },
+    {
+      "actor": "Super Admin",
+      "step": "Admin requests revision through existing review RPC",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 432
+    },
+    {
+      "actor": "B JWT",
+      "step": "B uploads corrected PDF with genuine owner JWT",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 200,
+      "durationMs": 271
+    },
+    {
+      "actor": "B JWT",
+      "step": "B replaces metadata with supported optimistic-lock RPC",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/replace_organization_document_file",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "actor": "B JWT",
+      "step": "B corrected download matches hash; original bytes preserved",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 200,
+      "durationMs": 686
+    },
+    {
+      "actor": "B JWT",
+      "step": "B corrected download matches hash; original bytes preserved",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 200,
+      "durationMs": 1029
+    },
+    {
+      "actor": "Other organization",
+      "step": "Other organization denied corrected private download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 400,
+      "durationMs": 342
+    },
+    {
+      "actor": "Anonymous",
+      "step": "Anonymous denied corrected private download",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 400,
+      "durationMs": 339
+    },
+    {
+      "actor": "Authorized Admin",
+      "step": "Authorized Admin: corrected-file gateway authorization",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 200,
+      "durationMs": 760
+    },
+    {
+      "actor": "Authorized Admin",
+      "step": "Authorized Admin: corrected-file gateway authorization",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 348
+    },
+    {
+      "actor": "Unauthorized Admin",
+      "step": "Unauthorized Admin: corrected-file gateway authorization",
+      "method": "POST",
+      "endpoint": "/functions/v1/admin-storage-access",
+      "status": 403,
+      "durationMs": 251
+    },
+    {
+      "actor": "Unauthorized Admin",
+      "step": "Unauthorized Admin: corrected-file gateway authorization",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 137
+    },
+    {
+      "actor": "Unauthorized Admin",
+      "step": "Unauthorized Admin: corrected-file gateway authorization",
+      "method": "POST",
+      "endpoint": "/auth/v1/logout",
+      "status": 204,
+      "durationMs": 159
+    },
+    {
+      "actor": "Unauthorized Admin",
+      "step": "Unauthorized Admin: corrected-file gateway authorization",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 133
+    },
+    {
+      "actor": "Unauthorized Admin",
+      "step": "Unauthorized Admin: corrected-file gateway authorization",
+      "method": "POST",
+      "endpoint": "/rest/v1/rpc/revoke_admin_session_token",
+      "status": 204,
+      "durationMs": 149
+    }
+  ]
+}

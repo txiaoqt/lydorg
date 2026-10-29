@@ -1,0 +1,22 @@
+[
+  {
+    "route": "/",
+    "requests": 28,
+    "idleSeconds": 0,
+    "idleRequests": 0,
+    "totalWireBytes": 10667433,
+    "jsWireBytes": 1867723,
+    "maxResponseMs": 2713.934,
+    "failures": []
+  },
+  {
+    "route": "/public-templates",
+    "requests": 24,
+    "idleSeconds": 35,
+    "idleRequests": 0,
+    "totalWireBytes": 4373863,
+    "jsWireBytes": 1976811,
+    "maxResponseMs": 643.195,
+    "failures": []
+  }
+]

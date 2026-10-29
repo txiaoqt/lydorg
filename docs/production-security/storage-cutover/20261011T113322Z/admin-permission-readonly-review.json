@@ -1,0 +1,96 @@
+{
+  "read_only": "on",
+  "admin_columns": [
+    {
+      "type": "uuid",
+      "table": "admin_accounts",
+      "column": "id"
+    },
+    {
+      "type": "USER-DEFINED",
+      "table": "admin_accounts",
+      "column": "username"
+    },
+    {
+      "type": "text",
+      "table": "admin_accounts",
+      "column": "password_hash"
+    },
+    {
+      "type": "USER-DEFINED",
+      "table": "admin_accounts",
+      "column": "email"
+    },
+    {
+      "type": "text",
+      "table": "admin_accounts",
+      "column": "display_name"
+    },
+    {
+      "type": "boolean",
+      "table": "admin_accounts",
+      "column": "is_active"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "column": "created_at"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "admin_accounts",
+      "column": "updated_at"
+    },
+    {
+      "type": "smallint",
+      "table": "admin_accounts",
+      "column": "role_id"
+    },
+    {
+      "type": "smallint",
+      "table": "admin_accounts",
+      "column": "unit_id"
+    },
+    {
+      "type": "boolean",
+      "table": "admin_accounts",
+      "column": "is_password_set"
+    },
+    {
+      "type": "smallint",
+      "table": "roles",
+      "column": "id"
+    },
+    {
+      "type": "USER-DEFINED",
+      "table": "roles",
+      "column": "code"
+    },
+    {
+      "type": "text",
+      "table": "roles",
+      "column": "label"
+    },
+    {
+      "type": "text",
+      "table": "roles",
+      "column": "description"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "roles",
+      "column": "created_at"
+    },
+    {
+      "type": "ARRAY",
+      "table": "roles",
+      "column": "permission_codes"
+    }
+  ],
+  "permission_helpers": [
+    {
+      "signature": "get_admin_permission_context(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_admin_permission_context(_session_token text)\n RETURNS TABLE(role_code text, role_label text, permission_codes text[])\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\ndeclare\r\n  _admin_id uuid;\r\nbegin\r\n  select vat.admin_id into _admin_id\r\n  from public.validate_admin_session_token(_session_token) vat\r\n  limit 1;\r\n\r\n  if _admin_id is null then\r\n    raise exception 'Admin account is not authorized.';\r\n  end if;\r\n\r\n  return query\r\n  select r.code::text, r.label, r.permission_codes\r\n  from public.admin_accounts a\r\n  join public.roles r on r.id = a.role_id\r\n  where a.id = _admin_id;\r\nend;\r\n$function$\n"
+    }
+  ]
+}

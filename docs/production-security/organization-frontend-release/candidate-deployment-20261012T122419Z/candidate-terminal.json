@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-10-12T12:48:13.507Z",
+  "id": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+  "url": "yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+  "readyState": "READY",
+  "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+  "ownerId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "target": "production",
+  "alias": [
+    "yorbmsuser-toffs-projects-81b2ce10.vercel.app"
+  ],
+  "projectSettings": {
+    "framework": "vite",
+    "nodeVersion": "24.x",
+    "installCommand": "npm ci --include=dev --no-audit --no-fund",
+    "buildCommand": "npm run build",
+    "outputDirectory": "build",
+    "rootDirectory": null
+  }
+}

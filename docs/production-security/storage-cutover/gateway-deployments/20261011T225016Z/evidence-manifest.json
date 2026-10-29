@@ -1,0 +1,134 @@
+{
+  "createdAt": "2026-10-11T23:08:07.357Z",
+  "project": "mqqaykksadotbrghbexz",
+  "gateway": "admin-storage-access",
+  "deploymentAttempts": 1,
+  "automaticRetries": 0,
+  "acceptedBoundaryChecks": 13,
+  "positiveSigningDownload": "BLOCKED",
+  "preservationInventories": 57,
+  "changedInventories": 0,
+  "reportLinksValid": true,
+  "files": [
+    {
+      "file": "artifact-preflight.json",
+      "bytes": 1459,
+      "sha256": "42d4a744f61cab7d708016f27627283befa5cae0f5561c0fc0562be2015aa36c"
+    },
+    {
+      "file": "cleanup-and-local-quality.json",
+      "bytes": 4979,
+      "sha256": "5099c5fd3051e06ed4407f73499acf7056f5a16823e28d5110032e8432f67388"
+    },
+    {
+      "file": "completion-receipt.json",
+      "bytes": 1885,
+      "sha256": "c2a5af8f8d7a735873c9776c67cec7f75b47882dda00ac591a5408335bd0a4c2"
+    },
+    {
+      "file": "control-plane-preflight.json",
+      "bytes": 6182,
+      "sha256": "0e2bb84bd4974ce9e96aa76e63531b1df48ba629c52402969f3fe296fdcdbaed"
+    },
+    {
+      "file": "database-acceptance-postflight.json",
+      "bytes": 41545,
+      "sha256": "c1ddde1d6a1cadf862cacb0d551acdbd8c7a502141e1bc736e7165b5bb804a85"
+    },
+    {
+      "file": "database-postflight.json",
+      "bytes": 41539,
+      "sha256": "b808d5f59365c1de9f119acd36640b2d1de3566fe326b4f8c3e294aae36ea1a6"
+    },
+    {
+      "file": "database-preflight.json",
+      "bytes": 41460,
+      "sha256": "18192a01f1e9499e42ccea5260fd9af272fe2ba5638db6cc20a75fa444e66c58"
+    },
+    {
+      "file": "deployed-identity-verification.json",
+      "bytes": 6365,
+      "sha256": "c9eed1ddce1754b2a821d363830918a17b5e9ad6123c1600cd487574c1db41f1"
+    },
+    {
+      "file": "deployed-source.json",
+      "bytes": 6455,
+      "sha256": "ab32aaf79ffe71a3f01955e11d77927c58b627efd72601e6838c69bbba4c9160"
+    },
+    {
+      "file": "deployment-receipt.json",
+      "bytes": 944,
+      "sha256": "3a3cec2652d2ff5c851cea50d3d766c4c82d959a0651c91912ab8c14ddd72edf"
+    },
+    {
+      "file": "execution-report.md",
+      "bytes": 11278,
+      "sha256": "48ea4cb689697560ec09b891c20094b71676fe40c3476613a138082966398b60"
+    },
+    {
+      "file": "final-function-inventories.json",
+      "bytes": 5838,
+      "sha256": "b7708b93ef54745ad88fef02a569982e8efde055f2ccccd24be72e97e826f864"
+    },
+    {
+      "file": "gateway-operation-lock.mjs",
+      "bytes": 1519,
+      "sha256": "9567fad56dcc995a8cfba0c3386b707c7ee9af5f8eb253f6c9b58fde5aaf830e"
+    },
+    {
+      "file": "hosted-configuration-metadata.json",
+      "bytes": 754,
+      "sha256": "1951c381e6e207384f3b101fa57c18c3b0d97c70b5f8ee3924ce5f0060f8ecf2"
+    },
+    {
+      "file": "http-acceptance.json",
+      "bytes": 6556,
+      "sha256": "4f65fd30354b459e9c12f8b159bbb40733211158b78875dba11708637c443a24"
+    },
+    {
+      "file": "http-acceptance.jsonl",
+      "bytes": 4325,
+      "sha256": "b37c54598fca56ea2319910264a5dc3760767460b86576e02feb1b4c0a096343"
+    },
+    {
+      "file": "http-acceptance.mjs",
+      "bytes": 4997,
+      "sha256": "e93ffa9ee3e08bbee71acef9c2c094288e057477bd0be8044db9320593d3682b"
+    },
+    {
+      "file": "immediate-control-plane.json",
+      "bytes": 5680,
+      "sha256": "f2e431cada22fd54d0045816e96e615b5e5bca80bc8cf244bb43eb3b15d3200f"
+    },
+    {
+      "file": "runtime-authorization-evidence.json",
+      "bytes": 1789,
+      "sha256": "4dca42ecea3fb165c769cc24a42d35cfa4990232e88dd785ac3d384128185714"
+    },
+    {
+      "file": "runtime-rpc-count-after.json",
+      "bytes": 333,
+      "sha256": "5867a6180092b43cb2629d446b9987a6aa8f946467e5f3b077f810ca5f03ce21"
+    },
+    {
+      "file": "runtime-rpc-count-before.json",
+      "bytes": 256,
+      "sha256": "07fa9b3aab784ef85fca2ef80aa16031d68de0e21bd7d579215e0cc34cf305de"
+    },
+    {
+      "file": "runtime-rpc-count-readonly.mjs",
+      "bytes": 2111,
+      "sha256": "bbee13b7eda816c41dfa16db29ac3167434de5ccb682c773964d816e500a0140"
+    },
+    {
+      "file": "staging-source-preflight.json",
+      "bytes": 6463,
+      "sha256": "4a073f1bb348db5665a7c1148a64f280f4305cf95b318ef1da7e881b2ffada6b"
+    },
+    {
+      "file": "verify-production-readonly.mjs",
+      "bytes": 5308,
+      "sha256": "d63e5de3313e88427158ff98c081c776043061b01b3e7f5f172545d97ddd8323"
+    }
+  ]
+}

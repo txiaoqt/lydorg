@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-11T15:54:54.085Z",
+  "publicCaSource": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+  "configuredHashMatches": true,
+  "officialHttpsBytesMatch": true,
+  "certificateIsCa": true,
+  "selfSignatureValid": true,
+  "certificateCurrentlyValid": true,
+  "httpsCertificateAndHostnameVerified": true,
+  "baselineSha256": "60a25f959aa2e45ab384cb41702f5eb13b93bdfe9ef71049b99eeceb5bde5d9a",
+  "baselineBytes": 8422,
+  "credentialsPrinted": false
+}

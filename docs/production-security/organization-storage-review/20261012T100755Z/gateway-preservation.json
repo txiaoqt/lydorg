@@ -1,0 +1,14 @@
+{
+  "capturedAt": "2026-10-12T10:38:41.820Z",
+  "readOnly": true,
+  "functionCount": 9,
+  "gateway": {
+    "id": "8ea84d1d-ab6b-40b3-8cc4-d78262fb182f",
+    "name": "admin-storage-access",
+    "slug": "admin-storage-access",
+    "status": "ACTIVE",
+    "version": 1,
+    "verify_jwt": false,
+    "entrypoint_path": "file:///tmp/user_fn_mqqaykksadotbrghbexz_8ea84d1d-ab6b-40b3-8cc4-d78262fb182f_1/source/index.ts"
+  }
+}

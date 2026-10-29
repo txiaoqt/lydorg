@@ -1,0 +1,14 @@
+[
+  {
+    "table": "organization_profiles",
+    "column": "identity_name_key",
+    "generated": "s",
+    "expression": "normalize_organization_identity_name(organization_name)"
+  },
+  {
+    "table": "organization_profiles",
+    "column": "identity_name_anchor",
+    "generated": "s",
+    "expression": "organization_identity_name_anchor(organization_name)"
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "sealedAt": "2026-10-12T14:42:53.630Z",
+  "files": [
+    {
+      "path": "acceptance-report.md",
+      "bytes": 14149,
+      "sha256": "d89598726a2c208b26362220de5da60a0a0c29e9857283931882b051669c6f16"
+    },
+    {
+      "path": "compare-operator-evidence.mjs",
+      "bytes": 5078,
+      "sha256": "cbe0595fb1f10aa40593435259b001c59ff7e6ee342a5d20e3c6acf388f014de"
+    },
+    {
+      "path": "operator-evidence-comparison.json",
+      "bytes": 1538,
+      "sha256": "6e7af6c39a5ad2fb4fad91490a44c063cfa686a7077bd1b3c3710f8728c8323a"
+    },
+    {
+      "path": "operator-observed-input.json",
+      "bytes": 12422,
+      "sha256": "111b76321ace31085a654a99c71400a1172813104112abbf40497fbc3cbb438c"
+    },
+    {
+      "path": "promotion-authorization-template.md",
+      "bytes": 2456,
+      "sha256": "81bf9a74d32f5fbd6eee4ebc1b1fa4c2ad60676386f702fd7693401e94299999"
+    },
+    {
+      "path": "provider-current-preservation.json",
+      "bytes": 1190,
+      "sha256": "f32e4712cec3b6f5fb5df851b8f21ad2bf4f397df4bf14f56d8a9dc8adf50b40"
+    },
+    {
+      "path": "readiness-result.json",
+      "bytes": 1639,
+      "sha256": "39751b659afeb82333a6d35a573aa48692c2c5ea3fcedbc5d78f770fe8f81a11"
+    },
+    {
+      "path": "verify-current-aliases.mjs",
+      "bytes": 2566,
+      "sha256": "9dad9873815fa4247935df05e36cc400762fe4eeae82cd2acf0117d3a639ea50"
+    }
+  ]
+}

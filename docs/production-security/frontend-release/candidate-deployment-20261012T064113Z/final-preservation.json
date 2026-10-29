@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "capturedAt": "2026-10-12T07:04:57.019Z",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "trackedDirtyPaths": 64,
+  "existingWorktreeFilesCompared": 4126,
+  "existingWorktreeContentDifferences": [],
+  "preservedEvidenceFiles": 74,
+  "priorFailedAttemptMarkersPreserved": 2,
+  "currentAttemptMarkerRetained": true,
+  "attempts": 1,
+  "automaticRetries": 0,
+  "operationLockReleased": true,
+  "sourceCheck": {
+    "status": "PASS",
+    "sourceRevision": "sha256:0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
+    "fileCount": 561,
+    "inventorySha256": "0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
+    "freshExtraction": true,
+    "cliGeneratedMetadataFiles": []
+  },
+  "gitDiffCheck": "PASS",
+  "productionCustomAliasesUnchanged": true,
+  "organizationProjectAndDeploymentListUnchanged": true,
+  "adminSettingsUnchanged": true,
+  "gatewayMetadataUnchanged": true,
+  "liveAdminHtml": {
+    "http": 200,
+    "bytes": 1884,
+    "sha256": "fabd94e4fe69d9fa197088cfc97a24d6208ba3b862d14cdccbca460e8a88ae93"
+  },
+  "privateEnvironmentContentsRead": false,
+  "backendMutationsPerformed": 0,
+  "productionDatabasePreservationQueryRepeated": false
+}

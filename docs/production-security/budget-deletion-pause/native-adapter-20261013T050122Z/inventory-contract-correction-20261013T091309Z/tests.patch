@@ -1,0 +1,176 @@
+diff --git "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\native-budget-pause.test.mjs" "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause.test.mjs"
+index 6bdf2cb..969e85e 100644
+--- "a/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\inventory-contract-correction-20261013T091309Z\\prior-artifacts\\native-budget-pause.test.mjs"
++++ "b/docs\\production-security\\budget-deletion-pause\\native-adapter-20261013T050122Z\\native-budget-pause.test.mjs"
+@@ -6,11 +6,13 @@ import {resolve,join,dirname,basename} from 'node:path';
+ import {spawn} from 'node:child_process';
+ import {fileURLToPath} from 'node:url';
+ import {checkServerIdentity} from 'node:tls';
+-import {loadReviewedInputs,invokeAcl} from './native-budget-pause-runner.mjs';
++import {loadReviewedInputs,invokeAcl,captureSnapshot} from './native-budget-pause-runner.mjs';
+ import {
+   TARGET,SQL_PATH,SQL_SHA,SQL_BYTES,PRE_CATALOG_SHA,POST_CATALOG_SHA,
+   sha256,hashJson,verifyFixedTarget,verifyBudgetSql,verifyPinnedFile,connectionConfiguration,connectClientOnce,safeError,
+   validateVerifierResult,expectedRelationsFromSql,normalizeProtectedData,protectedDataDigest,
++  ORIGINAL_INVENTORY_PATH,ORIGINAL_INVENTORY_SHA,BUDGET_INVENTORY_PATH,READ_ONLY_SQL_CONTRACTS,
++  verifyReadOnlySqlContract,verifyReadOnlyInputContracts,verifyBudgetInventoryCopy,validateReadOnlyVerifierResult,
+   verifyBudgetState,validateBudgetStateShape,verifyNativeIdentity,verifyControlPlaneProof,
+   verifyAuthorization,verifyFoundationReceipt,foundationStructure,stableFoundation,
+   comparePreservation,verifyTlsSocket,environmentSafety,createInstallApplicationName,
+@@ -21,7 +23,8 @@ import {
+ const root=resolve(fileURLToPath(new URL('../../../../',import.meta.url)));
+ const adapterDir=resolve(fileURLToPath(new URL('.',import.meta.url)));
+ const sqlPath=resolve(root,SQL_PATH);
+-const dataSqlPath=resolve(root,'docs/production-security/storage-cutover/executions/20261011T122743Z/protected-data-readonly.sql');
++const dataSqlPath=resolve(root,BUDGET_INVENTORY_PATH);
++const originalDataSqlPath=resolve(root,ORIGINAL_INVENTORY_PATH);
+ const foundationReceiptPath=resolve(root,'docs/production-security/storage-cutover/native-executions/20261011T221428755Z/independent-postflight.json');
+ const psAcl=resolve(adapterDir,'operation-acl.ps1');
+ const manifestPath=resolve(adapterDir,'reviewed-inputs.json');
+@@ -78,6 +81,121 @@ test('only the declared read-only ROLLBACK terminal tag is accepted',()=>{
+   assert.throws(()=>validateVerifierResult([{command:'ROLLBACK',rows:[{verification:{}},{verification:{}}]}],'verification'),/READ_ONLY_RESULT_SHAPE_MISMATCH/);
+ });
+ 
++test('actual SQL inventory copy preserves the original bytes and all 57 ordered definitions',async()=>{
++  const original=await readFile(originalDataSqlPath),budget=await readFile(dataSqlPath);
++  assert.equal(original.length,13900);assert.equal(sha256(original),ORIGINAL_INVENTORY_SHA);
++  assert.equal(budget.length,13902);
++  assert.equal(sha256(budget),'459a48ea2fdaf0393063f3fe796b4a0302bf0f440485f82d3dedaae1c5e07c34');
++  assert.deepEqual(budget,Buffer.from(original.toString('utf8').replace(/COMMIT;(\s*)$/,'ROLLBACK;$1'),'utf8'));
++  assert.equal(budget.toString('utf8').replace(/ROLLBACK;(\s*)$/,'COMMIT;$1'),original.toString('utf8'));
++  const definitions=bytes=>[...bytes.toString('utf8').matchAll(/SELECT\s+'((?:public|auth|storage)\.[a-zA-Z0-9_]+)'\s+AS\s+relation/gi)].map(match=>match[1]);
++  assert.equal(definitions(original).length,57);
++  assert.deepEqual(definitions(budget),definitions(original));
++  assert.deepEqual(verifyBudgetInventoryCopy(original,budget),expectedRelationsFromSql(original));
++  assert.throws(()=>verifyBudgetInventoryCopy(original,Buffer.from(budget.toString('utf8').replace('md5(','max('))),/BUDGET_INVENTORY_COPY_MISMATCH/);
++});
++
++function readOnlyDriverResult(inputName,row){
++  return [{command:'BEGIN',rows:[]},{command:'SET',rows:[]},{command:'SELECT',rowCount:1,rows:[row]},{command:READ_ONLY_SQL_CONTRACTS[inputName].terminal,rows:[]}];
++}
++
++test('actual SQL inputs each satisfy their declared isolation, timeout, result and terminal contract',async()=>{
++  const loaded=await loadReviewedInputs();
++  const contracts=verifyReadOnlyInputContracts(loaded.inputs);
++  assert.equal(contracts.length,6);
++  for(const contract of contracts){
++    assert.equal(contract.readOnly,true);assert.equal(contract.isolation,'REPEATABLE READ');assert.equal(contract.statementCount,4);
++    assert.equal(contract.terminal,contract.referenceOnly?'COMMIT':'ROLLBACK');
++    assert.equal(contract.statementTimeout,contract.input==='identitySql'?'10s':'20s');
++    if(!contract.referenceOnly){
++      const row={captured_at:'2026-10-13T00:00:00Z',read_only:'on',[contract.resultKey]:{synthetic:true}};
++      const value=validateReadOnlyVerifierResult(readOnlyDriverResult(contract.input,row),contract.input);
++      assert.deepEqual(value,contract.rowEnvelope?row:row[contract.resultKey]);
++    }
++  }
++  assert.equal(verifyBudgetSql(loaded.inputs.sql).trimEnd().endsWith('COMMIT;'),true);
++  assert.throws(()=>verifyReadOnlySqlContract(loaded.inputs.sql,'protectedDataSql'),/READ_ONLY_SQL_UNSUPPORTED_LEXICAL_FORM/);
++  assert.throws(()=>verifyReadOnlySqlContract(loaded.inputs.originalProtectedDataSql,'originalProtectedDataSql'),/READ_ONLY_SQL_INPUT_NOT_EXECUTABLE/);
++});
++
++test('actual SQL regression reproduces the original terminal mismatch and retains the inventory row envelope',async()=>{
++  const original=await readFile(originalDataSqlPath),budget=await readFile(dataSqlPath);
++  assert.equal(verifyReadOnlySqlContract(original,'originalProtectedDataSql',{execution:false}).terminal,'COMMIT');
++  const relations=expectedRelationsFromSql(budget);
++  const row={captured_at:'2026-10-13T00:00:00Z',read_only:'on',preserved_data:relations.map(relation=>({relation,row_count:0,content_fingerprint:'0'.repeat(32)}))};
++  assert.match(budget.toString('utf8'),/SELECT clock_timestamp\(\) AS captured_at, current_setting\('transaction_read_only'\) AS read_only, jsonb_agg\(to_jsonb\(x\) ORDER BY relation COLLATE "C"\) AS preserved_data FROM/);
++  const originalResult=readOnlyDriverResult('originalProtectedDataSql',row);
++  assert.throws(()=>validateVerifierResult(originalResult,'preserved_data','ROLLBACK'),/READ_ONLY_TERMINAL_TAG_MISMATCH/);
++  assert.throws(()=>validateReadOnlyVerifierResult(originalResult,'protectedDataSql'),/READ_ONLY_TERMINAL_TAG_MISMATCH/);
++  assert.throws(()=>verifyReadOnlySqlContract(original,'protectedDataSql'),/READ_ONLY_SQL_TERMINAL_MISMATCH/);
++  const result=readOnlyDriverResult('protectedDataSql',row);
++  // The old generic extraction loses read_only; actual inventory results need the whole row.
++  assert.throws(()=>protectedDataDigest(validateVerifierResult(result,'preserved_data'),relations),/PROTECTED_DATA_RESULT_INVALID/);
++  assert.deepEqual(validateReadOnlyVerifierResult(result,'protectedDataSql'),row);
++  assert.equal(protectedDataDigest(validateReadOnlyVerifierResult(result,'protectedDataSql'),relations).rows.length,57);
++});
++
++test('actual SQL contract drift and data-changing statements are rejected before a mocked native connection',async()=>{
++  const loaded=await loadReviewedInputs(),text=loaded.inputs.protectedDataSql.toString('utf8');
++  const cases=[
++    [text.replace('READ ONLY','READ WRITE'),'READ_ONLY_SQL_TRANSACTION_MODE_MISMATCH'],
++    [text.replace('REPEATABLE READ','READ COMMITTED'),'READ_ONLY_SQL_TRANSACTION_MODE_MISMATCH'],
++    [text.replace("statement_timeout='20s'","statement_timeout='30s'"),'READ_ONLY_SQL_TIMEOUT_MISMATCH'],
++    [text.replace(/ROLLBACK;(\s*)$/,'COMMIT;$1'),'READ_ONLY_SQL_TERMINAL_MISMATCH'],
++    [text.replace('SELECT clock_timestamp()',"WITH changed AS (DELETE FROM public.organization_profiles RETURNING *) SELECT clock_timestamp()"),'READ_ONLY_SQL_DATA_CHANGE_FORBIDDEN'],
++    [text.replace('SELECT clock_timestamp()',"SELECT set_config('role','postgres',true), clock_timestamp()"),'READ_ONLY_SQL_DATA_CHANGE_FORBIDDEN'],
++    [text.replace('SELECT clock_timestamp()',"SELECT nextval('public.sequence'), clock_timestamp()"),'READ_ONLY_SQL_DATA_CHANGE_FORBIDDEN'],
++    [text.replace('AS preserved_data FROM','AS preserved_data INTO public.bad_snapshot FROM'),'READ_ONLY_SQL_DATA_CHANGE_FORBIDDEN'],
++    [text.replace('ROLLBACK;','DELETE FROM public.organization_profiles; ROLLBACK;'),'READ_ONLY_SQL_STATEMENT_COUNT_MISMATCH'],
++    [text.replace('ROLLBACK;','ROLLBACK; COMMIT;'),'READ_ONLY_SQL_STATEMENT_COUNT_MISMATCH'],
++    [text.replace('AS preserved_data FROM','AS unexpected_result FROM'),'READ_ONLY_SQL_RESULT_KEY_MISMATCH'],
++    [text+'/* unclosed','READ_ONLY_SQL_UNTERMINATED_COMMENT'],
++    [text+"SELECT 'unclosed",'READ_ONLY_SQL_UNTERMINATED_LITERAL'],
++    [text.replace('SELECT clock_timestamp()',"SELECT $$DELETE$$, clock_timestamp()"),'READ_ONLY_SQL_UNSUPPORTED_LEXICAL_FORM'],
++  ];
++  let connected=0;
++  for(const [changed,code] of cases){
++    const inputs={...loaded.inputs,protectedDataSql:Buffer.from(changed,'utf8')};
++    await assert.rejects(async()=>{verifyReadOnlyInputContracts(inputs);connected++;},error=>error.message===code);
++  }
++  assert.equal(connected,0);
++  assert.throws(()=>verifyReadOnlySqlContract(loaded.inputs.identitySql,'unknownInput'),/READ_ONLY_SQL_INPUT_NOT_EXECUTABLE/);
++  assert.throws(()=>validateReadOnlyVerifierResult(readOnlyDriverResult('originalProtectedDataSql',{}),'originalProtectedDataSql'),/READ_ONLY_SQL_INPUT_NOT_EXECUTABLE/);
++  // Words inside comments and literals are not executed statements.
++  assert.equal(verifyReadOnlySqlContract(Buffer.from(text.replace('SELECT clock_timestamp()',"/* DELETE; /* UPDATE */ */ SELECT 'DELETE; UPDATE' AS ignored_literal, clock_timestamp()")),'protectedDataSql').terminal,'ROLLBACK');
++});
++
++test('actual SQL result parsing refuses alternate terminal tags, command sequences and duplicate envelopes',async()=>{
++  const loaded=await loadReviewedInputs();
++  for(const inputName of Object.keys(READ_ONLY_SQL_CONTRACTS).filter(name=>!READ_ONLY_SQL_CONTRACTS[name].referenceOnly)){
++    verifyReadOnlySqlContract(loaded.inputs[inputName],inputName);
++    const key=READ_ONLY_SQL_CONTRACTS[inputName].key,result=readOnlyDriverResult(inputName,{[key]:{read_only:'on'}});
++    assert.throws(()=>validateReadOnlyVerifierResult([...result.slice(0,-1),{command:'COMMIT'}],inputName),/READ_ONLY_TERMINAL_TAG_MISMATCH/);
++    assert.throws(()=>validateReadOnlyVerifierResult([result[0],{command:'DELETE'},...result.slice(1)],inputName),/READ_ONLY_COMMAND_SEQUENCE_MISMATCH/);
++    assert.throws(()=>validateReadOnlyVerifierResult([result[0],result[1],{command:'SELECT',rows:[{[key]:{}},{[key]:{}}]},result[3]],inputName),/READ_ONLY_RESULT_SHAPE_MISMATCH/);
++    assert.throws(()=>validateReadOnlyVerifierResult([result[0],result[1],{command:'SELECT',rows:[{unexpected:{}}]},result[3]],inputName),/READ_ONLY_RESULT_SHAPE_MISMATCH/);
++  }
++});
++
++test('actual SQL runner snapshot uses all four executable preflight inputs with mocked pg row shapes',async()=>{
++  const loaded=await loadReviewedInputs(),applicationName='ytrace-budget-pause-r-12345678-1234-4234-8234-123456789abc';
++  const foundation=JSON.parse(await readFile(foundationReceiptPath,'utf8')).foundation;
++  const identity={database:'postgres',current_user:'postgres',session_user:'postgres',server_version_num:170006,server_port:5432,transaction_read_only:'on',default_transaction_read_only:'on',tls:true,tls_version:'TLSv1.3',application_name:applicationName,backend_pid:55,backend_start:'2026-10-13T00:00:00Z',database_connect:true,owns_target_function:true,public_usage:true,public_create:true,plpgsql_usage:true,text_type_usage:true,uuid_array_type_usage:true,jsonb_type_usage:true,all_eight_protected_relations_selectable:true,pg_read_all_stats:true,active_budget_deletion_calls:0,other_budget_install_sessions:0};
++  const inventory={captured_at:'2026-10-13T00:00:00Z',read_only:'on',preserved_data:loaded.relations.map(relation=>({relation,row_count:0,content_fingerprint:'0'.repeat(32)}))};
++  const rows={identitySql:{native_identity:identity},preSql:{verification:readBudgetShape('pre')},protectedDataSql:inventory,foundationSql:{foundation_verification:foundation}};
++  const calls=[];
++  const client={async query(text){
++    const name=Object.keys(rows).find(name=>loaded.inputs[name].toString('utf8')===text);
++    assert.ok(name,'no install SQL or arbitrary query may be submitted to this mock');
++    verifyReadOnlySqlContract(Buffer.from(text),name);calls.push(name);return readOnlyDriverResult(name,rows[name]);
++  }};
++  const snapshot=await captureSnapshot(client,loaded,{applicationName,readOnly:true,caSha256:'a'.repeat(64),peerTls:{chainVerified:true,hostnameVerified:true,protocol:'TLSv1.3',peerCertificateFingerprint256:'OFFLINE-MOCK'},controlPlaneSha256:'b'.repeat(64)});
++  assert.deepEqual(calls,['identitySql','preSql','protectedDataSql','foundationSql']);
++  assert.equal(snapshot.status,'READ_ONLY_PREFLIGHT_PASS');assert.equal(snapshot.protectedData.preserved_data.length,57);
++  assert.equal(snapshot.protectedData.read_only,'on');assert.equal(snapshot.budget.compatibility_sha256,PRE_CATALOG_SHA);
++  assert.equal(snapshot.foundation.structureSha256,loaded.foundationExpected.sha256);
++});
++
+ test('captures exactly the 57 pinned relation identities and rejects missing, duplicate or unexpected rows',async()=>{
+   const relations=expectedRelationsFromSql(await readFile(dataSqlPath));
+   assert.equal(relations.length,57);
+@@ -89,6 +207,8 @@ test('captures exactly the 57 pinned relation identities and rejects missing, du
+   assert.throws(()=>normalizeProtectedData({read_only:'on',preserved_data:[...rows,rows[0]]},relations),/PROTECTED_DATA_RESULT_INVALID/);
+   const swapped=rows.slice();swapped[0]={...swapped[0],relation:'public.unexpected_relation'};
+   assert.throws(()=>normalizeProtectedData({read_only:'on',preserved_data:swapped},relations),/PROTECTED_DATA_RELATION_SET_MISMATCH/);
++  const duplicate=rows.slice();duplicate[0]=duplicate[1];
++  assert.throws(()=>normalizeProtectedData({read_only:'on',preserved_data:duplicate},relations),/PROTECTED_DATA_DUPLICATE_RELATION/);
+ });
+ 
+ test('requires exact before/after budget RPC and protected foundation state',async()=>{
+@@ -362,11 +482,13 @@ test('actual shipped PowerShell CLI and runner verify existing operator root/pro
+   const state=join(process.env.USERPROFILE,'.ytrace-production-budget-deletion-pause');
+   const proof=join(state,'control-plane-proof.json');
+   try{await stat(proof);}catch(error){if(error.code==='ENOENT'){t.skip('existing operator evidence is unavailable; disposable CLI cases still run');return;}throw error;}
+-  const before={files:await readdir(state),rootModified:(await stat(state)).mtimeMs,proofModified:(await stat(proof)).mtimeMs,proofSha256:sha256(await readFile(proof))};
++  // Do not read operator proof contents: NTFS may update last-access time.
++  const metadata=async()=>{const rootInfo=await stat(state),proofInfo=await stat(proof);return {files:await readdir(state),rootCreated:rootInfo.birthtimeMs,rootModified:rootInfo.mtimeMs,proofCreated:proofInfo.birthtimeMs,proofModified:proofInfo.mtimeMs,proofBytes:proofInfo.size};};
++  const before=await metadata();
+   await assertAclPass(psAcl,'Verify',state);
+   await assertAclPass(psAcl,'Verify',proof);
+   assert.equal((await invokeAcl('Verify',proof)).status,'PASS');
+-  assert.deepEqual({files:await readdir(state),rootModified:(await stat(state)).mtimeMs,proofModified:(await stat(proof)).mtimeMs,proofSha256:sha256(await readFile(proof))},before);
++  assert.deepEqual(await metadata(),before);
+ });
+ 
+ test('PowerShell CLI Protect and Verify use the bounded artifact allowlist (disposable fixed-root copy)',{skip:process.platform!=='win32'},async t=>{

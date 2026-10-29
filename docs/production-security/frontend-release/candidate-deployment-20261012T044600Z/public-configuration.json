@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-10-12T04:52:00.217Z",
+  "status": "PASS",
+  "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "providerNode": "24.x",
+  "providerBuild": "npm run build",
+  "providerInstall": "npm install",
+  "publicNames": [
+    "VITE_ADMIN_APP_URL",
+    "VITE_DEPLOY_SURFACE",
+    "VITE_SUPABASE_ANON_KEY",
+    "VITE_SUPABASE_URL"
+  ],
+  "configurationSha256": "27f1d9985bcbd49ba2d930f46577548e93e8c023be093b3a18f9261ddc81843a",
+  "surfaceMatchesAdmin": true,
+  "originMatchesProduction": true,
+  "adminURLMatchesCanonical": true,
+  "publicKeyClass": "anon JWT",
+  "publicKeyProjectMatches": true,
+  "standalonePwaFlagPresent": false,
+  "serverVariableNames": [
+    "SUPABASE_SERVICE_ROLE_KEY"
+  ],
+  "serverValuesRequested": false,
+  "publicValuesPersistedOutsideCompiledFrontend": false
+}

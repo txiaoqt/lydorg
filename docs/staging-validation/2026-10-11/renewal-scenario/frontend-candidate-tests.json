@@ -1,0 +1,27 @@
+[
+  {
+    "test": "verifiedAt alone is not an authoritative expiry",
+    "status": "PASS",
+    "scope": "transpiled separate frontend candidate; not applied"
+  },
+  {
+    "test": "projection without ledger pointer is not authoritative",
+    "status": "PASS",
+    "scope": "transpiled separate frontend candidate; not applied"
+  },
+  {
+    "test": "valid projection and ledger pointer retain countdown",
+    "status": "PASS",
+    "scope": "transpiled separate frontend candidate; not applied"
+  },
+  {
+    "test": "invalid projection cannot fall back to verification",
+    "status": "PASS",
+    "scope": "transpiled separate frontend candidate; not applied"
+  },
+  {
+    "test": "missing term disables start action despite historical estimate",
+    "status": "PASS",
+    "scope": "transpiled separate frontend candidate; not applied"
+  }
+]

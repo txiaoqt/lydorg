@@ -1,0 +1,109 @@
+{
+  "checkedAt": "2026-10-10T18:44:32.208Z",
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "method": "Privileged read-only GET of recorded synthetic files; not an authorization test",
+  "renewalStatus": "approved",
+  "cycle": 2,
+  "submissionStatus": "approved_green",
+  "documentCount": 6,
+  "targetStatus": "submitted",
+  "targetReferencesOriginal": true,
+  "correctedReferenceInHistory": true,
+  "fiveOthersApproved": true,
+  "originalFixturesPreserved": true,
+  "hashes": [
+    {
+      "kind": "renewal",
+      "sha256": "6e71339ae9f1ed382362a22da0ad7ae6f272a39e3ee565de51beb16f3e35103f",
+      "size": 673,
+      "match": true
+    },
+    {
+      "kind": "renewal-corrected",
+      "sha256": "67bba8968f41f97923e82f9fcfcf2d90871de9605d1b897ff336d452652a4f0d",
+      "size": 674,
+      "match": true
+    }
+  ],
+  "termStates": [
+    {
+      "term_number": 1,
+      "status": "superseded",
+      "start_date": "2023-11-09",
+      "end_date": "2026-11-09"
+    },
+    {
+      "term_number": 2,
+      "status": "active",
+      "start_date": "2026-11-09",
+      "end_date": "2029-11-09"
+    }
+  ],
+  "priorAssessmentMatches": true,
+  "http": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submission_files",
+      "status": 200,
+      "durationMs": 780
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_renewals",
+      "status": 200,
+      "durationMs": 348
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/document_submissions",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_accreditations",
+      "status": 200,
+      "durationMs": 129
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/activity_logs",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 595
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/2615fa09-a72b-48c6-8540-2f0e9cab810f",
+      "status": 200,
+      "durationMs": 771
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 135
+    }
+  ]
+}

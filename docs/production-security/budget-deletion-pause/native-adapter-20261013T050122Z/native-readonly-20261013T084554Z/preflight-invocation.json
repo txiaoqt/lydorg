@@ -1,0 +1,12 @@
+{
+  "status": "READ_ONLY_PREFLIGHT_RETURNED",
+  "startedAt": "2026-10-13T08:48:49.5752337Z",
+  "nativePreflightInvocations": 1,
+  "project": "mqqaykksadotbrghbexz",
+  "route": "native-pg-direct-tls",
+  "installationActivated": false,
+  "automaticRetries": 0,
+  "finishedAt": "2026-10-13T08:48:55.6670527Z",
+  "exitCode": 2,
+  "proofAgeAtFinishSeconds": 6.8200504
+}

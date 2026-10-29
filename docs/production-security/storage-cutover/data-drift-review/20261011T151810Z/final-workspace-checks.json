@@ -1,0 +1,16 @@
+{
+  "diffCheckExitCode": 0,
+  "secretTracked": false,
+  "secretIgnored": true,
+  "aclInheritanceDisabled": true,
+  "aclEntryCount": 2,
+  "unexpectedAclEntries": 0,
+  "localInstallationStateExists": {
+    "production-storage-foundation.operation.lock.json": false,
+    "native-foundation-attempt-started.json": false,
+    "native-foundation-authorization.json": false
+  },
+  "status": "PASS",
+  "existingLineEndingWarnings": true,
+  "filesNormalized": false
+}

@@ -1,0 +1,49 @@
+{
+  "projectRef": "mqqaykksadotbrghbexz",
+  "targetSuffix": "941f85",
+  "status": "AUTH_API_UPDATE_CONFIRMED",
+  "authMutationRequests": 1,
+  "http": [
+    {
+      "resource": "auth-health",
+      "method": "GET",
+      "status": 200,
+      "requestId": null,
+      "time": "2026-10-11T09:38:11.819Z"
+    },
+    {
+      "resource": "exact-recorded-auth-user",
+      "method": "GET",
+      "status": 200,
+      "requestId": null,
+      "time": "2026-10-11T09:38:12.100Z"
+    },
+    {
+      "resource": "exact-recorded-auth-user",
+      "method": "PUT",
+      "status": 200,
+      "requestId": null,
+      "time": "2026-10-11T09:38:12.773Z"
+    },
+    {
+      "resource": "exact-recorded-auth-user",
+      "method": "GET",
+      "status": 200,
+      "requestId": null,
+      "time": "2026-10-11T09:38:12.974Z"
+    }
+  ],
+  "credentialsRecorded": false,
+  "dispatchedAt": "2026-10-11T09:38:12.105Z",
+  "completedAt": "2026-10-11T09:38:12.975Z",
+  "authVersion": "v2.197.0",
+  "targetReturnedExactly": true,
+  "banActive": true,
+  "bannedUntil": "2126-09-17T09:38:14.819768Z",
+  "preservationFingerprint": "be97b8c6beddc856216f6869a1cd4ab18eb66efd021704a619fa78af837273c9",
+  "preservedAuthFieldsUnchanged": true,
+  "updatedAt": "2026-10-11T09:38:14.819962Z",
+  "noLoginPerformed": true,
+  "noEmailFlowInvoked": true,
+  "independentSqlVerification": "PENDING"
+}

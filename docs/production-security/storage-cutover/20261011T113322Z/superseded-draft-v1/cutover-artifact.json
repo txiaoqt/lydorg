@@ -1,0 +1,15 @@
+{
+  "status": "DRAFT; external prerequisites BLOCKED; NOT INSTALLED",
+  "project": "mqqaykksadotbrghbexz",
+  "sqlSha256": "0e35be70b431e1582269e9d5bac9c90c31d0601186776cbe5a1f96036d8bd0ee",
+  "sourceSha256": "6a172c11f670f5f7379a1eb732d6305119509630160bac741212ae0da40112fe",
+  "sourcePolicies": 15,
+  "removedPolicies": 12,
+  "addedPolicies": 6,
+  "finalPolicies": 9,
+  "migrationHistoryAfter": 164,
+  "migrationReceipt": "None; external execution receipt. Stop if a DB receipt is mandatory.",
+  "atomic": true,
+  "lockTimeout": "1s",
+  "statementTimeout": "30s"
+}

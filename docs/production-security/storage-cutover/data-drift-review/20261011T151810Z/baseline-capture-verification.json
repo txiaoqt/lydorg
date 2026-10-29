@@ -1,0 +1,489 @@
+{
+  "status": "REVIEWED_BASELINE_CAPTURED",
+  "project": "mqqaykksadotbrghbexz",
+  "capturedAt": "2026-10-11T15:31:27.305Z",
+  "oldBaselinePath": "docs/production-security/storage-cutover/executions/20261011T122743Z/immediate-data-before.json",
+  "newBaselinePath": "docs/production-security/storage-cutover/data-drift-review/20261011T151810Z/protected-data-baseline.json",
+  "oldBaselineSha256": "36a039bb6455aeea0d31c2e9920c7279f5ad3144b9a132071fa8218b4249a771",
+  "newBaselineSha256": "60a25f959aa2e45ab384cb41702f5eb13b93bdfe9ef71049b99eeceb5bde5d9a",
+  "oldBaselineBytes": 8427,
+  "newBaselineBytes": 8422,
+  "originalManifestSha256": "031c8c19c02ae311422d6e4248e44132ef15dd91ec976a0457fe8fe4d85471c7",
+  "originalBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+  "originalRunnerSha256": "92fa9d993cc6b57dd691bbbcb537712de5e3a479298759d0b73a457ae4fb481b",
+  "originalCoreSha256": "90b0d860823507f11893312643b33c683fe9cb75f03ea19361d7b81bdd81fdae",
+  "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+  "sqlBytes": 47407,
+  "catalogSha256": "eeda91fe5fcecb55724d162715eef3e094ae5e445eece0957f11eff4c4ef5eb5",
+  "migrationHistory": {
+    "count": 164,
+    "latest": "20261011230000",
+    "complete_md5": "1f5eca911f6e2057ae070a955eaca3dc"
+  },
+  "protectedRelations": 57,
+  "unchangedRelations": 50,
+  "reviewedAppendRelations": 7,
+  "preexistingCohortsMatch": 7,
+  "reviewedActivityMatches": true,
+  "reviewedActorMatches": true,
+  "foundationAbsent": true,
+  "databaseWrites": 0,
+  "comparisons": [
+    {
+      "relation": "auth.identities_inventory",
+      "oldRows": 95,
+      "newRows": 96,
+      "oldFingerprint": "e44e308809a55cbc5b2c4c1022318ae8",
+      "newFingerprint": "76c6dbf4f53a6b3f7df2038e41f3c4ac",
+      "status": "REVIEWED_APPEND"
+    },
+    {
+      "relation": "auth.users_inventory",
+      "oldRows": 94,
+      "newRows": 95,
+      "oldFingerprint": "7a7c585b95d6384f39e8e4fe49e22811",
+      "newFingerprint": "6aa6c3d524eceb9dd7e3c9d3cd97c583",
+      "status": "REVIEWED_APPEND"
+    },
+    {
+      "relation": "public.activity_announcements",
+      "oldRows": 6,
+      "newRows": 6,
+      "oldFingerprint": "a477e1841f1f52aa84be99c7e42c9212",
+      "newFingerprint": "a477e1841f1f52aa84be99c7e42c9212",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.activity_logs",
+      "oldRows": 3333,
+      "newRows": 3334,
+      "oldFingerprint": "046b6cb4008189de3e2e85ba940ae4a5",
+      "newFingerprint": "b8ef438a867a4e17cfd988f5bfc6ab23",
+      "status": "REVIEWED_APPEND"
+    },
+    {
+      "relation": "public.admin_accounts",
+      "oldRows": 2,
+      "newRows": 2,
+      "oldFingerprint": "6667025b4e95390384c3e8d21ebd86b9",
+      "newFingerprint": "6667025b4e95390384c3e8d21ebd86b9",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.admin_portal_change_versions",
+      "oldRows": 6,
+      "newRows": 6,
+      "oldFingerprint": "3adec7b30f5510c40a56289af100772b",
+      "newFingerprint": "3adec7b30f5510c40a56289af100772b",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.admin_sessions",
+      "oldRows": 483,
+      "newRows": 484,
+      "oldFingerprint": "8b00a6935584f01320b46a13eb763304",
+      "newFingerprint": "7016ab80b40dbe0a6f48785e8ba7b41e",
+      "status": "REVIEWED_APPEND"
+    },
+    {
+      "relation": "public.admin_system_settings",
+      "oldRows": 68,
+      "newRows": 68,
+      "oldFingerprint": "41cbbcc17101732120fe4ae511cf9fb9",
+      "newFingerprint": "41cbbcc17101732120fe4ae511cf9fb9",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.admin_template_categories",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.admin_ypop_deletion_jobs",
+      "oldRows": 4,
+      "newRows": 4,
+      "oldFingerprint": "605e3150726ac44764f165c6ac17f869",
+      "newFingerprint": "605e3150726ac44764f165c6ac17f869",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.annual_budget_allocations",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "baeafe3ae17c3eb8b1157bb6ea685f80",
+      "newFingerprint": "baeafe3ae17c3eb8b1157bb6ea685f80",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.barangays",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "772803262eb4662effaca6b0f9189a00",
+      "newFingerprint": "772803262eb4662effaca6b0f9189a00",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.budget_purpose_categories",
+      "oldRows": 8,
+      "newRows": 8,
+      "oldFingerprint": "00877f0b785dccfbbbb45fbf24969975",
+      "newFingerprint": "00877f0b785dccfbbbb45fbf24969975",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.budget_request_files",
+      "oldRows": 6,
+      "newRows": 6,
+      "oldFingerprint": "959a679f0db324003bfbd9a41a73bd76",
+      "newFingerprint": "959a679f0db324003bfbd9a41a73bd76",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.budget_requests",
+      "oldRows": 90,
+      "newRows": 90,
+      "oldFingerprint": "57fe3b1985eeb77aef7c8b7e61c43b84",
+      "newFingerprint": "57fe3b1985eeb77aef7c8b7e61c43b84",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.compliance_remarks",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.disclosure_documents",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.document_submission_files",
+      "oldRows": 547,
+      "newRows": 547,
+      "oldFingerprint": "86e23905698f1463ca8324b2f2fdee29",
+      "newFingerprint": "86e23905698f1463ca8324b2f2fdee29",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.document_submissions",
+      "oldRows": 92,
+      "newRows": 92,
+      "oldFingerprint": "cc28a4388e2ed0a521c1a57f6ee6f54d",
+      "newFingerprint": "cc28a4388e2ed0a521c1a57f6ee6f54d",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.events",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.inquiries",
+      "oldRows": 4,
+      "newRows": 4,
+      "oldFingerprint": "86a8b1c7c9bd972b5f61dcbc632033ec",
+      "newFingerprint": "86a8b1c7c9bd972b5f61dcbc632033ec",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.liquidation_report_files",
+      "oldRows": 5,
+      "newRows": 5,
+      "oldFingerprint": "74753e505a742349247f64c80a710765",
+      "newFingerprint": "74753e505a742349247f64c80a710765",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.liquidation_reports",
+      "oldRows": 62,
+      "newRows": 62,
+      "oldFingerprint": "c8feef83d961d102237a129520184554",
+      "newFingerprint": "c8feef83d961d102237a129520184554",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.move_applications",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.move_files",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.news_categories",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "abd1a75ddf10f1e3ec488bb737041d9e",
+      "newFingerprint": "abd1a75ddf10f1e3ec488bb737041d9e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.news_releases",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "798d23db2aef87b5dc37457dd3b2e180",
+      "newFingerprint": "798d23db2aef87b5dc37457dd3b2e180",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.notifications",
+      "oldRows": 173,
+      "newRows": 173,
+      "oldFingerprint": "c9da28803eedeaa26c65b78bb6eda6c9",
+      "newFingerprint": "c9da28803eedeaa26c65b78bb6eda6c9",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.organization_accreditations",
+      "oldRows": 89,
+      "newRows": 89,
+      "oldFingerprint": "61c8deb3bf9495fde59e613cc4f9b7f4",
+      "newFingerprint": "61c8deb3bf9495fde59e613cc4f9b7f4",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.organization_contacts",
+      "oldRows": 212,
+      "newRows": 212,
+      "oldFingerprint": "44b6275d26e3b12bc73b78506cf891f3",
+      "newFingerprint": "44b6275d26e3b12bc73b78506cf891f3",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.organization_profiles",
+      "oldRows": 92,
+      "newRows": 92,
+      "oldFingerprint": "52f00b0d86d0c583a56143629fd7409a",
+      "newFingerprint": "52f00b0d86d0c583a56143629fd7409a",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.organization_reference_counters",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "0982786fe42d4cc6e2931ce03c7620a3",
+      "newFingerprint": "0982786fe42d4cc6e2931ce03c7620a3",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.organization_renewals",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.organization_urn_counters",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "b51b9a427d9ac10351501c0812c8056c",
+      "newFingerprint": "b51b9a427d9ac10351501c0812c8056c",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.organizations",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.policy_versions",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "73a74104d4b95b6ec97c9598656e473c",
+      "newFingerprint": "73a74104d4b95b6ec97c9598656e473c",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.programs",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.required_document_types",
+      "oldRows": 13,
+      "newRows": 13,
+      "oldFingerprint": "0c5e9f03ad34ee1de7605d93eec093d4",
+      "newFingerprint": "0c5e9f03ad34ee1de7605d93eec093d4",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.roles",
+      "oldRows": 4,
+      "newRows": 4,
+      "oldFingerprint": "1dcad3d0e8c8490def0d21146dca21df",
+      "newFingerprint": "1dcad3d0e8c8490def0d21146dca21df",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.transparency_posts",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.units",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "a97f533c92fb2de1bb66f97de4ea00ea",
+      "newFingerprint": "a97f533c92fb2de1bb66f97de4ea00ea",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.urn_review_history",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.user_policy_acceptance",
+      "oldRows": 8,
+      "newRows": 9,
+      "oldFingerprint": "5c16d9135d0a61c4c1a12ef5169a3b6a",
+      "newFingerprint": "08fc7b45a84206f14263f28759a9d624",
+      "status": "REVIEWED_APPEND"
+    },
+    {
+      "relation": "public.user_profiles",
+      "oldRows": 94,
+      "newRows": 95,
+      "oldFingerprint": "27cfd488d99680cdf091e9b22076ba12",
+      "newFingerprint": "bff1ea8e1490becad98c4f6c83a016d6",
+      "status": "REVIEWED_APPEND"
+    },
+    {
+      "relation": "public.user_roles",
+      "oldRows": 94,
+      "newRows": 95,
+      "oldFingerprint": "f2ffd760602a9ce8155f21df268a5bff",
+      "newFingerprint": "9f133f574c7172ba6ad6ef106293d46a",
+      "status": "REVIEWED_APPEND"
+    },
+    {
+      "relation": "public.yorp_sample_document_assets",
+      "oldRows": 6,
+      "newRows": 6,
+      "oldFingerprint": "62c3e8cf15931bfb8c61447e80a5a8dd",
+      "newFingerprint": "62c3e8cf15931bfb8c61447e80a5a8dd",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_city_activities",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "528903a538a50c258a98c6f7566c60c3",
+      "newFingerprint": "528903a538a50c258a98c6f7566c60c3",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_entries",
+      "oldRows": 5,
+      "newRows": 5,
+      "oldFingerprint": "af85bef72658c2ea0eb84d1a98262965",
+      "newFingerprint": "af85bef72658c2ea0eb84d1a98262965",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_event_files",
+      "oldRows": 17,
+      "newRows": 17,
+      "oldFingerprint": "8cbfd3e6b00371e388f42144f4aee2fb",
+      "newFingerprint": "8cbfd3e6b00371e388f42144f4aee2fb",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_event_participations",
+      "oldRows": 14,
+      "newRows": 14,
+      "oldFingerprint": "45edd1bde95490300c5e0e36866476a7",
+      "newFingerprint": "45edd1bde95490300c5e0e36866476a7",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_files",
+      "oldRows": 0,
+      "newRows": 0,
+      "oldFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "newFingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_org_activities",
+      "oldRows": 3,
+      "newRows": 3,
+      "oldFingerprint": "d9970134c1e270bf09164bf6ddf67111",
+      "newFingerprint": "d9970134c1e270bf09164bf6ddf67111",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_org_activity_files",
+      "oldRows": 4,
+      "newRows": 4,
+      "oldFingerprint": "49bd4a87247d409605d93844836c11fb",
+      "newFingerprint": "49bd4a87247d409605d93844836c11fb",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_periods",
+      "oldRows": 1,
+      "newRows": 1,
+      "oldFingerprint": "a836b242db10b87679dfd8e840732f68",
+      "newFingerprint": "a836b242db10b87679dfd8e840732f68",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "public.ypop_submission_deletion_receipts",
+      "oldRows": 2,
+      "newRows": 2,
+      "oldFingerprint": "dc63498e324a7f91ce15207b07f05fc7",
+      "newFingerprint": "dc63498e324a7f91ce15207b07f05fc7",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "storage.buckets",
+      "oldRows": 10,
+      "newRows": 10,
+      "oldFingerprint": "832ce1466eb597a15f1082c9544eb540",
+      "newFingerprint": "832ce1466eb597a15f1082c9544eb540",
+      "status": "UNCHANGED"
+    },
+    {
+      "relation": "storage.objects",
+      "oldRows": 378,
+      "newRows": 378,
+      "oldFingerprint": "67284160e3ab4a273194aad042e84e40",
+      "newFingerprint": "67284160e3ab4a273194aad042e84e40",
+      "status": "UNCHANGED"
+    }
+  ]
+}

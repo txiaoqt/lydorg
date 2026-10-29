@@ -1,0 +1,223 @@
+diff --git a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T144500Z/windows-archive-fixture.cs b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145500Z/windows-archive-fixture.cs
+index 8adeeeb..6466591 100644
+--- a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T144500Z/windows-archive-fixture.cs
++++ b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145500Z/windows-archive-fixture.cs
+@@ -1,6 +1,7 @@
+ // OFFLINE F2-A FIXTURE LIBRARY ONLY. No production adapter or executable entrypoint.
+ // Only the hard-coded candidate fixture tree is admitted. No protected-state binding.
+-// Win32 x64 FILE_RENAME_INFO (class 3), ReplaceIfExists = FALSE, held parent handle.
++// Win32 x64 FILE_RENAME_INFO (class 3), ReplaceIfExists = FALSE, NULL RootDirectory.
++// Absolute destination stays within the held and identity-checked parent/ancestor chain.
+ // No MoveFileEx, copy, delete, cleanup, restore, alternate primitive, or retry.
+ using System;
+ using System.Collections.Generic;
+@@ -73,7 +74,7 @@ namespace YTraceF2A {
+         }
+     }
+     public static class FixtureArchive {
+-        public const string FixtureRoot = @"C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-f2a-windows-archive-20261014T144500Z\fixtures";
++        public const string FixtureRoot = @"C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-f2a-windows-archive-20261014T145500Z\fixtures";
+         internal static void Need(bool condition, string code) { if (!condition) throw new ArchiveFault(code); }
+         internal static string DirectoryPath(string input) {
+             Need(OperatingSystem.IsWindows() && IntPtr.Size == 8, "WINDOWS_X64_REQUIRED");
+@@ -198,13 +199,13 @@ namespace YTraceF2A {
+             FixtureArchive.Need(String.Equals(Native.Final(handle),source,StringComparison.OrdinalIgnoreCase), "SOURCE_MOVED_BEFORE_SUBMISSION");
+             FixtureArchive.Need(String.Equals(Native.Final(chain[chain.Count-1]),dir,StringComparison.OrdinalIgnoreCase), "DIRECTORY_MOVED_BEFORE_SUBMISSION");
+             // x64 FILE_RENAME_INFO: BOOLEAN/union at 0, RootDirectory at 8, FileNameLength at 16, UTF16 name at 20.
+-            byte[] name=Encoding.Unicode.GetBytes(Path.GetFileName(destination));
++            byte[] name=Encoding.Unicode.GetBytes(destination);
+             int length=Math.Max(32,20+name.Length+2);
+             IntPtr buffer=Marshal.AllocHGlobal(length);
+             try {
+                 Marshal.Copy(new byte[length],0,buffer,length);
+                 Marshal.WriteInt32(buffer,0,0); // ReplaceIfExists FALSE. No replace, POSIX, or copy flags.
+-                Marshal.WriteIntPtr(buffer,8,chain[chain.Count-1].DangerousGetHandle());
++                Marshal.WriteIntPtr(buffer,8,IntPtr.Zero); // Win32 FILE_RENAME_INFO RootDirectory must be NULL here.
+                 Marshal.WriteInt32(buffer,16,name.Length);
+                 Marshal.Copy(name,0,IntPtr.Add(buffer,20),name.Length);
+                 nativeOk=Native.SetFileInformationByHandle(handle,3,buffer,(uint)length);
+diff --git a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T144500Z/windows-archive-fixture.tests.cs b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145500Z/windows-archive-fixture.tests.cs
+index 1fee315..eab001e 100644
+--- a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T144500Z/windows-archive-fixture.tests.cs
++++ b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145500Z/windows-archive-fixture.tests.cs
+@@ -171,7 +171,7 @@ namespace YTraceF2A {
+                 Text(Path.Combine(dir,"source.bin"),Original); Text(Path.Combine(dir,"archive.bin"),"SYNTHETIC EXISTING");
+             });
+             Case("fixture root, traversal, alternate stream and same-leaf inputs fail before rename",()=>{
+-                string dir=Path.Combine(Session,"normal");
++                string dir=Dir("unsafe-inputs"); Write(Path.Combine(dir,"archive.bin"),Original);
+                 Rejected(()=>FixtureArchive.Capture(@"C:\not-an-admitted-fixture","source.bin"),"FIXTURE_ROOT_ONLY");
+                 Rejected(()=>FixtureArchive.Capture(dir+@"\..\normal","archive.bin"),"NONCANONICAL_PATH");
+                 Rejected(()=>FixtureArchive.Capture(dir,"archive.bin:stream"),"UNSAFE_LEAF");
+@@ -179,36 +179,48 @@ namespace YTraceF2A {
+                 Rejected(()=>FixtureArchive.ArchiveOnce(dir,"archive.bin","ARCHIVE.BIN",before),"SAME_LEAF_REJECTED");
+             });
+         }
+-        public static FileBinding PrepareRedirectedDirectoryFixture() {
+-            string dir=Dir("redirected-parent"); Write(Path.Combine(dir,"source.bin"),Original);
+-            var binding=FixtureArchive.Capture(dir,"source.bin");
+-            Directory.Move(dir,dir+"-retained");
+-            string target=Dir("redirect-target"); Write(Path.Combine(target,"source.bin"),"SYNTHETIC REDIRECT TARGET");
+-            return binding;
+-        }
+-        public static void CheckRedirectedDirectory(FileBinding binding) {
+-            Case("actual NTFS junction at source parent rejected before rename",()=>{
+-                string dir=Path.Combine(Session,"redirected-parent");
+-                Rejected(()=>FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",binding),"REPARSE_DIRECTORY_REJECTED");
+-                Text(Path.Combine(Session,"redirected-parent-retained","source.bin"),Original);
+-                Text(Path.Combine(Session,"redirect-target","source.bin"),"SYNTHETIC REDIRECT TARGET");
+-                Check(!File.Exists(Path.Combine(Session,"redirect-target","archive.bin")),"REDIRECT_TARGET_RENAMED");
++        public static void RunDirectoryDestinationCase() {
++            Case("preexisting directory destination rejected without replacing directory or source",()=>{
++                string dir=Dir("directory-destination"); Write(Path.Combine(dir,"source.bin"),Original);
++                Directory.CreateDirectory(Path.Combine(dir,"archive.bin"));
++                Write(Path.Combine(dir,"archive.bin","sentinel.bin"),"SYNTHETIC RETAINED DIRECTORY");
++                var before=FixtureArchive.Capture(dir,"source.bin");
++                var result=FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",before);
++                Check(result.Status!="ARCHIVED_AND_VERIFIED","DIRECTORY_DESTINATION_REPLACED");
++                Text(Path.Combine(dir,"source.bin"),Original);
++                Text(Path.Combine(dir,"archive.bin","sentinel.bin"),"SYNTHETIC RETAINED DIRECTORY");
++                Console.WriteLine("# existing directory nativeError="+result.NativeError+" status="+result.Status);
+             });
+         }
+-        public static FileBinding PrepareDestinationJunctionFixture() {
+-            string dir=Dir("destination-junction"); Write(Path.Combine(dir,"source.bin"),Original);
+-            string target=Dir("destination-junction-target"); Write(Path.Combine(target,"sentinel.bin"),"SYNTHETIC DESTINATION TARGET");
+-            return FixtureArchive.Capture(dir,"source.bin");
++        public static void PrepareProcessRace() {
++            string dir=Dir("process-race");
++            Write(Path.Combine(dir,"source-a.bin"),"SYNTHETIC PROCESS A");
++            Write(Path.Combine(dir,"source-b.bin"),"SYNTHETIC PROCESS B");
+         }
+-        public static void CheckDestinationJunction(FileBinding binding) {
+-            Case("actual junction destination cannot be replaced or followed by rename",()=>{
+-                string dir=Path.Combine(Session,"destination-junction");
+-                var result=FixtureArchive.ArchiveOnce(dir,"source.bin","archive.bin",binding);
+-                Check(result.Status!="ARCHIVED_AND_VERIFIED","JUNCTION_DESTINATION_REPLACED");
+-                Text(Path.Combine(dir,"source.bin"),Original);
+-                Text(Path.Combine(Session,"destination-junction-target","sentinel.bin"),"SYNTHETIC DESTINATION TARGET");
+-                Check((File.GetAttributes(Path.Combine(dir,"archive.bin"))&FileAttributes.ReparsePoint)!=0,"JUNCTION_REMOVED");
+-                Console.WriteLine("# destination junction nativeError="+result.NativeError+" status="+result.Status);
++        public static void RaceChildOnly(string contender) {
++            Check(contender=="A"||contender=="B","FIXED_CONTENDER_ONLY");
++            string dir=Path.Combine(Session,"process-race");
++            string leaf=contender=="A"?"source-a.bin":"source-b.bin";
++            var before=FixtureArchive.Capture(dir,leaf);
++            using(var op=FixtureArchive.Prepare(dir,leaf,"archive.bin",before)) {
++                Console.WriteLine("READY"); Console.Out.Flush();
++                Check(Console.ReadLine()=="GO","FIXED_RACE_GO_REQUIRED");
++                op.SubmitOnce(); var result=op.VerifySubmitted();
++                Console.WriteLine(result.Status+"|"+result.NativeError+"|"+result.Submissions);
++                Console.Out.Flush();
++            }
++        }
++        public static void CheckProcessRace(string first,string second) {
++            Case("two actual child processes contend for the same destination",()=>{
++                bool a=first=="ARCHIVED_AND_VERIFIED|0|1",b=second=="ARCHIVED_AND_VERIFIED|0|1";
++                Check(a^b,"PROCESS_RACE_NOT_ONE_WINNER");
++                string loser=a?second:first;
++                Check(loser=="REJECTED_DESTINATION_EXISTS|183|1" || loser=="REJECTED_DESTINATION_EXISTS|80|1","PROCESS_RACE_LOSER_NOT_COLLISION");
++                string dir=Path.Combine(Session,"process-race");
++                Text(Path.Combine(dir,"archive.bin"),a?"SYNTHETIC PROCESS A":"SYNTHETIC PROCESS B");
++                Text(Path.Combine(dir,a?"source-b.bin":"source-a.bin"),a?"SYNTHETIC PROCESS B":"SYNTHETIC PROCESS A");
++                Check(!File.Exists(Path.Combine(dir,a?"source-a.bin":"source-b.bin")),"PROCESS_RACE_WINNER_SOURCE_REMAINS");
++                Console.WriteLine("# independentProcesses=2 dispatches=2 winner="+(a?"A":"B")+" loser="+loser);
+             });
+         }
+         public static FileBinding PrepareHardlinkFixture() {
+diff --git a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T144500Z/invoke-fixture-tests.ps1 b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145500Z/invoke-fixture-tests.ps1
+index 0b18b15..6a946df 100644
+--- a/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T144500Z/invoke-fixture-tests.ps1
++++ b/docs/production-security/budget-deletion-pause/offline-f2a-windows-archive-20261014T145500Z/invoke-fixture-tests.ps1
+@@ -1,51 +1,58 @@
+ # OFFLINE F2-A FIXTURE TESTS ONLY. Not a preflight or production entrypoint.
+ [CmdletBinding()]
+-param([switch]$CrashFixtureOnly)
++param([switch]$CrashFixtureOnly,[ValidateSet('A','B')][string]$RaceFixtureOnly)
+ $ErrorActionPreference='Stop'
+-$expected='C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-f2a-windows-archive-20261014T144500Z'
++$expected='C:\Users\Christopher x Angel\Documents\lydo-connect-org-focused\docs\production-security\budget-deletion-pause\offline-f2a-windows-archive-20261014T145500Z'
+ if(-not [String]::Equals($PSScriptRoot,$expected,[StringComparison]::OrdinalIgnoreCase)){throw 'FIXED_CANDIDATE_DIRECTORY_REQUIRED'}
++if($CrashFixtureOnly -and $RaceFixtureOnly){throw 'ONE_FIXTURE_MODE_ONLY'}
+ Add-Type -Path @((Join-Path $PSScriptRoot 'windows-archive-fixture.cs'),(Join-Path $PSScriptRoot 'windows-archive-fixture.tests.cs')) -ErrorAction Stop
+ if($CrashFixtureOnly){[YTraceF2A.FixtureTests]::CrashChildOnly();throw 'CRASH_CHILD_RETURNED'}
++if($RaceFixtureOnly){[YTraceF2A.FixtureTests]::RaceChildOnly($RaceFixtureOnly);exit 0}
++function New-FixtureChild([string[]]$ExtraArgs){
++    $start=[Diagnostics.ProcessStartInfo]::new()
++    $start.FileName='C:\Users\Christopher x Angel\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.exe'
++    $start.UseShellExecute=$false;$start.CreateNoWindow=$true
++    $start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true;$start.RedirectStandardInput=$true
++    foreach($arg in @('-NoLogo','-NoProfile','-NonInteractive','-File',(Join-Path $PSScriptRoot 'invoke-fixture-tests.ps1'))+$ExtraArgs){$start.ArgumentList.Add($arg)}
++    $start.WorkingDirectory=$PSScriptRoot
++    $start.Environment.Clear()
++    $start.Environment['SystemRoot']='C:\Windows';$start.Environment['WINDIR']='C:\Windows'
++    $start.Environment['TEMP']=(Join-Path $PSScriptRoot 'compiler-temp');$start.Environment['TMP']=(Join-Path $PSScriptRoot 'compiler-temp')
++    $child=[Diagnostics.Process]::new();$child.StartInfo=$start
++    $null=$child.Start()
++    return $child
++}
+ Write-Output '# Actual Windows NTFS disposable-fixture suite; no production I/O'
+ [YTraceF2A.FixtureTests]::RunMainCases()
+-$redirect=[YTraceF2A.FixtureTests]::PrepareRedirectedDirectoryFixture()
++[YTraceF2A.FixtureTests]::RunDirectoryDestinationCase()
+ $session=[YTraceF2A.FixtureTests]::Session
+-$null=New-Item -ItemType Junction -Path (Join-Path $session 'redirected-parent') -Value (Join-Path $session 'redirect-target') -ErrorAction Stop
+-[YTraceF2A.FixtureTests]::CheckRedirectedDirectory($redirect)
+-$destination=[YTraceF2A.FixtureTests]::PrepareDestinationJunctionFixture()
+-$null=New-Item -ItemType Junction -Path (Join-Path $session 'destination-junction\archive.bin') -Value (Join-Path $session 'destination-junction-target') -ErrorAction Stop
+-[YTraceF2A.FixtureTests]::CheckDestinationJunction($destination)
+ $hardlink=[YTraceF2A.FixtureTests]::PrepareHardlinkFixture()
+ $null=New-Item -ItemType HardLink -Path (Join-Path $session 'hardlink-source\alias.bin') -Value (Join-Path $session 'hardlink-source\source.bin') -ErrorAction Stop
+ [YTraceF2A.FixtureTests]::CheckHardlink($hardlink)
++# The first revision's real junction-creation attempt was denied. Preserve that evidence;
++# do not retry it via another API or claim actual junction/redirection coverage.
++Write-Output '# BLOCKED: junction/redirection fixtures; prior real New-Item Junction returned Access is denied. No alternate attempt.'
++[YTraceF2A.FixtureTests]::PrepareProcessRace()
++$a=New-FixtureChild -ExtraArgs @('-RaceFixtureOnly','A')
++$b=New-FixtureChild -ExtraArgs @('-RaceFixtureOnly','B')
++$ea=$a.StandardError.ReadToEndAsync();$eb=$b.StandardError.ReadToEndAsync()
++$readyA=$a.StandardOutput.ReadLineAsync();$readyB=$b.StandardOutput.ReadLineAsync()
++if(-not $readyA.Wait(15000) -or -not $readyB.Wait(15000)){throw 'PROCESS_RACE_READY_TIMEOUT_UNRESOLVED_RETAIN_FIXTURES_NO_RETRY'}
++if($readyA.Result -ne 'READY' -or $readyB.Result -ne 'READY'){throw 'PROCESS_RACE_READY_MISMATCH'}
++$a.StandardInput.WriteLine('GO');$a.StandardInput.Flush();$a.StandardInput.Close()
++$b.StandardInput.WriteLine('GO');$b.StandardInput.Flush();$b.StandardInput.Close()
++$oa=$a.StandardOutput.ReadToEndAsync();$ob=$b.StandardOutput.ReadToEndAsync()
++if(-not $a.WaitForExit(15000) -or -not $b.WaitForExit(15000)){throw 'PROCESS_RACE_EXIT_TIMEOUT_UNRESOLVED_RETAIN_FIXTURES_NO_RETRY'}
++if($a.ExitCode -ne 0 -or $b.ExitCode -ne 0 -or $ea.GetAwaiter().GetResult().Length -ne 0 -or $eb.GetAwaiter().GetResult().Length -ne 0){throw 'PROCESS_RACE_CHILD_FAILED'}
++[YTraceF2A.FixtureTests]::CheckProcessRace($oa.GetAwaiter().GetResult().Trim(),$ob.GetAwaiter().GetResult().Trim())
+ [YTraceF2A.FixtureTests]::PrepareCrashFixture()
+-$start=[Diagnostics.ProcessStartInfo]::new()
+-$start.FileName='C:\Users\Christopher x Angel\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.exe'
+-$start.UseShellExecute=$false
+-$start.CreateNoWindow=$true
+-$start.RedirectStandardOutput=$true
+-$start.RedirectStandardError=$true
+-foreach($arg in @('-NoLogo','-NoProfile','-NonInteractive','-File',(Join-Path $PSScriptRoot 'invoke-fixture-tests.ps1'),'-CrashFixtureOnly')){$start.ArgumentList.Add($arg)}
+-$start.WorkingDirectory=$PSScriptRoot
+-$start.Environment.Clear()
+-$start.Environment['SystemRoot']='C:\Windows'
+-$start.Environment['WINDIR']='C:\Windows'
+-$start.Environment['TEMP']=(Join-Path $PSScriptRoot 'compiler-temp')
+-$start.Environment['TMP']=(Join-Path $PSScriptRoot 'compiler-temp')
+-$child=[Diagnostics.Process]::new()
+-$child.StartInfo=$start
+-$null=$child.Start()
+-$out=$child.StandardOutput.ReadToEndAsync()
+-$err=$child.StandardError.ReadToEndAsync()
+-if(-not $child.WaitForExit(20000)){
+-    $child.Kill($true)
+-    throw 'OFFLINE_CRASH_CHILD_TIMEOUT_UNRESOLVED_NO_RETRY_FIXTURES_RETAINED'
+-}
+-$childOut=$out.GetAwaiter().GetResult()
+-$childErr=$err.GetAwaiter().GetResult()
++$child=New-FixtureChild -ExtraArgs @('-CrashFixtureOnly')
++$out=$child.StandardOutput.ReadToEndAsync();$err=$child.StandardError.ReadToEndAsync()
++if(-not $child.WaitForExit(15000)){throw 'OFFLINE_CRASH_CHILD_TIMEOUT_UNRESOLVED_RETAIN_FIXTURES_NO_RETRY'}
++$childOut=$out.GetAwaiter().GetResult();$childErr=$err.GetAwaiter().GetResult()
+ if($childErr.Length -ne 0){throw 'OFFLINE_CRASH_CHILD_STDERR_NONEMPTY'}
+ [YTraceF2A.FixtureTests]::CheckCrashResult($child.ExitCode,$childOut)
+ Write-Output ('1..'+[YTraceF2A.FixtureTests]::Total)
+-Write-Output ('# pass='+[YTraceF2A.FixtureTests]::Passed+' fail='+[YTraceF2A.FixtureTests]::Failed+' fixtures-retained=true')
++Write-Output ('# pass='+[YTraceF2A.FixtureTests]::Passed+' fail='+[YTraceF2A.FixtureTests]::Failed+' blockedProperties=1 fixtures-retained=true')
+ if([YTraceF2A.FixtureTests]::Failed -ne 0){exit 1}
+ exit 0

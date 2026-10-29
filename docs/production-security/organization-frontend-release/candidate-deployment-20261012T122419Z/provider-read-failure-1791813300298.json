@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-10-12T13:55:00.298Z",
+  "endpoint": "/v2/teams/team_lrnDtn1fujS9WebCMQoWHmGR",
+  "exitCode": 1,
+  "timedOut": false,
+  "exceeded": false,
+  "stderrSha256": "c0087e6e4c3acd1885e9866c5087ed9c46ec9c012deee4e820d9b28b86a8dc05",
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "authenticationRequired": false,
+  "networkFailure": true
+}

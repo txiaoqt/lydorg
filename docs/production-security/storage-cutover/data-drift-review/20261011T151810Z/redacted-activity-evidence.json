@@ -1,0 +1,373 @@
+{
+  "status": "LEGITIMATE_WORKFLOWS_CORROBORATED",
+  "basis": "Native preexisting-record fingerprints, trusted provider identity, unchanged signup trigger/default role, ownership/RLS rules, external Auth audit and gateway request logs.",
+  "redactedInvestigation": {
+    "status": "READ_ONLY_REVIEW_COMPLETE",
+    "project": "mqqaykksadotbrghbexz",
+    "capturedAt": "2026-10-11T15:20:45.922Z",
+    "baselineCapturedAt": "2026-10-11 12:35:21.363922+00",
+    "preexistingRecords": [
+      {
+        "relation": "auth.identities_inventory",
+        "baselineRows": 95,
+        "preexistingRows": 95,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "auth.users_inventory",
+        "baselineRows": 94,
+        "preexistingRows": 94,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.activity_logs",
+        "baselineRows": 3333,
+        "preexistingRows": 3333,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.admin_sessions",
+        "baselineRows": 483,
+        "preexistingRows": 483,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.user_policy_acceptance",
+        "baselineRows": 8,
+        "preexistingRows": 8,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.user_profiles",
+        "baselineRows": 94,
+        "preexistingRows": 94,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      },
+      {
+        "relation": "public.user_roles",
+        "baselineRows": 94,
+        "preexistingRows": 94,
+        "rowCountMatches": true,
+        "contentFingerprintMatches": true
+      }
+    ],
+    "redactedActivity": {
+      "new_roles": [
+        {
+          "role": "youth",
+          "user_alias": "new-user-1",
+          "assigned_at": "2026-10-11T14:36:56.049075+00:00",
+          "permissions": [],
+          "linked_user_exists": true,
+          "assigned_by_is_null": true,
+          "matches_signup_default": true,
+          "assignment_seconds_from_auth": -0.011
+        }
+      ],
+      "new_users": [
+        {
+          "alias": "new-user-1",
+          "banned": false,
+          "anonymous": false,
+          "created_at": "2026-10-11T14:36:56.05982+00:00",
+          "role_count": 1,
+          "updated_at": "2026-10-11T14:36:56.178396+00:00",
+          "profile_count": 1,
+          "identity_count": 1,
+          "last_sign_in_at": "2026-10-11T14:36:56.131805+00:00",
+          "admin_account_link": false,
+          "authenticated_role": true,
+          "email_confirmed_at": "2026-10-11T14:36:56.127752+00:00",
+          "organization_count": 0,
+          "app_metadata_provider": "google",
+          "authenticated_audience": true,
+          "has_authorization_metadata": false,
+          "unexpected_app_metadata_fields": false
+        }
+      ],
+      "auth_events": null,
+      "new_consent": [
+        {
+          "created_at": "2026-10-11T14:37:02.25832+00:00",
+          "user_alias": "new-user-1",
+          "accepted_at": "2026-10-11T14:37:02.25832+00:00",
+          "active_policy": true,
+          "accepted_terms": true,
+          "accepted_privacy": true,
+          "linked_user_exists": true,
+          "user_agent_present": true,
+          "after_auth_creation": true,
+          "linked_policy_exists": true
+        }
+      ],
+      "new_profiles": [
+        {
+          "created_at": "2026-10-11T14:36:56.049075+00:00",
+          "updated_at": "2026-10-11T14:36:56.049075+00:00",
+          "user_alias": "new-user-1",
+          "email_matches_user": true,
+          "linked_user_exists": true,
+          "contact_matches_signup": true,
+          "full_name_matches_signup": true,
+          "creation_seconds_from_auth": -0.011,
+          "display_name_matches_signup": true
+        }
+      ],
+      "new_sessions": [
+        {
+          "admin_role": "super_admin",
+          "created_at": "2026-10-11T14:37:24.328655+00:00",
+          "expires_at": "2026-10-11T15:37:26.283293+00:00",
+          "revoked_at": null,
+          "admin_active": true,
+          "last_used_at": "2026-10-11T14:37:40.896965+00:00",
+          "admin_preexisting": true,
+          "admin_password_set": true,
+          "linked_admin_exists": true,
+          "matching_signin_audits": 1,
+          "actual_duration_minutes": 60.033,
+          "configured_timeout_minutes": 60
+        }
+      ],
+      "new_identities": [
+        {
+          "provider": "google",
+          "created_at": "2026-10-11T14:36:56.122017+00:00",
+          "updated_at": "2026-10-11T14:36:56.122017+00:00",
+          "user_alias": "new-user-1",
+          "email_matches_user": true,
+          "linked_user_exists": true,
+          "provider_email_verified": true
+        }
+      ],
+      "new_activity_logs": [
+        {
+          "action": "admin_sign_in",
+          "created_at": "2026-10-11T14:37:24.328655+00:00",
+          "organization_is_null": true,
+          "matching_new_sessions": 1,
+          "actor_is_new_auth_user": false,
+          "actor_is_existing_admin": true,
+          "related_id_matches_actor": true,
+          "related_type_is_admin_session": true,
+          "description_matches_login_format": true
+        }
+      ]
+    },
+    "databaseWrites": 0,
+    "credentialValuesLogged": false
+  },
+  "authLogs": [
+    {
+      "action": "user_signedup",
+      "actor_matches_reviewed_new_user": 1,
+      "audit_created_at": "2026-10-11T14:36:56.127681218Z",
+      "auth_path": "<other>",
+      "error_present": 0,
+      "http_status": null,
+      "method": "",
+      "provider": "google",
+      "source": "auth_audit_logs"
+    },
+    {
+      "action": "<other>",
+      "actor_matches_reviewed_new_user": 0,
+      "audit_created_at": "",
+      "auth_path": "/token",
+      "error_present": 1,
+      "http_status": 400,
+      "method": "POST",
+      "provider": "<not-recorded>",
+      "source": "auth_logs"
+    },
+    {
+      "action": "<other>",
+      "actor_matches_reviewed_new_user": 0,
+      "audit_created_at": "",
+      "auth_path": "/authorize",
+      "error_present": 0,
+      "http_status": 302,
+      "method": "GET",
+      "provider": "<not-recorded>",
+      "source": "auth_logs"
+    },
+    {
+      "action": "<other>",
+      "actor_matches_reviewed_new_user": 0,
+      "audit_created_at": "",
+      "auth_path": "/authorize",
+      "error_present": 0,
+      "http_status": null,
+      "method": "GET",
+      "provider": "google",
+      "source": "auth_logs"
+    },
+    {
+      "action": "user_signedup",
+      "actor_matches_reviewed_new_user": 1,
+      "audit_created_at": "",
+      "auth_path": "/callback",
+      "error_present": 0,
+      "http_status": 302,
+      "method": "GET",
+      "provider": "google",
+      "source": "auth_logs"
+    },
+    {
+      "action": "<other>",
+      "actor_matches_reviewed_new_user": 1,
+      "audit_created_at": "",
+      "auth_path": "<other>",
+      "error_present": 0,
+      "http_status": null,
+      "method": "",
+      "provider": "google",
+      "source": "auth_logs"
+    },
+    {
+      "action": "<other>",
+      "actor_matches_reviewed_new_user": 0,
+      "audit_created_at": "",
+      "auth_path": "/user",
+      "error_present": 0,
+      "http_status": 200,
+      "method": "GET",
+      "provider": "<not-recorded>",
+      "source": "auth_logs"
+    },
+    {
+      "action": "<other>",
+      "actor_matches_reviewed_new_user": 0,
+      "audit_created_at": "",
+      "auth_path": "/token",
+      "error_present": 1,
+      "http_status": 400,
+      "method": "POST",
+      "provider": "<not-recorded>",
+      "source": "auth_logs"
+    }
+  ],
+  "requestLogs": [
+    {
+      "api_key_role": "<absent>",
+      "http_status": 302,
+      "jwt_role": "<absent>",
+      "method": "GET",
+      "path": "/auth/v1/callback",
+      "requests": 1,
+      "subject_matches_reviewed_new_user": 0
+    },
+    {
+      "api_key_role": "<absent>",
+      "http_status": 200,
+      "jwt_role": "<absent>",
+      "method": "OPTIONS",
+      "path": "/auth/v1/token",
+      "requests": 1,
+      "subject_matches_reviewed_new_user": 0
+    },
+    {
+      "api_key_role": "anon",
+      "http_status": 400,
+      "jwt_role": "anon",
+      "method": "POST",
+      "path": "/auth/v1/token",
+      "requests": 2,
+      "subject_matches_reviewed_new_user": 0
+    },
+    {
+      "api_key_role": "<absent>",
+      "http_status": 200,
+      "jwt_role": "<absent>",
+      "method": "OPTIONS",
+      "path": "/rest/v1/rpc/authenticate_admin_account",
+      "requests": 1,
+      "subject_matches_reviewed_new_user": 0
+    },
+    {
+      "api_key_role": "anon",
+      "http_status": 200,
+      "jwt_role": "anon",
+      "method": "POST",
+      "path": "/rest/v1/rpc/authenticate_admin_account",
+      "requests": 1,
+      "subject_matches_reviewed_new_user": 0
+    },
+    {
+      "api_key_role": "anon",
+      "http_status": 200,
+      "jwt_role": "authenticated",
+      "method": "GET",
+      "path": "/rest/v1/user_policy_acceptance",
+      "requests": 1,
+      "subject_matches_reviewed_new_user": 1
+    },
+    {
+      "api_key_role": "<absent>",
+      "http_status": 200,
+      "jwt_role": "<absent>",
+      "method": "OPTIONS",
+      "path": "/rest/v1/user_policy_acceptance",
+      "requests": 2,
+      "subject_matches_reviewed_new_user": 0
+    },
+    {
+      "api_key_role": "anon",
+      "http_status": 201,
+      "jwt_role": "authenticated",
+      "method": "POST",
+      "path": "/rest/v1/user_policy_acceptance",
+      "requests": 1,
+      "subject_matches_reviewed_new_user": 1
+    }
+  ],
+  "failedPasswordRequests": [
+    {
+      "error_code": "invalid_credentials",
+      "grant_type": "password",
+      "requests": 1
+    },
+    {
+      "error_code": "user_banned",
+      "grant_type": "password",
+      "requests": 1
+    }
+  ],
+  "adminSessionRequests": [
+    {
+      "http_status": 200,
+      "method": "OPTIONS",
+      "path": "/rest/v1/rpc/admin_refresh_session",
+      "requests": 1
+    },
+    {
+      "http_status": 200,
+      "method": "POST",
+      "path": "/rest/v1/rpc/admin_refresh_session",
+      "requests": 1
+    },
+    {
+      "http_status": 200,
+      "method": "OPTIONS",
+      "path": "/rest/v1/rpc/get_admin_permission_context",
+      "requests": 1
+    },
+    {
+      "http_status": 200,
+      "method": "POST",
+      "path": "/rest/v1/rpc/get_admin_permission_context",
+      "requests": 1
+    }
+  ],
+  "limitations": [
+    "Human intent behind the denied password attempts is not established. They granted no access and do not explain the successful record additions.",
+    "Auth inventory fingerprints cover the reviewed metadata projection, not password hashes or every Auth column.",
+    "Platform events and server authorization establish the supported workflow; the physical human operator is not identified."
+  ]
+}

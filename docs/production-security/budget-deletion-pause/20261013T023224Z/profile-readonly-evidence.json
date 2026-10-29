@@ -1,0 +1,21 @@
+[
+  {
+    "evidence": {
+      "status": "pending_review",
+      "provider": "google",
+      "auth_role": "authenticated",
+      "created_at": "2026-10-12T14:25:31.999995+00:00",
+      "updated_at": "2026-10-12T14:25:31.968554+00:00",
+      "auth_exists": true,
+      "admin_linked": false,
+      "profile_alias": "2c2732174d1111e4",
+      "profile_count": 93,
+      "identity_count": 1,
+      "application_roles": [
+        "youth"
+      ],
+      "expected_owner_sha256": "dc239fb97d3966e4b35d4c4d913e3ad7387a434aea5492055771bd7fdf72ba02",
+      "operator_identity_attribution": "NOT ESTABLISHED BY THIS QUERY"
+    }
+  }
+]

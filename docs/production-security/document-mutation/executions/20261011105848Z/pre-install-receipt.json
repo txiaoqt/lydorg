@@ -1,0 +1,96 @@
+{
+  "status": "PRECONDITIONS_PASSED_NOT_EXECUTED",
+  "authorizedProject": "mqqaykksadotbrghbexz",
+  "authorizedSql": "docs/production-security/document-mutation/rebaseline-20261011T095424Z/document_mutation_lifecycle_guard_production_rebaselined.sql",
+  "sqlSha256": "bd06efbc326146cabf00ef005401a5bb7aa4a060927d7bffb63eafcf0f35f567",
+  "sqlBytes": 170636,
+  "preparedAtUtc": "2026-10-11 10:58:48 UTC",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "exclusiveWindowHumanConfirmation": true,
+  "executionMethod": "Fixed production project Supabase control-plane execute_sql; exact standalone transaction",
+  "migrationReceipt": "External only; candidate does not insert a database receipt",
+  "expectedMigrationCount": 164,
+  "expectedMigrationLatest": "20261011230000",
+  "expectedMigrationVersionNameMd5": "2d1ea52795f2d3c97c71e229819d9a7c",
+  "expectedCompleteMigrationHistoryMd5": "1f5eca911f6e2057ae070a955eaca3dc",
+  "originalLockTimeout": "5s",
+  "originalStatementTimeout": "30s",
+  "automaticRetry": false,
+  "liveMutationTestsAuthorized": false,
+  "preflight": {
+    "database": "postgres",
+    "read_only": "on",
+    "verified_at": "2026-10-11T10:58:50.911899+00:00",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "database_create": true,
+    "migration_records": 164,
+    "file_table_trigger": true,
+    "exact_catalog_match": true,
+    "public_schema_create": true,
+    "containment_marker_count": 4,
+    "submission_table_trigger": true,
+    "target_function_owners_match": true
+  },
+  "connection": {
+    "database": "postgres",
+    "read_only": "on",
+    "server_port": 5432,
+    "verified_at": "2026-10-11T10:56:35.88409+00:00",
+    "current_user": "postgres",
+    "session_user": "postgres",
+    "server_address": "2406:da1c:4c7:f800:e263:668:14a1:4880",
+    "server_version": "17.6",
+    "active_sessions": {
+      "ddl_candidates": 0,
+      "ddl_lock_waiters": 0,
+      "active_other_sessions": 0,
+      "open_other_transactions": 0
+    },
+    "schema_grants_md5": "bf20f44d6ac1985675351dae9be6bee3",
+    "default_privileges": [
+      {
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+        "owner": "postgres",
+        "schema": "public",
+        "object_type": "S"
+      },
+      {
+        "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "schema": "public",
+        "object_type": "f"
+      },
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "owner": "postgres",
+        "schema": "public",
+        "object_type": "r"
+      },
+      {
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+        "owner": "postgres",
+        "schema": "storage",
+        "object_type": "S"
+      },
+      {
+        "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "schema": "storage",
+        "object_type": "f"
+      },
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "owner": "postgres",
+        "schema": "storage",
+        "object_type": "r"
+      }
+    ],
+    "all_rls_policies_md5": "dcd94dd5098884fdf36e086a281a4825",
+    "existing_triggers_md5": "49ec58979964fc37520f88b9f1a41f4c",
+    "unrelated_functions_md5": "4d907c217217a7cbdfe654c10b9b57f5",
+    "table_security_and_structure_md5": "4bec8f408bb97952615161df762e9e9b"
+  }
+}
+

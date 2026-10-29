@@ -1,0 +1,1947 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "results": [
+    {
+      "check": "Org A reads its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 722
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 651
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 379
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 334
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 139
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 319
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 335
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 597
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 148
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 364
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 312
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 129
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 309
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 132
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 604
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 145
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 359
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 348
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 131
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 320
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 126
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 685
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 146
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 325
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 321
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 129
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 335
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 132
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 583
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 134
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 338
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 309
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 314
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 145
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 200,
+          "durationMs": 624
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 359
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 354
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 323
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 146
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+          "status": 400,
+          "durationMs": 310
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 159
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+          "status": 200,
+          "durationMs": 968
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 200,
+          "durationMs": 149
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 200,
+          "durationMs": 317
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+          "status": 400,
+          "durationMs": 336
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 400,
+          "durationMs": 137
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+          "status": 400,
+          "durationMs": 331
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 400,
+          "durationMs": 170
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+          "status": 200,
+          "durationMs": 863
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 200,
+          "durationMs": 150
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 200,
+          "durationMs": 356
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+          "status": 400,
+          "durationMs": 341
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 400,
+          "durationMs": 147
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+          "status": 400,
+          "durationMs": 341
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 400,
+          "durationMs": 152
+        }
+      ]
+    },
+    {
+      "check": "Org A reads its synthetic liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+          "status": 200,
+          "durationMs": 980
+        }
+      ]
+    },
+    {
+      "check": "Org A creates a valid signed URL for its synthetic liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 200,
+          "durationMs": 155
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 200,
+          "durationMs": 369
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot read Org A's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+          "status": 400,
+          "durationMs": 341
+        }
+      ]
+    },
+    {
+      "check": "Org B cannot sign Org A's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 400,
+          "durationMs": 153
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read A's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+          "status": 400,
+          "durationMs": 331
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign A's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 400,
+          "durationMs": 149
+        }
+      ]
+    },
+    {
+      "check": "Org B reads its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 200,
+          "durationMs": 597
+        }
+      ]
+    },
+    {
+      "check": "Org B creates a valid signed URL for its synthetic organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 144
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 200,
+          "durationMs": 340
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot read Org B's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 400,
+          "durationMs": 310
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot sign Org B's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 141
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read B's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+          "status": 400,
+          "durationMs": 328
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign B's organization-documents file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/organization-documents",
+          "status": 400,
+          "durationMs": 135
+        }
+      ]
+    },
+    {
+      "check": "Org B reads its synthetic ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+          "status": 200,
+          "durationMs": 856
+        }
+      ]
+    },
+    {
+      "check": "Org B creates a valid signed URL for its synthetic ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 200,
+          "durationMs": 144
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 200,
+          "durationMs": 364
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot read Org B's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+          "status": 400,
+          "durationMs": 316
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot sign Org B's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 400,
+          "durationMs": 144
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read B's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+          "status": 400,
+          "durationMs": 302
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign B's ypop-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/ypop-files",
+          "status": 400,
+          "durationMs": 138
+        }
+      ]
+    },
+    {
+      "check": "Org B reads its synthetic budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+          "status": 200,
+          "durationMs": 1008
+        }
+      ]
+    },
+    {
+      "check": "Org B creates a valid signed URL for its synthetic budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 200,
+          "durationMs": 143
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 200,
+          "durationMs": 353
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot read Org B's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+          "status": 400,
+          "durationMs": 313
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot sign Org B's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 400,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read B's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+          "status": 400,
+          "durationMs": 335
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign B's budget-request-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/budget-request-files",
+          "status": 400,
+          "durationMs": 148
+        }
+      ]
+    },
+    {
+      "check": "Org B reads its synthetic liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+          "status": 200,
+          "durationMs": 872
+        }
+      ]
+    },
+    {
+      "check": "Org B creates a valid signed URL for its synthetic liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 200,
+          "durationMs": 139
+        },
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 200,
+          "durationMs": 348
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot read Org B's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+          "status": 400,
+          "durationMs": 330
+        }
+      ]
+    },
+    {
+      "check": "Org A cannot sign Org B's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 400,
+          "durationMs": 134
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot read B's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "GET",
+          "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+          "status": 400,
+          "durationMs": 316
+        }
+      ]
+    },
+    {
+      "check": "Anonymous cannot sign B's liquidation-report-files file",
+      "result": "PASS",
+      "http": [
+        {
+          "actor": "Organization JWT / anonymous",
+          "step": "Prepared real Storage isolation suite",
+          "method": "POST",
+          "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+          "status": 400,
+          "durationMs": 153
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 649
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "POST",
+      "endpoint": "/auth/v1/token",
+      "status": 200,
+      "durationMs": 241
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 722
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 651
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 379
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 334
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 139
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 319
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 335
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 597
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 364
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 312
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 309
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 132
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 604
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 359
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 348
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 131
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 320
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 126
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 685
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 146
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 325
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 321
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 129
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 335
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 132
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 583
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 338
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 309
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 135
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 314
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 145
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 200,
+      "durationMs": 624
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 359
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 354
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 323
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 146
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/c7a77dac-4315-4fc1-a135-9512d8965790",
+      "status": 400,
+      "durationMs": 310
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 159
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+      "status": 200,
+      "durationMs": 968
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 200,
+      "durationMs": 149
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 200,
+      "durationMs": 317
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+      "status": 400,
+      "durationMs": 336
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 400,
+      "durationMs": 137
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/ypop-files/3f8ce2d0-0a92-4232-8fc1-5c71c6aec6f4",
+      "status": 400,
+      "durationMs": 331
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 400,
+      "durationMs": 170
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+      "status": 200,
+      "durationMs": 863
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 200,
+      "durationMs": 150
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 200,
+      "durationMs": 356
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+      "status": 400,
+      "durationMs": 341
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 400,
+      "durationMs": 147
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/budget-request-files/26d07b3b-06a2-439b-b45f-d7d1d397ed43",
+      "status": 400,
+      "durationMs": 341
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 400,
+      "durationMs": 152
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+      "status": 200,
+      "durationMs": 980
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 200,
+      "durationMs": 155
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 200,
+      "durationMs": 369
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+      "status": 400,
+      "durationMs": 341
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 400,
+      "durationMs": 153
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/liquidation-report-files/46808a51-1c7a-4cae-9e84-0d33c55ee109",
+      "status": 400,
+      "durationMs": 331
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 400,
+      "durationMs": 149
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 200,
+      "durationMs": 597
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 144
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 200,
+      "durationMs": 340
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 400,
+      "durationMs": 310
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 141
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/organization-documents/99a6cf3f-ac88-4105-b01b-914643de43f1",
+      "status": 400,
+      "durationMs": 328
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/organization-documents",
+      "status": 400,
+      "durationMs": 135
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+      "status": 200,
+      "durationMs": 856
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 200,
+      "durationMs": 144
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 200,
+      "durationMs": 364
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+      "status": 400,
+      "durationMs": 316
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 400,
+      "durationMs": 144
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/ypop-files/f8156bb4-73ac-4198-9f18-9cfbf34a0f5b",
+      "status": 400,
+      "durationMs": 302
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/ypop-files",
+      "status": 400,
+      "durationMs": 138
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+      "status": 200,
+      "durationMs": 1008
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 200,
+      "durationMs": 143
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 200,
+      "durationMs": 353
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+      "status": 400,
+      "durationMs": 313
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 400,
+      "durationMs": 134
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/budget-request-files/0779aa47-84e2-4442-9a4c-ef0407ac0b0a",
+      "status": 400,
+      "durationMs": 335
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/budget-request-files",
+      "status": 400,
+      "durationMs": 148
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+      "status": 200,
+      "durationMs": 872
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 200,
+      "durationMs": 348
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+      "status": 400,
+      "durationMs": 330
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 400,
+      "durationMs": 134
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "GET",
+      "endpoint": "/storage/v1/object/liquidation-report-files/cee48f1c-a9c5-45cd-ae9e-08a9cf8e0893",
+      "status": 400,
+      "durationMs": 316
+    },
+    {
+      "actor": "Organization JWT / anonymous",
+      "step": "Prepared real Storage isolation suite",
+      "method": "POST",
+      "endpoint": "/storage/v1/object/sign/liquidation-report-files",
+      "status": 400,
+      "durationMs": 153
+    }
+  ]
+}

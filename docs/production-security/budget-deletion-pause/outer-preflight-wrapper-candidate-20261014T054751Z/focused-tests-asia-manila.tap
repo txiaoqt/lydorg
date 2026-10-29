@@ -1,0 +1,514 @@
+TAP version 13
+# Subtest: strict ISO rejects undefined
+ok 1 - strict ISO rejects undefined
+  ---
+  duration_ms: 4.2463
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects null
+ok 2 - strict ISO rejects null
+  ---
+  duration_ms: 0.1551
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 
+ok 3 - strict ISO rejects 
+  ---
+  duration_ms: 0.5501
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01 00:00:00
+ok 4 - strict ISO rejects 2030-02-01 00:00:00
+  ---
+  duration_ms: 0.1914
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01T00:00:00
+ok 5 - strict ISO rejects 2030-02-01T00:00:00
+  ---
+  duration_ms: 0.3445
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-30T00:00:00Z
+ok 6 - strict ISO rejects 2030-02-30T00:00:00Z
+  ---
+  duration_ms: 0.1646
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-13-01T00:00:00Z
+ok 7 - strict ISO rejects 2030-13-01T00:00:00Z
+  ---
+  duration_ms: 0.1207
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01T24:00:00Z
+ok 8 - strict ISO rejects 2030-02-01T24:00:00Z
+  ---
+  duration_ms: 0.126
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01T00:00:60Z
+ok 9 - strict ISO rejects 2030-02-01T00:00:60Z
+  ---
+  duration_ms: 0.2872
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01T00:00:00-00:00
+ok 10 - strict ISO rejects 2030-02-01T00:00:00-00:00
+  ---
+  duration_ms: 0.3694
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01T00:00:00+14:01
+ok 11 - strict ISO rejects 2030-02-01T00:00:00+14:01
+  ---
+  duration_ms: 0.2003
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01T00:00:00+25:00
+ok 12 - strict ISO rejects 2030-02-01T00:00:00+25:00
+  ---
+  duration_ms: 0.144
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects  2030-02-01T00:00:00Z
+ok 13 - strict ISO rejects  2030-02-01T00:00:00Z
+  ---
+  duration_ms: 0.1118
+  type: 'test'
+  ...
+# Subtest: strict ISO rejects 2030-02-01T00:00:00.0000000001Z
+ok 14 - strict ISO rejects 2030-02-01T00:00:00.0000000001Z
+  ---
+  duration_ms: 0.1151
+  type: 'test'
+  ...
+# Subtest: explicit +08:00 and UTC describe the same instant
+ok 15 - explicit +08:00 and UTC describe the same instant
+  ---
+  duration_ms: 0.2704
+  type: 'test'
+  ...
+# Subtest: UTC +00:00 is allowed for validity
+ok 16 - UTC +00:00 is allowed for validity
+  ---
+  duration_ms: 0.4647
+  type: 'test'
+  ...
+# Subtest: valid leap day accepted; invalid leap day rejected
+ok 17 - valid leap day accepted; invalid leap day rejected
+  ---
+  duration_ms: 0.2131
+  type: 'test'
+  ...
+# Subtest: nanosecond precision is preserved
+ok 18 - nanosecond precision is preserved
+  ---
+  duration_ms: 0.1729
+  type: 'test'
+  ...
+# Subtest: exact five-minute boundary accepted
+ok 19 - exact five-minute boundary accepted
+  ---
+  duration_ms: 0.3243
+  type: 'test'
+  ...
+# Subtest: one millisecond past five minutes rejected
+ok 20 - one millisecond past five minutes rejected
+  ---
+  duration_ms: 0.1987
+  type: 'test'
+  ...
+# Subtest: one nanosecond past five minutes rejected
+ok 21 - one nanosecond past five minutes rejected
+  ---
+  duration_ms: 0.1691
+  type: 'test'
+  ...
+# Subtest: future proof rejected
+ok 22 - future proof rejected
+  ---
+  duration_ms: 0.1401
+  type: 'test'
+  ...
+# Subtest: fractional future proof rejected without truncation
+ok 23 - fractional future proof rejected without truncation
+  ---
+  duration_ms: 0.1731
+  type: 'test'
+  ...
+# Subtest: exact validity start accepted
+ok 24 - exact validity start accepted
+  ---
+  duration_ms: 0.1536
+  type: 'test'
+  ...
+# Subtest: exact validity end accepted
+ok 25 - exact validity end accepted
+  ---
+  duration_ms: 0.1401
+  type: 'test'
+  ...
+# Subtest: before validity start rejected
+ok 26 - before validity start rejected
+  ---
+  duration_ms: 0.2345
+  type: 'test'
+  ...
+# Subtest: past validity end rejected
+ok 27 - past validity end rejected
+  ---
+  duration_ms: 0.1994
+  type: 'test'
+  ...
+# Subtest: validity rejects missing start
+ok 28 - validity rejects missing start
+  ---
+  duration_ms: 0.1921
+  type: 'test'
+  ...
+# Subtest: validity rejects missing end
+ok 29 - validity rejects missing end
+  ---
+  duration_ms: 0.1421
+  type: 'test'
+  ...
+# Subtest: validity rejects reversed
+ok 30 - validity rejects reversed
+  ---
+  duration_ms: 0.0948
+  type: 'test'
+  ...
+# Subtest: validity rejects empty interval
+ok 31 - validity rejects empty interval
+  ---
+  duration_ms: 0.1371
+  type: 'test'
+  ...
+# Subtest: validity rejects timezone-free
+ok 32 - validity rejects timezone-free
+  ---
+  duration_ms: 0.1265
+  type: 'test'
+  ...
+# Subtest: validity rejects non-UTC window
+ok 33 - validity rejects non-UTC window
+  ---
+  duration_ms: 0.1085
+  type: 'test'
+  ...
+# Subtest: validity rejects unknown UTC offset
+ok 34 - validity rejects unknown UTC offset
+  ---
+  duration_ms: 1.0617
+  type: 'test'
+  ...
+# Subtest: invalid wall clock rejected: NaN
+ok 35 - invalid wall clock rejected: NaN
+  ---
+  duration_ms: 0.2107
+  type: 'test'
+  ...
+# Subtest: invalid wall clock rejected: Infinity
+ok 36 - invalid wall clock rejected: Infinity
+  ---
+  duration_ms: 0.0977
+  type: 'test'
+  ...
+# Subtest: invalid wall clock rejected: undefined
+ok 37 - invalid wall clock rejected: undefined
+  ---
+  duration_ms: 0.1436
+  type: 'test'
+  ...
+# Subtest: invalid wall clock rejected: 1896134400000
+ok 38 - invalid wall clock rejected: 1896134400000
+  ---
+  duration_ms: 0.1384
+  type: 'test'
+  ...
+# Subtest: invalid wall clock rejected: 1896134400000.1
+ok 39 - invalid wall clock rejected: 1896134400000.1
+  ---
+  duration_ms: 0.0881
+  type: 'test'
+  ...
+# Subtest: invalid wall clock rejected: -1
+ok 40 - invalid wall clock rejected: -1
+  ---
+  duration_ms: 0.7901
+  type: 'test'
+  ...
+# Subtest: clock regression rejected even inside approved interval
+ok 41 - clock regression rejected even inside approved interval
+  ---
+  duration_ms: 0.5007
+  type: 'test'
+  ...
+# Subtest: monotonic elapsed time prevents a backward wall adjustment from hiding overrun
+ok 42 - monotonic elapsed time prevents a backward wall adjustment from hiding overrun
+  ---
+  duration_ms: 0.2765
+  type: 'test'
+  ...
+# Subtest: monotonic missing or regression fails closed
+ok 43 - monotonic missing or regression fails closed
+  ---
+  duration_ms: 0.3988
+  type: 'test'
+  ...
+# Subtest: verified synthetic result plus complete evidence succeeds
+ok 44 - verified synthetic result plus complete evidence succeeds
+  ---
+  duration_ms: 7.3885
+  type: 'test'
+  ...
+# Subtest: proof and memory evidence inputs remain unchanged
+ok 45 - proof and memory evidence inputs remain unchanged
+  ---
+  duration_ms: 2.301
+  type: 'test'
+  ...
+# Subtest: expired prelaunch proof launches nothing; instance consumed
+ok 46 - expired prelaunch proof launches nothing; instance consumed
+  ---
+  duration_ms: 0.3946
+  type: 'test'
+  ...
+# Subtest: future proof launches nothing
+ok 47 - future proof launches nothing
+  ---
+  duration_ms: 0.2843
+  type: 'test'
+  ...
+# Subtest: missing validity launches nothing
+ok 48 - missing validity launches nothing
+  ---
+  duration_ms: 0.2841
+  type: 'test'
+  ...
+# Subtest: child crosses proof deadline despite zero exit: fail, retain, no retry
+ok 49 - child crosses proof deadline despite zero exit: fail, retain, no retry
+  ---
+  duration_ms: 0.3748
+  type: 'test'
+  ...
+# Subtest: child crosses approved UTC end despite zero exit: fail and retain
+ok 50 - child crosses approved UTC end despite zero exit: fail and retain
+  ---
+  duration_ms: 0.289
+  type: 'test'
+  ...
+# Subtest: exact proof boundary at completion succeeds only with complete evidence
+ok 51 - exact proof boundary at completion succeeds only with complete evidence
+  ---
+  duration_ms: 0.4995
+  type: 'test'
+  ...
+# Subtest: exact UTC end at completion succeeds only with complete evidence
+ok 52 - exact UTC end at completion succeeds only with complete evidence
+  ---
+  duration_ms: 0.4271
+  type: 'test'
+  ...
+# Subtest: evidence verification crossing deadline is unsuccessful
+ok 53 - evidence verification crossing deadline is unsuccessful
+  ---
+  duration_ms: 0.4623
+  type: 'test'
+  ...
+# Subtest: evidence reads crossing deadline are unsuccessful
+ok 54 - evidence reads crossing deadline are unsuccessful
+  ---
+  duration_ms: 0.3953
+  type: 'test'
+  ...
+# Subtest: zero exit cannot override invalid reviewed result status
+ok 55 - zero exit cannot override invalid reviewed result status
+  ---
+  duration_ms: 0.502
+  type: 'test'
+  ...
+# Subtest: zero exit cannot override invalid reviewed result status
+ok 56 - zero exit cannot override invalid reviewed result status
+  ---
+  duration_ms: 0.2464
+  type: 'test'
+  ...
+# Subtest: zero exit cannot override invalid reviewed result mode
+ok 57 - zero exit cannot override invalid reviewed result mode
+  ---
+  duration_ms: 0.2849
+  type: 'test'
+  ...
+# Subtest: zero exit cannot override invalid reviewed result installationActivated
+ok 58 - zero exit cannot override invalid reviewed result installationActivated
+  ---
+  duration_ms: 0.2709
+  type: 'test'
+  ...
+# Subtest: zero exit cannot override invalid reviewed result evidenceFile
+ok 59 - zero exit cannot override invalid reviewed result evidenceFile
+  ---
+  duration_ms: 0.3651
+  type: 'test'
+  ...
+# Subtest: zero exit cannot override invalid reviewed result evidenceFile
+ok 60 - zero exit cannot override invalid reviewed result evidenceFile
+  ---
+  duration_ms: 0.3676
+  type: 'test'
+  ...
+# Subtest: empty or multiple result records rejected even with zero exit
+ok 61 - empty or multiple result records rejected even with zero exit
+  ---
+  duration_ms: 0.9909
+  type: 'test'
+  ...
+# Subtest: nonzero or signaled child does not pass or retry
+ok 62 - nonzero or signaled child does not pass or retry
+  ---
+  duration_ms: 0.5319
+  type: 'test'
+  ...
+# Subtest: throwing child is sanitized and cannot relaunch
+ok 63 - throwing child is sanitized and cannot relaunch
+  ---
+  duration_ms: 0.5114
+  type: 'test'
+  ...
+# Subtest: missing generated evidence does not pass and leaves all other memory evidence
+ok 64 - missing generated evidence does not pass and leaves all other memory evidence
+  ---
+  duration_ms: 0.3019
+  type: 'test'
+  ...
+# Subtest: empty partial evidence retained, no retry
+ok 65 - empty partial evidence retained, no retry
+  ---
+  duration_ms: 0.2526
+  type: 'test'
+  ...
+# Subtest: changed second read rejected without modifying retained memory bytes
+ok 66 - changed second read rejected without modifying retained memory bytes
+  ---
+  duration_ms: 1.2294
+  type: 'test'
+  ...
+# Subtest: unverified ACL cannot pass
+ok 67 - unverified ACL cannot pass
+  ---
+  duration_ms: 0.3892
+  type: 'test'
+  ...
+# Subtest: unverified ACL cannot pass
+ok 68 - unverified ACL cannot pass
+  ---
+  duration_ms: 0.2995
+  type: 'test'
+  ...
+# Subtest: unverified ACL cannot pass
+ok 69 - unverified ACL cannot pass
+  ---
+  duration_ms: 0.2478
+  type: 'test'
+  ...
+# Subtest: incomplete independent verification cannot pass
+ok 70 - incomplete independent verification cannot pass
+  ---
+  duration_ms: 0.3547
+  type: 'test'
+  ...
+# Subtest: valid proof hash and unambiguous original JSON required
+ok 71 - valid proof hash and unambiguous original JSON required
+  ---
+  duration_ms: 0.2957
+  type: 'test'
+  ...
+# Subtest: secret-bearing child output is rejected without disclosure
+ok 72 - secret-bearing child output is rejected without disclosure
+  ---
+  duration_ms: 0.2523
+  type: 'test'
+  ...
+# Subtest: public facade disallows replacement of the reviewed evidence validator
+ok 73 - public facade disallows replacement of the reviewed evidence validator
+  ---
+  duration_ms: 0.2347
+  type: 'test'
+  ...
+# Subtest: public facade rejects synthetic evidence lacking exact reviewed reference pins
+ok 74 - public facade rejects synthetic evidence lacking exact reviewed reference pins
+  ---
+  duration_ms: 0.5703
+  type: 'test'
+  ...
+# Subtest: fixed evidence verifier rejects omitted or substituted preservation references
+ok 75 - fixed evidence verifier rejects omitted or substituted preservation references
+  ---
+  duration_ms: 0.1575
+  type: 'test'
+  ...
+# Subtest: fixed request has only reviewed direct route and read-only mode
+ok 76 - fixed request has only reviewed direct route and read-only mode
+  ---
+  duration_ms: 0.151
+  type: 'test'
+  ...
+# Subtest: no second launch after a successful invocation
+ok 77 - no second launch after a successful invocation
+  ---
+  duration_ms: 0.4379
+  type: 'test'
+  ...
+# Subtest: production result parser does not treat a PASS label alone as success
+ok 78 - production result parser does not treat a PASS label alone as success
+  ---
+  duration_ms: 0.1325
+  type: 'test'
+  ...
+# Subtest: wall regression between successive completion checkpoints fails and retains evidence
+ok 79 - wall regression between successive completion checkpoints fails and retains evidence
+  ---
+  duration_ms: 0.5264
+  type: 'test'
+  ...
+# Subtest: monotonic regression between completion checkpoints fails and retains evidence
+ok 80 - monotonic regression between completion checkpoints fails and retains evidence
+  ---
+  duration_ms: 0.4254
+  type: 'test'
+  ...
+# Subtest: increasing completion wall and monotonic samples remain valid
+ok 81 - increasing completion wall and monotonic samples remain valid
+  ---
+  duration_ms: 0.4649
+  type: 'test'
+  ...
+# Subtest: native integer fields accept only a positive PID and actual numeric zero counters
+ok 82 - native integer fields accept only a positive PID and actual numeric zero counters
+  ---
+  duration_ms: 0.5169
+  type: 'test'
+  ...
+# Subtest: null, false, strings, zero, negative and noninteger backend PIDs are rejected
+ok 83 - null, false, strings, zero, negative and noninteger backend PIDs are rejected
+  ---
+  duration_ms: 0.2358
+  type: 'test'
+  ...
+# Subtest: actual inventory row counts must be safe nonnegative JSON numbers before normalization
+ok 84 - actual inventory row counts must be safe nonnegative JSON numbers before normalization
+  ---
+  duration_ms: 0.5081
+  type: 'test'
+  ...
+1..84
+# tests 84
+# suites 0
+# pass 84
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 279.3063

@@ -1,0 +1,18 @@
+{
+  "capturedAt": "2026-10-12T10:22:33.325Z",
+  "status": "PASS",
+  "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+  "method": "Authenticated GET of four explicitly named public frontend settings only; values held in memory",
+  "publicNames": [
+    "VITE_DEPLOY_SURFACE",
+    "VITE_ENABLE_STANDALONE_USER_PWA_UI",
+    "VITE_SUPABASE_ANON_KEY",
+    "VITE_SUPABASE_URL"
+  ],
+  "projectRef": "mqqaykksadotbrghbexz",
+  "keyClass": "anon",
+  "surface": "user",
+  "standalonePwaUi": true,
+  "configurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+  "serverSecretsRetrieved": false
+}

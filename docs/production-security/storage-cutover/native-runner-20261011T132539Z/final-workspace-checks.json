@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-10-11 14:12:32 UTC",
+  "branch": "ui-refactor",
+  "head": "2f6e7427c553b7535f53860d1732b42df7c023e8",
+  "gitDiffCheck": {
+    "exitCode": 0,
+    "whitespaceErrors": false,
+    "preexistingLineEndingWarnings": true,
+    "limitation": "git diff --check covers tracked diffs; separate local review-folder whitespace check recorded in evidence-manifest.json."
+  },
+  "workingTree": {
+    "initialTrackedEntries": 62,
+    "initialUntrackedEntries": 98,
+    "finalPorcelainMatchesInitial": true,
+    "limitation": "Porcelain aggregates preexisting untracked docs directories; status equality is not a byte-for-byte inventory of every preexisting file. Task edits are confined to the new review folder."
+  },
+  "offlineReview": {
+    "status": "PASS",
+    "mode": "OFFLINE_REVIEW",
+    "project": "mqqaykksadotbrghbexz",
+    "host": "db.mqqaykksadotbrghbexz.supabase.co",
+    "sqlBytes": 47407,
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "runnerBundleSha256": "69b01be6d530fc0539a44e05fa38c2962fa1b6cae289e063f77076a5518c61af",
+    "connectionAttempted": false,
+    "installationActivated": false
+  },
+  "state": {
+    "sqlBytes": 47407,
+    "sqlSha256": "e7c094c31be9c62cb8938b815813436fd16d4b57a55c93449dd79b43798c7ba2",
+    "activeAuthorization": false,
+    "nativeAttemptMarker": false,
+    "operationLock": false
+  },
+  "ignoredStatePathsVerified": true,
+  "liveSqlSubmitted": false,
+  "productionWrites": 0,
+  "stagingWrites": 0
+}

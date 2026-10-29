@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "project": "mqqaykksadotbrghbexz",
+  "window": {
+    "start": "2026-10-11T22:59:40Z",
+    "end": "2026-10-11T23:01:10Z"
+  },
+  "requiredSecretMetadata": "hosted-configuration-metadata.json",
+  "serviceOnlyRpcReached": true,
+  "serverCredentialAcceptedForAuthorizationRpc": true,
+  "actualBackendResponses": [
+    {
+      "entries": 3,
+      "http_status": "403",
+      "severity": "",
+      "source": "edge_logs",
+      "sqlstate": ""
+    },
+    {
+      "entries": 3,
+      "http_status": "",
+      "severity": "ERROR",
+      "source": "postgres_logs",
+      "sqlstate": "42501"
+    }
+  ],
+  "actualDenialContext": {
+    "authorizer_context_errors": 3,
+    "errors": 3,
+    "raise_lines": [
+      "7"
+    ],
+    "raised_inside_function": 3
+  },
+  "reviewedFunctionLine7": "IF _admin IS NULL THEN RAISE EXCEPTION 'Admin session is invalid or expired.' USING ERRCODE='42501'; END IF;",
+  "interpretation": "All three 42501 errors were deliberately raised at the reviewed invalid-session branch. These are expected denials, not an ACL defect. No valid Admin session was used.",
+  "successfulSigningAndDownload": "BLOCKED",
+  "secretsReadOrSubstituted": false,
+  "counterLimitation": "Aggregate pg_stat_statements counters did not advance and were inconclusive. Actual PostgREST/PostgreSQL log context provides the runtime evidence.",
+  "diagnosticLimitations": [
+    {
+      "operation": "DESCRIBE TABLE logs",
+      "status": "FAILED",
+      "reason": "Unified logs backend rejected this metadata query; no data changed"
+    },
+    {
+      "operation": "Extract permission error from guessed body column",
+      "status": "FAILED",
+      "reason": "Unified logs backend rejected this diagnostic query; no data changed"
+    }
+  ],
+  "noAdditionalHttpRequests": true
+}

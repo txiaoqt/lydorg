@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "cliVersion": "63.1.2",
+  "versionOutputSha256": "021ca45fb110583bd960f1049591d7f81d2f0549ab7ec10ffbafa6026d4a178a",
+  "helpOutputSha256": "92125f6311f47309cd5a7280b9bffc0b723520fe5bd70a0b8f9ed38697ae3577",
+  "reviewedRoute": "deploy --prod --skip-domain --force --yes --json --no-wait",
+  "projectMapping": "Explicit Organization team/project in isolated .vercel/project.json and CLI environment",
+  "deploymentSubmitted": false
+}

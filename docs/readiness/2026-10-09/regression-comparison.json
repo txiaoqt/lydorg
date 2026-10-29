@@ -1,0 +1,1084 @@
+{
+  "baselineCommit": "2f6e742",
+  "baseline": {
+    "numTotalTests": 2290,
+    "numPassedTests": 2126,
+    "numFailedTests": 164
+  },
+  "current": {
+    "numTotalTests": 2321,
+    "numPassedTests": 2170,
+    "numFailedTests": 151
+  },
+  "matchedAssertions": 2271,
+  "newMatchedFailures": [],
+  "addedFailures": [],
+  "resolvedMatchedFailures": [
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions refreshes only liquidation detail metadata for an open file event"
+    ],
+    [
+      "lib/section35-artifact-generation.test.ts",
+      "Section 35 Artifact Generation & Verification generates Section 35 Quarterly Summary PDF and saves to scratch"
+    ],
+    [
+      "lib/admin-lifecycle-user-sync.test.tsx",
+      "Admin Lifecycle Actions + User Status Synchronization Verification 1. BUDGET REQUEST FULL LIFECYCLE & USER SYNCHRONIZATION renders admin StatusPill correctly across all budget lifecycle stages"
+    ],
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions filters budget status to the organization and refreshes only the open file detail for file events"
+    ],
+    [
+      "lib/section35-artifact-generation.test.ts",
+      "Section 35 Artifact Generation & Verification generates Section 35 Disaggregated XLSX and saves to scratch"
+    ],
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions refreshes only the selected Org-led semester for its organization"
+    ],
+    [
+      "lib/section35-artifact-generation.test.ts",
+      "Section 35 Artifact Generation & Verification generates Section 35 Disaggregated PDF and saves to scratch"
+    ],
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions refreshes only the selected YPOP semester when a city-led status changes"
+    ],
+    [
+      "lib/section35-artifact-generation.test.ts",
+      "Section 35 Artifact Generation & Verification generates Section 35 Quarterly Summary XLSX and saves to scratch"
+    ],
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions coalesces a parent and child-file event into one scoped refresh"
+    ]
+  ],
+  "baselineOnly": [
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Master YORP Registry Export (13 Columns) correctly maps an OrganizationProfile into all 13 master export fields"
+    ],
+    [
+      "lib/audit-records-hardening.test.ts",
+      "Admin System Settings \u2192 Audit & Records Hardening Test Suite 2. Authoritative Audit Categories & shouldLogActivityType Evaluator correctly suppresses audit logging when individual category settings are disabled"
+    ],
+    [
+      "lib/audit-records-hardening.test.ts",
+      "Admin System Settings \u2192 Audit & Records Hardening Test Suite 2. Authoritative Audit Categories & shouldLogActivityType Evaluator correctly classifies 'Archived file' and 'Restored file' under 'update' category"
+    ],
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Master YORP Registry Export (13 Columns) contains all 13 official master columns"
+    ],
+    [
+      "lib/audit-records-hardening.test.ts",
+      "Admin System Settings \u2192 Audit & Records Hardening Test Suite 3. createAdminActivityLogInSupabase with Categories & Metadata passes explicit category and metadata to the server-side RPC"
+    ],
+    [
+      "lib/audit-records-hardening.test.ts",
+      "Admin System Settings \u2192 Audit & Records Hardening Test Suite 4. Separation of Concerns: Audit Logging Decoupling ensures turning off audit settings never prevents underlying actions from executing"
+    ],
+    [
+      "lib/audit-records-hardening.test.ts",
+      "Admin System Settings \u2192 Audit & Records Hardening Test Suite 1. Audit & Records Settings Definitions & Defaults defines all 10 canonical Audit & Records settings with correct types and categories"
+    ],
+    [
+      "lib/report-export.test.ts",
+      "A4 Portrait orientation and width geometry across all configs configures all report configs for portrait with width <= 535.28 pt"
+    ],
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Master YORP Registry Export (13 Columns) satisfies A4 portrait total width <= 535.28 pt constraint"
+    ],
+    [
+      "lib/audit-records-hardening.test.ts",
+      "Admin System Settings \u2192 Audit & Records Hardening Test Suite 2. Authoritative Audit Categories & shouldLogActivityType Evaluator evaluates explicit audit categories against active system settings"
+    ],
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Master YORP Registry Export (13 Columns) correctly infers District II for canonical District II barangays if district is missing"
+    ],
+    [
+      "lib/audit-records-hardening.test.ts",
+      "Admin System Settings \u2192 Audit & Records Hardening Test Suite 3. createAdminActivityLogInSupabase with Categories & Metadata handles server-side suppression gracefully returning null without throwing"
+    ]
+  ],
+  "currentOnly": [
+    [
+      "components/RouteChunkBoundary.test.tsx",
+      "offers explicit recovery for Loading chunk 123 failed. without automatically reloading"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "reauthorizes legacy signed references instead of returning their bearer token"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache does not use a cache hit after session expiration"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "preserves public and local preview links without signing"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "retries a missing object and never persists signed URLs"
+    ],
+    [
+      "lib/public-system-settings.performance.test.ts",
+      "does not retain a failed request"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache deduplicates concurrent authorized signing"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache hits the same user's cache without signing again"
+    ],
+    [
+      "user/UserPortalEntry.performance.test.tsx",
+      "loads the browser portal lazily and retains local input across section changes"
+    ],
+    [
+      "components/RouteChunkBoundary.test.tsx",
+      "shows Suspense during a slow cold chunk and renders after it arrives"
+    ],
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Configurable Master YORP Registry Export preserves the current ten default columns including verified date"
+    ],
+    [
+      "lib/public-system-settings.performance.test.ts",
+      "shares only overlapping public settings requests, then reads fresh settings"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache does not log signed URLs from exceptions"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache retries transient errors immediately without a negative cache"
+    ],
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions coalesces a YPOP upload burst into one exact file-cache refresh"
+    ],
+    [
+      "user/UserPortalEntry.performance.test.tsx",
+      "preserves browser override elements"
+    ],
+    [
+      "components/public/PublicTemplatesCatalog.performance.test.tsx",
+      "does not poll idle, refreshes explicitly, and refetches stale metadata on focus"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache does not reuse A's URL for B even without an auth event"
+    ],
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Configurable Master YORP Registry Export correctly maps an OrganizationProfile into all 13 master export fields"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache scopes token refresh to the new credential"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "invalidates on TOKEN_REFRESHED"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "invalidates on SIGNED_OUT"
+    ],
+    [
+      "user/UserPortalEntry.performance.test.tsx",
+      "keeps installed PWA equivalent-route navigation"
+    ],
+    [
+      "components/RouteChunkBoundary.test.tsx",
+      "does not misclassify application errors as chunk failures"
+    ],
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions disposes queued and in-flight YPOP callbacks on navigation"
+    ],
+    [
+      "lib/report-export.test.ts",
+      "A4 report orientation and proportional width geometry preserves landscape registry and portrait financial reports with positive width weights"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache refreshes expired client freshness rather than returning an old bearer URL"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "rejects an in-flight signing response immediately after local logout starts"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache bounds a hung signing request and permits a future retry"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache rejects a pending A result after logout and B sign-in"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache clears cached authorization after suspension/permission-change notification"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "isolates organization account switches without reloading"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "invalidates on USER_UPDATED"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache does not return an old URL when reauthorization denies access"
+    ],
+    [
+      "lib/renewal-realtime.test.ts",
+      "scoped renewal Realtime subscriptions keeps an event received during an in-flight YPOP refresh"
+    ],
+    [
+      "components/RouteChunkBoundary.test.tsx",
+      "offers explicit recovery for Failed to fetch dynamically imported module without automatically reloading"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache does not permanently cache not-found or authorization failures"
+    ],
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Configurable Master YORP Registry Export correctly infers District II for canonical District II barangays if district is missing"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache rejects stale context reads across an auth transition"
+    ],
+    [
+      "lib/signed-storage-url-cache.test.ts",
+      "signed Storage URL authorization cache invalidates on logout"
+    ],
+    [
+      "components/RouteChunkBoundary.test.tsx",
+      "offers explicit recovery for Importing a module script failed. without automatically reloading"
+    ],
+    [
+      "lib/section35-reporting.test.ts",
+      "Section 35 Reporting & YORP Registry Export System B. Configurable Master YORP Registry Export uses landscape A4 with proportionally fitted positive column widths"
+    ],
+    [
+      "lib/signed-storage-url.integration.test.ts",
+      "signs lazily and shares concurrent requests through the production resolver"
+    ]
+  ],
+  "failedFiles": [
+    {
+      "file": "admin/admin-review-decision-help.test.tsx",
+      "failures": [
+        {
+          "name": "Review Decision Help & Status Label UI Tests LiquidationStatusLabel renders 'Approved \u2014 Onsite Required' with whitespace-nowrap",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Approved \u2014 Onsite Required. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "admin/admin-review-lifecycle-decision.test.tsx",
+      "failures": [
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 \u2014 BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 1: Submitted + unreviewed files renders document review controls and no retired duplicate buttons",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 \u2014 BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 2: Submitted status provides unified document review decision surface",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 \u2014 BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 3: approved_for_ftf_green shows Onsite Required, post-approval lifecycle dropdown and confirm button",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 \u2014 BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 4: hard_copy_submitted shows Hardcopy Submitted, lifecycle dropdown and confirm button",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 \u2014 BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 5: budget_released renders clean terminal banner with no dropdowns or confirm buttons",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 \u2014 BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 6: completed legacy records render terminal state only",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 1 & 7 \u2014 BUDGET REQUEST REVIEW DECISION & SINGLE ACTION SURFACE TEST 7: Single action surface \u2014 Exactly one Review Decision heading and no duplicate buttons",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 8: pending_activity_completion renders informational state and Review Decision is NOT blank",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 9: pending_activity_completion with goSignalAt must NOT display false Approved banner",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 10: not_started renders informational state and Review Decision header is omitted when 0 files",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 11: draft renders informational state and Review Decision header is omitted when 0 files",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 12: submitted renders unified Review Decision panel with Confirm Document Decision",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 13: approved_for_ftf_green renders unified Review Decision with Approved \u2014 Onsite Required and Liquidated button",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 14: hard_copy_submitted renders unified Review Decision with Liquidated button",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 15: completed_liquidated renders terminal state and no invalid actions",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 2, 3, 4, 5 \u2014 LIQUIDATION REVIEW DECISION & APPROVAL BANNER TEST 16: overdue renders Review Decision panel with zero manual overdue action buttons",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 \u2014 REGRESSION TEST SUITE (TESTS A - I) TEST A & B: Child + Parent Persistence & Refresh Persistence",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 \u2014 REGRESSION TEST SUITE (TESTS A - I) TEST C: Failed Parent Mutation \u2014 No false approval, surfaces meaningful error, restores actual DB state",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 \u2014 REGRESSION TEST SUITE (TESTS A - I) TEST E: Liquidation Trigger Safety \u2014 Liquidation update succeeds and persists without actor FK violation",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 11 \u2014 REGRESSION TEST SUITE (TESTS A - I) TEST F: Multi-File Approval \u2014 Approving 1 of 2 files keeps parent pending; approving all advances parent",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 \u2014 WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 21: Mouse wheel event on focused Approved Amount blurs and does not modify numeric value",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 \u2014 WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 22: Background refresh does NOT overwrite dirty Approved Amount, Decision, or Remarks",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 \u2014 WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 23: Submission sends the exact locally edited Approved Amount 122130.99",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 \u2014 WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 24: Opening Budget Review does NOT schedule review-specific periodic refresh timers",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 \u2014 WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 25: Selection Gating \u2014 Zero documents selected displays 'No documents selected', disables Decision and Confirm button",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 \u2014 WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 26: Selection Gating \u2014 Selecting document updates count, enables Decision and Confirm button, deselecting disables them again",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "AdminPortal Budget & Liquidation Review Decision / Lifecycle UI PART 12 \u2014 WHEEL EVENT, BACKGROUND REFRESH & UNSAVED INPUT PROTECTION TEST 27: Selection Gating \u2014 Needs Revision requires document selection and remarks before enabling confirmation",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        }
+      ]
+    },
+    {
+      "file": "admin/admin-settings.test.tsx",
+      "failures": [
+        {
+          "name": "Admin System Settings - Complete Authoritative Inventory (66 Settings) contains exactly 66 registered system setting definitions",
+          "message": "AssertionError: expected 65 to be 66 // Object.is equality"
+        },
+        {
+          "name": "Admin System Settings - Complete Authoritative Inventory (66 Settings) verifies all categories have expected counts",
+          "message": "AssertionError: expected 7 to be 8 // Object.is equality"
+        }
+      ]
+    },
+    {
+      "file": "admin/admin-ypop-request-revision-decision.test.tsx",
+      "failures": [
+        {
+          "name": "YPOP Admin Review Decision \u2014 Single-Item Request Revision & Authoritative Remark Invariant TEST 1 & 7: Single Request Revision with valid remark shows actual remark in confirmation and submits successfully",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "YPOP Admin Review Decision \u2014 Single-Item Request Revision & Authoritative Remark Invariant TEST 2 & 3: Missing or whitespace remark keeps Confirm disabled",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "YPOP Admin Review Decision \u2014 Single-Item Request Revision & Authoritative Remark Invariant TEST 4 & 5: When multiple items are selected, Request Revision is disabled in dropdown",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "YPOP Admin Review Decision \u2014 Single-Item Request Revision & Authoritative Remark Invariant TEST 6: Select All and other checkboxes are disabled when Request Revision is the active decision",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "YPOP Admin Review Decision \u2014 Single-Item Request Revision & Authoritative Remark Invariant TEST 13: Approve decision continues to support multi-select",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "YPOP Admin Review Decision \u2014 Single-Item Request Revision & Authoritative Remark Invariant TEST 14: YPOP Review Decision help icon opens Review Rules popover and closes on toggle",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        }
+      ]
+    },
+    {
+      "file": "admin/liquidation-unified-lifecycle.test.tsx",
+      "failures": [
+        {
+          "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 1. pending_activity_completion with 0 files renders ONLY informational state (NO Review Decision header, NO dropdown, NO buttons)",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 2. Organization file submission renders single Review Decision panel with Confirm Document Decision and NO legacy buttons",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 3. Multi-file safety: Approving 1 of 2 files keeps parent pending; approving both advances parent to approved_for_ftf_green (Onsite Required)",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 4. approved_for_ftf_green renders dedicated Approved \u2014 Onsite Required panel and button Liquidated",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        },
+        {
+          "name": "Liquidation Report Unified Lifecycle & Automatic Overdue 5. completed_liquidated renders clean terminal state with zero buttons or dropdowns",
+          "message": "TypeError: __vite_ssr_import_7__.supabase.channel is not a function"
+        }
+      ]
+    },
+    {
+      "file": "admin/yorp-sample-data-seeding-panel.test.tsx",
+      "failures": [
+        {
+          "name": "YorpSampleDataSeedingPanel toggles the dataset preview table with search and filters",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: SANTA CRUZ VOLLEYBALL CLUB. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "lib/admin-inactivity.test.ts",
+      "failures": [
+        {
+          "name": "Admin Session Inactivity Timeout Mechanics records user activity, throttles rapid writes, and extends session expiration",
+          "message": "AssertionError: expected '2026-10-09T13:09:33.398Z' to be '2023-11-14T22:43:23.000Z' // Object.is equality"
+        },
+        {
+          "name": "Admin Session Inactivity Timeout Mechanics detects continuous inactivity and expires session when timeout threshold is exceeded",
+          "message": "AssertionError: expected '{\"id\":\"admin-uuid-1\",\"username\":\"pasi\u2026' to be null"
+        }
+      ]
+    },
+    {
+      "file": "lib/admin-pdf-sample-generation.test.ts",
+      "failures": [
+        {
+          "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for YORP Registry with official letterhead",
+          "message": "AssertionError: expected 841.89 to be close to 595.28, received difference is 246.61, but expected 0.05"
+        },
+        {
+          "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Budget Requests with official letterhead",
+          "message": "Error: EPERM: operation not permitted, open 'C:\\Users\\Christopher x Angel\\.gemini\\antigravity-ide\\brain\\ad2ad959-7d14-4eae-bd6f-ad3ad5b92e58\\scratch\\sample_budget_requests.pdf'"
+        },
+        {
+          "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Budget Monitoring with official letterhead",
+          "message": "Error: EPERM: operation not permitted, open 'C:\\Users\\Christopher x Angel\\.gemini\\antigravity-ide\\brain\\ad2ad959-7d14-4eae-bd6f-ad3ad5b92e58\\scratch\\sample_budget_monitoring.pdf'"
+        },
+        {
+          "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Allocation by Barangay with official letterhead",
+          "message": "Error: EPERM: operation not permitted, open 'C:\\Users\\Christopher x Angel\\.gemini\\antigravity-ide\\brain\\ad2ad959-7d14-4eae-bd6f-ad3ad5b92e58\\scratch\\sample_allocation_by_barangay.pdf'"
+        },
+        {
+          "name": "Admin PDF Export System - Sample Generation & Verification generates multi-page A4 portrait PDF for Activity Logs with official letterhead",
+          "message": "Error: EPERM: operation not permitted, open 'C:\\Users\\Christopher x Angel\\.gemini\\antigravity-ide\\brain\\ad2ad959-7d14-4eae-bd6f-ad3ad5b92e58\\scratch\\sample_activity_logs.pdf'"
+        }
+      ]
+    },
+    {
+      "file": "lib/budget-monitoring-filters.test.ts",
+      "failures": [
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 1. Default view: filters to Current Fiscal Year (FY 2026)",
+          "message": "AssertionError: expected +0 to be 4 // Object.is equality"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 5. Purpose / Category filter: Dynamic and narrows results exclusively to matching category",
+          "message": "AssertionError: expected +0 to be 1 // Object.is equality"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 6. Budget Status filter: Awaiting Release vs Budget Released distinct behavior",
+          "message": "AssertionError: expected +0 to be 1 // Object.is equality"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 7. Major Classification filter: filters by organization classification",
+          "message": "AssertionError: expected +0 to be 3 // Object.is equality"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 8. Location filters: District and Barangay filtering",
+          "message": "AssertionError: expected +0 to be 3 // Object.is equality"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 9. Release Status filter: Not Released and Fully Released",
+          "message": "AssertionError: expected [] to include 'req-3'"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 10. Liquidation Status filter: Fully Liquidated vs Not Liquidated",
+          "message": "AssertionError: expected +0 to be 1 // Object.is equality"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 11. Sorting options: Amount Highest to Lowest and Lowest to Highest",
+          "message": "TypeError: Cannot read properties of undefined (reading 'approvedAmount')"
+        },
+        {
+          "name": "Budget Monitoring Filtering and Sorting Engine Test Suite 12. Organization funding table synchronization",
+          "message": "AssertionError: expected +0 to be 2 // Object.is equality"
+        }
+      ]
+    },
+    {
+      "file": "lib/dynamic-document-submission-workflow.test.tsx",
+      "failures": [
+        {
+          "name": "Dynamic Document Submission & Admin Template Workflow (19 Requirements) 15. Existing renewal workflow still works and returns renewal required document types",
+          "message": "AssertionError: expected 5 to be greater than or equal to 6"
+        }
+      ]
+    },
+    {
+      "file": "lib/organization-renewal-phase3.test.tsx",
+      "failures": [
+        {
+          "name": "Phase 3A & Phase 3B User Portal Renewal State Integration Tests Requirement 17: desktop layout renders UserPortalRedesignView and UserPortalRenewalWorkspaceView",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Accreditation Renewal Workspace. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3A & Phase 3B User Portal Renewal State Integration Tests Requirement 20: existing dashboard functionality remains intact",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Documents. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "lib/organization-renewal-phase3c-1.test.tsx",
+      "failures": [
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 3. draft replacement calls standard draft upload/update path, NOT revision replacement RPC",
+          "message": "AssertionError: expected \"uploadRenewalDocumentFileInSupabase\" to be called with arguments: [ ObjectContaining{\u2026} ]"
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 4. needs_revision flagged file \u2192 Replace Document uses authoritative replacement RPC",
+          "message": "Error: Unable to find role=\"button\" and name `/Replace Document/i`"
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 5. approved file \u2192 replacement blocked, displays 'Locked \u2022 Document Approved'",
+          "message": "Error: Unable to find an element with the text: Locked \u2022 Document Approved. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 7. under_review file \u2192 replacement blocked during admin review",
+          "message": "Error: Unable to find an element with the text: Under Admin Review. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 1: Draft Document Replacement vs Revision-Only Hardened RPC 8. renewal-level rejected \u2192 all file mutations blocked (terminal)",
+          "message": "Error: Unable to find an element with the text: Not Approved. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 11. expired workspace displays accreditation expired warning",
+          "message": "Error: Unable to find an element with the text: Accreditation Term Expired \u2022 Renewal Window Open. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 12. expired workspace communicates privileges requiring active accreditation are paused",
+          "message": "Error: Unable to find an element with the text: /Official privileges requiring active accreditation/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 13. expired workspace explicitly communicates pending budget releases are paused",
+          "message": "Error: Unable to find an element with the text: /pending budget releases, and YPOP score credits\\) are paused/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 14. expired workspace explicitly communicates already-released funds remain valid and subject to liquidation/accounting",
+          "message": "Error: Unable to find an element with the text: /Previously released funds remain valid and subject to liquidation and accounting/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 15. expired workspace communicates renewal remains available through Day 180 cutoff date",
+          "message": "Error: Unable to find an element with the text: /Late renewal remains available through .* \\(Day 180\\)\\./i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C.1: User Renewal Workspace Corrections Test Suite CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging 16. expired workspace does not claim already-released disbursements are paused",
+          "message": "Error: Unable to find an element with the text: Accreditation Term Expired \u2022 Renewal Window Open. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "lib/organization-renewal-phase3c.test.tsx",
+      "failures": [
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests WORKSPACE: Renewal Packet Loading & Requirements Display 1. renewal draft loads correctly with cycle, organization name, and status badge",
+          "message": "Error: Unable to find an element with the text: Accreditation Renewal Workspace. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests WORKSPACE: Renewal Packet Loading & Requirements Display 3. document completion count is correct (e.g. 0 of 6 uploaded)",
+          "message": "Error: Unable to find an element with the text: 0 of 6 (0%). This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests DRAFT: Upload Actions & Validation 7. successful upload refreshes packet state and updates completion count",
+          "message": "Error: Unable to find an element with the text: 1 of 6 (17%). This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests DRAFT: Upload Actions & Validation 8. upload errors are handled gracefully without crashing",
+          "message": "Error: Unable to find an element with the text: Accreditation Renewal Workspace. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests DRAFT: Upload Actions & Validation 9. duplicate upload action is prevented while an upload is in progress",
+          "message": "Error: Unable to find an element with the text: /Uploading.../i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests PREVIEW: Reusing Canonical PDF Viewer 10. existing PDF viewer is reused: calls openPreview with fileUrl and title",
+          "message": "Error: Unable to find role=\"button\" and name `/Preview/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 12. submit disabled when required documents are missing (< 6 uploaded)",
+          "message": "Error: Unable to find role=\"button\" and name `/Submit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 13. submit enabled when packet is complete (all 6 uploaded)",
+          "message": "Error: Unable to find role=\"button\" and name `/Submit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 14. confirmation modal appears upon clicking submit",
+          "message": "Error: Unable to find role=\"button\" and name `/Submit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 15. successful submit transitions to submitted via userSubmitRenewalInSupabase",
+          "message": "Error: Unable to find role=\"button\" and name `/Submit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests SUBMISSION: Completeness Guard, Confirmation Modal & Submission 16. submitted state becomes read-only with review banner",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: /Your renewal packet is currently in review by the PCYDO administrator/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 17. submitted is read-only",
+          "message": "Error: Unable to find an element with the text: Submitted (Pending Review). This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 18. under_review is read-only with active admin review banner",
+          "message": "Error: Unable to find an element with the text: Under Admin Review. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 19. needs_revision surfaces admin remarks in alert banner and on flagged cards",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: /Please replace Constitution and By-Laws with signed 2026 page/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REVIEW & REVISION: Handling Under Review & Needs Revision States 20. flagged documents show 'Replace Document' action",
+          "message": "Error: Unable to find role=\"button\" and name `/Replace Document/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 21. replacement works for needs_revision file: triggers replaceRenewalDocumentFileInSupabase",
+          "message": "Error: Unable to find role=\"button\" and name `/Replace Document/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 22. replacement works for rejected file where backend permits (rejected_red)",
+          "message": "Error: Unable to find role=\"button\" and name `/Replace Document/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 23. approved file cannot be replaced: displays 'Locked \u2022 Document Approved'",
+          "message": "Error: Unable to find an element with the text: Locked \u2022 Document Approved. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REPLACEMENT: Calling Authoritative userReplaceDocumentSubmissionFileInSupabase RPC 24. replacement refreshes current file in the view",
+          "message": "Error: Unable to find role=\"button\" and name `/Replace Document/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESUBMISSION: Resubmission Flow After Correction 26. resubmit unavailable while unresolved flagged files remain",
+          "message": "Error: Unable to find role=\"button\" and name `/Resubmit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESUBMISSION: Resubmission Flow After Correction 27. resubmit calls authoritative RPC userResubmitRenewalInSupabase when all flagged files resolved",
+          "message": "Error: Unable to find role=\"button\" and name `/Resubmit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESUBMISSION: Resubmission Flow After Correction 28. successful resubmit becomes read-only with 'Resubmitted Renewal Under Review' banner",
+          "message": "Error: Unable to find an element with the text: Resubmitted (Under Review). This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REJECTED: Terminal Rejection Guard 29. rejected renewal has no resubmit action",
+          "message": "Error: Unable to find an element with the text: Not Approved. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REJECTED: Terminal Rejection Guard 31. rejected renewal displays office-contact guidance",
+          "message": "Error: Unable to find an element with the text: /This renewal decision is final. Please contact the PCYDO office directly/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests EXPIRY: Term Expiration & Late Window Handling 33. expired organization remains visually expired",
+          "message": "Error: Unable to find an element with the text: Accreditation Term Expired \u2022 Renewal Window Open. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests EXPIRY: Term Expiration & Late Window Handling 34. pending renewal does not restore accreditation: informs user privileges are paused",
+          "message": "Error: Unable to find an element with the text: /pending budget releases, and YPOP score credits\\) are paused/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 36. stale renewal state is handled safely: RPC error caught without state corruption",
+          "message": "Error: Unable to find role=\"button\" and name `/Submit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 37. RPC errors do not fake state transitions: resubmit error keeps revision status",
+          "message": "Error: Unable to find an element with the text: Revision Requested. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 38. failed network fetch does not falsely mark accreditation expired",
+          "message": "Error: Unable to find an element with the text: Error loading renewal packet. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests CONCURRENCY & ERRORS: Resilience & Safe Degradation 39. duplicate submission clicks are prevented while request is in flight",
+          "message": "Error: Unable to find role=\"button\" and name `/Submit Renewal Application/i`"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESPONSIVE: Desktop, Tablet & Phone Structural Usability 40. desktop workspace remains stable with max-w-[1440px] container and header hierarchy",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Accreditation Renewal Workspace. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESPONSIVE: Desktop, Tablet & Phone Structural Usability 41. tablet layout remains usable with responsive flex and grid structures",
+          "message": "Error: expect(received).toBeInTheDocument()"
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests RESPONSIVE: Desktop, Tablet & Phone Structural Usability 42. phone layout has no horizontal overflow: includes break-words and responsive padding",
+          "message": "Error: Unable to find an element with the text: A-Very-Long-Filename-That-Could-Cause-Horizontal-Overflow-Without-Break-Words.pdf. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3C: User Renewal Document Workspace & Packet Implementation Tests REGRESSION: Document Submission, PDF Viewer & User Portal Integrity 45. existing User Portal navigation and route map integrity preserved",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Dashboard/i`"
+        }
+      ]
+    },
+    {
+      "file": "lib/organization-renewal-phase3d.test.tsx",
+      "failures": [
+        {
+          "name": "Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests 2. RENEWALS QUEUE TABLE (Tests 9-18) 13. RenewalStatusPill displays correct status color",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Submitted. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests 2. RENEWALS QUEUE TABLE (Tests 9-18) 16. Status filter filters by renewal status",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Submitted\""
+        }
+      ]
+    },
+    {
+      "file": "lib/organization-renewal-phase3e.test.ts",
+      "failures": [
+        {
+          "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4. Exactly 6 renewal documents are required in the renewal packet",
+          "message": "AssertionError: expected 5 to be 6 // Object.is equality"
+        },
+        {
+          "name": "Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite 2. Required Documents & Draft Uploads (Items 4-5) 4b. Reconciles canonical document identifiers with prompt shorthand aliases",
+          "message": "AssertionError: expected [ { \u2026(17) }, \u2026(4) ] to have a length of 6 but got 5"
+        }
+      ]
+    },
+    {
+      "file": "lib/public-budget-transparency.test.tsx",
+      "failures": [
+        {
+          "name": "Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12) TEST PUB 7 \u2014 Public Route /budget-transparency renders successfully with civic header",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Civic Fiscal Openness. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "lib/section35-artifact-generation.test.ts",
+      "failures": [
+        {
+          "name": "Section 35 Artifact Generation & Verification generates Master YORP Registry Export (PDF & CSV) and saves to scratch",
+          "message": "AssertionError: expected '\\ufeff\"No.\",\"Organization Name\",\"Majo\u2026' to contain '\"URN\",\"Name of Organization\"'"
+        },
+        {
+          "name": "Section 35 Artifact Generation & Verification Template Visual Regression & Verification Checks ensures Master YORP Registry export uses the official A4 template layout",
+          "message": "AssertionError: expected 841.89 to be close to 595.28, received difference is 246.61, but expected 0.05"
+        }
+      ]
+    },
+    {
+      "file": "lib/yorp-sample-dataset.test.ts",
+      "failures": [
+        {
+          "name": "YORP Sample Dataset Verification maintains realistic budget distribution without marking all liquidated",
+          "message": "AssertionError: expected 66000 to be 50000 // Object.is equality"
+        }
+      ]
+    },
+    {
+      "file": "lib/ytrace-policy.test.ts",
+      "failures": [
+        {
+          "name": "Y-TRACE policy content does not treat the old placeholder row as publishable legal text",
+          "message": "AssertionError: expected { \u2026(7) } to deeply equal { \u2026(7) }"
+        }
+      ]
+    },
+    {
+      "file": "pages/SignIn.test.tsx",
+      "failures": [
+        {
+          "name": "SignIn Component Organization Sign In (Modern SaaS UI) renders organization sign-in form elements, Google button, and slideshow",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: /Back to home/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        },
+        {
+          "name": "SignIn Component Organization Sign In (Modern SaaS UI) handles organization sign-in submission with valid credentials",
+          "message": "AssertionError: expected \"spy\" to be called with arguments: [ '/dashboard', { replace: true } ]"
+        },
+        {
+          "name": "SignIn Component Combined /signin Route Access Type Switching and Live Viewport Adaptation renders Admin sign-in when switching to Administrator mode at 1280px",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/^Admin$/i`"
+        }
+      ]
+    },
+    {
+      "file": "admin/pages/YorpRegistry.accreditation.test.tsx",
+      "failures": [
+        {
+          "name": "YORP registry accreditation dates uses the seeded 2023 term and finds it under Expiring Soon despite 2026 verification",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: 5 Oct 2023. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "admin/pages/YorpRegistry.quarterly.test.tsx",
+      "failures": [
+        {
+          "name": "raw YORP quarterly exports intersects quarter with semester and all registry filters using accreditation date",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/generate export/i`"
+        }
+      ]
+    },
+    {
+      "file": "admin/pages/YorpRegistry.test.tsx",
+      "failures": [
+        {
+          "name": "YorpRegistry Page Header Actions & Semester Filtering renders the Semester dropdown with default 'All Semesters' inline with Export and Reports",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/select semester/i`"
+        },
+        {
+          "name": "YorpRegistry Page Header Actions & Semester Filtering allows opening semester dropdown and renders semester options",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/select semester/i`"
+        }
+      ]
+    },
+    {
+      "file": "admin/components/AdminFilterLayoutStability.test.tsx",
+      "failures": [
+        {
+          "name": "Admin Filter & Layout Stability Across All 5 Pages BudgetRequestsTable renders rows with status label without runtime error",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Hardcopy Submitted. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "admin/components/AdminReportingPeriodSelector.test.tsx",
+      "failures": [
+        {
+          "name": "report period export controls keeps monitoring custom dates and All Year working",
+          "message": "AssertionError: expected last \"spy\" call to have been called with [ { fiscalPeriod: { \u2026(2) }, \u2026(8) } ]"
+        }
+      ]
+    },
+    {
+      "file": "admin/components/BudgetMonitoringOverview.test.tsx",
+      "failures": [
+        {
+          "name": "BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut Visibility Page controls keep the fiscal period separate from panel filters",
+          "message": "Error: expect(element).toHaveTextContent()"
+        }
+      ]
+    },
+    {
+      "file": "admin/components/YpopRecentActivity.test.tsx",
+      "failures": [
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 1: History button renders with aria-label='Decision history'",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 2 & 3: Clicking History opens popover containing 'Recent Activity'",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 4 & 5: Correct organization activity displayed, other org activity excluded",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 6 & 7: YPOP event participation and organization activity appear",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 8: Activity is sorted newest first",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 9: Activities are grouped by day (Today, Yesterday, d MMM yyyy, fallback Recent)",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 10: Empty organization shows 'No activity recorded yet.'",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 11 & 12: More than 4 entries show 'Load older activity' and clicking it expands by 4",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 13: Clicking outside closes the popover",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 14: Escape closes the popover",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 15 & 16: Changing selectedYpopId closes popover and resets visible count to 4",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        },
+        {
+          "name": "YPOP Validation Recent Activity / Decision History Popover TEST 17: No duplicate activity entries appear when an action exists in both state.activityLogs and YPOP revisionHistory",
+          "message": "Error: Unable to find role=\"button\" and name `/^submissions$/i`"
+        }
+      ]
+    },
+    {
+      "file": "admin/components/YpopValidationSummaryAndFilter.test.tsx",
+      "failures": [
+        {
+          "name": "YPOP Validation \u2014 Summary Cards, Qualification Model & Filter Suite TEST 1: Admin YPOP Validation summary cards contain exactly Pending Evaluation, Qualified, and Not Qualified, and NOT Submitted",
+          "message": "Error: Unable to find role=\"button\" and name `/submissions/i`"
+        }
+      ]
+    },
+    {
+      "file": "components/portal/UserPortalRedesignView.test.tsx",
+      "failures": [
+        {
+          "name": "UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality renders 4 overview health metric cards with keyboard accessibility and navigation",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Documents. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "components/portal/UserPortalResponsiveWorkspace.test.tsx",
+      "failures": [
+        {
+          "name": "PortalAttachedDocumentDrawer Responsive Behavior renders revision remarks and revision actions when status is needs_revision",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Needs Revision. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+        }
+      ]
+    },
+    {
+      "file": "components/reports/YorpQuarterlyReportDialog.regression.test.tsx",
+      "failures": [
+        {
+          "name": "official Section 35 workflow stays separate retains default year and quarter, both report types, and official year/quarter RPC arguments",
+          "message": "AssertionError: expected \"spy\" to be called with arguments: [ 2026, 3 ]"
+        }
+      ]
+    },
+    {
+      "file": "components/portal/ypop/YpopPpaSubmissionWorkflow.test.tsx",
+      "failures": [
+        {
+          "name": "Organization-Led PPA Drawer & File Submission/Persistence Workflow Group 4: Redundant Action Removal & Light Multi-File Selection UI 1 & 2. 'Log Another Activity' is NOT rendered; 'Close Drawer' remains in read-only footer (Desktop & Mobile)",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Close Drawer/i`"
+        }
+      ]
+    },
+    {
+      "file": "components/portal/ypop/YpopResponsiveDrawer.test.tsx",
+      "failures": [
+        {
+          "name": "YPOP Responsive Drawer/Modal Standardization C. Organization-Led PPA Details (Read-Only) renders Centered Modal Dialog on Tablet (768px)",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Close Drawer/i`"
+        },
+        {
+          "name": "YPOP Responsive Drawer/Modal Standardization C. Organization-Led PPA Details (Read-Only) renders Centered Modal Dialog on Phone (375px)",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Close Drawer/i`"
+        },
+        {
+          "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 320px",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Close Drawer/i`"
+        },
+        {
+          "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 375px",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Close Drawer/i`"
+        },
+        {
+          "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 390px",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Close Drawer/i`"
+        },
+        {
+          "name": "YPOP Responsive Drawer/Modal Standardization E. Organization-Led PPA Mobile Phone Responsiveness & Desktop Regression renders mobile drawer hierarchy, non-colliding header, and scrollable body at 430px",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name `/Close Drawer/i`"
+        }
+      ]
+    },
+    {
+      "file": "components/portal/ypop/YpopTransientDuplicateDraftPrevention.test.tsx",
+      "failures": [
+        {
+          "name": "Transient Duplicate Draft PPA Row Prevention Suite TEST B \u2014 Direct Submit: does NOT dispatch premature Draft to store, only dispatches submitted activity",
+          "message": "AssertionError: expected \"spy\" to be called 1 times, but got 0 times"
+        },
+        {
+          "name": "Transient Duplicate Draft PPA Row Prevention Suite TEST C \u2014 Existing Draft Submission: opens draft and submits, transitioning to Pending Review without duplicate",
+          "message": "AssertionError: expected \"spy\" to be called 1 times, but got 0 times"
+        },
+        {
+          "name": "Transient Duplicate Draft PPA Row Prevention Suite TEST F \u2014 Refresh / Sync: mergeRemoteState maintains single authoritative submitted activity",
+          "message": "AssertionError: expected [] to have a length of 1 but got +0"
+        }
+      ]
+    }
+  ],
+  "collectionErrorFollowup": {
+    "file": "src/lib/audit-records-hardening.test.ts",
+    "cause": "Partial admin-auth mock lacked newly imported event constants",
+    "fix": "Preserve real module exports while mocking readAdminSession",
+    "passed": 7,
+    "failed": 0,
+    "fullSuiteRerunAfterFixtureFix": false
+  },
+  "finalFollowups": {
+    "accountCache": {
+      "passed": 43,
+      "failed": 0
+    },
+    "contracts": {
+      "passed": 67,
+      "failed": 0
+    },
+    "securityWorkflows": {
+      "passed": 85,
+      "failed": 0
+    },
+    "note": "Overlapping focused runs; do not sum as unique tests. Private query-cache tests and actual PDF geometry were added after full-suite discovery; covered by focused followups."
+  },
+  "occurrenceMatchedAssertions": 2278,
+  "newOccurrenceMatchedFailures": [],
+  "addedOccurrenceFailures": []
+}

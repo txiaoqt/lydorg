@@ -1,0 +1,370 @@
+{
+  "scope": "Exact captured policies and grants, isolated PostgreSQL; synthetic objects and auth/admin helpers. Suspension has no Storage predicate in these policies.",
+  "securityAcceptance": "FAIL",
+  "results": [
+    {
+      "identity": "Anonymous",
+      "readableBuckets": [
+        {
+          "bucket_id": "organization-documents"
+        },
+        {
+          "bucket_id": "budget-request-files"
+        },
+        {
+          "bucket_id": "liquidation-report-files"
+        },
+        {
+          "bucket_id": "ypop-files"
+        },
+        {
+          "bucket_id": "move-files"
+        },
+        {
+          "bucket_id": "template-files"
+        },
+        {
+          "bucket_id": "news-release-images"
+        }
+      ],
+      "operations": [
+        {
+          "sql": "insert into storage.objects values(99,'template-files','unauthorized-fixture.pdf',null) returning id",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "sql": "update storage.objects set name='changed-fixture.pdf' where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        },
+        {
+          "sql": "delete from storage.objects where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "Organization A",
+      "readableBuckets": [
+        {
+          "bucket_id": "organization-documents"
+        },
+        {
+          "bucket_id": "budget-request-files"
+        },
+        {
+          "bucket_id": "liquidation-report-files"
+        },
+        {
+          "bucket_id": "ypop-files"
+        },
+        {
+          "bucket_id": "move-files"
+        },
+        {
+          "bucket_id": "template-files"
+        },
+        {
+          "bucket_id": "news-release-images"
+        }
+      ],
+      "operations": [
+        {
+          "sql": "insert into storage.objects values(99,'template-files','unauthorized-fixture.pdf',null) returning id",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "sql": "update storage.objects set name='changed-fixture.pdf' where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        },
+        {
+          "sql": "delete from storage.objects where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "Organization B",
+      "readableBuckets": [
+        {
+          "bucket_id": "organization-documents"
+        },
+        {
+          "bucket_id": "budget-request-files"
+        },
+        {
+          "bucket_id": "liquidation-report-files"
+        },
+        {
+          "bucket_id": "ypop-files"
+        },
+        {
+          "bucket_id": "move-files"
+        },
+        {
+          "bucket_id": "template-files"
+        },
+        {
+          "bucket_id": "news-release-images"
+        }
+      ],
+      "operations": [
+        {
+          "sql": "insert into storage.objects values(99,'template-files','unauthorized-fixture.pdf',null) returning id",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "sql": "update storage.objects set name='changed-fixture.pdf' where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        },
+        {
+          "sql": "delete from storage.objects where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "Authorized Admin fixture",
+      "readableBuckets": [
+        {
+          "bucket_id": "organization-documents"
+        },
+        {
+          "bucket_id": "budget-request-files"
+        },
+        {
+          "bucket_id": "liquidation-report-files"
+        },
+        {
+          "bucket_id": "ypop-files"
+        },
+        {
+          "bucket_id": "move-files"
+        },
+        {
+          "bucket_id": "template-files"
+        },
+        {
+          "bucket_id": "news-release-images"
+        }
+      ],
+      "operations": [
+        {
+          "sql": "insert into storage.objects values(99,'template-files','unauthorized-fixture.pdf',null) returning id",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "sql": "update storage.objects set name='changed-fixture.pdf' where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        },
+        {
+          "sql": "delete from storage.objects where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "Unauthorized Admin",
+      "readableBuckets": [
+        {
+          "bucket_id": "organization-documents"
+        },
+        {
+          "bucket_id": "budget-request-files"
+        },
+        {
+          "bucket_id": "liquidation-report-files"
+        },
+        {
+          "bucket_id": "ypop-files"
+        },
+        {
+          "bucket_id": "move-files"
+        },
+        {
+          "bucket_id": "template-files"
+        },
+        {
+          "bucket_id": "news-release-images"
+        }
+      ],
+      "operations": [
+        {
+          "sql": "insert into storage.objects values(99,'template-files','unauthorized-fixture.pdf',null) returning id",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "sql": "update storage.objects set name='changed-fixture.pdf' where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        },
+        {
+          "sql": "delete from storage.objects where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "Suspended Organization fixture",
+      "readableBuckets": [
+        {
+          "bucket_id": "organization-documents"
+        },
+        {
+          "bucket_id": "budget-request-files"
+        },
+        {
+          "bucket_id": "liquidation-report-files"
+        },
+        {
+          "bucket_id": "ypop-files"
+        },
+        {
+          "bucket_id": "move-files"
+        },
+        {
+          "bucket_id": "template-files"
+        },
+        {
+          "bucket_id": "news-release-images"
+        }
+      ],
+      "operations": [
+        {
+          "sql": "insert into storage.objects values(99,'template-files','unauthorized-fixture.pdf',null) returning id",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "sql": "update storage.objects set name='changed-fixture.pdf' where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        },
+        {
+          "sql": "delete from storage.objects where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "Invalid/expired session",
+      "readableBuckets": [
+        {
+          "bucket_id": "organization-documents"
+        },
+        {
+          "bucket_id": "budget-request-files"
+        },
+        {
+          "bucket_id": "liquidation-report-files"
+        },
+        {
+          "bucket_id": "ypop-files"
+        },
+        {
+          "bucket_id": "move-files"
+        },
+        {
+          "bucket_id": "template-files"
+        },
+        {
+          "bucket_id": "news-release-images"
+        }
+      ],
+      "operations": [
+        {
+          "sql": "insert into storage.objects values(99,'template-files','unauthorized-fixture.pdf',null) returning id",
+          "rows": [
+            {
+              "id": 99
+            }
+          ]
+        },
+        {
+          "sql": "update storage.objects set name='changed-fixture.pdf' where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        },
+        {
+          "sql": "delete from storage.objects where bucket_id='template-files' returning id",
+          "rows": [
+            {
+              "id": 6
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

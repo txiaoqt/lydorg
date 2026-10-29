@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-10-12T11:51:01.253Z",
+  "status": "PASS",
+  "exitCode": 0,
+  "freshNodeModules": true,
+  "independentDirectory": "candidate",
+  "credentialEnvironment": false,
+  "sourceUnchanged": true
+}

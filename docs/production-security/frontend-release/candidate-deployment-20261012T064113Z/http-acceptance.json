@@ -1,0 +1,34 @@
+{
+  "capturedAt": "2026-10-12T06:55:09.484Z",
+  "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+  "origin": "https://lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+  "readOnly": true,
+  "requests": [
+    {
+      "path": "/",
+      "http": 302,
+      "method": "GET",
+      "bytes": 263,
+      "sha256": "078d44efe538819a52deef2d03cc221b5b81ea1ae1f577dc80710db061c3766f",
+      "headers": {
+        "content-type": "text/plain",
+        "x-frame-options": "DENY"
+      },
+      "redirectOrigin": "https://vercel.com",
+      "securityHeadersMatch": false
+    }
+  ],
+  "secretScan": {
+    "status": "PENDING",
+    "filesScanned": 0,
+    "findings": [],
+    "productionOriginPresent": false,
+    "gatewayNamePresent": false,
+    "limitation": "Bounded literal/pattern scan; no server secrets fetched for comparison"
+  },
+  "privateFileRequests": 0,
+  "authenticatedAdminRequests": 0,
+  "externalSyncPostRequests": 0,
+  "status": "BLOCKED",
+  "reason": "CANDIDATE_ROOT_NOT_PUBLICLY_ACCESSIBLE"
+}

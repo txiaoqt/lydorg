@@ -1,0 +1,236 @@
+{
+  "capturedAt": "2026-10-12T15:11:20.918Z",
+  "status": "PASS",
+  "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+  "teamId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+  "candidate": {
+    "id": "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+    "url": "yorbmsuser-bbr407hfc-toffs-projects-81b2ce10.vercel.app",
+    "readyState": "READY",
+    "target": "production",
+    "createdAt": 1791809207507,
+    "ready": 1791809278925
+  },
+  "provider": {
+    "capturedAt": "2026-10-12T15:09:54.692Z",
+    "status": "PASS",
+    "authenticatedProviderAccess": true,
+    "team": {
+      "id": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "slug": "toffs-projects-81b2ce10"
+    },
+    "admin": {
+      "id": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "name": "lydorg",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "productionId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "productionUrl": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoExposeSystemEnvs": true,
+      "link": {
+        "type": "github",
+        "org": "txiaoqt",
+        "repo": "lydorg",
+        "productionBranch": "main"
+      }
+    },
+    "organization": {
+      "id": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "name": "yorbms_user",
+      "accountId": "team_lrnDtn1fujS9WebCMQoWHmGR",
+      "productionId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "productionUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app",
+      "framework": "vite",
+      "nodeVersion": "24.x",
+      "buildCommand": "npm run build",
+      "installCommand": "npm install",
+      "outputDirectory": "build",
+      "rootDirectory": null,
+      "autoExposeSystemEnvs": true,
+      "link": {
+        "type": "github",
+        "org": "txiaoqt",
+        "repo": "lydorg",
+        "productionBranch": "main"
+      }
+    },
+    "adminAlias": {
+      "alias": "y-trace-admin.vercel.app",
+      "projectId": "prj_J36xqAUQELX8NttCaFFInsxcCEaI",
+      "deploymentId": "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "deploymentUrl": "lydorg-7bb5w6yag-toffs-projects-81b2ce10.vercel.app"
+    },
+    "organizationAlias": {
+      "alias": "ytrace.app",
+      "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+      "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+    },
+    "organizationDomains": [
+      {
+        "name": "www.ytrace.app",
+        "verified": true,
+        "redirect": "ytrace.app",
+        "redirectStatusCode": 307,
+        "gitBranch": null
+      },
+      {
+        "name": "ytrace.app",
+        "verified": true,
+        "redirect": null,
+        "redirectStatusCode": null,
+        "gitBranch": null
+      }
+    ],
+    "activeCompetingDeployments": [],
+    "adminDeploymentIds": [
+      "dpl_AZ287kU35oFTVqyTEQRf749qncAA",
+      "dpl_23fmNmdVszfR79rsG1VmB7Nd9pAS",
+      "dpl_645dxpV4ubKyVXast3rBHjy3mZhr",
+      "dpl_3xkY2hTr9ght98vNXqrjZTtrEPCQ",
+      "dpl_BhYo37WcJuwBVx6JLL7VBJ5mQRY6",
+      "dpl_7GrB5SNwBBREHPr4wCYmzyG9JyMC",
+      "dpl_G4yh2FunfypmupKLTi69ULcq7rrp",
+      "dpl_6FJw3ZhqGbJk3PGbkCoyf8mMKk4w",
+      "dpl_Bm1idFnT8mzBfPWLoKed1qSnDMyZ",
+      "dpl_3zoCdrToHb9cQJBugBBJJMbQ53Nx",
+      "dpl_AY8K99yX6Gur4xf56A45ENW7bLYW",
+      "dpl_DEo54GRRSteKryaVyBsRMYLRqFxX",
+      "dpl_AmSTtB6gTpHZTckbEtHcZAGRwxTd",
+      "dpl_78xkUPrmTK6quMLRhHwM8SdWHQiP",
+      "dpl_A694MmRxnnXFeTYxirYc4i5Nzbqz",
+      "dpl_2DnwRR2wAGzQq9BJ6DXXraywWdt2",
+      "dpl_4AzoYFKHbBowFghrG1XpRx83zneV",
+      "dpl_FBwEZMMFvqY9FzdVN9XxLuPztwnU"
+    ],
+    "organizationDeploymentIds": [
+      "dpl_9cdS7dktgbw9PkhiewmzXn3nPFNQ",
+      "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+      "dpl_4YfNAbqeFDknqHszpARV5QW7o1GV",
+      "dpl_Ba4GUi6zLuYgBY3dkuWdgAui9Vgi",
+      "dpl_BtuYhQdZKRuUMZpxhaG8nepDjWC5",
+      "dpl_7dxckuuhfsfUAmEMXvJz37Lr9wgo",
+      "dpl_B64ppKg2KFvh9vdTZuYNUeQCnbBT",
+      "dpl_H1eTRoovHmQFJH51LkQoYzdirg7Y",
+      "dpl_9JxrDNGYWC28MmzXsxAsmma9ZSdG",
+      "dpl_HzbzcQWbdyBJ6eqLkAr39oEPsdjD",
+      "dpl_AqUFnz1Agw76oVvuJuX4ZPA6NDgL",
+      "dpl_2tF5QmmhRiHCmKhrJhtmzMD6Crix",
+      "dpl_4j1sZTY7zyLkENqYDDxCa28zfCCB",
+      "dpl_7ecpsJuM4EwsnqJcnaWX6At6rgmb",
+      "dpl_HqjUHqKs8CLyLoFe58r952aexJqy",
+      "dpl_Frczi2sE9aTTkCB1CxQXLNE15FX3"
+    ]
+  },
+  "organizationDomains": [
+    {
+      "name": "www.ytrace.app",
+      "verified": true,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "redirect": "ytrace.app",
+      "redirectStatusCode": 307
+    },
+    {
+      "name": "ytrace.app",
+      "verified": true,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "redirect": null,
+      "redirectStatusCode": null
+    }
+  ],
+  "adminDomains": [
+    {
+      "name": "y-trace-admin.vercel.app",
+      "verified": true,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "redirect": null,
+      "redirectStatusCode": null
+    }
+  ],
+  "currentProductionAliases": [
+    {
+      "alias": "www.ytrace.app",
+      "projectId": null,
+      "deploymentId": null
+    },
+    {
+      "alias": "yorbmsuser-git-main-toffs-projects-81b2ce10.vercel.app",
+      "projectId": null,
+      "deploymentId": null
+    },
+    {
+      "alias": "ytrace.app",
+      "projectId": null,
+      "deploymentId": null
+    }
+  ],
+  "candidateAliases": [
+    {
+      "alias": "yorbmsuser-toffs-projects-81b2ce10.vercel.app",
+      "projectId": null,
+      "deploymentId": null
+    }
+  ],
+  "affectedConfiguredProductionDomains": [
+    "www.ytrace.app",
+    "ytrace.app"
+  ],
+  "providerPromotionAliasScope": [
+    "www.ytrace.app",
+    "ytrace.app"
+  ],
+  "preservedBranchAlias": {
+    "alias": "yorbmsuser-git-main-toffs-projects-81b2ce10.vercel.app",
+    "projectId": "prj_ywvIWJbULZOdCMtrt6JPcMqguA2N",
+    "deploymentId": "dpl_HGFE2BwongbW7ncM4kn6cQ48ffeV",
+    "deploymentUrl": "yorbmsuser-e2bgtj2bj-toffs-projects-81b2ce10.vercel.app"
+  },
+  "generatedAliasAlreadyOnCandidate": "yorbmsuser-toffs-projects-81b2ce10.vercel.app",
+  "publicConfiguration": {
+    "capturedAt": "2026-10-12T15:11:20.918Z",
+    "status": "PASS",
+    "publicNames": [
+      "VITE_DEPLOY_SURFACE",
+      "VITE_ENABLE_STANDALONE_USER_PWA_UI",
+      "VITE_SUPABASE_ANON_KEY",
+      "VITE_SUPABASE_URL"
+    ],
+    "projectRef": "mqqaykksadotbrghbexz",
+    "keyClass": "anon",
+    "surface": "user",
+    "standalonePwaUi": true,
+    "configurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+    "valuesLogged": false,
+    "serverSecretsRetrieved": false
+  },
+  "pins": {
+    "sourceRevision": "0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
+    "sourceArchiveSha256": "e7d43c8aa7d0d0a2cc42130eafd34ad9b1b5147aeb416aba55349353f7fa33c8",
+    "sourceArchiveBytes": 15424325,
+    "sourceFiles": 562,
+    "staticInventorySha256": "bae8f79337d04020eb14b6fbb936b476cfe3cf2530db1596ca8a35138a336d94",
+    "staticFiles": 53,
+    "fixedVersion": "1.0.0-org-storage-rc+20261012114439.vercel24",
+    "publicConfigurationSha256": "cb861a63dc9a73eda9a295c21d659fabed8ea4dba15bf8722264b281e9c525bf",
+    "cliVersion": "63.1.2",
+    "cliClientSha256": "d09cbde148f869762f51b35b7cf0fd5defdd450094e288b81cefa93e6cd40914",
+    "cliCommandsSha256": "a7f2f57caf3f42d10c370ea36efca693948e5fa04856ef040784558f44a01cf5"
+  },
+  "hostedSource": {
+    "files": 561,
+    "providerMetadataSha256": "d17eb29112928c31af4bc3b1b25e0626f73af3afb59931802f28c9eb7d5d9d77",
+    "status": "PASS"
+  },
+  "lastAliasRequest": null,
+  "rollingReleaseEnabled": false,
+  "readOnly": true,
+  "operationLockOwnershipVerified": true
+}

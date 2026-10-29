@@ -1,0 +1,9 @@
+{
+  "existingNodePgVersion": "8.23.0",
+  "psqlAvailableOnPath": false,
+  "postgresInstallationFoundInCheckedStandardLocations": false,
+  "productionDbCredentialsInProcess": false,
+  "productionRootEnvLoaded": false,
+  "nativePostgresConnectivityTested": false,
+  "reason": "Required native DB credential and trusted CA parameters are absent; no credential-dependent native connection attempted."
+}

@@ -1,0 +1,60 @@
+{
+  "projectRef": "zroudsvpswqsjlyttkjf",
+  "status": "PASS",
+  "checkedAt": "2026-10-10T17:43:33.324Z",
+  "journalIdentitiesMatch": true,
+  "profileOwnershipMatches": true,
+  "superAdminAnchorMatches": true,
+  "bucketsMatch": true,
+  "fixtureLockAbsent": true,
+  "requests": [
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/settings",
+      "status": 200,
+      "durationMs": 476
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/auth/v1/admin/users",
+      "status": 200,
+      "durationMs": 434
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/organization_profiles",
+      "status": 200,
+      "durationMs": 152
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/admin_accounts",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/rest/v1/roles",
+      "status": 200,
+      "durationMs": 128
+    },
+    {
+      "actor": "setup",
+      "step": "preflight",
+      "method": "GET",
+      "endpoint": "/storage/v1/bucket",
+      "status": 200,
+      "durationMs": 158
+    }
+  ]
+}
