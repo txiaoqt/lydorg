@@ -8,7 +8,7 @@ const PublicTemplates = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
 
           {/* Title block */}
@@ -16,7 +16,7 @@ const PublicTemplates = () => {
             <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Forms &amp; Templates
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl">
+            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-2xl lg:max-w-5xl">
               Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>

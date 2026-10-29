@@ -18,7 +18,7 @@ const PublicBudgetTransparency = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           {/* Title block */}
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
