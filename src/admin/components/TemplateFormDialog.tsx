@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { ChevronDown, File, FileMinus, FileText, Info, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -86,6 +86,7 @@ type TemplateFormDialogProps = {
   onSave: () => void;
   categoryOptions?: string[];
   onAddCategory?: (category: string) => void | Promise<void>;
+  onRenameCategory?: (currentCategory: string, nextCategory: string) => string | void | Promise<string | void>;
   onDeleteCategory?: (category: string) => void;
 };
 
@@ -108,6 +109,7 @@ export const TemplateFormDialog = ({
   onSave,
   categoryOptions,
   onAddCategory,
+  onRenameCategory,
   onDeleteCategory,
 }: TemplateFormDialogProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +117,18 @@ export const TemplateFormDialog = ({
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
   const [isSavingCategory, setIsSavingCategory] = useState(false);
+  const [editingCategoryKey, setEditingCategoryKey] = useState<string | null>(null);
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (mode === null && !isSavingCategory) {
+      setIsAddingCategory(false);
+      setEditingCategoryKey(null);
+      setNewCategoryName("");
+      setNewCategoryError(null);
+      setIsCategoryMenuOpen(false);
+    }
+  }, [mode, isSavingCategory]);
 
   const displayFileName = file?.name || existingFileName || "";
   const displayFileSize = file ? file.size : existingFileSize ?? null;
@@ -176,6 +190,70 @@ export const TemplateFormDialog = ({
     }
   };
 
+  const handleConfirmRenameCategory = () => {
+    if (!editingCategoryKey || !onRenameCategory) return;
+
+    const current = normalizeTemplateCategoryKey(editingCategoryKey);
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) {
+      setNewCategoryError("Please enter a category name.");
+      return;
+    }
+
+    const normalized = normalizeTemplateCategoryKey(trimmed);
+    if (!normalized) {
+      setNewCategoryError("Please enter a valid category name.");
+      return;
+    }
+    if (isSystemTemplateCategory(normalized)) {
+      setNewCategoryError(`"${formatCanonicalCategoryLabel(normalized)}" is a system category.`);
+      return;
+    }
+
+    const duplicate = dynamicOptions.some((option) => {
+      const key = normalizeTemplateCategoryKey(option);
+      return key !== current && key === normalized;
+    });
+    if (duplicate) {
+      setNewCategoryError(`Category "${formatCanonicalCategoryLabel(normalized)}" already exists.`);
+      return;
+    }
+
+    if (normalized === current) {
+      setEditingCategoryKey(null);
+      setNewCategoryName("");
+      setNewCategoryError(null);
+      return;
+    }
+
+    const finishRenaming = (persistedName?: string | void) => {
+      const persistedCategory = normalizeTemplateCategoryKey(
+        typeof persistedName === "string" && persistedName.trim() ? persistedName : normalized,
+      );
+      if (normalizeTemplateCategoryKey(category) === current) onCategoryChange(persistedCategory);
+      setEditingCategoryKey(null);
+      setNewCategoryName("");
+      setNewCategoryError(null);
+    };
+
+    try {
+      const result = onRenameCategory(current, normalized);
+      if (result && typeof (result as Promise<string | void>).then === "function") {
+        setIsSavingCategory(true);
+        void Promise.resolve(result)
+          .then(finishRenaming)
+          .catch((error: unknown) => {
+            setNewCategoryError(error instanceof Error ? error.message : "The category could not be renamed.");
+          })
+          .finally(() => setIsSavingCategory(false));
+        return;
+      }
+      finishRenaming(result as string | void);
+    } catch (error) {
+      setNewCategoryError(error instanceof Error ? error.message : "The category could not be renamed.");
+    }
+  };
+
   return (
     <Dialog open={mode === "create" || mode === "edit"} onOpenChange={(open) => (!open ? onCancel() : undefined)}>
       <DialogContent
@@ -217,11 +295,12 @@ export const TemplateFormDialog = ({
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <Label>Category</Label>
-              {!isAddingCategory ? (
+              {!isAddingCategory && !editingCategoryKey ? (
                 <button
                   type="button"
                   onClick={() => {
                     setIsAddingCategory(true);
+                    setEditingCategoryKey(null);
                     setNewCategoryError(null);
                   }}
                   className="text-xs text-primary font-medium hover:underline cursor-pointer"
@@ -230,25 +309,33 @@ export const TemplateFormDialog = ({
                 </button>
               ) : null}
             </div>
-            {isAddingCategory ? (
+            {isAddingCategory || editingCategoryKey ? (
               <div className="flex flex-col gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface p-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-segoe text-xs font-semibold text-text-default">Add New Category</span>
+                  <span className="font-segoe text-xs font-semibold text-text-default">
+                    {editingCategoryKey ? "Edit Category" : "Add New Category"}
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
                       if (isSavingCategory) return;
                       setIsAddingCategory(false);
+                      setEditingCategoryKey(null);
                       setNewCategoryName("");
                       setNewCategoryError(null);
                     }}
                     disabled={isSavingCategory}
                     className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Cancel adding category"
+                    aria-label={editingCategoryKey ? "Cancel editing category" : "Cancel adding category"}
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
+                {editingCategoryKey ? (
+                  <p className="font-segoe text-[11px] leading-relaxed text-slate-500">
+                    Renaming this category updates every template currently assigned to it.
+                  </p>
+                ) : null}
                 <div className="flex gap-2">
                   <input
                     value={newCategoryName}
@@ -259,7 +346,8 @@ export const TemplateFormDialog = ({
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {
                         event.preventDefault();
-                        handleConfirmAddCategory();
+                        if (editingCategoryKey) handleConfirmRenameCategory();
+                        else handleConfirmAddCategory();
                       }
                     }}
                     placeholder="e.g. Youth Development, Handbook..."
@@ -268,11 +356,11 @@ export const TemplateFormDialog = ({
                   />
                   <button
                     type="button"
-                    onClick={handleConfirmAddCategory}
+                    onClick={editingCategoryKey ? handleConfirmRenameCategory : handleConfirmAddCategory}
                     disabled={isSavingCategory}
                     className="inline-flex h-8 items-center justify-center rounded-md bg-public-bg-brand px-3 text-xs font-semibold text-white transition-colors hover:bg-bg-brand-hover cursor-pointer disabled:cursor-wait disabled:opacity-60"
                   >
-                    {isSavingCategory ? "Saving…" : "Add"}
+                    {isSavingCategory ? "Saving…" : editingCategoryKey ? "Save" : "Add"}
                   </button>
                 </div>
                 {newCategoryError ? (
@@ -280,7 +368,7 @@ export const TemplateFormDialog = ({
                 ) : null}
               </div>
             ) : (
-              <DropdownMenu>
+              <DropdownMenu open={isCategoryMenuOpen} onOpenChange={setIsCategoryMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <button type="button" className={cn(FIELD_CLASS, "justify-between")}>
                     <span className={category ? "text-text-default" : "text-text-disabled"}>
@@ -293,26 +381,38 @@ export const TemplateFormDialog = ({
                   {dynamicOptions.map((option) => {
                     const isSystem = isSystemTemplateCategory(option);
                     return (
-                      <DropdownMenuItem
-                        key={option}
-                        className="flex cursor-pointer items-center justify-between font-segoe text-xs"
-                        onClick={() => onCategoryChange(option)}
-                      >
-                        <span className="truncate">{formatTemplateCategoryDropdownLabel(option)}</span>
-                        {!isSystem && onDeleteCategory ? (
-                          <button
-                            type="button"
-                            aria-label={`Delete category ${formatTemplateCategoryDropdownLabel(option)}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteCategory(option);
+                      <div key={option} className="flex items-center gap-1 px-1">
+                        <DropdownMenuItem
+                          className="min-w-0 flex-1 cursor-pointer font-segoe text-xs"
+                          onSelect={() => onCategoryChange(option)}
+                        >
+                          <span className="truncate">{formatTemplateCategoryDropdownLabel(option)}</span>
+                        </DropdownMenuItem>
+                        {!isSystem && onRenameCategory ? (
+                          <DropdownMenuItem
+                            aria-label={`Edit category ${formatTemplateCategoryDropdownLabel(option)}`}
+                            className="h-7 w-7 shrink-0 cursor-pointer justify-center rounded p-0 text-slate-400 focus:text-primary"
+                            onSelect={() => {
+                              setIsCategoryMenuOpen(false);
+                              setIsAddingCategory(false);
+                              setEditingCategoryKey(option);
+                              setNewCategoryName(formatCanonicalCategoryLabel(option));
+                              setNewCategoryError(null);
                             }}
-                            className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded p-0.5 text-slate-400 opacity-70 transition-colors hover:bg-slate-100 hover:text-rose-600 hover:opacity-100 focus:opacity-100"
+                          >
+                            <Pencil className="h-3.5 w-3.5" strokeWidth={1.6} />
+                          </DropdownMenuItem>
+                        ) : null}
+                        {!isSystem && onDeleteCategory ? (
+                          <DropdownMenuItem
+                            aria-label={`Delete category ${formatTemplateCategoryDropdownLabel(option)}`}
+                            className="h-7 w-7 shrink-0 cursor-pointer justify-center rounded p-0 text-slate-500 transition-colors hover:text-rose-600 focus-visible:ring-2 focus-visible:ring-rose-600"
+                            onSelect={() => onDeleteCategory(option)}
                           >
                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
-                          </button>
+                          </DropdownMenuItem>
                         ) : null}
-                      </DropdownMenuItem>
+                      </div>
                     );
                   })}
                   <DropdownMenuItem

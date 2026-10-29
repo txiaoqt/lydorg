@@ -3718,6 +3718,31 @@ export const createAdminTemplateCategoryInSupabase = async (category: string): P
   return normalizeTemplateCategoryKey(persistedName);
 };
 
+export const renameAdminTemplateCategoryInSupabase = async (
+  currentCategory: string,
+  nextCategory: string,
+): Promise<string> => {
+  const current = normalizeTemplateCategoryKey(currentCategory);
+  const next = normalizeTemplateCategoryKey(nextCategory);
+  if (!current || !next) throw new Error("Category name cannot be empty.");
+  if (isSystemTemplateCategory(current) || isSystemTemplateCategory(next)) {
+    throw new Error("System categories cannot be renamed.");
+  }
+  if (!supabase) return next;
+
+  const adminSession = getAuthenticatedAdminSession();
+  const { data, error } = await supabase.rpc("admin_rename_template_category", {
+    _session_token: adminSession.sessionToken,
+    _current_normalized_name: current,
+    _next_normalized_name: next,
+  });
+  if (error) throw new Error(error.message);
+  if (typeof data !== "string" || !data.trim()) {
+    throw new Error("The category could not be renamed.");
+  }
+  return normalizeTemplateCategoryKey(data);
+};
+
 export const deleteAdminTemplateCategoryInSupabase = async (category: string): Promise<void> => {
   const normalized = normalizeTemplateCategoryKey(category);
   if (!normalized) throw new Error("Category name is invalid.");

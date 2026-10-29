@@ -36,6 +36,7 @@ import {
   legacyRemovedTemplateNames,
   normalizeInquiryStatus,
   normalizeTemplateCategoryKey,
+  renameTemplateCategoryAssignments,
   seedState,
 } from "./lydo-connect-data";
 import { loadOrganizationBootstrapState } from "./lydo-connect-supabase";
@@ -302,6 +303,7 @@ type LydoConnectContextValue = {
   updateYPOPPeriod: (id: string, patch: UpdatePatch<YPOPPeriod>) => void;
   deleteYPOPPeriod: (id: string) => void;
   addCustomTemplateCategory: (category: string) => void;
+  renameCustomTemplateCategory: (currentCategory: string, nextCategory: string) => void;
   removeCustomTemplateCategory: (category: string) => void;
   setNewsCategories: (categories: NewsCategoryRecord[]) => void;
   addNewsCategory: (category: NewsCategoryRecord) => void;
@@ -1123,6 +1125,22 @@ export const LydoConnectProvider = ({ children }: { children: React.ReactNode })
             customTemplateCategories: [...currentCats, normalized],
           };
         });
+      },
+      renameCustomTemplateCategory: (currentCategory, nextCategory) => {
+        const current = normalizeTemplateCategoryKey(currentCategory);
+        const next = normalizeTemplateCategoryKey(nextCategory);
+        if (!current || !next || current === next || isSystemTemplateCategory(current) || isSystemTemplateCategory(next)) return;
+        setState((state) => ({
+          ...state,
+          customTemplateCategories: Array.from(
+            new Set(
+              (state.customTemplateCategories ?? [])
+                .map((category) => normalizeTemplateCategoryKey(category) === current ? next : normalizeTemplateCategoryKey(category))
+                .filter((category) => Boolean(category) && !isSystemTemplateCategory(category)),
+            ),
+          ),
+          templates: renameTemplateCategoryAssignments(state.templates, current, next),
+        }));
       },
       removeCustomTemplateCategory: (category) => {
         const normalized = normalizeTemplateCategoryKey(category);

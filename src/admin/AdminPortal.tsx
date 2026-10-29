@@ -185,6 +185,7 @@ import {
   createTransparencyPostInSupabase,
   createTemplateRecordInSupabase,
   createAdminTemplateCategoryInSupabase,
+  renameAdminTemplateCategoryInSupabase,
   deleteAdminTemplateCategoryInSupabase,
   deleteNewsReleaseInSupabase,
   deleteNewsReleasePreviewImageFromSupabase,
@@ -791,7 +792,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const currentAdminRoleCode = user?.roleCode ?? readAdminSession()?.roleCode;
   const isSuperAdmin = currentAdminRoleCode === "super_admin";
 
-  const { state: sharedState, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
+  const { state: sharedState, mergeRemoteState, updateOrganizationProfile, removeOrganizationAccountFromCache, createTemplate, removeTemplate, createNewsRelease, removeNewsRelease, updateNewsRelease, updateTransparencyPost, updateComplianceRemark, updateTemplate, createNotification, markNotificationRead, markAllNotificationsRead, updateBudgetRequest, updateBudgetRequestFile, updateLiquidationReport, updateLiquidationReportFile, updateInquiry, removeInquiry, createYPOPEntry, updateYPOPEntry, updateYPOPEventParticipation, createYPOPOrgActivity, updateYPOPOrgActivity, createYPOPCityActivity, updateYPOPCityActivity, deleteYPOPCityActivity, createYPOPPeriod, updateYPOPPeriod, deleteYPOPPeriod, addCustomTemplateCategory, renameCustomTemplateCategory, removeCustomTemplateCategory, addNewsCategory, removeNewsCategory, setNewsCategories } =
     useLydoConnect();
   const mergeRemoteStateRef = useRef(mergeRemoteState);
   useEffect(() => {
@@ -6997,6 +6998,20 @@ function AdminPortalContent({ section }: { section: string }) {
     addCustomTemplateCategory(persistedCategory);
   };
 
+  const handleRenameCustomTemplateCategory = async (currentCategory: string, nextCategory: string) => {
+    const persistedCategory = await renameAdminTemplateCategoryInSupabase(currentCategory, nextCategory);
+    renameCustomTemplateCategory(currentCategory, persistedCategory);
+    void queryClient.invalidateQueries({ queryKey: ["public", "templates", "catalog"] });
+    if (normalizeTemplateCategoryKey(templateCategoryDraft) === normalizeTemplateCategoryKey(currentCategory)) {
+      setTemplateCategoryDraft(persistedCategory);
+    }
+    toast({
+      title: "Category updated",
+      description: `Category renamed to ${formatCanonicalCategoryLabel(persistedCategory)}.`,
+    });
+    return persistedCategory;
+  };
+
   const handleUpdateTemplate = async () => {
     const template = state.templates.find((entry) => entry.id === editingTemplateId);
     if (!template) return;
@@ -12693,6 +12708,7 @@ function AdminPortalContent({ section }: { section: string }) {
               onSave={() => void (templateModalMode === "edit" ? handleUpdateTemplate() : handleCreateTemplate())}
               categoryOptions={templateCategoryOptions}
               onAddCategory={handleAddCustomTemplateCategory}
+              onRenameCategory={handleRenameCustomTemplateCategory}
               onDeleteCategory={handleInitiateDeleteCategory}
             />
             <Dialog

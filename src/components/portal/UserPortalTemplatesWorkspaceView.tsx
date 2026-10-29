@@ -25,6 +25,7 @@ import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
 import {
   formatTemplateCategoryDropdownLabel,
+  formatPublicTemplateCategorySectionLabel,
   orderTemplateCategories,
   deriveTemplateCategory,
   resolveCleanTemplateDownloadFileName,
@@ -456,8 +457,8 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                     onClick={() => toggleCategoryCollapse(group.category)}
                     className="min-w-0 flex-1 cursor-pointer select-none space-y-0.5 pr-1"
                   >
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground truncate">
-                      {group.category} ({group.items.length})
+                    <h3 className="break-words text-xs font-bold uppercase tracking-wider text-foreground">
+                      {formatPublicTemplateCategorySectionLabel(group.category)} ({group.items.length})
                     </h3>
                     <span className="text-[10px] text-muted-foreground font-semibold block">
                       {requiredCount > 0
@@ -754,15 +755,15 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                 onClick={() => toggleCategoryCollapse(group.category)}
                 className="p-4 bg-muted/20 border-b border-border/60 flex items-center justify-between cursor-pointer hover:bg-muted/40 transition-colors"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 text-muted-foreground transition-transform",
                       isCollapsed && "-rotate-90"
                     )}
                   />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                    {group.category} ({group.items.length})
+                  <h3 className="min-w-0 break-words text-xs font-bold uppercase tracking-wider text-foreground">
+                    {formatPublicTemplateCategorySectionLabel(group.category)} ({group.items.length})
                   </h3>
                 </div>
 

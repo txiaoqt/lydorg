@@ -1989,6 +1989,18 @@ export const formatTemplateCategoryLabel = (raw: string) => formatCanonicalCateg
 
 export const formatTemplateCategoryDropdownLabel = (raw: string) => formatCanonicalCategoryLabel(raw);
 
+export const formatPublicTemplateCategorySectionLabel = (raw?: string | null): string => {
+  const key = normalizeTemplateCategoryKey(raw ?? "");
+  const officialLabels: Record<string, string> = {
+    yorp: "YOUTH ORGANIZATION REGISTRATION PROGRAM (YORP)",
+    ypop: "YOUTH PARTICIPATION ORGANIZATION PASSPORT (YPOP)",
+    move: "MOBILITY OPPORTUNITY FOR VALUABLE EXCHANGE (MOVE)",
+    data_form: "DATA REQUEST FORMS",
+  };
+
+  return officialLabels[key] ?? formatCanonicalCategoryLabel(raw);
+};
+
 export const orderTemplateCategories = (categories: string[]) => {
   const safeCategories = (categories ?? []).filter((c): c is string => typeof c === "string" && Boolean(c.trim()));
   const seen = new Set<string>();
@@ -2028,6 +2040,37 @@ export type TemplateRecord = RequiredDocumentType & {
   templateUploadedAt: string;
   templateFileSize: number | null;
   templateCategories: string[];
+};
+
+export const renameTemplateCategoryAssignments = (
+  templates: TemplateRecord[],
+  currentCategory: string,
+  nextCategory: string,
+): TemplateRecord[] => {
+  const currentKey = normalizeTemplateCategoryKey(currentCategory);
+  const nextKey = normalizeTemplateCategoryKey(nextCategory);
+  if (!currentKey || !nextKey || currentKey === nextKey) return templates;
+
+  const rename = (categories?: string[]) =>
+    Array.isArray(categories)
+      ? categories.map((value) =>
+          normalizeTemplateCategoryKey(value) === currentKey ? nextKey : value,
+        )
+      : categories;
+
+  return templates.map((template) => {
+    const templateCategories = rename(template.templateCategories);
+    const templateCategory = rename(template.templateCategory);
+    if (templateCategories === template.templateCategories && templateCategory === template.templateCategory) {
+      return template;
+    }
+
+    return {
+      ...template,
+      ...(templateCategories ? { templateCategories } : {}),
+      ...(templateCategory ? { templateCategory } : {}),
+    };
+  });
 };
 
 export type YpopSubmissionDeletionReceipt = {
