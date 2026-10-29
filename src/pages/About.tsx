@@ -139,10 +139,10 @@ const About = () => {
           <div className="flex w-full flex-col items-center gap-4 py-0 text-center sm:gap-[32px] sm:py-[10px] xl:max-w-[573px] xl:items-start xl:text-left">
             <div className="flex w-full flex-col items-center gap-3 sm:gap-[16px] xl:items-start">
               <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-brand text-[28px] sm:text-public-fs-hero">
-                Empowering Youth Organizations in Pasig City
+                Supporting Youth Organizations in Pasig City
               </h1>
               <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-center text-[#1e1e1e] text-sm sm:text-public-fs-subtitle-sm xl:text-justify">
-                The Pasig City Youth Development Office (PCYDO) is mandated to support, develop, and monitor registered youth organizations across the city. Y-TRACE is our official digital portal — simplifying compliance, registration, document submission, and activity reporting for both organizations and PCYDO staff.
+                Connecting Pasig City youth organizations to registration services, compliance processes, and youth development programs through a centralized digital platform.
               </p>
             </div>
 
@@ -171,8 +171,80 @@ const About = () => {
         </div>
       </section>
 
+      {/* About PCYDO */}
+      <section className="bg-public-bg-section px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-[24px] xl:flex-row xl:items-center">
+
+          {/* Left column — PCYDO card */}
+          <div className="flex w-full flex-col gap-3.5 sm:gap-[24px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-overview-card xl:w-[515px] xl:shrink-0">
+            <div className="flex h-10 w-10 sm:h-[64px] sm:w-[64px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-brand p-2 sm:p-[8px]">
+              <Globe className="h-6 w-6 sm:h-12 sm:w-12 text-white" />
+            </div>
+            <div className="flex flex-col gap-1 sm:gap-[4px]">
+              <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-[#1e1e1e]">
+                Pasig City Youth Development Office
+              </h3>
+              <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
+                PCYDO
+              </span>
+            </div>
+            <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-public-text-secondary">
+              The Pasig City Youth Development Office oversees youth welfare programs, supports registered youth organizations, and enforces compliance with national and local youth development policies.
+            </p>
+            <div className="flex flex-wrap gap-1.5 sm:gap-[12px]">
+              {["Youth Development", "Compliance", "Registration"].map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-public-border-default bg-public-bg-section px-2.5 py-1 sm:px-[10px] sm:py-[10px] font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-[100%] text-[#1e1e1e]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Right column */}
+          <div className="flex w-full flex-1 flex-col gap-4 sm:gap-[24px] xl:px-[24px]">
+            <div className="flex flex-col gap-2 sm:gap-[10px] py-1 sm:py-[10px]">
+              <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
+                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
+                  ABOUT PCYDO
+                </span>
+              </div>
+              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
+                The office behind the portal
+              </h2>
+              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
+                PCYDO is the government office mandated to coordinate, monitor, and support all youth-related programs and organizations across the city's barangays.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:gap-[12px] py-1 sm:py-[10px]">
+              {pcydoCards.map(({ icon: Icon, title, description }) => (
+                <div
+                  key={title}
+                  className="flex flex-col items-start gap-3 sm:gap-[24px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-nav sm:flex-row sm:items-center"
+                >
+                  <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] shrink-0 items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
+                    <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
+                  </div>
+                  <div className="flex flex-col gap-1 sm:gap-[6px]">
+                    <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] text-public-text-brand">
+                      {title}
+                    </h3>
+                    <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-public-text-neutral-default">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       {/* Portal Overview */}
-      <section className="bg-public-bg-section px-4 pt-4 pb-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+      <section className="bg-white px-4 pt-4 pb-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-[24px] xl:flex-row xl:items-center">
 
           {/* Left column — gradient card */}
@@ -246,78 +318,6 @@ const About = () => {
             </div>
 
           </div>
-        </div>
-      </section>
-
-      {/* About PCYDO */}
-      <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-[24px] xl:flex-row xl:items-center">
-
-          {/* Left column — PCYDO card */}
-          <div className="flex w-full flex-col gap-3.5 sm:gap-[24px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-overview-card xl:w-[515px] xl:shrink-0">
-            <div className="flex h-10 w-10 sm:h-[64px] sm:w-[64px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-brand p-2 sm:p-[8px]">
-              <Globe className="h-6 w-6 sm:h-12 sm:w-12 text-white" />
-            </div>
-            <div className="flex flex-col gap-1 sm:gap-[4px]">
-              <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-[#1e1e1e]">
-                Pasig City Youth Development Office
-              </h3>
-              <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
-                PCYDO
-              </span>
-            </div>
-            <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-public-text-secondary">
-              The Pasig City Youth Development Office oversees youth welfare programs, supports registered youth organizations, and enforces compliance with national and local youth development policies.
-            </p>
-            <div className="flex flex-wrap gap-1.5 sm:gap-[12px]">
-              {["Youth Development", "Compliance", "Registration"].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-public-border-default bg-public-bg-section px-2.5 py-1 sm:px-[10px] sm:py-[10px] font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-[100%] text-[#1e1e1e]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Right column */}
-          <div className="flex w-full flex-1 flex-col gap-4 sm:gap-[24px] xl:px-[24px]">
-            <div className="flex flex-col gap-2 sm:gap-[10px] py-1 sm:py-[10px]">
-              <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                  ABOUT PCYDO
-                </span>
-              </div>
-              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-                The office behind the portal
-              </h2>
-              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
-                PCYDO is the government office mandated to coordinate, monitor, and support all youth-related programs and organizations across the city's barangays.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:gap-[12px] py-1 sm:py-[10px]">
-              {pcydoCards.map(({ icon: Icon, title, description }) => (
-                <div
-                  key={title}
-                  className="flex flex-col items-start gap-3 sm:gap-[24px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-nav sm:flex-row sm:items-center"
-                >
-                  <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] shrink-0 items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
-                    <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
-                  </div>
-                  <div className="flex flex-col gap-1 sm:gap-[6px]">
-                    <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] text-public-text-brand">
-                      {title}
-                    </h3>
-                    <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-public-text-neutral-default">
-                      {description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
       </section>
 
