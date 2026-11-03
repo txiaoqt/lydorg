@@ -41,17 +41,17 @@ type AdministratorsTableProps = {
 const PAGE_SIZE = 10;
 
 const MENU_ITEM_CLASS =
-  "flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 font-segoe text-sm font-normal leading-none";
+  "flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 font-inter text-sm font-normal leading-none";
 
 const RolePill = ({ roleCode, roleLabel }: { roleCode: string | null; roleLabel: string | null }) => {
   if (!roleLabel) {
-    return <span className="font-segoe text-xs text-slate-500">—</span>;
+    return <span className="font-inter text-xs text-slate-500">—</span>;
   }
   const isSuperAdmin = roleCode === "super_admin";
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+        "inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
         isSuperAdmin
           ? "border-role-pink-border bg-role-pink-bg text-role-pink-text"
           : "border-role-blue-border bg-role-blue-bg text-role-blue-text",
@@ -65,17 +65,17 @@ const RolePill = ({ roleCode, roleLabel }: { roleCode: string | null; roleLabel:
 const StatusPill = ({ active, passwordSet }: { active: boolean; passwordSet: boolean }) => {
   if (!passwordSet) {
     return (
-      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-warning-secondary">
         Invitation Pending
       </span>
     );
   }
   return active ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-danger-secondary">
       Suspended
     </span>
   );
@@ -133,7 +133,7 @@ export const AdministratorsTable = ({
               setPage(0);
             }}
             placeholder="Search administrators..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -141,7 +141,7 @@ export const AdministratorsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{activeRoleLabel}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -154,7 +154,7 @@ export const AdministratorsTable = ({
                 setPage(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 roleFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -168,7 +168,7 @@ export const AdministratorsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   roleFilter === role.code && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -182,7 +182,7 @@ export const AdministratorsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{activeUnitLabel}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -195,7 +195,7 @@ export const AdministratorsTable = ({
                 setPage(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 unitFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -209,7 +209,7 @@ export const AdministratorsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   unitFilter === unit.code && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -223,7 +223,7 @@ export const AdministratorsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{activeStatusLabel}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -238,7 +238,7 @@ export const AdministratorsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   statusFilter === status && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -250,7 +250,7 @@ export const AdministratorsTable = ({
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
         <span className="w-[30%]">User</span>
         <span className="w-[16%]">Role</span>
         <span className="w-[20%]">Unit</span>
@@ -262,8 +262,8 @@ export const AdministratorsTable = ({
       {/* Rows */}
       {pageItems.length === 0 ? (
         <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-          <p className="font-segoe text-sm font-semibold text-text-default">No administrators found</p>
-          <p className="font-segoe text-xs text-slate-500">Try adjusting your search or filters.</p>
+          <p className="font-inter text-sm font-semibold text-text-default">No administrators found</p>
+          <p className="font-inter text-xs text-slate-500">Try adjusting your search or filters.</p>
         </div>
       ) : (
         pageItems.map((administrator) => {
@@ -279,13 +279,13 @@ export const AdministratorsTable = ({
             >
               <div className="flex w-[30%] min-w-0 items-center gap-2.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-public-bg-brand">
-                  <span className="font-segoe text-sm font-semibold leading-none text-neutral-100">{initial}</span>
+                  <span className="font-inter text-sm font-semibold leading-none text-neutral-100">{initial}</span>
                 </div>
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                  <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                     {administrator.displayName}
                   </p>
-                  <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">{administrator.email}</p>
+                  <p className="truncate font-inter text-xs leading-[140%] text-slate-500">{administrator.email}</p>
                 </div>
               </div>
 
@@ -297,7 +297,7 @@ export const AdministratorsTable = ({
                 {administrator.unitLabel ? (
                   <CategoryChip category={administrator.unitLabel} />
                 ) : (
-                  <span className="font-segoe text-xs text-slate-500">—</span>
+                  <span className="font-inter text-xs text-slate-500">—</span>
                 )}
               </div>
 
@@ -406,7 +406,7 @@ export const AdministratorsTable = ({
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{administrators.length}</span> records
         </p>
@@ -415,7 +415,7 @@ export const AdministratorsTable = ({
             type="button"
             onClick={() => changePage(clampedPage - 1)}
             disabled={clampedPage === 0}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
             Previous
@@ -429,7 +429,7 @@ export const AdministratorsTable = ({
                   type="button"
                   onClick={() => changePage(index)}
                   className={cn(
-                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                     index === clampedPage
                       ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                       : "text-text-default hover:bg-slate-50",
@@ -443,7 +443,7 @@ export const AdministratorsTable = ({
             type="button"
             onClick={() => changePage(clampedPage + 1)}
             disabled={clampedPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

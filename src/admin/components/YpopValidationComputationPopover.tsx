@@ -103,7 +103,7 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[94vw] max-w-[420px] max-h-[85vh] overflow-y-auto p-4 space-y-3 rounded-2xl shadow-xl bg-admin-surface border border-slate-300 dark:border-slate-800 text-text-default font-segoe"
+        className="w-[94vw] max-w-[420px] max-h-[85vh] overflow-y-auto p-4 space-y-3 rounded-2xl shadow-xl bg-admin-surface border border-slate-300 dark:border-slate-800 text-text-default font-inter"
       >
         {/* Header Information */}
         <div>

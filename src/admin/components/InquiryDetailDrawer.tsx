@@ -73,10 +73,10 @@ export const InquiryDetailDrawer = ({
                   <ReferenceCodeChip code={referenceCode} className="w-fit" />
                   <StatusPill status={inquiry.status} />
                 </div>
-                <h2 className="break-words font-segoe text-lg font-semibold leading-snug text-text-default">
+                <h2 className="break-words font-inter text-lg font-semibold leading-snug text-text-default">
                   {inquiry.subject || "General Inquiry"}
                 </h2>
-                <div className="flex items-center gap-1.5 font-segoe text-xs leading-[140%] text-slate-500">
+                <div className="flex items-center gap-1.5 font-inter text-xs leading-[140%] text-slate-500">
                   <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={1.6} />
                   <span>Received</span>
                   <span className="font-cascadia text-xs text-slate-600">
@@ -100,11 +100,11 @@ export const InquiryDetailDrawer = ({
               {/* Message Section */}
               <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-admin-surface p-5 sm:p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-1.5 border-b border-slate-300 pb-3">
-                  <p className="font-segoe text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <p className="font-inter text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Message
                   </p>
                 </div>
-                <p className="whitespace-pre-wrap break-words font-segoe text-sm font-normal leading-relaxed text-text-default">
+                <p className="whitespace-pre-wrap break-words font-inter text-sm font-normal leading-relaxed text-text-default">
                   {inquiry.description}
                 </p>
               </div>
@@ -112,25 +112,25 @@ export const InquiryDetailDrawer = ({
               {/* Sender Information Section */}
               <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-admin-surface p-5 sm:p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-1.5 border-b border-slate-300 pb-3">
-                  <p className="font-segoe text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <p className="font-inter text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Sender Information
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <p className="font-segoe text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <p className="font-inter text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                       Organization
                     </p>
-                    <p className="break-words font-segoe text-sm font-semibold leading-snug text-text-default">
+                    <p className="break-words font-inter text-sm font-semibold leading-snug text-text-default">
                       {inquiry.organizationName || inquiry.submitterName || "Unknown"}
                     </p>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <p className="font-segoe text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <p className="font-inter text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                       Email
                     </p>
                     <div className="flex flex-col gap-2">
-                      <p className="break-all font-segoe text-sm font-semibold leading-snug text-text-default">
+                      <p className="break-all font-inter text-sm font-semibold leading-snug text-text-default">
                         {inquiry.email}
                       </p>
                       <button
@@ -158,7 +158,7 @@ export const InquiryDetailDrawer = ({
               {/* Status Update Segmented Control */}
               <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-admin-surface p-5 sm:p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-1.5 border-b border-slate-300 pb-3">
-                  <p className="font-segoe text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <p className="font-inter text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Update Inquiry Status
                   </p>
                 </div>
@@ -173,7 +173,7 @@ export const InquiryDetailDrawer = ({
                         aria-pressed={active}
                         onClick={() => onUpdateStatus(action.value)}
                         className={cn(
-                          "inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 font-segoe text-xs font-semibold leading-none transition-colors sm:text-sm cursor-pointer disabled:opacity-50",
+                          "inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 font-inter text-xs font-semibold leading-none transition-colors sm:text-sm cursor-pointer disabled:opacity-50",
                           active
                             ? "bg-public-bg-brand text-public-text-neutral-on-neutral shadow-xs font-bold"
                             : "text-text-default hover:bg-white hover:text-slate-900",
@@ -194,7 +194,7 @@ export const InquiryDetailDrawer = ({
                   type="button"
                   disabled={saving}
                   onClick={() => onDeleteInquiry(inquiry)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface px-3 py-2 font-segoe text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 transition-colors hover:border-rose-300 dark:hover:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-50 active:scale-95 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface px-3 py-2 font-inter text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 transition-colors hover:border-rose-300 dark:hover:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-50 active:scale-95 cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                   Delete Inquiry

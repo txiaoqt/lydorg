@@ -51,7 +51,7 @@ import {
 } from "@/lib/lydo-connect-data";
 
 const FIELD_CLASS =
-  "flex h-9 w-full items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-segoe text-[13px] font-normal leading-[140%] text-text-default outline-none transition-colors placeholder:text-text-disabled focus-visible:border-public-bg-brand focus-visible:ring-2 focus-visible:ring-public-bg-brand/20";
+  "flex h-9 w-full items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-inter text-[13px] font-normal leading-[140%] text-text-default outline-none transition-colors placeholder:text-text-disabled focus-visible:border-public-bg-brand focus-visible:ring-2 focus-visible:ring-public-bg-brand/20";
 
 const FIELD_ERROR_CLASS =
   "border-icon-danger-secondary focus-visible:border-icon-danger-secondary focus-visible:ring-icon-danger-secondary/20";
@@ -107,7 +107,7 @@ export const CalendarCaption = ({ displayMonth }: CaptionProps) => {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 font-segoe text-sm font-normal leading-none text-text-default transition-colors hover:text-public-bg-brand active:scale-95"
+              className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 font-inter text-sm font-normal leading-none text-text-default transition-colors hover:text-public-bg-brand active:scale-95"
             >
               {MONTH_NAMES[displayMonth.getMonth()]}
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -139,7 +139,7 @@ export const CalendarCaption = ({ displayMonth }: CaptionProps) => {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 font-segoe text-sm font-normal leading-none text-text-default transition-colors hover:text-public-bg-brand active:scale-95"
+              className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 font-inter text-sm font-normal leading-none text-text-default transition-colors hover:text-public-bg-brand active:scale-95"
             >
               {displayMonth.getFullYear()}
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -182,10 +182,10 @@ export const CalendarCaption = ({ displayMonth }: CaptionProps) => {
 
 const SectionHeader = ({ step, title }: { step: number; title: string }) => (
   <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-public-bg-secondary-100 font-segoe text-[11px] font-bold text-public-text-brand-secondary">
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-public-bg-secondary-100 font-inter text-[11px] font-bold text-public-text-brand-secondary">
       {step}
     </span>
-    <h3 className="font-segoe text-xs font-bold uppercase tracking-wider text-slate-700">
+    <h3 className="font-inter text-xs font-bold uppercase tracking-wider text-slate-700">
       {title}
     </h3>
   </div>
@@ -202,7 +202,7 @@ const Label = ({
 }) => (
   <label
     htmlFor={htmlFor}
-    className="flex items-center gap-1 font-segoe text-[13px] font-medium leading-none text-text-default"
+    className="flex items-center gap-1 font-inter text-[13px] font-medium leading-none text-text-default"
   >
     {children}
     {required ? (
@@ -469,10 +469,10 @@ export const NewsReleaseFormDialog = ({
               <Pencil className="h-5 w-5" strokeWidth={1.8} />
             </div>
             <div className="flex flex-col gap-0.5">
-              <DialogTitle className="font-segoe text-lg font-semibold leading-tight text-text-default">
+              <DialogTitle className="font-inter text-lg font-semibold leading-tight text-text-default">
                 {mode === "edit" ? "Edit News Release" : "Add News Release"}
               </DialogTitle>
-              <DialogDescription className="font-segoe text-xs text-slate-500">
+              <DialogDescription className="font-inter text-xs text-slate-500">
                 {mode === "edit"
                   ? "Update an existing announcement for the Organization Portal."
                   : "Create a new announcement for the Organization Portal."}
@@ -510,7 +510,7 @@ export const NewsReleaseFormDialog = ({
                 className={cn(FIELD_CLASS, titleError && FIELD_ERROR_CLASS)}
               />
               {titleError ? (
-                <p className="flex items-center gap-1 font-segoe text-xs text-icon-danger-secondary" role="alert">
+                <p className="flex items-center gap-1 font-inter text-xs text-icon-danger-secondary" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>{titleError}</span>
                 </p>
@@ -529,12 +529,12 @@ export const NewsReleaseFormDialog = ({
                 rows={3}
                 aria-invalid={Boolean(descriptionError)}
                 className={cn(
-                  "w-full resize-none rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-segoe text-[13px] font-normal leading-[140%] text-text-default outline-none transition-colors placeholder:text-text-disabled focus-visible:border-public-bg-brand focus-visible:ring-2 focus-visible:ring-public-bg-brand/20",
+                  "w-full resize-none rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-inter text-[13px] font-normal leading-[140%] text-text-default outline-none transition-colors placeholder:text-text-disabled focus-visible:border-public-bg-brand focus-visible:ring-2 focus-visible:ring-public-bg-brand/20",
                   descriptionError && FIELD_ERROR_CLASS,
                 )}
               />
               {descriptionError ? (
-                <p className="flex items-center gap-1 font-segoe text-xs text-icon-danger-secondary" role="alert">
+                <p className="flex items-center gap-1 font-inter text-xs text-icon-danger-secondary" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>{descriptionError}</span>
                 </p>
@@ -576,22 +576,22 @@ export const NewsReleaseFormDialog = ({
 
               {/* Validation feedback */}
               {facebookPostUrl.trim() && !facebookValidation.isValid ? (
-                <p className="flex items-center gap-1 font-segoe text-xs text-icon-danger-secondary" role="alert">
+                <p className="flex items-center gap-1 font-inter text-xs text-icon-danger-secondary" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>{facebookValidation.error}</span>
                 </p>
               ) : facebookPostUrl.trim() && facebookValidation.isValid ? (
-                <p className="flex items-center gap-1 font-segoe text-xs text-emerald-600">
+                <p className="flex items-center gap-1 font-inter text-xs text-emerald-600">
                   <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                   <span>Supported Facebook post format detected.</span>
                 </p>
               ) : submitted && !facebookPostUrl.trim() ? (
-                <p className="flex items-center gap-1 font-segoe text-xs text-icon-danger-secondary" role="alert">
+                <p className="flex items-center gap-1 font-inter text-xs text-icon-danger-secondary" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>Facebook post URL is required.</span>
                 </p>
               ) : (
-                <p className="font-segoe text-[11px] text-slate-500">
+                <p className="font-inter text-[11px] text-slate-500">
                   Link directly to the official Facebook post, video, photo, or share permalink.
                 </p>
               )}
@@ -605,7 +605,7 @@ export const NewsReleaseFormDialog = ({
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <Label required>Thumbnail Image File</Label>
-                <span className="font-segoe text-[11px] text-slate-500">JPG, PNG, or WebP · Max 5 MB</span>
+                <span className="font-inter text-[11px] text-slate-500">JPG, PNG, or WebP · Max 5 MB</span>
               </div>
 
               {/* Hidden file input */}
@@ -630,11 +630,11 @@ export const NewsReleaseFormDialog = ({
                       className="h-full w-full object-cover"
                     />
                     {hasSelectedNewFile ? (
-                      <div className="absolute top-2 left-2 rounded bg-public-bg-brand/90 px-2 py-0.5 font-segoe text-[11px] font-medium text-white shadow-xs">
+                      <div className="absolute top-2 left-2 rounded bg-public-bg-brand/90 px-2 py-0.5 font-inter text-[11px] font-medium text-white shadow-xs">
                         New image selected
                       </div>
                     ) : hasExistingThumbnail ? (
-                      <div className="absolute top-2 left-2 rounded bg-slate-800/80 px-2 py-0.5 font-segoe text-[11px] font-medium text-white shadow-xs">
+                      <div className="absolute top-2 left-2 rounded bg-slate-800/80 px-2 py-0.5 font-inter text-[11px] font-medium text-white shadow-xs">
                         Current saved thumbnail
                       </div>
                     ) : null}
@@ -644,11 +644,11 @@ export const NewsReleaseFormDialog = ({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 text-slate-700">
                       <FileImage className="h-4 w-4 shrink-0 text-public-bg-brand" />
-                      <span className="max-w-[220px] truncate font-segoe text-xs font-medium">
+                      <span className="max-w-[220px] truncate font-inter text-xs font-medium">
                         {previewImageFile ? previewImageFile.name : "Saved image"}
                       </span>
                       {previewImageFile ? (
-                        <span className="font-segoe text-[11px] text-slate-500">
+                        <span className="font-inter text-[11px] text-slate-500">
                           ({formatFileSize(previewImageFile.size)})
                         </span>
                       ) : null}
@@ -663,7 +663,7 @@ export const NewsReleaseFormDialog = ({
                             setImageError(null);
                             if (fileInputRef.current) fileInputRef.current.value = "";
                           }}
-                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs font-medium text-text-default transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95"
+                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-inter text-xs font-medium text-text-default transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95"
                         >
                           <RotateCcw className="h-3.5 w-3.5" />
                           <span>Revert</span>
@@ -676,7 +676,7 @@ export const NewsReleaseFormDialog = ({
                             setImageError(null);
                             if (fileInputRef.current) fileInputRef.current.value = "";
                           }}
-                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95"
+                          className="flex h-8 items-center gap-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-inter text-xs font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           <span>Remove</span>
@@ -686,7 +686,7 @@ export const NewsReleaseFormDialog = ({
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex h-8 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-3 font-segoe text-xs font-medium text-text-default shadow-2xs transition-colors hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95"
+                        className="flex h-8 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-3 font-inter text-xs font-medium text-text-default shadow-2xs transition-colors hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95"
                       >
                         <UploadCloud className="h-3.5 w-3.5 text-public-bg-brand" />
                         <span>{hasSelectedNewFile || hasExistingThumbnail ? "Replace image" : "Upload image"}</span>
@@ -725,10 +725,10 @@ export const NewsReleaseFormDialog = ({
                     <UploadCloud className="h-5 w-5" strokeWidth={1.8} />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-segoe text-xs font-semibold text-text-default">
+                    <span className="font-inter text-xs font-semibold text-text-default">
                       Click to browse or drag and drop image
                     </span>
-                    <span className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
+                    <span className="font-inter text-[11px] text-slate-500 dark:text-slate-400">
                       Thumbnail must be uploaded directly (JPG, PNG, WebP up to 5 MB)
                     </span>
                   </div>
@@ -737,7 +737,7 @@ export const NewsReleaseFormDialog = ({
 
               {/* Image Error Alert */}
               {thumbnailError ? (
-                <p className="flex items-center gap-1 font-segoe text-xs text-icon-danger-secondary" role="alert">
+                <p className="flex items-center gap-1 font-inter text-xs text-icon-danger-secondary" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>{thumbnailError}</span>
                 </p>
@@ -759,7 +759,7 @@ export const NewsReleaseFormDialog = ({
                       setIsAddingCategory(true);
                       setTimeout(() => newCategoryInputRef.current?.focus(), 50);
                     }}
-                    className="flex items-center gap-1 font-segoe text-xs font-semibold text-public-bg-brand hover:underline active:scale-95 transition-all"
+                    className="flex items-center gap-1 font-inter text-xs font-semibold text-public-bg-brand hover:underline active:scale-95 transition-all"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Add new category</span>
@@ -800,7 +800,7 @@ export const NewsReleaseFormDialog = ({
                         <DropdownMenuItem
                           key={option.id || option.normalizedName || option.name}
                           className={cn(
-                            "group/item flex cursor-pointer items-center justify-between font-segoe text-xs py-1.5",
+                            "group/item flex cursor-pointer items-center justify-between font-inter text-xs py-1.5",
                             isSelected && "font-semibold text-public-bg-brand bg-slate-50 dark:bg-slate-800",
                           )}
                           onClick={() => {
@@ -852,7 +852,7 @@ export const NewsReleaseFormDialog = ({
                     <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-800" />
 
                     <DropdownMenuItem
-                      className="cursor-pointer font-segoe text-xs font-medium text-public-bg-brand hover:bg-public-bg-secondary-100 dark:hover:bg-slate-800"
+                      className="cursor-pointer font-inter text-xs font-medium text-public-bg-brand hover:bg-public-bg-secondary-100 dark:hover:bg-slate-800"
                       onClick={() => {
                         setIsAddingCategory(true);
                         setTimeout(() => newCategoryInputRef.current?.focus(), 50);
@@ -868,7 +868,7 @@ export const NewsReleaseFormDialog = ({
                 {isAddingCategory ? (
                   <div className="flex flex-col gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3 animate-in fade-in-50 duration-150">
                     <div className="flex items-center justify-between">
-                      <span className="font-segoe text-xs font-semibold text-text-default">Add New Category</span>
+                      <span className="font-inter text-xs font-semibold text-text-default">Add New Category</span>
                       <button
                         type="button"
                         onClick={handleCancelAddCategory}
@@ -898,7 +898,7 @@ export const NewsReleaseFormDialog = ({
                         }}
                         placeholder="e.g. Community Outreach"
                         className={cn(
-                          "h-8 flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs outline-none focus-visible:border-public-bg-brand focus-visible:ring-1 focus-visible:ring-public-bg-brand",
+                          "h-8 flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-inter text-xs outline-none focus-visible:border-public-bg-brand focus-visible:ring-1 focus-visible:ring-public-bg-brand",
                           newCategoryError && "border-icon-danger-secondary",
                         )}
                       />
@@ -906,7 +906,7 @@ export const NewsReleaseFormDialog = ({
                         type="button"
                         disabled={isAddingCategorySubmitting}
                         onClick={() => void handleConfirmAddCategory()}
-                        className="h-8 rounded-md bg-public-bg-brand px-3 font-segoe text-xs font-medium text-white transition-colors hover:bg-bg-brand-hover active:scale-95 disabled:opacity-50 inline-flex items-center gap-1"
+                        className="h-8 rounded-md bg-public-bg-brand px-3 font-inter text-xs font-medium text-white transition-colors hover:bg-bg-brand-hover active:scale-95 disabled:opacity-50 inline-flex items-center gap-1"
                       >
                         {isAddingCategorySubmitting ? (
                           <>
@@ -921,18 +921,18 @@ export const NewsReleaseFormDialog = ({
                         type="button"
                         disabled={isAddingCategorySubmitting}
                         onClick={handleCancelAddCategory}
-                        className="h-8 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-segoe text-xs text-text-default hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95"
+                        className="h-8 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-2.5 font-inter text-xs text-text-default hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95"
                       >
                         Cancel
                       </button>
                     </div>
 
                     {newCategoryError ? (
-                      <p className="font-segoe text-[11px] text-icon-danger-secondary" role="alert">
+                      <p className="font-inter text-[11px] text-icon-danger-secondary" role="alert">
                         {newCategoryError}
                       </p>
                     ) : (
-                      <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="font-inter text-[11px] text-slate-500 dark:text-slate-400">
                         New category will be immediately selected and persisted in the category registry.
                       </p>
                     )}
@@ -941,12 +941,12 @@ export const NewsReleaseFormDialog = ({
               </div>
 
               {categoryError ? (
-                <p className="flex items-center gap-1 font-segoe text-xs text-icon-danger-secondary" role="alert">
+                <p className="flex items-center gap-1 font-inter text-xs text-icon-danger-secondary" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>{categoryError}</span>
                 </p>
               ) : (
-                <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="font-inter text-[11px] text-slate-500 dark:text-slate-400">
                   Required category tag shown on public news release cards and admin filters.
                 </p>
               )}
@@ -984,7 +984,7 @@ export const NewsReleaseFormDialog = ({
                       components={{ Caption: CalendarCaption }}
                       classNames={{
                         day_selected:
-                          "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                          "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-inter text-public-fs-subheading-sm leading-none text-center",
                       }}
                     />
                     <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
@@ -994,7 +994,7 @@ export const NewsReleaseFormDialog = ({
                           onDatePostedChange("");
                           setDateOpen(false);
                         }}
-                        className="font-segoe text-xs text-slate-500 hover:text-slate-800"
+                        className="font-inter text-xs text-slate-500 hover:text-slate-800"
                       >
                         Clear
                       </button>
@@ -1004,7 +1004,7 @@ export const NewsReleaseFormDialog = ({
                           onDatePostedChange(format(new Date(), "yyyy-MM-dd"));
                           setDateOpen(false);
                         }}
-                        className="font-segoe text-xs font-semibold text-public-bg-brand hover:underline"
+                        className="font-inter text-xs font-semibold text-public-bg-brand hover:underline"
                       >
                         Today
                       </button>
@@ -1012,7 +1012,7 @@ export const NewsReleaseFormDialog = ({
                   </PopoverContent>
                 </Popover>
                 {dateError ? (
-                  <p className="flex items-center gap-1 font-segoe text-xs text-icon-danger-secondary" role="alert">
+                  <p className="flex items-center gap-1 font-inter text-xs text-icon-danger-secondary" role="alert">
                     <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                     <span>{dateError}</span>
                   </p>
@@ -1035,7 +1035,7 @@ export const NewsReleaseFormDialog = ({
                     {VISIBILITY_OPTIONS.map((option) => (
                       <DropdownMenuItem
                         key={option.value}
-                        className="cursor-pointer font-segoe text-xs"
+                        className="cursor-pointer font-inter text-xs"
                         onClick={() => onVisibilityChange(option.value)}
                       >
                         {option.label}
@@ -1054,7 +1054,7 @@ export const NewsReleaseFormDialog = ({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="h-10 rounded-md border border-slate-300 bg-admin-surface px-4 font-segoe text-sm font-normal text-text-default transition-colors hover:border-slate-400 hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+            className="h-10 rounded-md border border-slate-300 bg-admin-surface px-4 font-inter text-sm font-normal text-text-default transition-colors hover:border-slate-400 hover:bg-slate-50 active:scale-95 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -1062,7 +1062,7 @@ export const NewsReleaseFormDialog = ({
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="flex h-10 items-center gap-2 rounded-md bg-public-bg-brand px-4 font-segoe text-sm font-medium text-public-text-neutral-on-neutral shadow-sm transition-all hover:bg-bg-brand-hover active:scale-95 disabled:opacity-50"
+            className="flex h-10 items-center gap-2 rounded-md bg-public-bg-brand px-4 font-inter text-sm font-medium text-public-text-neutral-on-neutral shadow-sm transition-all hover:bg-bg-brand-hover active:scale-95 disabled:opacity-50"
           >
             <Save className="h-4 w-4 shrink-0" strokeWidth={1.8} />
             {saving ? "Saving..." : mode === "edit" ? "Save Changes" : "Create News Release"}
@@ -1083,16 +1083,16 @@ export const NewsReleaseFormDialog = ({
     >
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+          <AlertDialogTitle className="font-inter text-base font-bold text-text-default">
             Delete Category
           </AlertDialogTitle>
-          <AlertDialogDescription className="font-segoe text-sm text-slate-500">
+          <AlertDialogDescription className="font-inter text-sm text-slate-500">
             Are you sure you want to delete the category “{categoryToDelete?.name}”? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         {deleteCategoryError ? (
-          <div className="rounded-md border border-rose-200 bg-rose-50 p-2.5 font-segoe text-xs text-rose-700" role="alert">
+          <div className="rounded-md border border-rose-200 bg-rose-50 p-2.5 font-inter text-xs text-rose-700" role="alert">
             {deleteCategoryError}
           </div>
         ) : null}
@@ -1104,7 +1104,7 @@ export const NewsReleaseFormDialog = ({
               setCategoryToDelete(null);
               setDeleteCategoryError(null);
             }}
-            className="font-segoe"
+            className="font-inter"
           >
             Cancel
           </AlertDialogCancel>
@@ -1130,7 +1130,7 @@ export const NewsReleaseFormDialog = ({
                 setIsDeletingCategory(false);
               }
             }}
-            className="font-segoe active:scale-[0.98] transition-transform"
+            className="font-inter active:scale-[0.98] transition-transform"
           >
             {isDeletingCategory ? (
               <>

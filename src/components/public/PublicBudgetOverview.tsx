@@ -212,17 +212,17 @@ export default function PublicBudgetOverview({
       className={cn("public-budget-overview w-full max-w-7xl mx-auto space-y-6 sm:space-y-8", className)}
     >
       {/* 1. Header Section */}
-      <div className="public-budget-overview-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6">
+      <div className="public-budget-overview-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-public-border-default pb-6">
         <div>
           <div className="public-budget-record-context flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-public-text-brand mb-1">
             <span>Pasig City Youth Development</span>
             <span className="text-slate-300">•</span>
             <span>Official PCYDO Records</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-segoe">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-inter">
             Budget Transparency
           </h1>
-          <p className="text-sm text-slate-600 mt-1 max-w-2xl font-segoe">
+          <p className="text-sm text-slate-600 mt-1 max-w-2xl font-inter">
             Official financial snapshot of the Local Youth Development Fund.
           </p>
         </div>
@@ -240,29 +240,28 @@ export default function PublicBudgetOverview({
                     id={fySelectorId}
                     type="button"
                     aria-label={`Select Fiscal Year. Currently FY ${activeFY}`}
-                    className="flex h-11 min-w-[130px] items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="group flex h-10 min-w-[130px] items-center justify-between gap-2 rounded-[2px] border border-public-border-default bg-white px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2"
                   >
                     <span className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-500 shrink-0" strokeWidth={1.75} />
+                      <Calendar className="h-4 w-4 text-public-text-secondary shrink-0" strokeWidth={1.75} aria-hidden="true" />
                       <span>FY {activeFY}</span>
                     </span>
-                    <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" strokeWidth={1.75} />
+                    <ChevronDown className="h-4 w-4 text-public-text-brand shrink-0 transition-transform group-data-[state=open]:rotate-180" strokeWidth={1.75} aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44 rounded-lg border-slate-200 bg-white p-1 shadow-lg">
+                <DropdownMenuContent align="end" sideOffset={4} className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[130px] rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg">
                   {resolvedAvailableFYs.map((fy) => (
                     <DropdownMenuItem
                       key={fy}
                       onClick={() => handleSelectFY(fy)}
                       className={cn(
-                        "flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md cursor-pointer",
+                        "flex cursor-pointer items-center justify-between rounded-none border-b border-l-2 border-public-border-default px-3 py-3 text-sm last:border-b-0 focus:bg-public-bg-section focus:text-public-text-brand",
                         fy === activeFY
-                          ? "bg-primary/10 text-primary font-bold"
-                          : "text-slate-700 hover:bg-slate-100"
+                          ? "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand"
+                          : "border-l-transparent text-public-text-neutral-default"
                       )}
                     >
                       <span>FY {fy}</span>
-                      {fy === activeFY && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -271,18 +270,18 @@ export default function PublicBudgetOverview({
           )}
 
           {/* Freshness Badge */}
-          <div className="public-budget-freshness flex h-11 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/80 px-3.5 text-xs text-slate-600">
+          <div className="public-budget-freshness flex h-10 items-center gap-1.5 rounded-[2px] border border-public-border-default bg-white px-3.5 text-xs text-public-text-secondary">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            <span className="font-segoe">Last updated: {lastUpdatedText}</span>
+            <span className="font-inter">Last updated: {lastUpdatedText}</span>
           </div>
         </div>
       </div>
 
       {/* Loading Skeleton */}
       {isLoading && (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center flex flex-col items-center justify-center gap-3">
+        <div className="rounded-[2px] border border-public-border-default bg-white p-12 text-center flex flex-col items-center justify-center gap-3">
           <RefreshCw className="h-7 w-7 text-primary animate-spin" />
-          <p className="text-sm font-medium text-slate-600 font-segoe">
+          <p className="text-sm font-medium text-slate-600 font-inter">
             Retrieving official PCYDO financial records for FY {activeFY}...
           </p>
         </div>
@@ -290,7 +289,7 @@ export default function PublicBudgetOverview({
 
       {/* Error State */}
       {!isLoading && fetchError && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="rounded-[2px] border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
             <div>
@@ -301,7 +300,7 @@ export default function PublicBudgetOverview({
           <button
             type="button"
             onClick={() => handleSelectFY(activeFY)}
-            className="flex h-10 items-center gap-2 rounded-lg border border-amber-300 bg-white px-4 py-2 text-xs font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100/50"
+            className="flex h-10 items-center gap-2 rounded-[2px] border border-amber-300 bg-white px-4 py-2 text-xs font-semibold text-amber-900 transition hover:bg-amber-100/50"
           >
             <RefreshCw className="h-3.5 w-3.5 shrink-0" />
             Retry
@@ -313,13 +312,13 @@ export default function PublicBudgetOverview({
         <>
           {/* Deficit Alert Banner if Commitments Exceed Annual Baseline */}
           {isDeficit && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50/90 p-5 flex items-start gap-3.5 shadow-sm">
+            <div className="rounded-[2px] border border-rose-200 border-l-4 border-l-rose-600 bg-rose-50 p-5 flex items-start gap-3.5">
               <AlertTriangle className="h-5 w-5 text-rose-600 mt-0.5 shrink-0" />
               <div className="space-y-1">
-                <h2 className="text-sm font-bold text-rose-950 font-segoe">
+                <h2 className="text-sm font-bold text-rose-950 font-inter">
                   Allocation Ceiling Reached
                 </h2>
-                <p className="text-xs sm:text-sm text-rose-800 font-segoe leading-relaxed">
+                <p className="text-xs sm:text-sm text-rose-800 font-inter leading-relaxed">
                   Approved youth project commitments exceed the current annual city allocation baseline by{" "}
                   <span className="font-cascadia font-bold underline">
                     {formatPesoAmount(deficitAmount)}
@@ -332,25 +331,25 @@ export default function PublicBudgetOverview({
 
           {/* Unconfigured FY Graceful Notice */}
           {!isConfigured && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50/90 p-6 text-center space-y-2">
+            <div className="rounded-[2px] border border-public-border-default bg-white p-6 text-center space-y-2">
               <Building2 className="h-8 w-8 text-slate-400 mx-auto" strokeWidth={1.5} />
-              <h2 className="text-base font-semibold text-slate-800 font-segoe">
+              <h2 className="text-base font-semibold text-slate-800 font-inter">
                 FY Budget Allocation Not Configured for FY {activeFY}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto font-segoe">
+              <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto font-inter">
                 The City Government of Pasig has not published a statutory baseline allocation for this fiscal year yet. When approved, official allocations and grant distributions will appear here.
               </p>
             </div>
           )}
 
           {/* 2. Budget Execution Pipeline — Single Visual Source of Truth */}
-          <div className="public-budget-pipeline rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-5">
+          <div className="public-budget-pipeline rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-segoe">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-inter">
                   Budget Execution Pipeline &middot; FY {activeFY}
                 </h2>
-                <p className="text-xs text-slate-500 font-segoe mt-0.5">
+                <p className="text-xs text-slate-500 font-inter mt-0.5">
                   Current allocation position across released funds, pending disbursement, and remaining headroom.
                 </p>
               </div>
@@ -360,12 +359,12 @@ export default function PublicBudgetOverview({
               {/* Canonical financial summary */}
             <div className="public-budget-stages grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
               {/* Stage 1: FY Budget Allocation */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-colors hover:border-slate-300">
+              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-segoe", BUDGET_MONITORING_COLORS.allocation.value)}>
+                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.allocation.value)}>
                     1. {BUDGET_MONITORING_LABELS.allocation}
                   </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-slate-100 text-slate-600">
                     <Coins className="h-3.5 w-3.5" strokeWidth={1.75} />
                   </span>
                 </div>
@@ -373,19 +372,19 @@ export default function PublicBudgetOverview({
                   <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.allocation.value)}>
                     {isConfigured ? formatPesoAmount(annualBudget) : "—"}
                   </div>
-                  <div className="text-xs text-slate-500 font-segoe mt-1">
+                  <div className="text-xs text-slate-500 font-inter mt-1">
                     {isConfigured ? "Annual statutory allocation" : "Pending appropriation"}
                   </div>
                 </div>
               </div>
 
               {/* Stage 2: Approved / Committed */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-colors hover:border-blue-200">
+              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-segoe", BUDGET_MONITORING_COLORS.committed.value)}>
+                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.committed.value)}>
                     2. {BUDGET_MONITORING_LABELS.committed}
                   </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-blue-700">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-blue-50 text-blue-700">
                     <FileCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
                   </span>
                 </div>
@@ -393,19 +392,19 @@ export default function PublicBudgetOverview({
                   <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.committed.value)}>
                     {formatPesoAmount(approvedBudget)}
                   </div>
-                  <div className="text-xs text-blue-700 font-segoe mt-1 font-medium">
+                  <div className="text-xs text-blue-700 font-inter mt-1 font-medium">
                     {committedPctDisplay}
                   </div>
                 </div>
               </div>
 
               {/* Stage 3: Released Budget */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-colors hover:border-cyan-200">
+              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-segoe", BUDGET_MONITORING_COLORS.released.value)}>
+                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.released.value)}>
                     3. {BUDGET_MONITORING_LABELS.released}
                   </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-cyan-50 text-cyan-700">
                     <Banknote className="h-3.5 w-3.5" strokeWidth={1.75} />
                   </span>
                 </div>
@@ -413,19 +412,19 @@ export default function PublicBudgetOverview({
                   <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.released.value)}>
                     {formatPesoAmount(releasedBudget)}
                   </div>
-                  <div className="text-xs text-cyan-800 font-segoe mt-1 font-medium">
+                  <div className="text-xs text-cyan-800 font-inter mt-1 font-medium">
                     {releasedPctDisplay}
                   </div>
                 </div>
               </div>
 
               {/* Stage 4: Liquidated Budget */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5 shadow-2xs transition-colors hover:border-emerald-200">
+              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-segoe", BUDGET_MONITORING_COLORS.liquidated.value)}>
+                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.liquidated.value)}>
                     4. {BUDGET_MONITORING_LABELS.liquidated}
                   </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-emerald-50 text-emerald-700">
                     <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                   </span>
                 </div>
@@ -433,7 +432,7 @@ export default function PublicBudgetOverview({
                   <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.liquidated.value)}>
                     {formatPesoAmount(liquidatedBudget)}
                   </div>
-                  <div className="text-xs text-emerald-800 font-segoe mt-1 font-medium">
+                  <div className="text-xs text-emerald-800 font-inter mt-1 font-medium">
                     {auditedPctDisplay}
                   </div>
                 </div>
@@ -454,13 +453,13 @@ export default function PublicBudgetOverview({
 
           {/* 4. Purpose Categories: Where the Youth Budget Goes */}
           <div className="public-budget-distribution grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="public-budget-purpose lg:col-span-2 rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-4">
+            <div className="public-budget-purpose lg:col-span-2 rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-slate-100 pb-3">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900 font-segoe">
+                  <h2 className="text-base font-bold text-slate-900 font-inter">
                     Where the Youth Budget Goes
                   </h2>
-                  <p className="text-xs text-slate-500 font-segoe">
+                  <p className="text-xs text-slate-500 font-inter">
                     Approved allocations by canonical purpose, ordered by amount.
                   </p>
                 </div>
@@ -470,7 +469,7 @@ export default function PublicBudgetOverview({
               </div>
 
               {purposeCategories.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-sm font-segoe">
+                <div className="py-12 text-center text-slate-400 text-sm font-inter">
                   No approved youth grant allocations for FY {activeFY} yet.
                 </div>
               ) : (
@@ -485,7 +484,7 @@ export default function PublicBudgetOverview({
                     return (
                       <div key={item.category} className="space-y-1.5">
                         <div className="public-budget-purpose-label flex items-start justify-between gap-3 text-xs font-semibold">
-                          <span className="flex min-w-0 flex-1 items-start gap-2 text-slate-800 font-segoe">
+                          <span className="flex min-w-0 flex-1 items-start gap-2 text-slate-800 font-inter">
                             <span
                               className="mt-0.5 h-2.5 w-2.5 rounded-full shrink-0"
                               style={{ backgroundColor: color }}
@@ -514,25 +513,25 @@ export default function PublicBudgetOverview({
                 </div>
               )}
               {unmappedPurposeAmount > 0 && (
-                <p className="rounded-md bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                <p className="rounded-[2px] bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
                   {formatPesoAmount(unmappedPurposeAmount)} in approved records does not match a canonical Purpose / Category selected for its organization, so it is excluded from the category list.
                 </p>
               )}
             </div>
 
             {/* 5. Geographic Transparency: District Allocations */}
-            <div className="rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-4">
+            <div className="rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6 space-y-4">
               <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-base font-bold text-slate-900 font-segoe">
+                <h2 className="text-base font-bold text-slate-900 font-inter">
                   District Distribution
                 </h2>
-                <p className="text-xs text-slate-500 font-segoe">
+                <p className="text-xs text-slate-500 font-inter">
                   Aggregated distribution across Pasig legislative districts.
                 </p>
               </div>
 
               {districtAllocations.length === 0 ? (
-                <div className="py-6 text-center text-slate-500 text-sm font-segoe">
+                <div className="py-6 text-center text-slate-500 text-sm font-inter">
                   {unassignedDistrictAmount > 0 ? (
                     <>
                       <p>No approved allocations could be assigned to District I or District II for FY {activeFY}.</p>
@@ -552,7 +551,7 @@ export default function PublicBudgetOverview({
                   {districtAllocations.map((dist) => (
                     <div
                       key={dist.district}
-                      className="rounded-lg border border-slate-200/80 bg-slate-50/60 p-3.5 space-y-1.5"
+                      className="rounded-[2px] border border-public-border-default bg-public-bg-section p-3.5 space-y-1.5"
                     >
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-slate-800 flex items-center gap-1.5">
@@ -578,12 +577,12 @@ export default function PublicBudgetOverview({
               )}
 
               {districtAllocations.length > 0 && unassignedDistrictAmount > 0 && (
-                <p className="rounded-md bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                <p className="rounded-[2px] bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
                   {formatPesoAmount(unassignedDistrictAmount)} in approved records could not be mapped from the organization’s headquarters Barangay to a Pasig district.
                 </p>
               )}
 
-              <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3 text-[11px] text-blue-900 leading-relaxed font-segoe">
+              <div className="border-l-4 border-public-border-brand bg-public-bg-section p-3 text-[11px] text-public-text-neutral-default leading-relaxed font-inter">
                 <span className="font-bold">Public Privacy Standard:</span> Organization identities and specific grant applications remain confidential in accordance with public transparency standards.
               </div>
             </div>

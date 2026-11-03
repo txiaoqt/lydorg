@@ -91,10 +91,10 @@ export function DownloadDocumentsDialog({
               <Download className="h-5 w-5 text-public-text-brand-secondary" strokeWidth={1.6} />
             </div>
             <div className="flex flex-col gap-1">
-              <p className="font-segoe text-lg font-semibold leading-none text-text-default">
+              <p className="font-inter text-lg font-semibold leading-none text-text-default">
                 Download Documents
               </p>
-              <p className="font-segoe text-sm font-normal leading-none text-slate-500">
+              <p className="font-inter text-sm font-normal leading-none text-slate-500">
                 Choose how you'd like to download these files.
               </p>
             </div>
@@ -122,10 +122,10 @@ export function DownloadDocumentsDialog({
               <Download className="h-5 w-5 text-icon-info-secondary" strokeWidth={1.6} />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <p className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+              <p className="font-inter text-[13px] font-semibold leading-none text-text-default">
                 Download Original File
               </p>
-              <p className="font-segoe text-[11px] font-normal leading-none text-slate-500">
+              <p className="font-inter text-[11px] font-normal leading-none text-slate-500">
                 Download this file as-is, at full quality.
               </p>
             </div>
@@ -149,10 +149,10 @@ export function DownloadDocumentsDialog({
               <Archive className="h-5 w-5 text-positive-secondary" strokeWidth={1.6} />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <p className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+              <p className="font-inter text-[13px] font-semibold leading-none text-text-default">
                 Compress All & Download (.zip)
               </p>
-              <p className="font-segoe text-[11px] font-normal leading-none text-slate-500">
+              <p className="font-inter text-[11px] font-normal leading-none text-slate-500">
                 {loadingOption === "compress" && progressMessage
                   ? progressMessage
                   : `Bundle all ${allFiles.length} document${allFiles.length === 1 ? "" : "s"} into one .zip, targeting 3 MB.`}
@@ -176,7 +176,7 @@ export function DownloadDocumentsDialog({
             <button
               type="button"
               disabled={loadingOption !== null}
-              className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-text-default shadow-none transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50"
+              className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-text-default shadow-none transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50"
             >
               Cancel
             </button>

@@ -179,6 +179,7 @@ export default function PublicTemplatesCatalog({
         openFile={openFile}
         compactHeader={compactHeader}
         searchPlaceholder="Search by title, description, or keyword..."
+        publicToolbar
       />
 
       <PortalDocumentDrawer
@@ -200,6 +201,7 @@ export default function PublicTemplatesCatalog({
         previewCanInline={previewCanInline}
         previewEmptyMessage={previewEmptyMessage}
         organizationName="PCYDO"
+        publicStyle
         downloading={isDownloading}
         onDownloadFile={handleDownloadFile}
         onOpenInNewTab={(url) => {

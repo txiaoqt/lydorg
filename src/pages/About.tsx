@@ -1,71 +1,56 @@
-import { ArrowRight, Award, Bell, BookOpen, CircleCheck, ClipboardList, FileText, FolderOpen, Globe, Heart, LayoutGrid, Lock, ScrollText, Send, ShieldCheck, Star, Target, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Award, Building2, ChevronDown, BookOpen, CircleCheck, ClipboardList, FileText, FolderOpen, Globe, Handshake, Lock, ScrollText, Send, ShieldCheck, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
-import aboutHero from "@/assets/about-hero.webp";
+import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
-const portalItems = [
-  { icon: Users, label: "Organization Registration" },
-  { icon: FileText, label: "Compliance Submission" },
-  { icon: FolderOpen, label: "Official Forms & Templates" },
-  { icon: Bell, label: "Announcements & Advisories" },
-  { icon: ClipboardList, label: "Compliance Tracking" },
-];
 
 const aboutCards = [
   {
     icon: BookOpen,
-    title: "Learn the Process",
-    description: "Understand the compliance workflow for youth organizations under PCYDO.",
+    title: "Access Information and Guidelines",
+    description: "Review registration procedures, compliance requirements, and program guidelines relevant to youth organizations.",
   },
   {
     icon: FileText,
-    title: "Access Official Forms",
-    description: "Download official forms and templates required for registration, renewal, and compliance submissions.",
+    title: "Access Official Forms and Templates",
+    description: "Browse and download official forms, templates, and reference documents published by the PCYDO.",
   },
   {
     icon: Send,
-    title: "Apply Online",
-    description: "Register your organization and submit compliance documents through the portal.",
+    title: "Submit Requirements Online",
+    description: "Submit registration documents, compliance requirements, and program-related submissions through the Organization Portal.",
   },
   {
     icon: ClipboardList,
-    title: "Track Your Application",
-    description: "Monitor the real-time review status of your submitted documents.",
+    title: "Track Submission Status",
+    description: "Monitor submission statuses and review administrative remarks, revision requests, and notifications regarding required actions.",
   },
 ];
 
-const pcydoCards = [
-  {
-    icon: Target,
-    title: "Our Mission",
-    description: "To empower youth organizations in Pasig City through streamlined compliance, accessible resources, and transparent digital governance.",
-  },
-  {
-    icon: Heart,
-    title: "Our Vision",
-    description: "A thriving youth sector where every registered organization can fulfill its mandate with ease and full accountability.",
-  },
-  {
-    icon: Star,
-    title: "Our Mandate",
-    description: "To implement Republic Act 10742 by overseeing SK federation activities, youth organization accreditation, and citywide PCYDO programs.",
-  },
-];
 
 const programCards = [
   {
     icon: Users,
     tag: "YORP",
+    image: "/images/program-yorp.svg",
     title: "Youth Organization Registration Program",
-    description: "The official registration, accreditation, and renewal program requiring youth organizations to formally register with PCYDO and maintain verified compliance standing.",
+    description: [
+      "The Youth Organization Registration Program (YORP) is a program of the National Youth Commission (NYC) that facilitates the registration of youth and youth-serving organizations in the Philippines. It supports the recognition of youth organizations and their engagement in youth development initiatives and community and national development.",
+      "Upon successful registration, an organization is assigned a Unique Registration Number (URN), which serves as its registration identifier.",
+      "For more information, read the official PCYDO Facebook post about YORP and refer to the YORP guidelines for detailed information on registration requirements, required documents, and the registration process.",
+    ],
   },
   {
     icon: Award,
     tag: "YPOP",
+    image: "/images/program-ypop.svg",
     title: "Youth Participation Organization Passport",
-    description: "A youth participation program tracking engagement in City-Led Activities and Organization-Led PPAs through proof submission, validation, and points accumulation.",
+    description: [
+      "The Youth Participation Organization Passport (YPOP) is a program established under Pasig City Ordinance No. 50, Series of 2024. It recognizes the participation of YORP-registered youth and youth-serving organizations in government-initiated activities and their own initiatives. Through a points-based evaluation, the program assesses organizations' participation and eligibility for applicable incentives.",
+      "For more information, read the official PCYDO Facebook post about YPOP and refer to the YPOP Guidelines for detailed information on participation requirements, point allocation, and qualification criteria.",
+    ],
   },
 ];
 
@@ -105,18 +90,21 @@ const featureCards = [
 const policyCards = [
   {
     icon: Lock,
+    category: "Personal Information",
     title: "Privacy Policy",
     description: "How we collect, use, and protect your organization's personal information on the Y-TRACE platform.",
     href: "/privacy",
   },
   {
     icon: ShieldCheck,
+    category: "Transparency",
     title: "Terms of Service",
     description: "The rules and conditions governing use of the Y-TRACE portal for registered youth organizations and PCYDO staff.",
     href: "/terms",
   },
   {
     icon: ScrollText,
+    category: "Compliance",
     title: "Data Privacy Act Compliance",
     description: "Our compliance with Republic Act 10173, ensuring the lawful processing of personal data for all Y-TRACE users.",
     href: "/privacy#legal-bases-for-processing",
@@ -125,6 +113,8 @@ const policyCards = [
 
 const About = () => {
   const { isAuthenticated, role } = useAuth();
+  const { address: officeAddress, email: officialEmail } = usePublicContactInfo();
+  const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(officialEmail)}`;
   const portalHref = role === "admin" ? "/admin" : "/dashboard";
 
   return (
@@ -132,236 +122,240 @@ const About = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="about-hero-gradient flex min-h-0 sm:min-h-[758px] flex-col justify-center px-4 pt-16 pb-2 sm:px-6 sm:pt-20 sm:pb-0 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col-reverse items-center gap-5 pt-2 pb-0 sm:gap-[40px] sm:py-[64px] xl:flex-row xl:items-center xl:justify-between xl:py-[160px]">
+      <section className="public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-6 pb-10 pt-8 text-center sm:gap-7 sm:pb-[64px] sm:pt-[72px]">
+          <h1 className="font-tnr text-[36px] font-normal leading-[1.1] tracking-[-0.01em] text-white sm:text-[46px] lg:text-[52px]">
+            Supporting
+            <br className="hidden sm:block" />
+            {" "}Youth Organizations
+            <br className="hidden sm:block" />
+            {" "}in Pasig City
+          </h1>
+          <p className="max-w-[46rem] font-inter text-base font-normal leading-[1.6] text-white/85">
+            Connecting Pasig City youth organizations to registration services, compliance processes, and youth development programs through a centralized digital platform.
+          </p>
+          {isAuthenticated ? (
+            <Link
+              to={portalHref}
+              className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-[2px] bg-[#1A5CA8] px-6 font-inter text-sm font-medium text-white transition-colors hover:bg-[#2468B8] active:bg-[#174E8F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E2F66]"
+            >
+              Open Portal
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          ) : null}
+        </div>
+      </section>
 
-          {/* Left column */}
-          <div className="flex w-full flex-col items-center gap-4 py-0 text-center sm:gap-[32px] sm:py-[10px] xl:max-w-[573px] xl:items-start xl:text-left">
-            <div className="flex w-full flex-col items-center gap-3 sm:gap-[16px] xl:items-start">
-              <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-brand text-[28px] sm:text-public-fs-hero">
-                Supporting Youth Organizations in Pasig City
-              </h1>
-              <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] tracking-[-0.02em] text-center text-[#1e1e1e] text-sm sm:text-public-fs-subtitle-sm xl:text-justify">
-                Connecting Pasig City youth organizations to registration services, compliance processes, and youth development programs through a centralized digital platform.
-              </p>
+      {/* On this page */}
+      <nav aria-label="On this page" className="border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-8 sm:py-5">
+          <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-slate-500">
+            On this page
+          </span>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            {[
+              { label: "About the office", href: "#about-office" },
+              { label: "Supported programs", href: "#supported-programs" },
+              { label: "About the portal", href: "#about-portal" },
+              { label: "Legal policies", href: "#legal-policies" },
+            ].map(({ label, href }) => (
+              <a
+                key={href}
+                href={href}
+                className="group inline-flex items-center gap-1.5 rounded-[2px] font-inter text-[13px] font-medium text-public-text-brand underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
+              >
+                {label}
+                <ChevronDown
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 text-public-text-brand-secondary transition-transform duration-200 ease-out group-hover:translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* About PCYDO */}
+      <section id="about-office" className="scroll-mt-[140px] bg-public-bg-section px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
+
+          {/* Copy */}
+          <div className="flex w-full flex-col items-start lg:w-[52%] lg:shrink-0">
+            <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-public-text-brand-secondary">
+              About PCYDO
+            </span>
+            <h2 className="mt-3 font-editorial text-[30px] font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand sm:text-[36px] lg:text-[40px]">
+              The office behind the portal
+            </h2>
+            <p className="mt-6 max-w-[58ch] font-inter text-[15px] font-normal leading-[1.7] text-slate-700 sm:text-base">
+              The Pasig City Youth Development Office (PCYDO) is the local government office responsible for coordinating youth development programs and administering processes involving youth and youth-serving organizations in Pasig City. Its functions are guided by Republic Act No. 10742, as amended by Republic Act No. 11768, and Pasig City Ordinance No. 50, Series of 2024, which establishes the city's Comprehensive Youth Development Code.
+            </p>
+            <p className="mt-5 max-w-[58ch] font-inter text-[13px] font-normal leading-[1.7] text-slate-500 sm:text-sm">
+              Through Y-TRACE, PCYDO provides a centralized digital platform for organizations to access registration services, submit requirements, monitor compliance, and participate in applicable youth development programs.
+            </p>
+          </div>
+
+          {/* Office information */}
+          <aside className="flex w-full flex-col rounded-[2px] bg-public-bg-secondary-subtle p-6 sm:p-8 lg:flex-1">
+            <div className="flex items-center gap-3">
+              <Building2 aria-hidden="true" strokeWidth={1.5} className="h-5 w-5 text-public-text-brand" />
+              <h3 className="font-editorial text-lg font-normal leading-none text-public-text-brand">
+                Office information
+              </h3>
             </div>
 
-            {/* Button group */}
-            {isAuthenticated ? (
-              <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:gap-[16px] xl:w-auto">
-                <Link
-                  to={portalHref}
-                  className="flex h-10 items-center justify-center rounded-[8px] bg-public-bg-brand px-5 sm:h-auto sm:px-[24px] sm:py-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none text-public-text-neutral-on-neutral transition-colors hover:bg-public-bg-brand-hover shadow-xs sm:shadow-none"
-                >
-                  Open Portal
-                </Link>
+            <dl className="mt-6 flex flex-col gap-5 border-t border-slate-300/70 pt-6">
+              <div>
+                <dt className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.12em] text-slate-500">
+                  Visit us
+                </dt>
+                <dd className="mt-2 font-inter text-[13px] font-normal leading-[1.65] text-slate-600">
+                  {officeAddress}
+                </dd>
               </div>
-            ) : null}
-          </div>
+              <div>
+                <dt className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.12em] text-slate-500">
+                  Opening hours
+                </dt>
+                <dd className="mt-2 flex flex-col gap-0.5 font-inter text-[13px] font-normal leading-[1.65] text-slate-600">
+                  <span>Mon – Thu: 7:00 AM – 6:00 PM</span>
+                  <span>Fri – Sun: Closed</span>
+                </dd>
+              </div>
+              <div>
+                <dt className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.12em] text-slate-500">
+                  Get in touch
+                </dt>
+                <dd className="mt-2 flex flex-col gap-1 font-inter text-[13px] font-normal leading-[1.65] text-slate-600">
+                  <a
+                    href={gmailComposeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-fit break-all text-public-text-brand underline underline-offset-[3px] decoration-public-text-brand/40 transition-colors hover:decoration-public-text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
+                  >
+                    {officialEmail}
+                  </a>
+                  <span>In-person and online support available</span>
+                </dd>
+              </div>
+            </dl>
 
-          {/* Right column — image card */}
-          <div className="flex w-full items-center justify-center rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-2 sm:p-[10px] shadow-public-overview-card xl:h-[395px] xl:w-[678px] xl:shrink-0">
-            <img
-              src={aboutHero}
-              alt="Pasig City PCYDO"
-              className="h-full w-full object-contain"
-            />
-          </div>
+            <Link
+              to="/contacts"
+              className="group mt-6 inline-flex w-fit items-center gap-2 rounded-[2px] font-inter text-sm font-semibold text-public-text-brand underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-4"
+            >
+              Plan your visit
+              <ArrowRight
+                aria-hidden="true"
+                className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+              />
+            </Link>
+          </aside>
 
         </div>
       </section>
 
-      {/* About PCYDO */}
-      <section className="bg-public-bg-section px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-[24px] xl:flex-row xl:items-center">
+      {/* Supported Programs */}
+      <section id="supported-programs" className="scroll-mt-[140px] bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
 
-          {/* Left column — PCYDO card */}
-          <div className="flex w-full flex-col gap-3.5 sm:gap-[24px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-overview-card xl:w-[515px] xl:shrink-0">
-            <div className="flex h-10 w-10 sm:h-[64px] sm:w-[64px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-brand p-2 sm:p-[8px]">
-              <Globe className="h-6 w-6 sm:h-12 sm:w-12 text-white" />
-            </div>
-            <div className="flex flex-col gap-1 sm:gap-[4px]">
-              <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-[#1e1e1e]">
-                Pasig City Youth Development Office
-              </h3>
-              <span className="font-segoe text-sm sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-public-text-brand">
-                PCYDO
+          {/* Header */}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+            <div className="flex flex-col items-start gap-2.5">
+              <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-public-text-brand-secondary">
+                Supported Programs
               </span>
+              <h2 className="font-editorial text-[30px] font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand sm:text-[36px] lg:text-[40px]">
+                Programs We Support
+              </h2>
             </div>
-            <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-left sm:text-justify text-public-text-secondary">
-              The Pasig City Youth Development Office oversees youth welfare programs, supports registered youth organizations, and enforces compliance with national and local youth development policies.
+            <p className="max-w-[30rem] font-inter text-sm font-normal leading-[1.65] text-slate-500 lg:text-right">
+              Discover the flagship government programs that Y-TRACE helps youth organizations access, comply with, and participate in.
             </p>
-            <div className="flex flex-wrap gap-1.5 sm:gap-[12px]">
-              {["Youth Development", "Compliance", "Registration"].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-public-border-default bg-public-bg-section px-2.5 py-1 sm:px-[10px] sm:py-[10px] font-segoe text-xs sm:text-public-fs-body-sm font-normal leading-[100%] text-[#1e1e1e]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
-          {/* Right column */}
-          <div className="flex w-full flex-1 flex-col gap-4 sm:gap-[24px] xl:px-[24px]">
-            <div className="flex flex-col gap-2 sm:gap-[10px] py-1 sm:py-[10px]">
-              <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                  ABOUT PCYDO
-                </span>
-              </div>
-              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-                The office behind the portal
-              </h2>
-              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
-                PCYDO is the government office mandated to coordinate, monitor, and support all youth-related programs and organizations across the city's barangays.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:gap-[12px] py-1 sm:py-[10px]">
-              {pcydoCards.map(({ icon: Icon, title, description }) => (
-                <div
-                  key={title}
-                  className="flex flex-col items-start gap-3 sm:gap-[24px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-nav sm:flex-row sm:items-center"
-                >
-                  <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] shrink-0 items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
-                    <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
-                  </div>
-                  <div className="flex flex-col gap-1 sm:gap-[6px]">
-                    <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] text-public-text-brand">
-                      {title}
-                    </h3>
-                    <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[140%] text-public-text-neutral-default">
-                      {description}
-                    </p>
+          {/* Program cards */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8">
+            {programCards.map(({ icon: Icon, tag, title, description, image }) => (
+              <article
+                key={tag}
+                className="group flex flex-col overflow-hidden border border-slate-200 bg-white transition-colors duration-200 hover:border-public-border-brand/60"
+              >
+                <div className="relative flex aspect-[16/6] w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#0E2F66] to-[#1A5CA8]">
+                  <Icon
+                    aria-hidden="true"
+                    strokeWidth={1.1}
+                    className="h-16 w-16 text-white/85"
+                  />
+                  {image && (
+                    <img
+                      src={image}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    />
+                  )}
+                  <span className="absolute left-5 top-4 z-10 font-inter text-[10px] font-bold uppercase leading-none tracking-[0.14em] text-white/75">
+                    {tag}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col gap-2 p-5 sm:p-6">
+                  <h3 className="font-editorial text-xl font-normal leading-snug text-public-text-brand">
+                    {title}
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {description.map((paragraph) => (
+                      <p key={paragraph.slice(0, 40)} className="font-inter text-[13px] font-normal leading-[1.65] text-slate-500">
+                        {paragraph}
+                      </p>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              </article>
+            ))}
           </div>
 
         </div>
       </section>
 
       {/* Portal Overview */}
-      <section className="bg-white px-4 pt-4 pb-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-[24px] xl:flex-row xl:items-center">
+      <section id="about-portal" className="scroll-mt-[140px] bg-public-bg-section px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-10">
+        <div className="flex w-full flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
 
-          {/* Left column — gradient card */}
-          <div className="flex w-full flex-col gap-3.5 sm:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-gradient-to-r from-[#0E2F66] to-[#1A5CA8] p-4 sm:p-[24px] shadow-public-overview-card xl:w-[540px] xl:shrink-0">
-
-            {/* Title frame */}
-            <div className="flex items-center gap-2 sm:gap-[10px]">
-              <LayoutGrid className="h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0 text-[rgba(243,243,243,1)] [stroke-width:2.5px]" />
-              <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-white">
-                Portal Overview
-              </span>
-            </div>
-
-            {/* Box frame */}
-            <div className="flex flex-col gap-2 sm:gap-[12px]">
-              {portalItems.map(({ icon: Icon, label }) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between rounded-lg border border-[rgba(220,228,240,0.4)] bg-white/15 px-3 py-2 sm:px-[16px] sm:py-[10px] backdrop-blur-[4px]"
-                >
-                  <div className="flex items-center gap-2.5 sm:gap-[16px]">
-                    <div className="flex h-7 w-7 sm:h-[40px] sm:w-[40px] items-center justify-center rounded-md sm:rounded-[8px] bg-white/15 p-1 sm:p-[8px]">
-                      <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-                    </div>
-                    <span className="font-segoe text-xs sm:text-public-fs-subheading-sm font-semibold leading-[140%] text-white">
-                      {label}
-                    </span>
-                  </div>
-                  <CircleCheck className="h-4 w-4 sm:h-6 sm:w-6 shrink-0 text-white" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right column */}
-          <div className="flex w-full flex-1 flex-col gap-4 sm:gap-[24px] xl:px-[24px]">
-
-            {/* Overview header */}
-            <div className="flex flex-col gap-2 sm:gap-[10px] py-1 sm:py-[10px]">
-              <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-1 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-                <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                  OVERVIEW
-                </span>
-              </div>
-              <h2 className="font-segoe font-bold leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-                What is Y-TRACE?
-              </h2>
-              <p className="font-segoe font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-subheading-sm">
-                Y-TRACE is the official online portal of PCYDO for managing youth organization compliance, registrations, and activity processes — all in one place.
-              </p>
-            </div>
-
-            {/* 2×2 card grid */}
-            <div className="grid grid-cols-1 gap-3 sm:gap-x-[24px] sm:gap-y-[12px] py-1 sm:py-[10px] sm:grid-cols-2">
-              {aboutCards.map(({ icon: Icon, title, description }) => (
-                <div
-                  key={title}
-                  className="flex flex-col gap-2 sm:gap-[12px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[16px] shadow-public-nav"
-                >
-                  <div className="flex h-8 w-8 sm:h-[40px] sm:w-[40px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
-                    <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-public-text-brand" />
-                  </div>
-                  <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                    {title}
-                  </h3>
-                  <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
-                    {description}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Supported Programs */}
-      <section className="bg-public-bg-section px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 sm:gap-[10px]">
-
-          {/* Header — left-aligned */}
-          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                SUPPORTED PROGRAMS
-              </span>
-            </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-              Programs We Support
+          {/* Copy + coverage list */}
+          <div className="flex w-full flex-col items-start lg:w-[42%] lg:shrink-0">
+            <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-public-text-brand-secondary">
+              About the Portal
+            </span>
+            <h2 className="mt-3 font-editorial text-[30px] font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand sm:text-[36px] lg:text-[40px]">
+              About Y-TRACE
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
-              Discover the flagship government programs that Y-TRACE helps youth organizations access, comply with, and participate in.
+            <p className="mt-5 max-w-[46ch] font-inter text-[15px] font-normal leading-[1.65] text-slate-600">
+              Y-TRACE is a digital platform that centralizes information and online services for youth organizations in Pasig City. It facilitates access to registration and compliance guidelines, online submission of requirements, status tracking, and participation in programs administered by the PCYDO.
             </p>
+
+            <Link
+              to="/site-map"
+              className="group mt-7 inline-flex h-11 items-center justify-center gap-4 rounded-[2px] bg-public-bg-brand px-5 font-inter text-sm font-medium text-white transition-colors hover:bg-public-bg-brand-hover active:bg-public-bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
+            >
+              View all services
+              <ArrowRight
+                aria-hidden="true"
+                className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+              />
+            </Link>
           </div>
 
-          {/* Cards row */}
-          <div className="grid grid-cols-1 gap-3 sm:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2">
-            {programCards.map(({ icon: Icon, tag, title, description }) => (
-              <div
-                key={tag}
-                className="flex flex-col gap-3 sm:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-nav"
-              >
-                {/* Icon + pill row */}
-                <div className="flex items-center justify-between py-0.5 sm:py-[4px]">
-                  <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-brand p-1.5 sm:p-[8px]">
-                    <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
-                  </div>
-                  <div className="inline-flex items-center rounded-full border border-public-bg-secondary-100 bg-white px-2.5 py-1 sm:px-[10px] sm:py-[10px] backdrop-blur-[4px]">
-                    <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand">
-                      {tag}
-                    </span>
-                  </div>
-                </div>
-                <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+          {/* Feature grid */}
+          <div className="grid w-full grid-cols-1 gap-x-10 sm:grid-cols-2 lg:flex-1">
+            {aboutCards.map(({ icon: Icon, title, description }) => (
+              <div key={title} className="flex flex-col gap-2 border-t border-slate-200 py-5">
+                <Icon aria-hidden="true" strokeWidth={1.5} className="h-5 w-5 text-public-text-brand" />
+                <h3 className="font-inter text-[15px] font-medium leading-snug text-public-text-brand">
                   {title}
                 </h3>
-                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                <p className="font-inter text-[13px] font-normal leading-[1.6] text-slate-500">
                   {description}
                 </p>
               </div>
@@ -369,41 +363,63 @@ const About = () => {
           </div>
 
         </div>
+
+          {/* Prefer to speak with someone */}
+          <div className="flex w-full flex-col gap-4 border border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+            <div className="flex items-start gap-4">
+              <Handshake aria-hidden="true" strokeWidth={1.5} className="mt-0.5 h-5 w-5 shrink-0 text-public-text-brand" />
+              <div className="flex flex-col gap-1">
+                <p className="font-inter text-[15px] font-medium leading-snug text-public-text-brand">
+                  Prefer to speak with someone?
+                </p>
+                <p className="font-inter text-[13px] font-normal leading-[1.6] text-slate-500">
+                  Our team can help you use the portal, complete a form or find an alternative way to apply.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/contacts"
+              className="group inline-flex h-11 shrink-0 items-center justify-center gap-3 rounded-[2px] border border-public-border-brand px-5 font-inter text-sm font-medium text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
+            >
+              Contact our team
+              <ArrowRight
+                aria-hidden="true"
+                className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+              />
+            </Link>
+          </div>
+
+        </div>
       </section>
 
       {/* Features */}
-      <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 sm:gap-[10px]">
+      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
 
-          {/* Header — left-aligned */}
-          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                FEATURES
+          {/* Header */}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+            <div className="flex flex-col items-start gap-2.5">
+              <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-public-text-brand-secondary">
+                Features
               </span>
+              <h2 className="font-editorial text-[30px] font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand sm:text-[36px] lg:text-[40px]">
+                Everything Your Organization Needs
+              </h2>
             </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
-              Everything Your Organization Needs
-            </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
+            <p className="max-w-[30rem] font-inter text-sm font-normal leading-[1.65] text-slate-500 lg:text-right">
               Y-TRACE provides all the digital tools your youth organization needs to stay compliant and connected with PCYDO.
             </p>
           </div>
 
-          {/* 3×2 card grid */}
-          <div className="grid grid-cols-1 gap-3 sm:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 lg:grid-cols-3">
+          {/* Feature grid */}
+          <div className="grid grid-cols-1 gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
             {featureCards.map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="flex flex-col gap-2.5 sm:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-nav"
-              >
-                <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
-                  <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
-                </div>
-                <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
+              <div key={title} className="flex flex-col gap-2 border-t border-slate-200 py-5">
+                <Icon aria-hidden="true" strokeWidth={1.5} className="h-5 w-5 text-public-text-brand" />
+                <h3 className="font-inter text-[15px] font-medium leading-snug text-public-text-brand">
                   {title}
                 </h3>
-                <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
+                <p className="font-inter text-[13px] font-normal leading-[1.6] text-slate-500">
                   {description}
                 </p>
               </div>
@@ -414,48 +430,58 @@ const About = () => {
       </section>
 
       {/* Policies */}
-      <section className="bg-public-bg-section px-4 py-8 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 sm:gap-[10px]">
+      <section id="legal-policies" className="scroll-mt-[140px] bg-public-bg-section px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 lg:flex-row lg:items-start lg:gap-16">
 
-          {/* Header — left-aligned */}
-          <div className="flex flex-col gap-1.5 sm:gap-[10px] py-1 sm:py-[10px]">
-            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-[10px] rounded-full border border-public-bg-secondary-100 bg-public-bg-secondary-subtle px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] backdrop-blur-[4px]">
-              <span className="font-segoe text-xs sm:text-public-fs-body-sm font-semibold leading-[140%] text-public-text-brand-secondary">
-                POLICIES
-              </span>
-            </div>
-            <h2 className="font-segoe font-bold leading-tight sm:leading-[120%] tracking-[-0.02em] text-public-text-brand text-[22px] sm:text-public-fs-title-page">
+          {/* Copy */}
+          <div className="flex w-full flex-col items-start lg:w-[38%] lg:shrink-0">
+            <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-public-text-brand-secondary">
+              Policies
+            </span>
+            <h2 className="mt-3 font-editorial text-[30px] font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand sm:text-[36px] lg:text-[40px]">
               Our Policies
             </h2>
-            <p className="font-segoe font-normal leading-normal sm:leading-[100%] text-public-text-secondary text-sm sm:text-public-fs-body-sm">
+            <p className="mt-5 max-w-[42ch] font-inter text-sm font-normal leading-[1.7] text-slate-500 sm:text-[15px]">
               Read about our commitments to transparency, data protection, and responsible use of the Y-TRACE platform.
             </p>
+            <div className="mt-6 flex w-full max-w-[26rem] items-start gap-3 rounded-[2px] bg-public-bg-secondary-subtle px-4 py-3.5">
+              <ShieldCheck
+                aria-hidden="true"
+                strokeWidth={1.5}
+                className="mt-0.5 h-4 w-4 shrink-0 text-public-text-brand"
+              />
+              <p className="font-inter text-[13px] font-normal leading-[1.6] text-slate-600">
+                We collect only what is needed to provide a service. We do not sell your personal information.
+              </p>
+            </div>
           </div>
 
-          {/* Cards row */}
-          <div className="grid grid-cols-1 gap-3 sm:gap-[24px] py-1 sm:py-[10px] sm:grid-cols-2 lg:grid-cols-3">
-            {policyCards.map(({ icon: Icon, title, description, href }) => (
-              <div
+          {/* Policy list */}
+          <div className="flex w-full flex-col lg:flex-1">
+            {policyCards.map(({ icon: Icon, category, title, description, href }) => (
+              <Link
                 key={title}
-                className="flex flex-col gap-2.5 sm:gap-[16px] rounded-xl sm:rounded-[16px] border border-public-bg-brand-subtle bg-white p-4 sm:p-[24px] shadow-public-nav"
+                to={href}
+                className="group flex items-start gap-4 border-t border-slate-200 py-5 last:border-b focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2 sm:py-6"
               >
-                <div className="flex h-9 w-9 sm:h-[48px] sm:w-[48px] items-center justify-center rounded-lg sm:rounded-[16px] bg-public-bg-tertiary-100 p-1.5 sm:p-[8px]">
-                  <Icon className="h-5 w-5 sm:h-8 sm:w-8 text-public-text-brand" />
+                <Icon aria-hidden="true" strokeWidth={1.5} className="mt-1 h-5 w-5 shrink-0 text-public-text-brand" />
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="font-inter text-[10px] font-semibold uppercase leading-none tracking-[0.12em] text-slate-500">
+                    {category}
+                  </span>
+                  <h3 className="font-inter text-[17px] font-medium leading-snug text-public-text-brand underline-offset-4 group-hover:underline">
+                    {title}
+                  </h3>
+                  <p className="font-inter text-[13px] font-normal leading-[1.6] text-slate-500">
+                    {description}
+                  </p>
                 </div>
-                <h3 className="font-segoe text-base sm:text-public-fs-subtitle-sm font-semibold leading-[120%] tracking-[-0.02em] text-public-text-brand">
-                  {title}
-                </h3>
-                <p className="font-segoe text-sm sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[100%] text-public-text-secondary">
-                  {description}
-                </p>
-                <Link
-                  to={href}
-                  className="flex items-center gap-1.5 sm:gap-[8px] py-1 sm:py-[4px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-[100%] text-public-text-brand transition-colors hover:underline"
-                >
-                  View Policy
-                  <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                </Link>
-              </div>
+                <ArrowUpRight
+                  aria-hidden="true"
+                  strokeWidth={1.5}
+                  className="mt-1 h-4 w-4 shrink-0 text-public-text-brand transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                />
+              </Link>
             ))}
           </div>
 

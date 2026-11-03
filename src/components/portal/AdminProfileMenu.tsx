@@ -32,10 +32,10 @@ export const AdminProfileMenu = ({ userProfile, onSettings, onActivityLogs, onSi
           type="button"
           className="flex items-center gap-3 rounded-md px-2.5 py-2 transition-colors hover:bg-muted/60 dark:hover:bg-slate-800/60"
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-public-bg-brand font-segoe text-sm leading-[120%] text-public-text-on-brand">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-public-bg-brand font-inter text-sm leading-[120%] text-public-text-on-brand">
             {getAvatarInitial(userProfile.name)}
           </div>
-          <span className="max-w-[120px] truncate font-segoe text-sm font-semibold leading-[140%] text-foreground">
+          <span className="max-w-[120px] truncate font-inter text-sm font-semibold leading-[140%] text-foreground">
             {userProfile.name}
           </span>
           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.6} />
@@ -43,17 +43,17 @@ export const AdminProfileMenu = ({ userProfile, onSettings, onActivityLogs, onSi
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-[210px] rounded-lg border border-border bg-popover p-1 shadow-lg">
         <DropdownMenuLabel className="flex flex-col gap-1 px-3 py-2.5 font-normal">
-          <span className="truncate font-segoe text-sm font-semibold leading-[140%] text-foreground">
+          <span className="truncate font-inter text-sm font-semibold leading-[140%] text-foreground">
             {userProfile.name}
           </span>
-          <span className="truncate font-segoe text-xs leading-none text-muted-foreground">{userProfile.email}</span>
+          <span className="truncate font-inter text-xs leading-none text-muted-foreground">{userProfile.email}</span>
         </DropdownMenuLabel>
         
         <DropdownMenuSeparator className="bg-border" />
         
         {/* Appearance / Theme Switcher */}
         <div className="px-2 py-1.5">
-          <p className="px-1.5 pb-1.5 font-segoe text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <p className="px-1.5 pb-1.5 font-inter text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             Appearance
           </p>
           <div className="grid grid-cols-3 gap-1 rounded-md bg-muted/60 p-1">
@@ -106,14 +106,14 @@ export const AdminProfileMenu = ({ userProfile, onSettings, onActivityLogs, onSi
 
         <DropdownMenuItem
           onClick={onSettings}
-          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-segoe text-sm leading-none text-foreground focus:bg-muted focus:text-foreground"
+          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-inter text-sm leading-none text-foreground focus:bg-muted focus:text-foreground"
         >
           <Settings className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.6} />
           Settings
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onActivityLogs}
-          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-segoe text-sm leading-none text-foreground focus:bg-muted focus:text-foreground"
+          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-inter text-sm leading-none text-foreground focus:bg-muted focus:text-foreground"
         >
           <Activity className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.6} />
           Activity Logs
@@ -123,7 +123,7 @@ export const AdminProfileMenu = ({ userProfile, onSettings, onActivityLogs, onSi
         
         <DropdownMenuItem
           onClick={onSignOut}
-          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-segoe text-sm leading-none text-destructive focus:bg-destructive/10 focus:text-destructive"
+          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-inter text-sm leading-none text-destructive focus:bg-destructive/10 focus:text-destructive"
         >
           <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.6} />
           Sign out

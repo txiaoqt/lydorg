@@ -166,10 +166,10 @@ export function AdminExportDialog({
               <Download className="h-5 w-5 text-public-text-brand-secondary" strokeWidth={1.8} />
             </div>
             <div className="flex flex-col gap-0.5">
-              <DialogTitle className="font-segoe text-base sm:text-lg font-semibold leading-tight text-text-default">
+              <DialogTitle className="font-inter text-base sm:text-lg font-semibold leading-tight text-text-default">
                 {resolvedTitle}
               </DialogTitle>
-              <DialogDescription className="font-segoe text-xs sm:text-[13px] font-normal leading-normal text-slate-500">
+              <DialogDescription className="font-inter text-xs sm:text-[13px] font-normal leading-normal text-slate-500">
                 {resolvedDescription}
               </DialogDescription>
             </div>
@@ -192,7 +192,7 @@ export function AdminExportDialog({
 
         {/* Format Selection Cards */}
         <div className="flex flex-col gap-2.5">
-          <label className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <label className="font-inter text-xs font-semibold uppercase tracking-wider text-slate-500">
             Export Format
           </label>
           <div className="flex flex-col gap-2.5">
@@ -233,10 +233,10 @@ export function AdminExportDialog({
                     <Icon className="h-5 w-5" strokeWidth={1.8} />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <p className="font-segoe text-[13.5px] font-semibold leading-tight text-text-default">
+                    <p className="font-inter text-[13.5px] font-semibold leading-tight text-text-default">
                       {itemTitle}
                     </p>
-                    <p className="font-segoe text-[12px] font-normal leading-normal text-slate-500">
+                    <p className="font-inter text-[12px] font-normal leading-normal text-slate-500">
                       {itemDesc}
                     </p>
                   </div>
@@ -262,15 +262,15 @@ export function AdminExportDialog({
         {isPdf && (
           <div className="rounded-lg border border-slate-200/90 bg-slate-50/70 p-4 space-y-3.5 transition-all">
             <div className="flex items-center justify-between">
-              <span className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-600">
+              <span className="font-inter text-xs font-semibold uppercase tracking-wider text-slate-600">
                 Page Setup
               </span>
-              <span className="font-segoe text-[11px] font-normal text-slate-400">PDF layout options</span>
+              <span className="font-inter text-[11px] font-normal text-slate-400">PDF layout options</span>
             </div>
 
             {/* Paper Size Selector */}
             <div className="space-y-1.5">
-              <label htmlFor="pdf-paper-size" className="font-segoe text-xs font-medium text-slate-700">
+              <label htmlFor="pdf-paper-size" className="font-inter text-xs font-medium text-slate-700">
                 Paper Size
               </label>
               <Select
@@ -296,14 +296,14 @@ export function AdminExportDialog({
 
             {/* Orientation Selector */}
             <div className="space-y-1.5">
-              <label className="font-segoe text-xs font-medium text-slate-700">Orientation</label>
+              <label className="font-inter text-xs font-medium text-slate-700">Orientation</label>
               <div className="grid grid-cols-2 gap-2.5 w-full">
                 <button
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => setOrientation("portrait")}
                   className={cn(
-                    "flex h-10 w-full items-center justify-center gap-2 rounded-md border px-4 py-2 font-segoe text-xs font-semibold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed",
+                    "flex h-10 w-full items-center justify-center gap-2 rounded-md border px-4 py-2 font-inter text-xs font-semibold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed",
                     orientation === "portrait"
                       ? "border-public-bg-brand bg-public-bg-brand text-white shadow-xs"
                       : "border-slate-300 bg-admin-surface text-slate-700 hover:border-slate-400 hover:bg-slate-50"
@@ -317,7 +317,7 @@ export function AdminExportDialog({
                   disabled={isSubmitting}
                   onClick={() => setOrientation("landscape")}
                   className={cn(
-                    "flex h-10 w-full items-center justify-center gap-2 rounded-md border px-4 py-2 font-segoe text-xs font-semibold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed",
+                    "flex h-10 w-full items-center justify-center gap-2 rounded-md border px-4 py-2 font-inter text-xs font-semibold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed",
                     orientation === "landscape"
                       ? "border-public-bg-brand bg-public-bg-brand text-white shadow-xs"
                       : "border-slate-300 bg-admin-surface text-slate-700 hover:border-slate-400 hover:bg-slate-50"
@@ -337,7 +337,7 @@ export function AdminExportDialog({
             <button
               type="button"
               disabled={isSubmitting}
-              className="h-10 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-xs font-semibold text-text-default shadow-2xs transition-all hover:border-slate-400 hover:bg-slate-50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand disabled:opacity-50"
+              className="h-10 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-xs font-semibold text-text-default shadow-2xs transition-all hover:border-slate-400 hover:bg-slate-50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand disabled:opacity-50"
             >
               Cancel
             </button>
@@ -346,7 +346,7 @@ export function AdminExportDialog({
             type="button"
             disabled={isSubmitting || Boolean(periodFilter?.enabled && getAdminReportPeriodError(periodFilter.value))}
             onClick={() => void handleGenerate()}
-            className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-segoe text-xs font-semibold text-white shadow-xs transition-all hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-60"
+            className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-inter text-xs font-semibold text-white shadow-xs transition-all hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-60"
           >
             {isSubmitting ? (
               <>

@@ -96,7 +96,7 @@ const SectionCard = ({
     <div className="flex items-center justify-between gap-1.5 border-b border-slate-300 pb-3">
       <div className="flex items-center gap-1.5">
         <Icon className="h-[13px] w-[13px] shrink-0 text-slate-500" strokeWidth={1.6} />
-        <p className="font-segoe text-[13px] font-semibold uppercase leading-none text-slate-500">{title}</p>
+        <p className="font-inter text-[13px] font-semibold uppercase leading-none text-slate-500">{title}</p>
       </div>
       {headerRight ?? null}
     </div>
@@ -106,8 +106,8 @@ const SectionCard = ({
 
 const DataField = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="flex flex-col gap-2 rounded-md border border-border-panel-subtle bg-bg-panel-subtle px-4 py-3">
-    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
-    <p className="font-segoe text-sm font-semibold leading-none text-text-default">{value}</p>
+    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+    <p className="font-inter text-sm font-semibold leading-none text-text-default">{value}</p>
   </div>
 );
 
@@ -123,8 +123,8 @@ const CopyableField = ({ label, value }: { label: string; value: string }) => {
   return (
     <div className="flex items-center justify-between gap-2 rounded-md border border-border-panel-subtle bg-bg-panel-subtle px-4 py-3">
       <div className="flex flex-col gap-2">
-        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
-        <p className="font-segoe text-sm font-semibold leading-none text-text-default">{value}</p>
+        <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+        <p className="font-inter text-sm font-semibold leading-none text-text-default">{value}</p>
       </div>
       {canCopy ? (
         <button
@@ -141,7 +141,7 @@ const CopyableField = ({ label, value }: { label: string; value: string }) => {
 };
 
 const AdvocacyPill = ({ label }: { label: string }) => (
-  <span className="inline-flex w-fit items-center rounded-full border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+  <span className="inline-flex w-fit items-center rounded-full border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-inter text-xs font-semibold leading-[140%] text-text-tertiary-800">
     {formatAdvocacyLabel(label)}
   </span>
 );
@@ -155,7 +155,7 @@ const CATEGORY_PILL_CLASSES: Record<YPOPCityActivityCategory, string> = {
 const CategoryPill = ({ category }: { category: YPOPCityActivityCategory }) => (
   <span
     className={cn(
-      "inline-flex w-fit shrink-0 items-center rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+      "inline-flex w-fit shrink-0 items-center rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
       CATEGORY_PILL_CLASSES[category],
     )}
   >
@@ -164,7 +164,7 @@ const CategoryPill = ({ category }: { category: YPOPCityActivityCategory }) => (
 );
 
 const PointsPill = ({ points }: { points: number }) => (
-  <span className="inline-flex w-fit shrink-0 items-center rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+  <span className="inline-flex w-fit shrink-0 items-center rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-inter text-xs font-semibold leading-[140%] text-text-tertiary-800">
     {points} pts
   </span>
 );
@@ -181,9 +181,9 @@ const RepresentativeCard = ({
   <div className="flex flex-col gap-3 rounded-md border border-slate-300 bg-admin-surface p-6 shadow-sm">
     <div className="flex items-center gap-1.5 border-b border-slate-300 pb-3">
       <Icon className="h-[13px] w-[13px] shrink-0 text-slate-500" strokeWidth={1.6} />
-      <p className="font-segoe text-[13px] font-semibold uppercase leading-none text-slate-500">{title}</p>
+      <p className="font-inter text-[13px] font-semibold uppercase leading-none text-slate-500">{title}</p>
     </div>
-    <p className="font-segoe text-sm font-semibold leading-none text-text-default">{name || "Not provided"}</p>
+    <p className="font-inter text-sm font-semibold leading-none text-text-default">{name || "Not provided"}</p>
   </div>
 );
 
@@ -199,8 +199,8 @@ const AccreditationStatusCard = ({ entry, now }: { entry: YorpRegistryEntry; now
     return (
       <div className="flex items-center rounded-md border border-status-danger-border bg-danger-subtle p-3">
         <div className="flex flex-col gap-1 px-4 py-3">
-          <p className="font-segoe text-lg font-semibold leading-none text-text-danger-strong">Expired</p>
-          <p className="font-segoe text-xs font-normal leading-none text-slate-500">
+          <p className="font-inter text-lg font-semibold leading-none text-text-danger-strong">Expired</p>
+          <p className="font-inter text-xs font-normal leading-none text-slate-500">
             Expired {days} day{days === 1 ? "" : "s"} ago · Renewal required
           </p>
         </div>
@@ -222,13 +222,13 @@ const AccreditationStatusCard = ({ entry, now }: { entry: YorpRegistryEntry; now
       <div className="flex flex-col gap-1 px-4 py-3">
         <p
           className={cn(
-            "font-segoe text-lg font-semibold leading-none",
+            "font-inter text-lg font-semibold leading-none",
             isActive ? "text-text-positive-strong" : "text-text-warning-secondary",
           )}
         >
           {isActive ? "Active" : "Expiring Soon"}
         </p>
-        <p className="font-segoe text-xs font-normal leading-none text-slate-500">
+        <p className="font-inter text-xs font-normal leading-none text-slate-500">
           {isActive ? "In good standing" : "Renew before expiration"}
         </p>
       </div>
@@ -236,7 +236,7 @@ const AccreditationStatusCard = ({ entry, now }: { entry: YorpRegistryEntry; now
       <div className="flex flex-1 flex-col items-center gap-2 py-3">
         <p
           className={cn(
-            "font-segoe text-[11px] font-semibold uppercase leading-none",
+            "font-inter text-[11px] font-semibold uppercase leading-none",
             isActive ? "text-positive-secondary" : "text-text-warning-secondary",
           )}
         >
@@ -258,7 +258,7 @@ const AccreditationStatusCard = ({ entry, now }: { entry: YorpRegistryEntry; now
               >
                 {String(unit.value).padStart(2, "0")}
               </p>
-              <p className="font-segoe text-[11px] font-normal leading-none text-slate-500">{unit.label}</p>
+              <p className="font-inter text-[11px] font-normal leading-none text-slate-500">{unit.label}</p>
             </div>
           ))}
         </div>
@@ -269,8 +269,8 @@ const AccreditationStatusCard = ({ entry, now }: { entry: YorpRegistryEntry; now
 
 const EmptyTab = ({ label, description = "Coming soon." }: { label: string; description?: string }) => (
   <div className="flex flex-col items-center gap-1 py-16 text-center">
-    <p className="font-segoe text-sm font-semibold text-text-default">{label}</p>
-    <p className="font-segoe text-xs text-slate-500">{description}</p>
+    <p className="font-inter text-sm font-semibold text-text-default">{label}</p>
+    <p className="font-inter text-xs text-slate-500">{description}</p>
   </div>
 );
 
@@ -531,10 +531,10 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-300 bg-bg-panel-subtle px-8 py-6">
                 <div className="flex flex-col gap-2">
                   <ReferenceCodeChip code={org.urn || "—"} className="w-fit" />
-                  <h2 className="font-segoe text-lg font-semibold leading-none text-text-default">
+                  <h2 className="font-inter text-lg font-semibold leading-none text-text-default">
                     {org.organizationName}
                   </h2>
-                  <div className="flex flex-wrap items-center gap-3 font-segoe text-xs leading-[140%] text-slate-500">
+                  <div className="flex flex-wrap items-center gap-3 font-inter text-xs leading-[140%] text-slate-500">
                     <span className="flex items-center gap-1">
                       <MapPin className="h-[13px] w-[13px] shrink-0" strokeWidth={1.6} />
                       {[org.district, org.barangay ? `Brgy. ${org.barangay}` : ""].filter(Boolean).join(" · ") || "—"}
@@ -547,7 +547,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <button type="button" onClick={handleExportReport} disabled={isExporting}
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-xs font-semibold text-text-default hover:bg-bg-panel-subtle disabled:opacity-60">
+                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-xs font-semibold text-text-default hover:bg-bg-panel-subtle disabled:opacity-60">
                     {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                     {isExporting ? "Exporting…" : "Export Report"}
                   </button>
@@ -574,7 +574,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                         type="button"
                         onClick={() => setActiveTab(tab.value)}
                         className={cn(
-                          "inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-md px-2 py-2 font-segoe text-xs font-semibold leading-none transition-colors sm:px-3 sm:text-sm",
+                          "inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-md px-2 py-2 font-inter text-xs font-semibold leading-none transition-colors sm:px-3 sm:text-sm",
                           active
                             ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                             : "text-text-default hover:bg-slate-50",
@@ -619,7 +619,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="flex flex-col gap-2 rounded-md border border-border-panel-subtle bg-bg-panel-subtle px-4 py-3">
-                            <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                            <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">
                               Centers of Youth Participation
                             </p>
                             <div className="flex flex-wrap gap-1.5">
@@ -711,17 +711,17 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                 className="absolute right-0 top-full z-10 mt-2 flex w-[408px] max-h-[553px] flex-col overflow-y-auto rounded-md border border-slate-300 bg-admin-surface px-4 py-3 shadow-lg"
                               >
                                 <div className="flex flex-col gap-1 border-b border-slate-300 px-2 pb-4 pt-3">
-                                  <p className="font-segoe text-lg font-semibold leading-none text-text-default">
+                                  <p className="font-inter text-lg font-semibold leading-none text-text-default">
                                     YPOP Points Breakdown
                                   </p>
-                                  <p className="text-justify font-segoe text-[13px] font-normal leading-none text-slate-500">
+                                  <p className="text-justify font-inter text-[13px] font-normal leading-none text-slate-500">
                                     Breakdown of this organization&rsquo;s overall YPOP points.
                                   </p>
                                 </div>
 
                                 <div className="flex flex-col gap-4 py-3">
                                   <div className="flex flex-col gap-1">
-                                    <p className="font-segoe text-xs font-semibold leading-none text-slate-500">
+                                    <p className="font-inter text-xs font-semibold leading-none text-slate-500">
                                       City-Led Points
                                     </p>
                                     {ypopData.categoryBreakdown.map(
@@ -730,21 +730,21 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                           key={category}
                                           className="flex items-center justify-between gap-2 rounded-md px-3 py-1.5"
                                         >
-                                          <p className="font-segoe text-xs font-semibold leading-none text-text-default">
+                                          <p className="font-inter text-xs font-semibold leading-none text-text-default">
                                             {count}× {YPOP_CITY_LED_CATEGORY_LABELS[category]}
                                           </p>
                                           {attendedCount === 0 ? (
-                                            <p className="font-segoe text-[10px] font-semibold italic leading-none text-text-disabled">
+                                            <p className="font-inter text-[10px] font-semibold italic leading-none text-text-disabled">
                                               Not attended
                                             </p>
                                           ) : (
-                                            <p className="font-segoe text-[10px] font-semibold leading-none text-text-disabled">
+                                            <p className="font-inter text-[10px] font-semibold leading-none text-text-disabled">
                                               {count} × {pointsPerActivity} pts =
                                             </p>
                                           )}
                                           <p
                                             className={cn(
-                                              "font-segoe text-xs font-bold leading-none",
+                                              "font-inter text-xs font-bold leading-none",
                                               attendedCount === 0 ? "text-text-disabled" : "text-text-default",
                                             )}
                                           >
@@ -754,21 +754,21 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                       ),
                                     )}
                                     <div className="flex items-center justify-between gap-2 border-t border-dashed border-border-default py-1.5">
-                                      <p className="font-segoe text-xs font-semibold leading-none text-text-neutral-secondary">
+                                      <p className="font-inter text-xs font-semibold leading-none text-text-neutral-secondary">
                                         City-led subtotal
                                       </p>
-                                      <p className="font-segoe text-[10px] font-semibold leading-none text-text-disabled">
+                                      <p className="font-inter text-[10px] font-semibold leading-none text-text-disabled">
                                         {ypopData.cityLedEarned} pts ÷ {ypopData.cityLedMax} max pts ={" "}
                                         {ypopData.cityLedPercent}%
                                       </p>
-                                      <p className="font-segoe text-xs font-bold leading-none text-text-default">
+                                      <p className="font-inter text-xs font-bold leading-none text-text-default">
                                         {ypopData.cityLedEarned} pts
                                       </p>
                                     </div>
                                   </div>
 
                                   <div className="flex flex-col gap-1">
-                                    <p className="font-segoe text-xs font-semibold leading-none text-slate-500">
+                                    <p className="font-inter text-xs font-semibold leading-none text-slate-500">
                                       Organization-Led Bonus
                                     </p>
                                     {(() => {
@@ -790,7 +790,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                           >
                                             <p
                                               className={cn(
-                                                "font-segoe text-xs font-semibold leading-none",
+                                                "font-inter text-xs font-semibold leading-none",
                                                 active ? "text-text-info-strong" : "text-text-disabled",
                                               )}
                                             >
@@ -798,7 +798,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                             </p>
                                             <p
                                               className={cn(
-                                                "font-segoe text-xs font-bold leading-none",
+                                                "font-inter text-xs font-bold leading-none",
                                                 active ? "text-text-info-strong" : "text-text-disabled",
                                               )}
                                             >
@@ -821,7 +821,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                     <div className="flex items-center justify-between gap-2 px-3">
                                       <p
                                         className={cn(
-                                          "font-segoe text-xs font-normal leading-none",
+                                          "font-inter text-xs font-normal leading-none",
                                           ypopData.isQualified ? "text-text-positive-strong" : "text-text-danger-strong",
                                         )}
                                       >
@@ -829,7 +829,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                       </p>
                                       <p
                                         className={cn(
-                                          "font-segoe text-xs font-bold leading-none",
+                                          "font-inter text-xs font-bold leading-none",
                                           ypopData.isQualified ? "text-text-positive-strong" : "text-text-danger-strong",
                                         )}
                                       >
@@ -839,7 +839,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                     <div className="flex items-center justify-between gap-2 px-3">
                                       <p
                                         className={cn(
-                                          "font-segoe text-xs font-normal leading-none",
+                                          "font-inter text-xs font-normal leading-none",
                                           ypopData.isQualified ? "text-text-positive-strong" : "text-text-danger-strong",
                                         )}
                                       >
@@ -847,7 +847,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                       </p>
                                       <p
                                         className={cn(
-                                          "font-segoe text-xs font-bold leading-none",
+                                          "font-inter text-xs font-bold leading-none",
                                           ypopData.isQualified ? "text-text-positive-strong" : "text-text-danger-strong",
                                         )}
                                       >
@@ -855,12 +855,12 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                       </p>
                                     </div>
                                     <div className="mt-1 flex items-center justify-between gap-2 px-3">
-                                      <p className="font-segoe text-xs font-bold leading-none text-text-default">
+                                      <p className="font-inter text-xs font-bold leading-none text-text-default">
                                         Total YPOP Points
                                       </p>
                                       <p
                                         className={cn(
-                                          "font-segoe text-lg font-bold leading-none",
+                                          "font-inter text-lg font-bold leading-none",
                                           ypopData.isQualified ? "text-text-positive-strong" : "text-text-danger-strong",
                                         )}
                                       >
@@ -883,26 +883,26 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                 : "border-status-danger-border bg-danger-subtle",
                             )}
                           >
-                            <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                            <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">
                               Eligibility Status
                             </p>
                             <div>
                               <p
                                 className={cn(
-                                  "font-segoe text-xl font-semibold leading-none",
+                                  "font-inter text-xl font-semibold leading-none",
                                   ypopData.isQualified ? "text-text-positive-strong" : "text-text-danger-strong",
                                 )}
                               >
                                 {ypopData.isQualified ? "Qualified" : "Not Qualified"}
                               </p>
-                              <p className="mt-1 font-segoe text-xs font-normal leading-none text-slate-500">
+                              <p className="mt-1 font-inter text-xs font-normal leading-none text-slate-500">
                                 {ypopData.isQualified ? "Met minimum threshold" : "Below minimum threshold"}
                               </p>
                             </div>
                           </div>
 
                           <div className="flex flex-col gap-3 rounded-md border border-border-panel-subtle bg-bg-panel-subtle p-3">
-                            <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                            <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">
                               Semester Validation Points
                             </p>
                             <div className="flex flex-col gap-1">
@@ -949,23 +949,23 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                           <button
                             type="button"
                             onClick={handleViewAllCityLed}
-                            className="font-segoe text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-bg-brand-hover hover:underline cursor-pointer"
+                            className="font-inter text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-bg-brand-hover hover:underline cursor-pointer"
                           >
                             View All
                           </button>
                         }
                       >
                         {supabase && ypopDetailQuery.isPending ? (
-                          <p className="py-4 text-center font-segoe text-xs text-slate-500" role="status">
+                          <p className="py-4 text-center font-inter text-xs text-slate-500" role="status">
                             Loading joined activities…
                           </p>
                         ) : supabase && ypopDetailQuery.isError ? (
                           <div className="flex flex-col items-center gap-2 py-4 text-center">
-                            <p className="font-segoe text-xs text-slate-500">Could not load joined activities.</p>
+                            <p className="font-inter text-xs text-slate-500">Could not load joined activities.</p>
                             <button
                               type="button"
                               onClick={() => void ypopDetailQuery.refetch()}
-                              className="font-segoe text-xs font-semibold text-public-bg-brand hover:underline"
+                              className="font-inter text-xs font-semibold text-public-bg-brand hover:underline"
                             >
                               Try again
                             </button>
@@ -977,7 +977,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                 key={participation.id}
                                 className="flex items-center justify-between gap-2 border-b border-slate-300 py-3 last:border-b-0"
                               >
-                                <p className="min-w-0 flex-1 truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                                <p className="min-w-0 flex-1 truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                                   {participation.activityName}
                                 </p>
                                 <div className="flex shrink-0 items-center gap-2">
@@ -988,7 +988,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                             ))}
                           </div>
                         ) : (
-                          <p className="py-4 text-center font-segoe text-xs text-slate-500">
+                          <p className="py-4 text-center font-inter text-xs text-slate-500">
                             No city-led activities joined yet.
                           </p>
                         )}
@@ -1001,17 +1001,17 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                           <button
                             type="button"
                             onClick={handleViewAllOrgLed}
-                            className="font-segoe text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-bg-brand-hover hover:underline cursor-pointer"
+                            className="font-inter text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-bg-brand-hover hover:underline cursor-pointer"
                           >
                             View All
                           </button>
                         }
                       >
                         <div className="flex items-baseline gap-2">
-                          <p className="font-segoe text-2xl font-semibold leading-none text-text-default">
+                          <p className="font-inter text-2xl font-semibold leading-none text-text-default">
                             {ypopData.orgActivities.length}
                           </p>
-                          <p className="font-segoe text-xs font-semibold leading-[140%] text-slate-500">
+                          <p className="font-inter text-xs font-semibold leading-[140%] text-slate-500">
                             activities completed this cycle
                           </p>
                         </div>
@@ -1019,17 +1019,17 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                           <div className="flex flex-col">
                             {ypopData.orgActivities.map((activity) => (
                               <div key={activity.id} className="border-b border-slate-300 py-3 last:border-b-0">
-                                <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                                <p className="font-inter text-sm font-semibold leading-[140%] text-text-default">
                                   {activity.activityName}
                                 </p>
-                                <p className="font-segoe text-xs font-normal leading-[140%] text-slate-500">
+                                <p className="font-inter text-xs font-normal leading-[140%] text-slate-500">
                                   Completed {activity.activityDate || "—"}
                                 </p>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="py-4 text-center font-segoe text-xs text-slate-500">
+                          <p className="py-4 text-center font-inter text-xs text-slate-500">
                             No organization-initiated activities completed yet.
                           </p>
                         )}
@@ -1044,16 +1044,16 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                   <div className="flex flex-col gap-4">
                     <SectionCard title="Registration Documents" icon={FileText}>
                       {supabase && documentsQuery.isPending ? (
-                        <p role="status" className="py-8 text-center font-segoe text-sm text-slate-500">Loading registration documents…</p>
+                        <p role="status" className="py-8 text-center font-inter text-sm text-slate-500">Loading registration documents…</p>
                       ) : supabase && documentsQuery.isError ? (
                         <div role="alert" className="py-8 text-center">
-                          <p className="font-segoe text-sm text-text-default">Unable to load registration documents.</p>
-                          <p className="mt-2 font-segoe text-xs text-slate-500">{documentsQuery.error.message}</p>
-                          <button type="button" onClick={() => void documentsQuery.refetch()} className="mt-3 rounded-md border border-slate-300 px-3 py-2 font-segoe text-xs font-semibold text-text-default">Retry</button>
+                          <p className="font-inter text-sm text-text-default">Unable to load registration documents.</p>
+                          <p className="mt-2 font-inter text-xs text-slate-500">{documentsQuery.error.message}</p>
+                          <button type="button" onClick={() => void documentsQuery.refetch()} className="mt-3 rounded-md border border-slate-300 px-3 py-2 font-inter text-xs font-semibold text-text-default">Retry</button>
                         </div>
                       ) : submittedFiles.length > 0 ? (
                         <div className="flex flex-col gap-3">
-                          <p className="font-segoe text-xs text-slate-500">
+                          <p className="font-inter text-xs text-slate-500">
                             {submittedFiles.length} {submittedFiles.length === 1 ? "document" : "documents"} submitted with this registration.
                           </p>
                           <div className="flex flex-col gap-2.5">
@@ -1077,14 +1077,14 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                     </div>
                                     <div className="flex min-w-0 flex-col gap-1">
                                       <div className="flex items-center gap-2">
-                                        <p className="truncate font-segoe text-sm font-semibold leading-tight text-text-default">
+                                        <p className="truncate font-inter text-sm font-semibold leading-tight text-text-default">
                                           {documentTitle}
                                         </p>
-                                        <span className="inline-flex shrink-0 items-center rounded border border-border-success-subtle bg-bg-success-subtle px-1.5 py-0.5 font-segoe text-[10px] font-semibold text-positive-secondary">
+                                        <span className="inline-flex shrink-0 items-center rounded border border-border-success-subtle bg-bg-success-subtle px-1.5 py-0.5 font-inter text-[10px] font-semibold text-positive-secondary">
                                           Verified
                                         </span>
                                       </div>
-                                      <div className="flex flex-wrap items-center gap-1.5 font-segoe text-xs text-slate-500">
+                                      <div className="flex flex-wrap items-center gap-1.5 font-inter text-xs text-slate-500">
                                         <span className="truncate max-w-[200px] sm:max-w-[260px] font-medium text-slate-600">
                                           {file.fileName || "Document file"}
                                         </span>
@@ -1109,7 +1109,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                       type="button"
                                       onClick={() => handlePreviewFile(file, documentTitle)}
                                       disabled={resolvingFileId === file.id}
-                                      className="flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-2.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50 hover:text-public-bg-brand active:scale-[0.98] disabled:opacity-50"
+                                      className="flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-2.5 font-inter text-xs font-semibold text-text-default transition-colors hover:bg-slate-50 hover:text-public-bg-brand active:scale-[0.98] disabled:opacity-50"
                                     >
                                       {resolvingFileId === file.id ? (
                                         <Loader2 className="h-3.5 w-3.5 animate-spin text-public-bg-brand" strokeWidth={1.6} />
@@ -1142,8 +1142,8 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                             <FileText className="h-6 w-6" strokeWidth={1.6} />
                           </div>
-                          <p className="font-segoe text-sm font-semibold text-text-default">No submitted documents</p>
-                          <p className="max-w-xs font-segoe text-xs text-slate-500">
+                          <p className="font-inter text-sm font-semibold text-text-default">No submitted documents</p>
+                          <p className="max-w-xs font-inter text-xs text-slate-500">
                             This organization has no registration documents on record.
                           </p>
                         </div>
@@ -1157,7 +1157,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                   <SheetClose asChild>
                     <button
                       type="button"
-                      className="flex h-11 w-[66px] items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      className="flex h-11 w-[66px] items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                     >
                       Close
                     </button>

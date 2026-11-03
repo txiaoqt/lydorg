@@ -19,8 +19,8 @@ type NeedsAttentionListProps = {
 export const NeedsAttentionList = ({ items, onNavigate }: NeedsAttentionListProps) => (
   <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-card px-4 py-3 shadow-xs">
     <div className="flex flex-col gap-1 border-b border-border px-2 py-3 pb-4">
-      <h2 className="font-segoe text-lg font-semibold leading-none text-foreground">Needs Attention</h2>
-      <p className="font-segoe text-[13px] font-normal leading-none text-muted-foreground">
+      <h2 className="font-inter text-lg font-semibold leading-none text-foreground">Needs Attention</h2>
+      <p className="font-inter text-[13px] font-normal leading-none text-muted-foreground">
         Review urgent items requiring administrative action across the system.
       </p>
     </div>
@@ -47,10 +47,10 @@ export const NeedsAttentionList = ({ items, onNavigate }: NeedsAttentionListProp
                 />
               </div>
               <div className="flex min-w-0 flex-col gap-1">
-                <p className="truncate font-segoe text-sm font-semibold leading-[120%] text-foreground">
+                <p className="truncate font-inter text-sm font-semibold leading-[120%] text-foreground">
                   {item.orgName}
                 </p>
-                <p className="truncate font-segoe text-[13px] font-normal leading-none text-muted-foreground">
+                <p className="truncate font-inter text-[13px] font-normal leading-none text-muted-foreground">
                   {item.actionText}
                 </p>
                 <p className="font-cascadia text-[10px] font-normal leading-[140%] text-muted-foreground/75">

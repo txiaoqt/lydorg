@@ -18,14 +18,14 @@ const PublicBudgetTransparency = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           {/* Title block */}
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+            <h1 className="font-inter font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Budget Transparency
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
+            <p className="font-inter font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
               Official budget information published by the Pasig City Youth Development Office (PCYDO), including budget allocations, approved budget requests, fund releases, liquidated amounts, and the distribution of approved allocations by purpose and legislative district.
             </p>
           </div>
@@ -33,9 +33,9 @@ const PublicBudgetTransparency = () => {
       </section>
 
       {/* Main Budget Transparency Overview */}
-      <main className="bg-background px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10 lg:px-[64px]">
+      <main className="bg-public-bg-section px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10 lg:px-[64px]">
         <div className="mx-auto w-full max-w-7xl">
-          <div role="tablist" aria-label="Budget transparency views" className="public-budget-transparency-tabs mb-6 flex w-full flex-nowrap gap-2 border-b border-slate-200 pb-3">
+          <div role="tablist" aria-label="Budget transparency views" className="public-budget-transparency-tabs mb-6 flex w-full flex-nowrap gap-6 border-b border-public-border-default">
             <button
               id="budget-overview-tab"
               type="button"
@@ -44,8 +44,8 @@ const PublicBudgetTransparency = () => {
               aria-controls="budget-overview-panel"
               onClick={() => setActiveTab("overview")}
               className={cn(
-                "min-h-11 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 sm:px-5",
-                activeTab === "overview" ? "border-blue-950 bg-blue-950 text-white" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+                "-mb-px min-h-11 border-b-2 px-1 py-2.5 font-inter text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2",
+                activeTab === "overview" ? "border-public-border-brand text-public-text-brand" : "border-transparent text-public-text-secondary hover:text-public-text-brand",
               )}
             >Budget Transparency</button>
             <button
@@ -56,8 +56,8 @@ const PublicBudgetTransparency = () => {
               aria-controls="budget-map-panel"
               onClick={() => setActiveTab("map")}
               className={cn(
-                "min-h-11 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 sm:px-5",
-                activeTab === "map" ? "border-blue-950 bg-blue-950 text-white" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+                "-mb-px min-h-11 border-b-2 px-1 py-2.5 font-inter text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2",
+                activeTab === "map" ? "border-public-border-brand text-public-text-brand" : "border-transparent text-public-text-secondary hover:text-public-text-brand",
               )}
             >Budget Transparency Map</button>
           </div>

@@ -98,14 +98,14 @@ export const BudgetMonitoringFilterSummary = ({
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 px-3.5 py-2.5">
-      <span className="font-segoe text-xs font-bold text-slate-600 dark:text-slate-400">
+      <span className="font-inter text-xs font-bold text-slate-600 dark:text-slate-400">
         Active Filters:
       </span>
       <div className="flex flex-wrap items-center gap-1.5 flex-1">
         {chips.map((chip) => (
           <span
             key={chip.key}
-            className="inline-flex items-center gap-1 rounded-md bg-white dark:bg-admin-surface border border-slate-300 dark:border-slate-700 px-2 py-0.5 font-segoe text-[11px] font-semibold text-text-default shadow-2xs"
+            className="inline-flex items-center gap-1 rounded-md bg-white dark:bg-admin-surface border border-slate-300 dark:border-slate-700 px-2 py-0.5 font-inter text-[11px] font-semibold text-text-default shadow-2xs"
           >
             <span>{chip.label}</span>
             <button
@@ -122,7 +122,7 @@ export const BudgetMonitoringFilterSummary = ({
       <button
         type="button"
         onClick={onResetFilters}
-        className="font-segoe text-xs font-semibold text-public-text-brand hover:underline"
+        className="font-inter text-xs font-semibold text-public-text-brand hover:underline"
       >
         Clear all
       </button>

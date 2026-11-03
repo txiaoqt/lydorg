@@ -109,7 +109,7 @@ function SectionSelectAllCheckbox({
   }, [indeterminate]);
 
   return (
-    <label className="inline-flex items-center gap-1.5 font-segoe text-xs font-semibold text-public-bg-brand hover:text-bg-brand-hover dark:text-sky-400 dark:hover:text-sky-300 cursor-pointer select-none">
+    <label className="inline-flex items-center gap-1.5 font-inter text-xs font-semibold text-public-bg-brand hover:text-bg-brand-hover dark:text-sky-400 dark:hover:text-sky-300 cursor-pointer select-none">
       <input
         ref={inputRef}
         type="checkbox"
@@ -279,10 +279,10 @@ export function YorpRegistryExportDialog({
             <Download className="h-4.5 w-4.5 text-public-text-brand-secondary" strokeWidth={2} />
           </div>
           <div className="min-w-0 flex-1">
-            <DialogTitle className="font-segoe text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+            <DialogTitle className="font-inter text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
               Export YORP Registry
             </DialogTitle>
-            <DialogDescription className="font-segoe text-xs font-normal text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+            <DialogDescription className="font-inter text-xs font-normal text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
               Choose the information you want included in your export.
             </DialogDescription>
           </div>
@@ -295,15 +295,15 @@ export function YorpRegistryExportDialog({
           {selectedSemesterLabel && (
             <div className="flex items-center justify-between rounded-lg border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 px-3.5 py-2.5">
               <div className="flex items-center gap-2">
-                <span className="font-segoe text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <span className="font-inter text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Semester:
                 </span>
-                <span className="font-segoe text-xs font-bold text-slate-900 dark:text-slate-100">
+                <span className="font-inter text-xs font-bold text-slate-900 dark:text-slate-100">
                   {selectedSemesterLabel}
                 </span>
               </div>
               {typeof recordCount === "number" && (
-                <span className="font-segoe text-xs font-medium text-slate-500 dark:text-slate-400">
+                <span className="font-inter text-xs font-medium text-slate-500 dark:text-slate-400">
                   {recordCount} record{recordCount === 1 ? "" : "s"} matching
                 </span>
               )}
@@ -314,12 +314,12 @@ export function YorpRegistryExportDialog({
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <label className="font-segoe text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label className="font-inter text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                   Select Columns
                 </label>
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-0.5 font-segoe text-xs font-semibold leading-none border transition-colors",
+                    "inline-flex items-center rounded-full px-2.5 py-0.5 font-inter text-xs font-semibold leading-none border transition-colors",
                     selectedCount > 0
                       ? "bg-sky-50 text-sky-700 border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/60"
                       : "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-900/60",
@@ -330,7 +330,7 @@ export function YorpRegistryExportDialog({
               </div>
 
               {/* Quick Actions */}
-              <div className="flex items-center gap-1 font-segoe text-xs">
+              <div className="flex items-center gap-1 font-inter text-xs">
                 <button
                   type="button"
                   disabled={isSubmitting || selectedCount === totalAvailableCount}
@@ -373,11 +373,11 @@ export function YorpRegistryExportDialog({
               <div className="min-w-0 flex-1">
                 <label
                   htmlFor="always-include-required-fields"
-                  className="block font-segoe text-xs font-semibold text-slate-900 dark:text-slate-100 cursor-pointer select-none"
+                  className="block font-inter text-xs font-semibold text-slate-900 dark:text-slate-100 cursor-pointer select-none"
                 >
                   Always include required fields
                 </label>
-                <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                <p className="font-inter text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
                   Always include No., Organization Name, and URN in every export.
                 </p>
               </div>
@@ -404,7 +404,7 @@ export function YorpRegistryExportDialog({
                     className="flex flex-col rounded-lg border border-slate-200/90 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-2.5 space-y-1.5 transition-all"
                   >
                     <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-1.5 px-1">
-                      <span className="font-segoe text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      <span className="font-inter text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         {group.label}
                       </span>
                       <div className="flex items-center gap-2">
@@ -416,7 +416,7 @@ export function YorpRegistryExportDialog({
                           groupLabel={group.label}
                         />
                         <span className="text-slate-300 dark:text-slate-700">·</span>
-                        <span className="font-segoe text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                        <span className="font-inter text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                           {groupSelectedCount}/{groupColumns.length}
                         </span>
                       </div>
@@ -452,16 +452,16 @@ export function YorpRegistryExportDialog({
                                 )}
                                 aria-label={col.label}
                               />
-                              <span className="font-segoe text-xs font-medium text-text-default truncate">
+                              <span className="font-inter text-xs font-medium text-text-default truncate">
                                 {col.label}
                               </span>
                             </div>
                             {isLockedRequired ? (
-                              <span className="shrink-0 rounded bg-sky-100 dark:bg-sky-950/80 px-1.5 py-0.5 font-segoe text-[9.5px] font-semibold text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60">
+                              <span className="shrink-0 rounded bg-sky-100 dark:bg-sky-950/80 px-1.5 py-0.5 font-inter text-[9.5px] font-semibold text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60">
                                 Required
                               </span>
                             ) : col.isDefault ? (
-                              <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-segoe text-[9.5px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+                              <span className="shrink-0 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-inter text-[9.5px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
                                 Default
                               </span>
                             ) : null}
@@ -476,7 +476,7 @@ export function YorpRegistryExportDialog({
 
             {/* Validation alert if 0 columns selected */}
             {selectedCount === 0 ? (
-              <div className="rounded-md border border-amber-300/80 bg-amber-50/90 dark:bg-amber-950/40 dark:border-amber-900/60 p-2 text-center font-segoe text-xs font-semibold text-amber-900 dark:text-amber-200">
+              <div className="rounded-md border border-amber-300/80 bg-amber-50/90 dark:bg-amber-950/40 dark:border-amber-900/60 p-2 text-center font-inter text-xs font-semibold text-amber-900 dark:text-amber-200">
                 Select at least one column to generate an export.
               </div>
             ) : null}
@@ -484,7 +484,7 @@ export function YorpRegistryExportDialog({
 
           {/* Export Format Selector */}
           <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-800">
-            <label className="font-segoe text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <label className="font-inter text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Export Format
             </label>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -519,10 +519,10 @@ export function YorpRegistryExportDialog({
                       <Icon className="h-4 w-4" strokeWidth={2} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-segoe text-xs font-semibold leading-tight text-text-default">
+                      <p className="font-inter text-xs font-semibold leading-tight text-text-default">
                         {config.title}
                       </p>
-                      <p className="truncate font-segoe text-[10.5px] text-slate-500 dark:text-slate-400">
+                      <p className="truncate font-inter text-[10.5px] text-slate-500 dark:text-slate-400">
                         {config.description}
                       </p>
                     </div>
@@ -541,10 +541,10 @@ export function YorpRegistryExportDialog({
           {isPdf && (
             <div className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 p-3 space-y-2.5 transition-all">
               <div className="flex flex-wrap items-center justify-between gap-1">
-                <span className="font-segoe text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <span className="font-inter text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   PDF Page Setup
                 </span>
-                <span className="font-segoe text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="font-inter text-[11px] text-slate-400 dark:text-slate-500">
                   {selectedCount > 8 ? "Landscape recommended for multi-column layout" : "Layout options"}
                 </span>
               </div>
@@ -552,7 +552,7 @@ export function YorpRegistryExportDialog({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {/* Paper Size Selector */}
                 <div className="space-y-1.5">
-                  <label htmlFor="pdf-paper-size" className="font-segoe text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <label htmlFor="pdf-paper-size" className="font-inter text-xs font-medium text-slate-700 dark:text-slate-300">
                     Paper Size
                   </label>
                   <Select
@@ -581,7 +581,7 @@ export function YorpRegistryExportDialog({
 
                 {/* Orientation Selector */}
                 <div className="space-y-1.5">
-                  <label className="font-segoe text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <label className="font-inter text-xs font-medium text-slate-700 dark:text-slate-300">
                     Orientation
                   </label>
                   <div className="grid grid-cols-2 gap-2 w-full">
@@ -590,7 +590,7 @@ export function YorpRegistryExportDialog({
                       disabled={isSubmitting}
                       onClick={() => setOrientation("landscape")}
                       className={cn(
-                        "flex h-9 w-full items-center justify-center gap-1.5 rounded-md border px-2.5 py-1.5 font-segoe text-xs font-semibold transition-all duration-150 active:scale-[0.98] cursor-pointer",
+                        "flex h-9 w-full items-center justify-center gap-1.5 rounded-md border px-2.5 py-1.5 font-inter text-xs font-semibold transition-all duration-150 active:scale-[0.98] cursor-pointer",
                         orientation === "landscape"
                           ? "border-public-bg-brand bg-public-bg-brand text-white shadow-2xs"
                           : "border-slate-300 dark:border-slate-700 bg-admin-surface text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
@@ -604,7 +604,7 @@ export function YorpRegistryExportDialog({
                       disabled={isSubmitting}
                       onClick={() => setOrientation("portrait")}
                       className={cn(
-                        "flex h-9 w-full items-center justify-center gap-1.5 rounded-md border px-2.5 py-1.5 font-segoe text-xs font-semibold transition-all duration-150 active:scale-[0.98] cursor-pointer",
+                        "flex h-9 w-full items-center justify-center gap-1.5 rounded-md border px-2.5 py-1.5 font-inter text-xs font-semibold transition-all duration-150 active:scale-[0.98] cursor-pointer",
                         orientation === "portrait"
                           ? "border-public-bg-brand bg-public-bg-brand text-white shadow-2xs"
                           : "border-slate-300 dark:border-slate-700 bg-admin-surface text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
@@ -622,7 +622,7 @@ export function YorpRegistryExportDialog({
 
         {/* Dedicated Sticky Footer */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-t border-slate-200/90 dark:border-slate-800 bg-admin-surface dark:bg-slate-900 shrink-0">
-          <div className="font-segoe text-xs sm:text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="font-inter text-xs sm:text-[13px] text-slate-500 dark:text-slate-400">
             {typeof recordCount === "number" ? (
               <span>
                 <strong className="text-text-default font-semibold">{recordCount}</strong>{" "}
@@ -636,7 +636,7 @@ export function YorpRegistryExportDialog({
               <button
                 type="button"
                 disabled={isSubmitting}
-                className="h-10 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-4 py-2 font-segoe text-xs sm:text-sm font-semibold text-text-default shadow-2xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand disabled:opacity-50 cursor-pointer"
+                className="h-10 rounded-md border border-slate-300 dark:border-slate-700 bg-admin-surface px-4 py-2 font-inter text-xs sm:text-sm font-semibold text-text-default shadow-2xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
@@ -646,7 +646,7 @@ export function YorpRegistryExportDialog({
               disabled={isSubmitting || selectedCount === 0 || Boolean(periodFilter?.enabled && getAdminReportPeriodError(periodFilter.value))}
               onClick={() => void handleGenerate()}
               aria-busy={isSubmitting}
-              className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-segoe text-xs sm:text-sm font-semibold text-white shadow-xs transition-all hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-inter text-xs sm:text-sm font-semibold text-white shadow-xs transition-all hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? (
                 <>

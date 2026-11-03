@@ -39,7 +39,31 @@ export interface UserPortalTemplatesWorkspaceViewProps {
   hideHeader?: boolean;
   compactHeader?: boolean;
   searchPlaceholder?: string;
+  /** Public-site toolbar look (flat, square, brand). Portal keeps its own styling when unset. */
+  publicToolbar?: boolean;
 }
+
+// Public-site toolbar overrides, merged over the portal classes via cn/tailwind-merge.
+const PUBLIC_TOOLBAR = "rounded-none border-0 bg-transparent p-0 shadow-none";
+const PUBLIC_SEARCH_ICON = "top-1/2 h-4 w-4 -translate-y-1/2 text-public-text-secondary";
+const PUBLIC_INPUT = "h-10 rounded-[2px] border-public-border-default bg-white text-base sm:text-sm placeholder:text-public-text-secondary focus-visible:border-public-border-brand focus-visible:ring-0 focus-visible:ring-offset-0";
+const PUBLIC_TRIGGER = "h-10 rounded-[2px] border-public-border-default bg-white text-sm font-semibold text-public-text-brand shadow-none hover:border-public-border-brand hover:bg-white hover:text-public-text-brand";
+const PUBLIC_ACTION = "h-10 rounded-[2px] border-0 bg-public-bg-brand text-sm font-semibold text-public-text-on-brand shadow-none hover:bg-public-bg-brand-hover hover:text-public-text-on-brand [&_svg]:text-current";
+const PUBLIC_MENU = "rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg";
+const PUBLIC_ITEM = "rounded-none border-b border-l-2 border-public-border-default border-l-transparent px-3 py-3 text-sm font-normal text-public-text-neutral-default last:border-b-0 focus:bg-public-bg-section focus:text-public-text-brand";
+const PUBLIC_ITEM_ACTIVE = "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand";
+const PUBLIC_SECTION = "rounded-[2px] border-public-border-default bg-white shadow-none hover:border-public-border-default";
+const PUBLIC_SECTION_HEAD = "border-public-border-default bg-white hover:bg-public-bg-section";
+const PUBLIC_SECTION_TITLE = "text-public-text-brand";
+const PUBLIC_SMALL_BUTTON = "rounded-[2px] border-public-border-default bg-white text-public-text-brand shadow-none hover:border-public-border-brand hover:bg-white hover:text-public-text-brand [&_svg]:text-current";
+const PUBLIC_TABLE_HEAD = "border-public-border-default bg-public-bg-section text-public-text-secondary";
+const PUBLIC_ROW = "cursor-default hover:bg-public-bg-section";
+const PUBLIC_REQUIRED = "rounded-[2px] bg-public-bg-brand-subtle text-public-text-brand";
+const PUBLIC_OPTIONAL = "rounded-[2px] bg-public-bg-section text-public-text-secondary";
+const PUBLIC_CHIP = "rounded-[2px] border-public-border-default bg-white text-public-text-secondary";
+const PUBLIC_VIEW = "rounded-[2px] border-public-border-default text-public-text-brand shadow-none hover:bg-public-bg-section hover:text-public-text-brand [&_svg]:text-current";
+const PUBLIC_DOWNLOAD = "rounded-[2px] bg-public-bg-brand text-public-text-on-brand shadow-none hover:bg-public-bg-brand-hover";
+const PUBLIC_ICON_TILE = "rounded-[2px] bg-public-bg-section text-public-text-brand";
 
 // Authentic File Format Resolver (PDF, DOCX, XLSX, ZIP, PNG, etc.)
 export const extractTemplateCategoryLabels = (tpl: any): string[] => {
@@ -119,6 +143,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
   hideHeader = false,
   compactHeader = false,
   searchPlaceholder,
+  publicToolbar = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -341,16 +366,16 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
         )}
 
         {/* Mobile Search & Filter Toolbar */}
-        <div className="bg-card border border-border/60 p-3 rounded-2xl shadow-xs space-y-2.5">
+        <div className={cn("bg-card border border-border/60 p-3 rounded-2xl shadow-xs space-y-2.5", publicToolbar && PUBLIC_TOOLBAR)}>
           {/* Search Input - Full Row */}
           <div className="relative w-full">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className={cn("absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground", publicToolbar && PUBLIC_SEARCH_ICON)} aria-hidden="true" />
             <Input
               type="text"
               placeholder={searchPlaceholder ?? "Search templates..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 pl-9 pr-3 text-xs rounded-xl bg-background border-border/80 w-full"
+              className={cn("h-9 pl-9 pr-3 text-xs rounded-xl bg-background border-border/80 w-full", publicToolbar && PUBLIC_INPUT)}
             />
           </div>
 
@@ -363,7 +388,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 w-full rounded-xl border-border/80 text-xs font-semibold gap-1.5 justify-between px-2.5 sm:px-3 cursor-pointer shadow-2xs hover:bg-accent text-foreground min-w-0"
+                  className={cn("h-9 w-full rounded-xl border-border/80 text-xs font-semibold gap-1.5 justify-between px-2.5 sm:px-3 cursor-pointer shadow-2xs hover:bg-accent text-foreground min-w-0", publicToolbar && PUBLIC_TRIGGER)}
                 >
                   <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate text-left">
                     <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -374,12 +399,14 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                   <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0 opacity-70 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
+              <DropdownMenuContent align="start" className={cn("w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg", publicToolbar && PUBLIC_MENU)}>
                 <DropdownMenuItem
                   onClick={() => setCategoryFilter("all")}
                   className={cn(
                     "text-xs font-medium rounded-lg cursor-pointer flex items-center justify-between",
-                    categoryFilter === "all" && "bg-primary/10 text-primary font-bold"
+                    categoryFilter === "all" && "bg-primary/10 text-primary font-bold",
+                    publicToolbar && PUBLIC_ITEM,
+                    publicToolbar && categoryFilter === "all" && PUBLIC_ITEM_ACTIVE
                   )}
                 >
                   <span>All Categories</span>
@@ -400,7 +427,9 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                       onClick={() => setCategoryFilter(cat)}
                       className={cn(
                         "text-xs font-medium rounded-lg cursor-pointer flex items-center justify-between",
-                        categoryFilter === cat && "bg-primary/10 text-primary font-bold"
+                        categoryFilter === cat && "bg-primary/10 text-primary font-bold",
+                        publicToolbar && PUBLIC_ITEM,
+                        publicToolbar && categoryFilter === cat && PUBLIC_ITEM_ACTIVE
                       )}
                     >
                       <span className="truncate mr-2">{cat}</span>
@@ -423,7 +452,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                   : "Official-Templates.zip";
                 void handleDownloadTemplatesZip(filteredTemplates, name, "mobile-toolbar-zip");
               }}
-              className="h-9 w-full rounded-xl border-border/80 text-xs font-semibold gap-1.5 justify-center px-2.5 sm:px-3 cursor-pointer shadow-2xs hover:bg-accent text-foreground min-w-0"
+              className={cn("h-9 w-full rounded-xl border-border/80 text-xs font-semibold gap-1.5 justify-center px-2.5 sm:px-3 cursor-pointer shadow-2xs hover:bg-accent text-foreground min-w-0", publicToolbar && PUBLIC_ACTION)}
             >
               {downloadingZipKey === "mobile-toolbar-zip" ? (
                 <>
@@ -450,14 +479,14 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
           return (
             <div key={group.category} className="space-y-2.5">
               {/* Compact Integrated Section Header Card */}
-              <div className="bg-card border border-border/60 p-3 rounded-2xl shadow-xs">
+              <div className={cn("bg-card border border-border/60 p-3 rounded-2xl shadow-xs", publicToolbar && PUBLIC_SECTION)}>
                 <div className="flex items-center justify-between gap-2">
                   {/* Left: Title & Subtitle clickable area for collapse/expand */}
                   <div
                     onClick={() => toggleCategoryCollapse(group.category)}
                     className="min-w-0 flex-1 cursor-pointer select-none space-y-0.5 pr-1"
                   >
-                    <h3 className="break-words text-xs font-bold uppercase tracking-wider text-foreground">
+                    <h3 className={cn("break-words text-xs font-bold uppercase tracking-wider text-foreground", publicToolbar && PUBLIC_SECTION_TITLE)}>
                       {formatPublicTemplateCategorySectionLabel(group.category)} ({group.items.length})
                     </h3>
                     <span className="text-[10px] text-muted-foreground font-semibold block">
@@ -482,7 +511,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                           sectionZipKey
                         );
                       }}
-                      className="h-7 px-2.5 text-[11px] font-bold rounded-xl border-border/80 gap-1.5 cursor-pointer shadow-2xs hover:bg-accent text-foreground shrink-0"
+                      className={cn("h-7 px-2.5 text-[11px] font-bold rounded-xl border-border/80 gap-1.5 cursor-pointer shadow-2xs hover:bg-accent text-foreground shrink-0", publicToolbar && PUBLIC_SMALL_BUTTON)}
                     >
                       {downloadingZipKey === sectionZipKey ? (
                         <>
@@ -503,7 +532,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                         e.stopPropagation();
                         toggleCategoryCollapse(group.category);
                       }}
-                      className="p-1 text-muted-foreground hover:text-foreground cursor-pointer rounded-lg hover:bg-accent/60 transition-colors shrink-0"
+                      className={cn("p-1 text-muted-foreground hover:text-foreground cursor-pointer rounded-lg hover:bg-accent/60 transition-colors shrink-0", publicToolbar && "rounded-[2px] hover:bg-public-bg-section")}
                       aria-label={`Toggle ${group.category} templates section`}
                     >
                       <ChevronDown
@@ -531,11 +560,11 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                     return (
                       <Card
                         key={`${group.category}-${tpl.id}`}
-                        className="rounded-2xl border border-border/60 bg-card p-4 space-y-3 shadow-xs hover:border-primary/40 transition-all flex flex-col"
+                        className={cn("rounded-2xl border border-border/60 bg-card p-4 space-y-3 shadow-xs hover:border-primary/40 transition-all flex flex-col", publicToolbar && PUBLIC_SECTION)}
                       >
                         {/* Top Row: Icon + Title */}
                         <div className="flex items-start gap-3 min-w-0">
-                          <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                          <div className={cn("h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5", publicToolbar && PUBLIC_ICON_TILE)}>
                             <FileText className="h-4.5 w-4.5" />
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
@@ -544,22 +573,22 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                             </p>
                             {/* Metadata Badges */}
                             <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                              <span className="text-[10px] font-mono font-bold bg-muted px-2 py-0.5 rounded-md text-muted-foreground uppercase">
+                              <span className={cn("text-[10px] font-mono font-bold bg-muted px-2 py-0.5 rounded-md text-muted-foreground uppercase", publicToolbar && PUBLIC_OPTIONAL)}>
                                 {fileFormat}
                               </span>
                               {tpl.isRequired ? (
-                                <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-md">
+                                <span className={cn("text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-md", publicToolbar && PUBLIC_REQUIRED)}>
                                   Required
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-md">
+                                <span className={cn("text-[10px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-md", publicToolbar && PUBLIC_OPTIONAL)}>
                                   Optional
                                 </span>
                               )}
                               {extractTemplateCategoryLabels(tpl).map((cat) => (
                                 <span
                                   key={cat}
-                                  className="text-[10px] font-medium bg-muted/60 border border-border/50 px-2 py-0.5 rounded-md text-muted-foreground truncate max-w-[140px]"
+                                  className={cn("text-[10px] font-medium bg-muted/60 border border-border/50 px-2 py-0.5 rounded-md text-muted-foreground truncate max-w-[140px]", publicToolbar && PUBLIC_CHIP)}
                                 >
                                   {cat}
                                 </span>
@@ -594,7 +623,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                   void openFile(tpl.fileUrl, tpl.title);
                                 }
                               }}
-                              className="h-9 px-3 rounded-xl border border-border/80 text-xs font-semibold text-foreground hover:bg-accent gap-1.5 flex items-center justify-center cursor-pointer shadow-xs transition-all"
+                              className={cn("h-9 px-3 rounded-xl border border-border/80 text-xs font-semibold text-foreground hover:bg-accent gap-1.5 flex items-center justify-center cursor-pointer shadow-xs transition-all", publicToolbar && PUBLIC_VIEW)}
                             >
                               <Eye className="h-3.5 w-3.5 text-primary" /> View
                             </Button>
@@ -604,7 +633,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                               size="sm"
                               disabled={isDownloading}
                               onClick={() => void handleDownloadSingleTemplate(tpl)}
-                              className="h-9 px-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 flex items-center justify-center cursor-pointer shadow-xs transition-all"
+                              className={cn("h-9 px-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold gap-1.5 flex items-center justify-center cursor-pointer shadow-xs transition-all", publicToolbar && PUBLIC_DOWNLOAD)}
                             >
                               {isDownloading ? (
                                 <>
@@ -631,7 +660,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
 
         {/* Mobile Empty State */}
         {categoryGroups.length === 0 && (
-          <Card className="rounded-2xl border border-border/60 bg-card p-8 text-center space-y-2 shadow-xs">
+          <Card className={cn("rounded-2xl border border-border/60 bg-card p-8 text-center space-y-2 shadow-xs", publicToolbar && PUBLIC_SECTION)}>
             <FileText className="h-8 w-8 text-muted-foreground/50 mx-auto" />
             <p className="text-sm font-bold text-foreground">No templates found</p>
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">
@@ -663,28 +692,28 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
         )}
 
         {/* Unified Search & Category Toolbar */}
-        <div className="flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs">
+        <div className={cn("flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs", publicToolbar && PUBLIC_TOOLBAR)}>
           <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className={cn("absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground", publicToolbar && cn(PUBLIC_SEARCH_ICON, "left-3"))} aria-hidden="true" />
             <Input
               type="text"
               placeholder={searchPlaceholder ?? "Search templates by title, description, category..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full"
+              className={cn("h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full", publicToolbar && cn(PUBLIC_INPUT, "pl-9"))}
             />
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border text-xs font-medium gap-1 cursor-pointer">
+                <Button type="button" variant="outline" size="sm" className={cn("h-8 rounded-xl border-border text-xs font-medium gap-1 cursor-pointer", publicToolbar && cn(PUBLIC_TRIGGER, "px-3"))}>
                   <Filter className="h-3.5 w-3.5" />
                   Category: {categoryFilter === "all" ? "All" : categoryFilter}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52 p-2 rounded-xl bg-card border-border/80">
-                <DropdownMenuItem onClick={() => setCategoryFilter("all")} className="text-xs font-medium cursor-pointer">
+              <DropdownMenuContent align="end" className={cn("w-52 p-2 rounded-xl bg-card border-border/80", publicToolbar && cn(PUBLIC_MENU, "w-60"))}>
+                <DropdownMenuItem onClick={() => setCategoryFilter("all")} className={cn("text-xs font-medium cursor-pointer", publicToolbar && PUBLIC_ITEM, publicToolbar && categoryFilter === "all" && PUBLIC_ITEM_ACTIVE)}>
                   All Categories ({publicTemplates.length})
                 </DropdownMenuItem>
                 {availableCategories.map((cat) => {
@@ -702,7 +731,9 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                       onClick={() => setCategoryFilter(cat)}
                       className={cn(
                         "text-xs font-medium cursor-pointer flex items-center justify-between",
-                        categoryFilter === cat && "bg-primary/10 text-primary font-bold"
+                        categoryFilter === cat && "bg-primary/10 text-primary font-bold",
+                        publicToolbar && PUBLIC_ITEM,
+                        publicToolbar && categoryFilter === cat && PUBLIC_ITEM_ACTIVE
                       )}
                     >
                       <span>{cat}</span>
@@ -724,7 +755,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                   : "Official-Templates.zip";
                 void handleDownloadTemplatesZip(filteredTemplates, name, "toolbar-zip");
               }}
-              className="h-8 rounded-xl border-border text-xs font-medium gap-1.5 cursor-pointer disabled:opacity-50"
+              className={cn("h-8 rounded-xl border-border text-xs font-medium gap-1.5 cursor-pointer disabled:opacity-50", publicToolbar && cn(PUBLIC_ACTION, "px-4"))}
             >
               {downloadingZipKey === "toolbar-zip" ? (
                 <>
@@ -749,11 +780,11 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
           return (
             <Card
               key={group.category}
-              className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs space-y-0"
+              className={cn("rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs space-y-0", publicToolbar && PUBLIC_SECTION)}
             >
               <div
                 onClick={() => toggleCategoryCollapse(group.category)}
-                className="p-4 bg-muted/20 border-b border-border/60 flex items-center justify-between cursor-pointer hover:bg-muted/40 transition-colors"
+                className={cn("p-4 bg-muted/20 border-b border-border/60 flex items-center justify-between cursor-pointer hover:bg-muted/40 transition-colors", publicToolbar && PUBLIC_SECTION_HEAD)}
               >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <ChevronDown
@@ -762,7 +793,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                       isCollapsed && "-rotate-90"
                     )}
                   />
-                  <h3 className="min-w-0 break-words text-xs font-bold uppercase tracking-wider text-foreground">
+                  <h3 className={cn("min-w-0 break-words text-xs font-bold uppercase tracking-wider text-foreground", publicToolbar && PUBLIC_SECTION_TITLE)}>
                     {formatPublicTemplateCategorySectionLabel(group.category)} ({group.items.length})
                   </h3>
                 </div>
@@ -780,7 +811,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                         sectionZipKey
                       )
                     }
-                    className="h-7 text-[11px] font-bold rounded-lg border-border gap-1 cursor-pointer"
+                    className={cn("h-7 text-[11px] font-bold rounded-lg border-border gap-1 cursor-pointer", publicToolbar && PUBLIC_SMALL_BUTTON)}
                   >
                     {downloadingZipKey === sectionZipKey ? (
                       <>
@@ -802,7 +833,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse min-w-[850px]">
                     <thead>
-                      <tr className="border-b border-border/70 bg-muted/10 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <tr className={cn("border-b border-border/70 bg-muted/10 text-[11px] font-bold text-muted-foreground uppercase tracking-wider", publicToolbar && PUBLIC_TABLE_HEAD)}>
                         <th className="py-3 px-5">Document</th>
                         <th className="py-3 px-4 text-center w-[90px]">Format</th>
                         <th className="py-3 px-4 w-[130px]">Category</th>
@@ -811,7 +842,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                         <th className="py-3 px-5 text-right w-[190px] min-w-[190px]">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/40">
+                    <tbody className={cn("divide-y divide-border/40", publicToolbar && "divide-public-border-default")}>
                       {group.items.map((tpl) => {
                         const rawSizeBytes = tpl.fileSize ?? null;
                         const rawTimestamp = tpl.updatedAt ?? null;
@@ -823,12 +854,12 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                         return (
                           <tr
                             key={`${group.category}-${tpl.id}`}
-                            className="h-16 hover:bg-primary/5 transition-colors cursor-pointer group"
+                            className={cn("h-16 hover:bg-primary/5 transition-colors cursor-pointer group", publicToolbar && PUBLIC_ROW)}
                           >
                             {/* Column 1: Document */}
                             <td className="py-3 px-5">
                               <div className="flex items-center gap-3">
-                                <FileText className="h-5 w-5 text-primary shrink-0" />
+                                <FileText className={cn("h-5 w-5 text-primary shrink-0", publicToolbar && "text-public-text-brand")} aria-hidden="true" />
                                 <div className="space-y-0.5 min-w-0">
                                   <div className="flex items-center gap-2">
                                     <p
@@ -838,11 +869,11 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                       {tpl.title}
                                     </p>
                                     {tpl.isRequired ? (
-                                      <span className="text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm shrink-0">
+                                      <span className={cn("text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm shrink-0", publicToolbar && PUBLIC_REQUIRED)}>
                                         Required
                                       </span>
                                     ) : (
-                                      <span className="text-[9px] font-medium bg-muted text-muted-foreground px-1.5 py-0.5 rounded-sm shrink-0">
+                                      <span className={cn("text-[9px] font-medium bg-muted text-muted-foreground px-1.5 py-0.5 rounded-sm shrink-0", publicToolbar && PUBLIC_OPTIONAL)}>
                                         Optional
                                       </span>
                                     )}
@@ -869,7 +900,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                   extractTemplateCategoryLabels(tpl).map((cat) => (
                                     <span
                                       key={cat}
-                                      className="inline-flex items-center text-[10px] font-medium bg-muted/60 border border-border/50 px-2 py-0.5 rounded-md text-muted-foreground"
+                                      className={cn("inline-flex items-center text-[10px] font-medium bg-muted/60 border border-border/50 px-2 py-0.5 rounded-md text-muted-foreground", publicToolbar && PUBLIC_CHIP)}
                                     >
                                       {cat}
                                     </span>
@@ -906,7 +937,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                     void openFile(tpl.fileUrl, tpl.title);
                                   }
                                 }}
-                                className="h-7 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg cursor-pointer shrink-0"
+                                className={cn("h-7 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg cursor-pointer shrink-0", publicToolbar && PUBLIC_VIEW)}
                               >
                                 <Eye className="mr-1 h-3.5 w-3.5" /> View
                               </Button>
@@ -915,7 +946,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                 size="sm"
                                 disabled={downloadingSingleId === tpl.id}
                                 onClick={() => void handleDownloadSingleTemplate(tpl)}
-                                className="h-7 w-[116px] min-w-[116px] text-xs font-bold rounded-lg bg-primary text-primary-foreground cursor-pointer gap-1.5 justify-center shrink-0"
+                                className={cn("h-7 w-[116px] min-w-[116px] text-xs font-bold rounded-lg bg-primary text-primary-foreground cursor-pointer gap-1.5 justify-center shrink-0", publicToolbar && PUBLIC_DOWNLOAD)}
                               >
                                 {downloadingSingleId === tpl.id ? (
                                   <>
@@ -943,7 +974,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
 
         {/* Clean Single Empty State when 0 templates match filter */}
         {categoryGroups.length === 0 && (
-          <Card className="rounded-2xl border border-border/60 bg-card p-12 text-center space-y-2 shadow-xs">
+          <Card className={cn("rounded-2xl border border-border/60 bg-card p-12 text-center space-y-2 shadow-xs", publicToolbar && PUBLIC_SECTION)}>
             <FileText className="h-10 w-10 text-muted-foreground/60 mx-auto" />
             <p className="text-sm font-bold text-foreground">No templates found</p>
             <p className="text-xs text-muted-foreground">

@@ -35,20 +35,20 @@ export const StatusPill = ({ status }: { status: InquiryRecord["status"] }) => {
   const normalized = normalizeInquiryStatus(status);
   if (normalized === "pending_review") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Pending Review
       </span>
     );
   }
   if (normalized === "reviewed") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Reviewed
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
       Closed
     </span>
   );
@@ -57,7 +57,7 @@ export const StatusPill = ({ status }: { status: InquiryRecord["status"] }) => {
 export const CategoryChip = ({ category, className }: { category: string; className?: string }) => (
   <span
     className={cn(
-      "inline-flex w-fit items-center rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-1.5 py-1 font-segoe text-[10px] font-semibold leading-[140%] text-text-tertiary-800",
+      "inline-flex w-fit items-center rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-1.5 py-1 font-inter text-[10px] font-semibold leading-[140%] text-text-tertiary-800",
       className,
     )}
   >
@@ -101,7 +101,7 @@ export const ReplyEmailButton = ({
       onClick();
     }}
     className={cn(
-      "flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md bg-public-bg-brand px-2.5 py-1.5 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover",
+      "flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md bg-public-bg-brand px-2.5 py-1.5 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover",
       className,
     )}
   >
@@ -179,7 +179,7 @@ export const InquiriesTable = ({
               serverPagination?.onPageChange(0);
             }}
             placeholder="Search inquiries..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -196,7 +196,7 @@ export const InquiriesTable = ({
                   serverPagination?.onPageChange(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -210,7 +210,7 @@ export const InquiriesTable = ({
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
         <span className="w-[12%]">Reference ID</span>
         <span className="w-[15%]">Organization</span>
         <span className="min-w-0 flex-1">Subject &amp; Preview</span>
@@ -222,8 +222,8 @@ export const InquiriesTable = ({
       {/* Rows */}
       {pageItems.length === 0 ? (
         <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-          <p className="font-segoe text-sm font-semibold text-text-default">No inquiries found</p>
-          <p className="font-segoe text-xs text-slate-500">Try adjusting your search or filters.</p>
+          <p className="font-inter text-sm font-semibold text-text-default">No inquiries found</p>
+          <p className="font-inter text-xs text-slate-500">Try adjusting your search or filters.</p>
         </div>
       ) : (
         pageItems.map((inquiry) => {
@@ -243,21 +243,21 @@ export const InquiriesTable = ({
               </div>
 
               <div className="flex w-[15%] flex-col gap-1">
-                <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                   {inquiry.organizationName || inquiry.submitterName || "Unknown"}
                 </p>
-                <p className="truncate font-segoe text-xs leading-none text-slate-500">{inquiry.email}</p>
+                <p className="truncate font-inter text-xs leading-none text-slate-500">{inquiry.email}</p>
               </div>
 
               <div className="flex min-w-0 flex-1 flex-col gap-1 pr-2">
-                <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                   {inquiry.subject}
                 </p>
-                <p className="line-clamp-1 break-words font-segoe text-xs leading-[140%] text-slate-500">{inquiry.description}</p>
+                <p className="line-clamp-1 break-words font-inter text-xs leading-[140%] text-slate-500">{inquiry.description}</p>
               </div>
 
               <div className="flex w-[15%] flex-col gap-1">
-                <p className="font-segoe text-xs font-semibold leading-[140%] text-text-default">
+                <p className="font-inter text-xs font-semibold leading-[140%] text-text-default">
                   {isValidDate ? `${format(date, "d MMM yyyy")} · ${format(date, "h:mm a")}` : ""}
                 </p>
                 <p className="flex items-center gap-1 font-cascadia text-[10px] text-slate-500">
@@ -289,7 +289,7 @@ export const InquiriesTable = ({
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{serverPagination?.totalCount ?? inquiries.length}</span> submissions
         </p>
@@ -298,7 +298,7 @@ export const InquiriesTable = ({
             type="button"
             onClick={() => changePage(clampedPage - 1)}
             disabled={clampedPage === 0}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
             Previous
@@ -312,7 +312,7 @@ export const InquiriesTable = ({
                   type="button"
                   onClick={() => changePage(index)}
                   className={cn(
-                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                     index === clampedPage
                       ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                       : "text-text-default hover:bg-slate-50",
@@ -326,7 +326,7 @@ export const InquiriesTable = ({
             type="button"
             onClick={() => changePage(clampedPage + 1)}
             disabled={clampedPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

@@ -152,7 +152,7 @@ export const LiquidationStatusLabel = ({
     const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
     if (isExpired) {
       return (
-        <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap border-status-danger-border bg-danger-subtle text-icon-danger-secondary">
+        <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%] whitespace-nowrap border-status-danger-border bg-danger-subtle text-icon-danger-secondary">
           Revision Expired (Locked)
         </span>
       );
@@ -165,7 +165,7 @@ export const LiquidationStatusLabel = ({
   return (
     <span
       className={cn(
-        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%] whitespace-nowrap",
+        "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%] whitespace-nowrap",
         config.className,
       )}
     >
@@ -248,7 +248,7 @@ export const LiquidationReportsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -272,7 +272,7 @@ export const LiquidationReportsTable = ({
               setPage(0);
             }}
             placeholder="Search by liquidation ID or organization..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -280,7 +280,7 @@ export const LiquidationReportsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{districtFilter === "all" ? "All districts" : districtFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -293,7 +293,7 @@ export const LiquidationReportsTable = ({
             <DropdownMenuItem
               onClick={() => handleDistrictFilterChange("all")}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 districtFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -304,7 +304,7 @@ export const LiquidationReportsTable = ({
                 key={district}
                 onClick={() => handleDistrictFilterChange(district)}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   districtFilter === district && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -318,7 +318,7 @@ export const LiquidationReportsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{barangayFilter === "all" ? "All barangays" : barangayFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -334,7 +334,7 @@ export const LiquidationReportsTable = ({
                 setPage(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 barangayFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -348,7 +348,7 @@ export const LiquidationReportsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   barangayFilter === barangay.name && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -362,7 +362,7 @@ export const LiquidationReportsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="whitespace-nowrap">{classificationFilter === "all" ? "All major classifications" : classificationFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -378,7 +378,7 @@ export const LiquidationReportsTable = ({
                 setPage(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 classificationFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -392,7 +392,7 @@ export const LiquidationReportsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   classificationFilter === classification && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -407,7 +407,7 @@ export const LiquidationReportsTable = ({
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[840px]">
           {/* Column headers */}
-          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
             <span className="w-[15%]">Reference ID</span>
             <span className="w-[26%]">Organization &amp; Project</span>
             <span className="w-[16%]">Linked Request</span>
@@ -419,8 +419,8 @@ export const LiquidationReportsTable = ({
           {/* Rows */}
           {pageItems.length === 0 ? (
             <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-              <p className="font-segoe text-sm font-semibold text-text-default">No matching liquidation reports</p>
-              <p className="font-segoe text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
+              <p className="font-inter text-sm font-semibold text-text-default">No matching liquidation reports</p>
+              <p className="font-inter text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
             </div>
           ) : (
             pageItems.map((report) => {
@@ -437,10 +437,10 @@ export const LiquidationReportsTable = ({
                   </div>
 
                   <div className="flex w-[26%] min-w-0 flex-col gap-0.5">
-                    <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                    <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                       {linkedBudget?.activityTitle ?? "Approved budget"}
                     </p>
-                    <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">
+                    <p className="truncate font-inter text-xs leading-[140%] text-slate-500">
                       {organization?.organizationName ?? "Unknown organization"}
                     </p>
                   </div>
@@ -456,12 +456,12 @@ export const LiquidationReportsTable = ({
                         <ExternalLink className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
                       </button>
                     ) : (
-                      <span className="font-segoe text-xs text-slate-400">—</span>
+                      <span className="font-inter text-xs text-slate-400">—</span>
                     )}
                   </div>
 
                   <div className="flex w-[14%] items-center">
-                    <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">{formatShortDate(report.deadlineAt)}</p>
+                    <p className="font-inter text-sm font-normal leading-[140%] text-text-default">{formatShortDate(report.deadlineAt)}</p>
                   </div>
 
                   <div className="flex w-[14%] items-center">
@@ -477,7 +477,7 @@ export const LiquidationReportsTable = ({
                     <button
                       type="button"
                       onClick={() => onReview(report.id)}
-                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                     >
                       <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                       Review
@@ -492,7 +492,7 @@ export const LiquidationReportsTable = ({
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{serverPage?.totalCount ?? reports.length}</span> submissions
         </p>
@@ -501,7 +501,7 @@ export const LiquidationReportsTable = ({
             type="button"
             onClick={() => changePage(clampedPage - 1)}
             disabled={clampedPage === 0}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
             Previous
@@ -515,7 +515,7 @@ export const LiquidationReportsTable = ({
                   type="button"
                   onClick={() => changePage(index)}
                   className={cn(
-                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                     index === clampedPage
                       ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                       : "text-text-default hover:bg-slate-50",
@@ -529,7 +529,7 @@ export const LiquidationReportsTable = ({
             type="button"
             onClick={() => changePage(clampedPage + 1)}
             disabled={clampedPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

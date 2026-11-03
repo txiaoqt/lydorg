@@ -57,20 +57,20 @@ const PAGE_SIZE = 10;
 const StatusPill = ({ status }: { status: NewsRelease["visibilityStatus"] }) => {
   if (status === "published") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
         Published
       </span>
     );
   }
   if (status === "draft") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
         Draft
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
       Hidden
     </span>
   );
@@ -124,7 +124,7 @@ const ActionIconButton = forwardRef<
 ActionIconButton.displayName = "ActionIconButton";
 
 const MENU_ITEM_CLASS =
-  "flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 font-segoe text-sm font-normal leading-none";
+  "flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 font-inter text-sm font-normal leading-none";
 
 const MoreActionsMenu = ({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) => (
   <DropdownMenu>
@@ -180,13 +180,13 @@ const NewsCard = ({
       </div>
 
       <div className="flex flex-col gap-4">
-        <p className="line-clamp-2 font-segoe text-sm font-semibold leading-[140%] text-text-default">{news.title}</p>
-        <p className="line-clamp-2 font-segoe text-[13px] font-normal leading-[140%] text-slate-500">{news.description}</p>
+        <p className="line-clamp-2 font-inter text-sm font-semibold leading-[140%] text-text-default">{news.title}</p>
+        <p className="line-clamp-2 font-inter text-[13px] font-normal leading-[140%] text-slate-500">{news.description}</p>
       </div>
 
       <div className="mt-auto flex flex-col gap-3">
         <div className="flex items-center justify-between border-b border-slate-300 py-3">
-          <p className="font-segoe text-[13px] font-semibold leading-[140%] text-slate-500">
+          <p className="font-inter text-[13px] font-semibold leading-[140%] text-slate-500">
             {news.visibilityStatus === "hidden" ? "Hidden" : "Published"}
           </p>
           <p className="font-cascadia text-[13px] font-normal leading-[140%] text-text-default">
@@ -198,7 +198,7 @@ const NewsCard = ({
           <button
             type="button"
             onClick={() => onPreview(news)}
-            className="flex h-9 w-[104px] items-center justify-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:bg-slate-50"
+            className="flex h-9 w-[104px] items-center justify-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:bg-slate-50"
           >
             <Eye className="h-4 w-4 shrink-0" strokeWidth={1.6} />
             Preview
@@ -209,7 +209,7 @@ const NewsCard = ({
               <button
                 type="button"
                 onClick={() => onTogglePublish(news)}
-                className="flex h-9 w-[85px] items-center justify-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:bg-slate-50"
+                className="flex h-9 w-[85px] items-center justify-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:bg-slate-50"
               >
                 <EyeOff className="h-4 w-4 shrink-0 text-public-text-neutral-default" strokeWidth={1.6} />
                 Hide
@@ -218,7 +218,7 @@ const NewsCard = ({
               <button
                 type="button"
                 onClick={() => onTogglePublish(news)}
-                className="flex h-9 w-[101px] items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-2 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                className="flex h-9 w-[101px] items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-2 font-inter text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
               >
                 <Globe className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                 Publish
@@ -263,7 +263,7 @@ export const NewsReleasesTable = ({
 
   const paginationFooter = (
     <div className="flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-      <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+      <p className="font-inter text-[13px] text-text-neutral-tertiary">
         Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
         <span className="text-text-default">{newsReleases.length}</span> records
       </p>
@@ -272,7 +272,7 @@ export const NewsReleasesTable = ({
           type="button"
           onClick={() => changePage(clampedPage - 1)}
           disabled={clampedPage === 0}
-          className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+          className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
           Previous
@@ -286,7 +286,7 @@ export const NewsReleasesTable = ({
                 type="button"
                 onClick={() => changePage(index)}
                 className={cn(
-                  "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                  "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                   index === clampedPage
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -300,7 +300,7 @@ export const NewsReleasesTable = ({
           type="button"
           onClick={() => changePage(clampedPage + 1)}
           disabled={clampedPage >= totalPages - 1}
-          className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+          className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
         >
           Next
           <ChevronRight className="h-4 w-4" strokeWidth={1.6} />
@@ -321,7 +321,7 @@ export const NewsReleasesTable = ({
               setPage(0);
             }}
             placeholder="Search news releases..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -337,7 +337,7 @@ export const NewsReleasesTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -353,7 +353,7 @@ export const NewsReleasesTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="whitespace-nowrap">{categoryFilter === "all" ? "All categories" : categoryFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -366,7 +366,7 @@ export const NewsReleasesTable = ({
                 setPage(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 categoryFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -380,7 +380,7 @@ export const NewsReleasesTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   categoryFilter === category && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -399,8 +399,8 @@ export const NewsReleasesTable = ({
       {viewMode === "grid" ? (
         newsReleases.length === 0 ? (
           <div className="flex flex-col items-center gap-1 rounded-md border border-slate-300 bg-admin-surface px-4 py-16 text-center shadow-sm">
-            <p className="font-segoe text-sm font-semibold text-text-default">No news releases found</p>
-            <p className="font-segoe text-xs text-slate-500">Try adjusting your search or filters.</p>
+            <p className="font-inter text-sm font-semibold text-text-default">No news releases found</p>
+            <p className="font-inter text-xs text-slate-500">Try adjusting your search or filters.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -419,7 +419,7 @@ export const NewsReleasesTable = ({
       ) : (
         <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
           {/* Column headers */}
-          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
             <span className="min-w-0 flex-1">Title</span>
             <span className="w-[12%]">Category</span>
             <span className="w-[16%]">Facebook Link</span>
@@ -431,8 +431,8 @@ export const NewsReleasesTable = ({
           {/* Rows */}
           {pageItems.length === 0 ? (
             <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-              <p className="font-segoe text-sm font-semibold text-text-default">No news releases found</p>
-              <p className="font-segoe text-xs text-slate-500">Try adjusting your search or filters.</p>
+              <p className="font-inter text-sm font-semibold text-text-default">No news releases found</p>
+              <p className="font-inter text-xs text-slate-500">Try adjusting your search or filters.</p>
             </div>
           ) : (
             pageItems.map((news) => {
@@ -445,7 +445,7 @@ export const NewsReleasesTable = ({
                   className="group flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
                 >
                   <div className="flex min-w-0 flex-1 flex-col gap-1 pr-2">
-                    <p className="line-clamp-2 font-segoe text-sm font-semibold leading-[140%] text-text-default">{news.title}</p>
+                    <p className="line-clamp-2 font-inter text-sm font-semibold leading-[140%] text-text-default">{news.title}</p>
                   </div>
 
                   <div className="flex w-[12%] items-center">
@@ -458,7 +458,7 @@ export const NewsReleasesTable = ({
                         href={news.facebookPostUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group/link flex items-center gap-1 font-segoe text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-icon-info-secondary"
+                        className="group/link flex items-center gap-1 font-inter text-[13px] font-semibold leading-none text-public-bg-brand transition-colors hover:text-icon-info-secondary"
                       >
                         Facebook Link
                         <ExternalLink
@@ -472,7 +472,7 @@ export const NewsReleasesTable = ({
                   </div>
 
                   <div className="flex w-[16%] items-center">
-                    <p className="font-segoe text-xs font-semibold leading-[140%] text-text-default">
+                    <p className="font-inter text-xs font-semibold leading-[140%] text-text-default">
                       {isValidDate ? `${format(date, "d MMM yyyy")}, ${format(date, "h:mm a")}` : ""}
                     </p>
                   </div>
@@ -494,7 +494,7 @@ export const NewsReleasesTable = ({
 
           {/* Footer / pagination */}
           <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-            <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+            <p className="font-inter text-[13px] text-text-neutral-tertiary">
               Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
               <span className="text-text-default">{newsReleases.length}</span> records
             </p>
@@ -503,7 +503,7 @@ export const NewsReleasesTable = ({
                 type="button"
                 onClick={() => changePage(clampedPage - 1)}
                 disabled={clampedPage === 0}
-                className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+                className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
                 Previous
@@ -517,7 +517,7 @@ export const NewsReleasesTable = ({
                       type="button"
                       onClick={() => changePage(index)}
                       className={cn(
-                        "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                        "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                         index === clampedPage
                           ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                           : "text-text-default hover:bg-slate-50",
@@ -531,7 +531,7 @@ export const NewsReleasesTable = ({
                 type="button"
                 onClick={() => changePage(clampedPage + 1)}
                 disabled={clampedPage >= totalPages - 1}
-                className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+                className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
               >
                 Next
                 <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

@@ -71,13 +71,13 @@ export const RenewalStatusPill = ({
 }) => {
   if (status === "approved") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
         Verified
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Pending Review
     </span>
   );
@@ -88,7 +88,7 @@ const DocumentsPill = ({ submitted, required }: { submitted: number; required: n
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
         complete
           ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
           : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
@@ -164,7 +164,7 @@ export const RenewalsTable = ({
                   goFirstPage();
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -188,7 +188,7 @@ export const RenewalsTable = ({
               goFirstPage();
             }}
             placeholder="Search by renewal reference or organization..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -196,7 +196,7 @@ export const RenewalsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{districtFilter === "all" ? "All districts" : districtFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -209,7 +209,7 @@ export const RenewalsTable = ({
             <DropdownMenuItem
               onClick={() => handleDistrictFilterChange("all")}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 districtFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -220,7 +220,7 @@ export const RenewalsTable = ({
                 key={district}
                 onClick={() => handleDistrictFilterChange(district)}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   districtFilter === district && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -234,7 +234,7 @@ export const RenewalsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{barangayFilter === "all" ? "All barangays" : barangayFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -250,7 +250,7 @@ export const RenewalsTable = ({
                 goFirstPage();
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 barangayFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -264,7 +264,7 @@ export const RenewalsTable = ({
                   goFirstPage();
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   barangayFilter === barangay.name && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -278,7 +278,7 @@ export const RenewalsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="whitespace-nowrap">{classificationFilter === "all" ? "All major classifications" : classificationFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -294,7 +294,7 @@ export const RenewalsTable = ({
                 goFirstPage();
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 classificationFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -308,7 +308,7 @@ export const RenewalsTable = ({
                   goFirstPage();
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   classificationFilter === classification && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -323,7 +323,7 @@ export const RenewalsTable = ({
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[840px]">
           {/* Column headers */}
-          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
             <span className="w-6 shrink-0">
               <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
             </span>
@@ -339,8 +339,8 @@ export const RenewalsTable = ({
           {/* Rows */}
           {pageItems.length === 0 ? (
             <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-              <p className="font-segoe text-sm font-semibold text-text-default">No matching renewal applications</p>
-              <p className="font-segoe text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
+              <p className="font-inter text-sm font-semibold text-text-default">No matching renewal applications</p>
+              <p className="font-inter text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
             </div>
           ) : (
             pageItems.map((item, index) => {
@@ -358,16 +358,16 @@ export const RenewalsTable = ({
 
                   <div className="flex w-[14%] flex-col gap-0.5">
                     <ReferenceCodeChip code={item.referenceIdentifier || "—"} />
-                    <span className="font-segoe text-[11px] font-medium text-slate-500">
+                    <span className="font-inter text-[11px] font-medium text-slate-500">
                       Cycle {item.cycleNumber}
                     </span>
                   </div>
 
                   <div className="flex w-[20%] min-w-0 flex-col gap-0.5">
-                    <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                    <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                       {item.organizationName}
                     </p>
-                    <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">
+                    <p className="truncate font-inter text-xs leading-[140%] text-slate-500">
                       {[item.district, item.barangay].filter(Boolean).join(" · ") || "No location provided"}
                     </p>
                   </div>
@@ -376,10 +376,10 @@ export const RenewalsTable = ({
                     {item.majorClassification ? (
                       <CategoryChip category={item.majorClassification} />
                     ) : (
-                      <span className="font-segoe text-xs text-slate-500">—</span>
+                      <span className="font-inter text-xs text-slate-500">—</span>
                     )}
                     {item.currentAccreditationExpiry ? (
-                      <span className="font-segoe text-[11px] text-slate-500">
+                      <span className="font-inter text-[11px] text-slate-500">
                         Expiry: {format(new Date(item.currentAccreditationExpiry), "d MMM yyyy")}
                       </span>
                     ) : null}
@@ -390,7 +390,7 @@ export const RenewalsTable = ({
                   </div>
 
                   <div className="flex w-[10%] items-center">
-                    <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">
+                    <p className="font-inter text-sm font-normal leading-[140%] text-text-default">
                       {isValidDate && submittedDate ? format(submittedDate, "d MMM yyyy") : "—"}
                     </p>
                   </div>
@@ -403,7 +403,7 @@ export const RenewalsTable = ({
                     <button
                       type="button"
                       onClick={() => onReview(item.renewalId)}
-                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                     >
                       <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                       Review
@@ -418,7 +418,7 @@ export const RenewalsTable = ({
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{totalCount}</span> renewals
         </p>
@@ -427,7 +427,7 @@ export const RenewalsTable = ({
             type="button"
             onClick={() => changePage(clampedPage - 1)}
             disabled={clampedPage === 0}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
             Previous
@@ -441,7 +441,7 @@ export const RenewalsTable = ({
                   type="button"
                   onClick={() => changePage(index)}
                   className={cn(
-                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                     index === clampedPage
                       ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                       : "text-text-neutral-tertiary hover:bg-slate-100",
@@ -455,7 +455,7 @@ export const RenewalsTable = ({
             type="button"
             onClick={() => changePage(clampedPage + 1)}
             disabled={clampedPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

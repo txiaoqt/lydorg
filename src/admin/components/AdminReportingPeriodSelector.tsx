@@ -19,7 +19,7 @@ export function AdminReportingPeriodSelector({ value, years, onChange, allowAll 
   const controlClass = "h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-2 text-sm text-text-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-public-bg-brand disabled:opacity-50 dark:border-slate-600";
   const selectClass = `${controlClass} peer appearance-none !pl-3 !pr-9`;
   const error = getAdminReportPeriodError(value);
-  return <fieldset disabled={disabled} className={compact ? "w-full space-y-2 font-segoe sm:w-80" : "space-y-3 font-segoe"}>
+  return <fieldset disabled={disabled} className={compact ? "w-full space-y-2 font-inter sm:w-80" : "space-y-3 font-inter"}>
     <legend className={compact ? "sr-only" : "mb-2 text-sm font-semibold text-text-default"}>Reporting Period</legend>
     <div className="grid grid-cols-2 gap-3">
       <label htmlFor={`${id}-year`} className="space-y-1 text-xs font-medium text-text-secondary">Year

@@ -27,15 +27,15 @@ export const RecentActivityLogCard = ({ items, actorName, actorRole, onViewFullL
   <div className="flex min-w-0 flex-1 flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 shadow-xs lg:flex-[2]">
     <div className="flex items-start justify-between gap-3 border-b border-border px-2 py-3 pb-4">
       <div className="flex flex-col gap-1">
-        <h2 className="font-segoe text-lg font-semibold leading-none text-foreground">Recent Activity Log</h2>
-        <p className="font-segoe text-[13px] font-normal leading-none text-muted-foreground">
+        <h2 className="font-inter text-lg font-semibold leading-none text-foreground">Recent Activity Log</h2>
+        <p className="font-inter text-[13px] font-normal leading-none text-muted-foreground">
           Track recent actions and workflow updates across the system.
         </p>
       </div>
       <button
         type="button"
         onClick={onViewFullLog}
-        className="shrink-0 rounded-md p-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-primary transition-all hover:underline"
+        className="shrink-0 rounded-md p-1.5 font-inter text-[13px] font-semibold leading-[140%] text-primary transition-all hover:underline"
       >
         View full log
       </button>
@@ -57,17 +57,17 @@ export const RecentActivityLogCard = ({ items, actorName, actorRole, onViewFullL
               <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className="truncate font-segoe text-sm font-semibold leading-snug text-foreground">
+                  <p className="truncate font-inter text-sm font-semibold leading-snug text-foreground">
                     {item.activity}
                   </p>
                   <p className="shrink-0 font-cascadia text-[10px] font-medium leading-none text-muted-foreground">
                     {dayLabel} &middot; {timeLabel}
                   </p>
                 </div>
-                <p className="truncate font-segoe text-xs font-normal leading-snug text-muted-foreground">
+                <p className="truncate font-inter text-xs font-normal leading-snug text-muted-foreground">
                   {item.detail}
                 </p>
-                <p className="font-segoe text-[10px] font-normal leading-none text-muted-foreground/75">
+                <p className="font-inter text-[10px] font-normal leading-none text-muted-foreground/75">
                   By {actorName} ({actorRole})
                 </p>
               </div>

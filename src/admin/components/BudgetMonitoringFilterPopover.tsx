@@ -55,7 +55,7 @@ export const BudgetMonitoringFilterPopover = ({ filters, onChangeFilters, onRese
           type="button"
           aria-label="Open Budget Filters"
           className={cn(
-            "flex h-10 items-center gap-2 rounded-md border px-3 font-segoe text-xs font-semibold transition-colors",
+            "flex h-10 items-center gap-2 rounded-md border px-3 font-inter text-xs font-semibold transition-colors",
             activeCount
               ? "border-public-bg-brand bg-public-bg-secondary-100 text-public-text-brand"
               : "border-slate-300 bg-white text-text-default hover:bg-slate-50",

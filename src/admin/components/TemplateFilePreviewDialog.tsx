@@ -57,7 +57,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
               <FileText className="h-5 w-5 text-public-text-brand-secondary" strokeWidth={2} />
             </div>
             <div className="flex flex-col gap-1">
-              <DialogTitle className="font-segoe text-lg font-semibold leading-none text-text-default">
+              <DialogTitle className="font-inter text-lg font-semibold leading-none text-text-default">
                 {template.name}
               </DialogTitle>
               <p className="font-cascadia text-[13px] font-normal leading-none text-slate-500">
@@ -91,7 +91,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
               <Megaphone className="h-14 w-14 text-public-text-neutral-on-neutral" strokeWidth={1.5} />
               {rawUrl ? (
                 <div className="flex flex-col items-center gap-2">
-                  <p className="font-segoe text-sm text-public-text-neutral-on-neutral">
+                  <p className="font-inter text-sm text-public-text-neutral-on-neutral">
                     Preview not available in the browser
                   </p>
                   <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
                       href={resolvedUrl || undefined}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex h-9 items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                      className="flex h-9 items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                     >
                       <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                       Open File
@@ -107,7 +107,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
                     <a
                       href={resolvedUrl || undefined}
                       download={resolveCleanTemplateDownloadFileName(template.name, template.templateFileName || rawUrl || resolvedUrl)}
-                      className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-public-bg-brand px-3 py-2 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                      className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-public-bg-brand px-3 py-2 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                     >
                       <Download className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                       Download File
@@ -115,7 +115,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
                   </div>
                 </div>
               ) : (
-                <p className="font-segoe text-sm text-public-text-neutral-on-neutral">No file uploaded yet.</p>
+                <p className="font-inter text-sm text-public-text-neutral-on-neutral">No file uploaded yet.</p>
               )}
             </div>
           )}
@@ -125,7 +125,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
           <DialogClose asChild>
             <button
               type="button"
-              className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-text-default shadow-none transition-colors hover:border-slate-400 hover:bg-slate-50"
+              className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-text-default shadow-none transition-colors hover:border-slate-400 hover:bg-slate-50"
             >
               Close
             </button>

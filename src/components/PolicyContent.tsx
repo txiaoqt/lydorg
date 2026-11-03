@@ -44,11 +44,11 @@ export const PolicyContent = ({
           data-alias-id={isLegalBases ? "legal-bases-for-processing" : undefined}
           key={`h2-${index}`}
           className={isRedesign
-            ? "font-segoe scroll-mt-[130px] border-b border-public-border-default pb-2 sm:pb-[10px] pt-3 sm:pt-4 first:pt-0 text-base sm:text-public-fs-subtitle-sm font-bold sm:font-semibold leading-snug sm:leading-[120%] tracking-[-0.02em] text-public-text-brand"
+            ? "font-inter scroll-mt-[130px] xl:scroll-mt-[176px] border-b border-public-border-default pb-2 sm:pb-[10px] pt-3 sm:pt-4 first:pt-0 text-base sm:text-public-fs-subtitle-sm font-bold sm:font-semibold leading-snug sm:leading-[120%] tracking-[-0.02em] text-public-text-brand"
             : "scroll-mt-24 border-t border-border pt-6 text-[1.08rem] font-semibold leading-snug text-foreground sm:text-xl"}
         >
           {isLegalBases ? (
-            <span id="legal-bases-for-processing" className="scroll-mt-[130px]" />
+            <span id="legal-bases-for-processing" className="scroll-mt-[130px] xl:scroll-mt-[176px]" />
           ) : null}
           {heading}
         </h2>,
@@ -79,7 +79,7 @@ export const PolicyContent = ({
         className={isMetadata
           ? "rounded-lg border border-border bg-muted/45 px-3 py-2 text-xs leading-5 text-muted-foreground sm:text-sm"
           : isRedesign
-            ? "font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[160%] text-public-text-neutral-default text-left"
+            ? "font-inter text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed sm:leading-[160%] text-public-text-neutral-default text-left"
             : "text-[15px] leading-[1.7] text-foreground sm:text-base sm:leading-7"}
       >
         {line}

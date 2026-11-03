@@ -20,18 +20,6 @@
       "sha256": "97620ee0cd7e827e9f43b36850437d3ad416affbbb955e79b27397cd5b2940e1"
     },
     {
-      "path": "api/sync-run-once.py",
-      "sha256": "f0184bfdfe8212d141c3d88d4eaa32312cefc1467a86cd3b7315f9dc4c7e311d"
-    },
-    {
-      "path": "worker/__init__.py",
-      "sha256": "77161e8de0386cc8325696b33d9a592cccd9310c3c32de50a287794c93c6bc51"
-    },
-    {
-      "path": "worker/gform_sync_worker.py",
-      "sha256": "4a2e46231dc36709be585ab37920e031217948c2c8ecd0ca30f0f94806330295"
-    },
-    {
       "path": "src/lib/admin-storage-access.ts",
       "sha256": "c7b5eee5076ad8a4095ed0afbeefc5f42c85ba462200dc14cae8b8c08e198fdb"
     },
@@ -52,7 +40,7 @@
       "sha256": "961d9786467553ef0f7b14972db12523f6ac9609b07d610978f734d7d992f883"
     }
   ],
-  "routingAndHeadersSha256": "9c709c6bfb433627e1567a298e2e81b61c296c4dc9045645e8fd68acc3f42255",
+  "routingAndHeadersSha256": "9176102ff6e7c009b915d0850f2342eee146f3ff3606ce2662788b2ec31af970",
   "integrationProvenance": {
     "originalDeployedSourceRevision": "sha256:0339c4336aeec2f7b4cccef2b9a873d107dae350a97bdc501a62f4e815c8c324",
     "originalDeployedSourceArchiveSha256": "a6ba0e4e9dc4684a45dc8c86bdaf448311db571bc7156ea73dbf3cf62d36d465",

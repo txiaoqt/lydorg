@@ -12,8 +12,6 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sync:once": "python worker/gform_sync_worker.py --once",
-    "sync:worker": "python worker/gform_sync_worker.py",
     "build:admin": "node scripts/build-admin-release.mjs",
     "test:admin-packaging": "node --test scripts/build-admin-release.test.mjs",
     "build:organization": "node scripts/build-organization-release.mjs",

@@ -84,8 +84,8 @@ export default function NewsReleaseRecord() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-14 sm:pt-16 lg:pt-20">
-          <div className="sticky top-14 sm:top-16 lg:top-20 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
+        <main className="pt-14 sm:pt-16 lg:pt-20 xl:pt-32">
+          <div className="sticky top-14 sm:top-16 lg:top-20 xl:top-32 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
               <div className="flex h-12 items-center">
                 <Button type="button" variant="ghost" size="sm" onClick={() => navigate(backPath)}>
@@ -114,7 +114,7 @@ export default function NewsReleaseRecord() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-14 sm:pt-16 lg:pt-20">
+      <main className="pt-14 sm:pt-16 lg:pt-20 xl:pt-32">
 
         {/* Sticky sub-navbar */}
         <div className="sticky top-16 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">

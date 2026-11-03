@@ -68,7 +68,7 @@ body.ytrace-pwa-active,
 }
 
 @media (max-width: 1023px) {
-  body.ytrace-pwa-active .pwa-document-preview { width: calc(100vw - 1.5rem); max-width: 36rem; height: 88dvh; max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 0; overflow: hidden; border-radius: 1.25rem; font-family: var(--font-sans), "Segoe UI", sans-serif; gap: 0; }
+  body.ytrace-pwa-active .pwa-document-preview { width: calc(100vw - 1.5rem); max-width: 36rem; height: 88dvh; max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 0; overflow: hidden; border-radius: 1.25rem; font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif; gap: 0; }
   body.ytrace-pwa-active .pwa-document-preview .document-preview-mobile-header { padding: .875rem; gap: .75rem; }
   body.ytrace-pwa-active .pwa-document-preview .document-preview-mobile-header h2 { font-size: var(--pwa-type-body); line-height: 1.4; font-weight: 600; }
   body.ytrace-pwa-active .pwa-document-preview .document-preview-mobile-meta { margin-top: .25rem; font-size: var(--pwa-type-meta); line-height: 1.4; }
@@ -105,7 +105,7 @@ body.ytrace-pwa-active,
   background: var(--pwa-theme-background);
   color: var(--pwa-ink);
   font-size: var(--pwa-type-body);
-  font-family: var(--font-sans, Inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans, Inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .ytrace-pwa-app * { box-sizing: border-box; }

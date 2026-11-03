@@ -54,11 +54,23 @@ describe("public FAQ navigation and accessible disclosure", () => {
     const search = screen.getAllByPlaceholderText("Search questions by keyword, topic, or answer...")[0];
     fireEvent.change(search, { target: { value: "Y-TRACE" } });
     expect(screen.getByRole("button", { name: "What is Y-TRACE?" })).toHaveAttribute("aria-controls", controls);
+    fireEvent.change(search, { target: { value: "budget request" } });
+    expect(screen.getByRole("button", { name: "How can my organization submit a budget request?" })).toBeInTheDocument();
     fireEvent.change(search, { target: { value: "no-matching-synthetic-topic" } });
     expect(screen.getByText("No questions found matching your search.")).toBeInTheDocument();
     fireEvent.change(search, { target: { value: "" } });
     expect(screen.getByRole("button", { name: "What is Y-TRACE?" })).toHaveAttribute("aria-controls", controls);
-    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(6);
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["General Information"]);
+  });
+
+  it("browses one category at a time, starting with General Information", () => {
+    renderFaqs();
+    expect(screen.queryByRole("button", { name: /^All Categories/ })).toBeNull();
+    expect(screen.getByRole("button", { name: /^General Information/ })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: /^Budget Requests/ }));
+    expect(screen.getByRole("button", { name: /^Budget Requests/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: "What is Y-TRACE?" })).toBeNull();
+    expect(screen.getByRole("button", { name: "How can my organization submit a budget request?" })).toBeInTheDocument();
   });
 
   it("routes the About learn-more link to the public About page", async () => {
@@ -70,6 +82,7 @@ describe("public FAQ navigation and accessible disclosure", () => {
 
   it("routes the forms answer link to Forms & Templates", async () => {
     renderFaqs();
+    fireEvent.click(screen.getByRole("button", { name: /^Forms and Templates/ }));
     fireEvent.click(screen.getByRole("button", { name: "Where can I access the official forms and templates?" }));
     fireEvent.click(screen.getByRole("link", { name: "Forms & Templates page" }));
     expect(await screen.findByRole("heading", { name: "Forms destination" })).toBeInTheDocument();
@@ -77,8 +90,10 @@ describe("public FAQ navigation and accessible disclosure", () => {
 
   it("preserves the six registration requirements and the Contact link", async () => {
     renderFaqs();
+    fireEvent.click(screen.getByRole("button", { name: /^Youth Organization Registration Program/ }));
     fireEvent.click(screen.getByRole("button", { name: "What documents are required for YORP registration?" }));
     expect(screen.getAllByRole("listitem")).toHaveLength(6);
+    fireEvent.click(screen.getByRole("button", { name: /^Account and Portal Support/ }));
     fireEvent.click(screen.getByRole("button", { name: "What should I do if I cannot access my account?" }));
     fireEvent.click(screen.getByRole("link", { name: "Contact page" }));
     expect(await screen.findByRole("heading", { name: "Contact destination" })).toBeInTheDocument();

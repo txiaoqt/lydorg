@@ -181,7 +181,7 @@ export const CityActivityAnnouncementDialog: React.FC<CityActivityAnnouncementDi
               <p className="font-semibold text-sm text-foreground leading-snug">{activity.name}</p>
               <span
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 font-segoe text-[11px] font-semibold",
+                  "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 font-inter text-[11px] font-semibold",
                   categoryPillClasses[category] || "border-slate-200 bg-slate-50 text-slate-700"
                 )}
               >

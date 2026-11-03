@@ -36,7 +36,7 @@ export const StatsCard = ({ title, value, icon: Icon, trend, trendLabel, descrip
       }
     >
       <div className="flex items-start justify-between px-2">
-        <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+        <p className="font-inter text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/70 border border-border/50 text-foreground/80 transition-colors group-hover:bg-primary/15 group-hover:text-primary dark:group-hover:text-sky-300">
           <Icon
             className="h-4 w-4 transition-colors"
@@ -57,7 +57,7 @@ export const StatsCard = ({ title, value, icon: Icon, trend, trendLabel, descrip
             </span>
           ) : null}
         </div>
-        <p className="font-segoe text-[11px] font-normal leading-[140%] text-muted-foreground/80">{description}</p>
+        <p className="font-inter text-[11px] font-normal leading-[140%] text-muted-foreground/80">{description}</p>
       </div>
     </div>
   );

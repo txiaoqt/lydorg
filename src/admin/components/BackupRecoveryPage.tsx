@@ -71,7 +71,7 @@ export function BackupRecoveryPage() {
   };
   if (!canView) return <div role="alert" className="rounded-xl border border-admin-border bg-admin-surface p-6 text-text-default">You do not have permission to view Backup &amp; Recovery.</div>;
   const safeError = query.error instanceof BackupControlError ? query.error : new BackupControlError("control_unavailable");
-  return <div className="space-y-6 font-segoe">
+  return <div className="space-y-6 font-inter">
     <AdminPageHeader title="Backup & Recovery" description="Protect Y-TRACE database records and uploaded files using verified external backups."
       action={<Button variant="outline" size="sm" onClick={() => { void query.refetch(); }} disabled={query.isFetching}>
         <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />Refresh</Button>} />

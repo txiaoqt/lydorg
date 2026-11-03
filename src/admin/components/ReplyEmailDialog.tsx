@@ -35,10 +35,10 @@ const FieldRow = ({
       withDivider && "border-b border-slate-300 pb-2.5",
     )}
   >
-    <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider leading-none text-slate-500">{label}</p>
+    <p className="font-inter text-[11px] font-semibold uppercase tracking-wider leading-none text-slate-500">{label}</p>
     <p
       className={cn(
-        "font-segoe text-[13px] font-semibold leading-normal text-text-default",
+        "font-inter text-[13px] font-semibold leading-normal text-text-default",
         allowBreakAll ? "break-all" : "break-words [overflow-wrap:anywhere]",
       )}
     >
@@ -140,8 +140,8 @@ export const ReplyEmailDialog = ({
               <Mail className="h-5 w-5 text-public-text-brand-secondary" strokeWidth={1.6} />
             </div>
             <div className="flex flex-col gap-1">
-              <p className="font-segoe text-lg font-semibold leading-none text-text-default">Reply via Email</p>
-              <p className="font-segoe text-sm font-normal leading-none text-slate-500">{organizationName}</p>
+              <p className="font-inter text-lg font-semibold leading-none text-text-default">Reply via Email</p>
+              <p className="font-inter text-sm font-normal leading-none text-slate-500">{organizationName}</p>
             </div>
           </div>
           <DialogClose asChild>
@@ -159,14 +159,14 @@ export const ReplyEmailDialog = ({
           {isAlreadyReviewed ? (
             <div className="flex items-start gap-2.5 rounded-md border border-slate-300 bg-bg-panel-subtle p-4">
               <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-              <p className="font-segoe text-[13px] font-normal leading-[130%] text-text-default">
+              <p className="font-inter text-[13px] font-normal leading-[130%] text-text-default">
                 This inquiry has already been marked as Reviewed. No further response actions are available.
               </p>
             </div>
           ) : (
             <div className="flex items-start gap-2.5 rounded-md border border-brand-info-border bg-brand-info-subtle p-3.5">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-              <p className="font-segoe text-[12px] font-normal leading-[135%] text-public-bg-brand">
+              <p className="font-inter text-[12px] font-normal leading-[135%] text-public-bg-brand">
                 Google Account Chooser will open first so you can select which Google account to use. Gmail Compose will then open addressed to{" "}
                 <strong className="underline">{email}</strong>. After Gmail opens, make sure your From address is set to the appropriate account before sending.
               </p>
@@ -185,11 +185,11 @@ export const ReplyEmailDialog = ({
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="inquiry-gmail-draft-message"
-                  className="font-segoe text-[12px] font-semibold text-slate-700"
+                  className="font-inter text-[12px] font-semibold text-slate-700"
                 >
                   Draft Reply Message <span className="text-slate-400 font-normal">(optional)</span>
                 </label>
-                <span className="font-segoe text-[11px] text-slate-400">
+                <span className="font-inter text-[11px] text-slate-400">
                   {message.length.toLocaleString()} chars
                 </span>
               </div>
@@ -201,7 +201,7 @@ export const ReplyEmailDialog = ({
                 placeholder="Draft your reply message here (will be pre-filled into Gmail)..."
                 rows={4}
                 className={cn(
-                  "w-full rounded-md border border-slate-300 bg-white p-3 font-segoe text-[13px] leading-relaxed text-text-default placeholder:text-slate-400",
+                  "w-full rounded-md border border-slate-300 bg-white p-3 font-inter text-[13px] leading-relaxed text-text-default placeholder:text-slate-400",
                   "focus:border-public-bg-brand focus:outline-none focus:ring-1 focus:ring-public-bg-brand disabled:bg-slate-100 disabled:opacity-60",
                 )}
               />
@@ -221,7 +221,7 @@ export const ReplyEmailDialog = ({
                 onClick={() => void handleOpenGmail()}
                 disabled={savingAction !== null}
                 className={cn(
-                  "flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold leading-none text-public-text-neutral-on-neutral transition-colors",
+                  "flex h-11 w-full items-center justify-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm font-semibold leading-none text-public-text-neutral-on-neutral transition-colors",
                   "hover:bg-bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50",
                 )}
               >
@@ -238,7 +238,7 @@ export const ReplyEmailDialog = ({
                 onClick={() => void handleManualMarkReviewed()}
                 disabled={savingAction !== null}
                 className={cn(
-                  "flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-4 py-2.5 font-segoe text-public-fs-body-sm font-medium leading-none text-text-default transition-colors",
+                  "flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-4 py-2.5 font-inter text-public-fs-body-sm font-medium leading-none text-text-default transition-colors",
                   "hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50",
                 )}
               >
@@ -257,7 +257,7 @@ export const ReplyEmailDialog = ({
             onClick={() => onOpenChange(false)}
             disabled={savingAction !== null}
             className={cn(
-              "h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-4 py-2.5 font-segoe text-public-fs-body-sm font-medium leading-none text-text-default transition-colors",
+              "h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-4 py-2.5 font-inter text-public-fs-body-sm font-medium leading-none text-text-default transition-colors",
               "hover:bg-slate-50 disabled:opacity-50",
             )}
           >

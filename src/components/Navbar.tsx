@@ -66,47 +66,32 @@ const Navbar = () => {
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 bg-white shadow-public-nav border-b border-slate-100/80">
       <div className="mx-auto flex h-14 sm:h-16 lg:h-20 w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-10 lg:px-20">
-        <Link to="/" className="min-w-0 shrink-0 flex items-center">
+        <Link to="/" className="min-w-0 shrink-0 flex items-center gap-3">
           <img
-            src="/FullNavbar.svg"
+            src="/navbar-mark.svg"
             alt="Y-TRACE"
-            className="h-8 w-auto sm:h-9 lg:h-[45px] object-contain"
+            className="h-9 w-9 lg:h-11 lg:w-11 rounded-[6px] object-contain"
           />
+          <span aria-hidden="true" className="flex flex-col font-inter leading-none text-public-text-brand">
+            <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-[0.04em]">Pasig City</span>
+            <span className="mt-1 text-base lg:text-lg font-semibold">Y-TRACE</span>
+          </span>
         </Link>
 
-        {/* Desktop nav links — visible at lg and above */}
-        <div className="hidden h-[42px] items-center gap-[10px] bg-white px-[10px] xl:flex">
-          {!isAuthenticated
-            ? navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`flex h-[42px] items-center px-[12px] py-[10px] text-public-fs-body-sm font-normal leading-[140%] transition-colors ${
-                    isNavItemActive(item.href)
-                      ? "border-b border-public-border-brand text-public-text-brand"
-                      : "border-b border-transparent text-public-text-secondary hover:text-public-text-brand"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))
-            : null}
-        </div>
-
-        {/* Desktop right actions — visible at lg and above */}
+        {/* Desktop right actions — visible at xl and above */}
         <div className="hidden h-[40px] items-center gap-[16px] xl:flex">
           {isAuthenticated ? (
             <>
               <Link
                 to={portalHref}
-                className="flex h-[40px] items-center rounded-[8px] border border-public-border-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex h-[40px] items-center rounded-[2px] border border-public-border-default px-[16px] font-inter text-public-fs-body-sm font-medium leading-none text-public-text-brand transition-colors hover:border-public-border-brand hover:bg-public-bg-brand-subtle"
               >
                 {portalLabel}
               </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex h-[40px] items-center rounded-[8px] bg-public-bg-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
+                className="flex h-[40px] items-center rounded-[2px] bg-public-bg-brand px-[20px] font-inter text-public-fs-body-sm font-medium leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
               >
                 Sign Out
               </button>
@@ -115,13 +100,13 @@ const Navbar = () => {
             <>
               <Link
                 to="/signin"
-                className="flex h-[40px] items-center rounded-[8px] border border-public-border-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-brand transition-colors hover:bg-public-bg-brand-subtle"
+                className="flex h-[40px] items-center rounded-[2px] border border-public-border-default px-[16px] font-inter text-public-fs-body-sm font-medium leading-none text-public-text-brand transition-colors hover:border-public-border-brand hover:bg-public-bg-brand-subtle"
               >
-                Sign in
+                Sign In
               </Link>
               <Link
                 to="/signup"
-                className="flex h-[40px] items-center rounded-[8px] bg-public-bg-brand px-[12px] font-segoe text-public-fs-body-sm font-normal leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
+                className="flex h-[40px] items-center rounded-[2px] bg-public-bg-brand px-[20px] font-inter text-public-fs-body-sm font-medium leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
               >
                 Create an Account
               </Link>
@@ -138,6 +123,27 @@ const Navbar = () => {
         >
           {mobileOpen ? <X className="h-6 w-6 text-slate-900" /> : <Menu className="h-6 w-6 text-slate-900" />}
         </button>
+      </div>
+
+      {/* Desktop nav row — always rendered at xl so page offsets (xl:pt-32) stay fixed */}
+      <div className="hidden h-12 border-t border-slate-100 xl:block">
+        <div className="mx-auto flex h-full w-full max-w-[1440px] items-stretch gap-8 px-20">
+          {!isAuthenticated
+            ? navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`flex items-center border-b-2 text-public-fs-body-sm leading-[140%] transition-colors ${
+                    isNavItemActive(item.href)
+                      ? "border-public-border-brand font-semibold text-public-text-brand"
+                      : "border-transparent font-normal text-public-text-neutral-default hover:text-public-text-brand"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))
+            : null}
+        </div>
       </div>
 
       {/* Invisible mobile backdrop for outside-click dismiss — preserves normal page appearance */}
@@ -184,14 +190,14 @@ const Navbar = () => {
               <Link
                 to="/signin"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-segoe text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
+                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-inter text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[42px] items-center justify-center rounded-xl bg-public-bg-brand font-segoe text-sm font-bold text-public-text-on-brand hover:bg-public-bg-brand-hover active:scale-[0.98] transition-all shadow-xs"
+                className="flex h-[42px] items-center justify-center rounded-xl bg-public-bg-brand font-inter text-sm font-bold text-public-text-on-brand hover:bg-public-bg-brand-hover active:scale-[0.98] transition-all shadow-xs"
               >
                 Create an Account
               </Link>
@@ -204,14 +210,14 @@ const Navbar = () => {
               <Link
                 to={portalHref}
                 onClick={() => setMobileOpen(false)}
-                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-segoe text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
+                className="flex h-[42px] items-center justify-center rounded-xl border border-primary/30 font-inter text-sm font-bold text-primary bg-white hover:bg-primary/5 active:scale-[0.98] transition-all shadow-2xs"
               >
                 {portalLabel}
               </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-segoe text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
+                className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-inter text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
               >
                 Sign Out
               </button>

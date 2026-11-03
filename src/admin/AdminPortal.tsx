@@ -270,10 +270,10 @@ import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, O
 
 const RegistrationInfoBox = ({ label, title, description }: { label: string; title: string; description?: string }) => (
   <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
     <div className="flex flex-col gap-0.5">
-      <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{title}</p>
-      {description ? <p className="truncate font-segoe text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
+      <p className="truncate font-inter text-sm font-semibold leading-none text-text-default">{title}</p>
+      {description ? <p className="truncate font-inter text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
     </div>
   </div>
 );
@@ -304,19 +304,19 @@ const RegistrationContactBox = ({
         <Icon className="h-5 w-5 text-border-brand-secondary" strokeWidth={2} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
+        <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
         <div className="flex min-w-0 items-center gap-1.5">
           {href ? (
             <a
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="truncate font-segoe text-sm font-semibold leading-none text-text-default underline-offset-4 hover:underline"
+              className="truncate font-inter text-sm font-semibold leading-none text-text-default underline-offset-4 hover:underline"
             >
               {title}
             </a>
           ) : (
-            <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default">{title}</p>
+            <p className="truncate font-inter text-sm font-semibold leading-none text-text-default">{title}</p>
           )}
           {showCopy ? (
             <button
@@ -329,7 +329,7 @@ const RegistrationContactBox = ({
             </button>
           ) : null}
         </div>
-        {description ? <p className="truncate font-segoe text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
+        {description ? <p className="truncate font-inter text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
       </div>
     </div>
   );
@@ -338,14 +338,14 @@ const RegistrationContactBox = ({
 const DocumentQueueStatusPill = ({ status, isAwaiting }: { status: SubmissionFile["adminStatus"]; isAwaiting?: boolean }) => {
   if (status === "approved_green") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
         Approved
       </span>
     );
   }
   if (status === "rejected_red") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-danger-secondary">
         Rejected
       </span>
     );
@@ -353,19 +353,19 @@ const DocumentQueueStatusPill = ({ status, isAwaiting }: { status: SubmissionFil
   if (status === "needs_revision") {
     if (isAwaiting) {
       return (
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-700">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-amber-700">
           Awaiting Resubmission
         </span>
       );
     }
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
       </span>
     );
   }
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Pending Review
     </span>
   );
@@ -374,14 +374,14 @@ const DocumentQueueStatusPill = ({ status, isAwaiting }: { status: SubmissionFil
 const YpopDocumentStatusPill = ({ status, isAwaiting }: { status: YPOPEventParticipationStatus | YPOPOrgActivityStatus; isAwaiting?: boolean }) => {
   if (status === "verified" || status === "approved") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
         {status === "verified" ? "Verified" : "Approved"}
       </span>
     );
   }
   if (status === "rejected") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-danger-secondary">
         Rejected
       </span>
     );
@@ -389,33 +389,33 @@ const YpopDocumentStatusPill = ({ status, isAwaiting }: { status: YPOPEventParti
   if (status === "needs_revision") {
     if (isAwaiting) {
       return (
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-amber-700">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-amber-700">
           Awaiting Resubmission
         </span>
       );
     }
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-action">
         Needs Revision
       </span>
     );
   }
   if (status === "draft") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
         Draft
       </span>
     );
   }
   if (status === "pending_evaluation") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Pending Evaluation
       </span>
     );
   }
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Pending Review
     </span>
   );
@@ -7924,8 +7924,8 @@ function AdminPortalContent({ section }: { section: string }) {
             <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
                 <div className="flex flex-col gap-1">
-                  <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
-                  <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                  <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                  <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                     Review your decisions before submitting.
                   </p>
                 </div>
@@ -7945,10 +7945,10 @@ function AdminPortalContent({ section }: { section: string }) {
                       className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
                     >
                       <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
-                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                        <p className="font-inter text-lg font-semibold uppercase leading-none text-text-default">
                           Recent Activity
                         </p>
-                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                        <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                           A log of recent actions taken on this organization.
                         </p>
                       </div>
@@ -7973,11 +7973,11 @@ function AdminPortalContent({ section }: { section: string }) {
                                         <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
                                       </span>
                                       <div className="min-w-0 flex-1 space-y-0.5">
-                                        <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                        <p className="font-inter text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
                                           <span className="font-semibold">{entry.adminName}</span> {entry.verb}{" "}
                                           <span className="font-semibold">{entry.docName}</span>.
                                         </p>
-                                        <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                        <p className="font-inter text-[11px] font-normal leading-none text-[#b3b3b3]">
                                           {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
                                         </p>
                                       </div>
@@ -7988,7 +7988,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             </div>
                           ))
                         ) : (
-                          <p className="py-6 text-center font-segoe text-sm text-slate-500">
+                          <p className="py-6 text-center font-inter text-sm text-slate-500">
                             No activity recorded yet.
                           </p>
                         )}
@@ -7999,7 +7999,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           <button
                             type="button"
                             onClick={() => setRegistrationActivityVisibleCount((current) => current + 4)}
-                            className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                            className="font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
                           >
                             Load older activity
                           </button>
@@ -8016,8 +8016,8 @@ function AdminPortalContent({ section }: { section: string }) {
                     <div className="flex items-center gap-2.5">
                       <CheckCircle className="h-5 w-5 shrink-0 text-positive-secondary" strokeWidth={1.8} />
                       <div>
-                        <p className="font-segoe text-sm font-semibold leading-tight">Organization Verified</p>
-                        <p className="font-segoe text-xs text-text-default">
+                        <p className="font-inter text-sm font-semibold leading-tight">Organization Verified</p>
+                        <p className="font-inter text-xs text-text-default">
                           All required registration documents have been approved. Official deterministic URN has been generated and assigned.
                         </p>
                       </div>
@@ -8031,18 +8031,18 @@ function AdminPortalContent({ section }: { section: string }) {
                 ) : null}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">
                       {approvedDocumentCount} / {templateDocuments.length}
                     </p>
                   </div>
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{needsRevisionCount + rejectedCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{needsRevisionCount + rejectedCount}</p>
                   </div>
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
                   </div>
                 </div>
               </div>
@@ -8054,7 +8054,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
                   type="button"
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                   onClick={() => handleRegistrationSelectionChange(null)}
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
@@ -8063,7 +8063,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div className="flex flex-wrap items-center gap-2.5">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
                       isRegistrationDocumentsComplete
                         ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
                         : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
@@ -8079,7 +8079,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       variant="outline"
                       size="sm"
                       onClick={() => void openRegistrationDeleteDialog(selectedOrg)}
-                      className="h-9 gap-1.5 border-destructive/30 font-segoe text-xs font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      className="h-9 gap-1.5 border-destructive/30 font-inter text-xs font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       Delete Registration
@@ -8101,7 +8101,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                       <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                     </div>
-                    <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                       {selectedOrg.organizationName}
                     </h1>
                     <ReferenceCodeChip code={selectedOrg.referenceId || "—"} />
@@ -8116,7 +8116,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     <button
                       type="button"
                       onClick={() => setRegistrationInfoCollapsed((current) => !current)}
-                      className="font-segoe text-[11px] font-semibold leading-none text-slate-500"
+                      className="font-inter text-[11px] font-semibold leading-none text-slate-500"
                     >
                       {registrationInfoCollapsed ? "Expand Details" : "Collapse Details"}
                     </button>
@@ -8190,8 +8190,8 @@ function AdminPortalContent({ section }: { section: string }) {
                       />
                     </div>
                     <div className="rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                      <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Office Address</p>
-                      <p className="mt-2 font-segoe text-sm font-medium leading-[140%] text-text-default">
+                      <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Office Address</p>
+                      <p className="mt-2 font-inter text-sm font-medium leading-[140%] text-text-default">
                         {selectedOrg.address || "No address provided"}
                       </p>
                     </div>
@@ -8204,7 +8204,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                       {activeReviewEntry?.documentType.name ?? "No document selected"}
                     </p>
                     <div className="flex shrink-0 items-center gap-2">
@@ -8218,7 +8218,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 filteredQueueEntries[Math.max(0, activeReviewIndex - 1)]?.file.id ?? null,
                               )
                             }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                           >
                             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
                             Previous
@@ -8230,7 +8230,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 type="button"
                                 onClick={() => setActiveRegistrationReviewFileId(entry.file.id)}
                                 className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                  "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
                                   activeReviewEntry?.file.id === entry.file.id
                                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                                     : "text-text-default hover:bg-slate-50",
@@ -8248,7 +8248,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 filteredQueueEntries[Math.min(filteredQueueEntries.length - 1, activeReviewIndex + 1)]?.file.id ?? null,
                               )
                             }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                           >
                             Next
                             <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
@@ -8335,8 +8335,8 @@ function AdminPortalContent({ section }: { section: string }) {
                       return (
                         <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                            <p className="font-inter text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
                               <input
                                 type="checkbox"
                                 ref={(el) => {
@@ -8351,7 +8351,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               Select all
                             </label>
                           </div>
-                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                          <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
                             Review the organization&rsquo;s submitted documents and select a document to preview.
                           </p>
                         </div>
@@ -8408,7 +8408,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               />
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-start justify-between gap-2">
-                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
+                                  <p className="line-clamp-2 font-inter text-sm font-semibold leading-none text-text-default">
                                     {documentType.name}
                                   </p>
                                   <DocumentQueueStatusPill
@@ -8424,10 +8424,10 @@ function AdminPortalContent({ section }: { section: string }) {
                                   {file.fileName}
                                 </p>
                                 <div className="flex items-center gap-2 pt-1">
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
                                     Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
                                   </p>
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
                                     {formatFileSize(file.fileSize)}
                                   </p>
                                 </div>
@@ -8436,7 +8436,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           );
                         })
                       ) : (
-                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                        <p className="px-2 py-6 text-center font-inter text-sm text-slate-500">
                           No documents submitted yet.
                         </p>
                       )}
@@ -8446,7 +8446,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
                       <div className="flex items-center gap-2">
-                        <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                        <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Decision</p>
                         {isOrgSuspended ? (
                           <RegistrationStatusPill status="suspended_inactive" />
                         ) : null}
@@ -8467,11 +8467,11 @@ function AdminPortalContent({ section }: { section: string }) {
                           ref={registrationDecisionHelpPanelRef}
                           className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
                         >
-                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">Approve</span> — multiple files can be selected.
                           </p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">Request Revision / Reject</span> — one file at a time, remarks required.
                           </p>
                         </div>
@@ -8483,13 +8483,13 @@ function AdminPortalContent({ section }: { section: string }) {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-start gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle px-4 py-3">
                             <Info className="mt-0.5 h-4 w-4 shrink-0 text-icon-danger-secondary" strokeWidth={1.6} />
-                            <p className="font-segoe text-[13px] leading-[140%] text-icon-danger-secondary">
+                            <p className="font-inter text-[13px] leading-[140%] text-icon-danger-secondary">
                               Review actions are unavailable because this organization account is permanently suspended.
                             </p>
                           </div>
 
                           <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                            <label className="font-inter text-[13px] text-text-default">Decision</label>
                             <Select disabled value="suspended">
                               <SelectTrigger className="h-8 border-slate-300 text-[13px] text-slate-500 bg-slate-50 cursor-not-allowed">
                                 <SelectValue placeholder="Review unavailable — Account Suspended">
@@ -8505,7 +8505,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           <button
                             type="button"
                             disabled
-                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors cursor-not-allowed opacity-[0.38]"
+                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors cursor-not-allowed opacity-[0.38]"
                           >
                             Confirm
                           </button>
@@ -8514,23 +8514,23 @@ function AdminPortalContent({ section }: { section: string }) {
                         <div className="flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
                           <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
                           <div>
-                            <p className="font-segoe text-sm font-semibold text-positive-secondary">
+                            <p className="font-inter text-sm font-semibold text-positive-secondary">
                               Registration Verified
                             </p>
-                            <p className="mt-0.5 font-segoe text-xs text-text-default">
+                            <p className="mt-0.5 font-inter text-xs text-text-default">
                               All required registration documents have been approved. This organization is officially registered.
                             </p>
                           </div>
                           {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
                             <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
-                              <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
+                              <span className="font-inter text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
                               <span className="font-cascadia text-base font-bold text-positive-secondary">
                                 {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
                               </span>
                             </div>
                           ) : null}
                           {selectedOrg.verifiedAt ? (
-                            <p className="font-segoe text-[11px] text-slate-500">
+                            <p className="font-inter text-[11px] text-slate-500">
                               Verified on {formatVerifiedDateLabel(selectedOrg.verifiedAt)}
                             </p>
                           ) : null}
@@ -8540,26 +8540,26 @@ function AdminPortalContent({ section }: { section: string }) {
                           {selectedBulkFiles.length === 0 ? (
                             <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                               <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                              <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                              <p className="font-inter text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
                             </div>
                           ) : registrationBulkDecision === "approve" && hasUnrevisedSelectedFiles ? (
                             <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
                               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
-                              <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                              <p className="font-inter text-[13px] leading-[120%] text-amber-700">
                                 Awaiting Resubmission: The organization must submit a revised document before it can be approved.
                               </p>
                             </div>
                           ) : (
                             <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
                               <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                              <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                              <p className="font-inter text-[13px] leading-[120%] text-public-bg-brand">
                                 {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
                               </p>
                             </div>
                           )}
 
                           <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                            <label className="font-inter text-[13px] text-text-default">Decision</label>
                             <Select
                               value={registrationBulkDecision}
                               onValueChange={(value) => {
@@ -8593,7 +8593,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
                           {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
                             <div className="flex flex-col gap-1.5">
-                              <label className="font-segoe text-[13px] text-text-default">
+                              <label className="font-inter text-[13px] text-text-default">
                                 Remarks <span className="text-destructive">*</span>
                               </label>
                               <Textarea
@@ -8613,7 +8613,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               setRegistrationRejectAcknowledged(false);
                               setIsRegistrationDecisionConfirmOpen(true);
                             }}
-                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                            className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                           >
                             Confirm
                           </button>
@@ -8637,9 +8637,9 @@ function AdminPortalContent({ section }: { section: string }) {
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
                         <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
                           {selectedBulkFiles.map((entry) => {
@@ -8648,13 +8648,13 @@ function AdminPortalContent({ section }: { section: string }) {
                               : "—";
                             return (
                               <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
                                   {entry.documentType.name}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                <p className="font-inter text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
                                   {registrationReviewDecisionLabel[registrationBulkDecision]}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
                                   {remarkText}
                                 </p>
                               </div>
@@ -8956,8 +8956,8 @@ function AdminPortalContent({ section }: { section: string }) {
             <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
                 <div className="flex flex-col gap-1">
-                  <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
-                  <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                  <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                  <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                     Review your decisions before submitting.
                   </p>
                 </div>
@@ -8977,10 +8977,10 @@ function AdminPortalContent({ section }: { section: string }) {
                       className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
                     >
                       <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
-                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                        <p className="font-inter text-lg font-semibold uppercase leading-none text-text-default">
                           Recent Activity
                         </p>
-                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                        <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                           A log of recent actions taken on this renewal.
                         </p>
                       </div>
@@ -9000,7 +9000,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     <div
                                       key={entry.id}
                                       className={cn(
-                                        "py-2 font-segoe text-[13px] leading-[140%] text-text-default",
+                                        "py-2 font-inter text-[13px] leading-[140%] text-text-default",
                                         index !== group.entries.length - 1 && "border-b border-slate-200",
                                       )}
                                     >
@@ -9021,8 +9021,8 @@ function AdminPortalContent({ section }: { section: string }) {
                         ) : (
                           <div className="flex flex-col items-center justify-center py-8 text-center">
                             <Clock className="h-8 w-8 text-slate-400" />
-                            <p className="mt-2 font-segoe text-sm font-semibold text-text-default">No activity yet</p>
-                            <p className="font-segoe text-xs text-slate-500">
+                            <p className="mt-2 font-inter text-sm font-semibold text-text-default">No activity yet</p>
+                            <p className="font-inter text-xs text-slate-500">
                               Decisions made on this renewal will appear here.
                             </p>
                           </div>
@@ -9034,7 +9034,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           <button
                             type="button"
                             onClick={() => setRenewalActivityVisibleCount((current) => current + 4)}
-                            className="font-segoe text-xs font-semibold text-public-bg-brand hover:underline"
+                            className="font-inter text-xs font-semibold text-public-bg-brand hover:underline"
                           >
                             Show more
                           </button>
@@ -9047,20 +9047,20 @@ function AdminPortalContent({ section }: { section: string }) {
 
               <div className="grid grid-cols-3 gap-2.5 pt-4">
                 <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
-                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{approvedDocumentCount}</p>
+                  <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                  <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{approvedDocumentCount}</p>
                 </div>
                 <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                  <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">
                     Request Revision
                   </p>
-                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">
+                  <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">
                     {needsRevisionCount + rejectedCount}
                   </p>
                 </div>
                 <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                  <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
-                  <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
+                  <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                  <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{unreviewedCount}</p>
                 </div>
               </div>
             </div>
@@ -9072,7 +9072,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
                   type="button"
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                   onClick={() => handleRenewalSelectionChange(null)}
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
@@ -9081,7 +9081,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div className="flex flex-wrap items-center gap-2.5">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
                       isRenewalDocumentsComplete
                         ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
                         : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
@@ -9105,7 +9105,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                       <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                     </div>
-                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                       {selectedOrg.organizationName}
                     </p>
                     <ReferenceCodeChip
@@ -9116,7 +9116,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       category={selectedOrg.majorClassification}
                       ariaLabel="Major Classification"
                     />
-                    <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 font-segoe text-xs font-medium text-slate-700">
+                    <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 font-inter text-xs font-medium text-slate-700">
                       Cycle {selectedRenewalRecord.cycleNumber}
                     </span>
                   </div>
@@ -9124,7 +9124,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <button
                     type="button"
                     onClick={() => setRenewalInfoCollapsed((prev) => !prev)}
-                    className="flex items-center gap-1 font-segoe text-xs font-medium text-slate-600 hover:text-text-default"
+                    className="flex items-center gap-1 font-inter text-xs font-medium text-slate-600 hover:text-text-default"
                   >
                     <span>{renewalInfoCollapsed ? "Show details" : "Hide details"}</span>
                     <ChevronDown
@@ -9136,38 +9136,38 @@ function AdminPortalContent({ section }: { section: string }) {
                 {!renewalInfoCollapsed ? (
                   <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Organization</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.organizationName}</p>
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Organization</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.organizationName}</p>
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Major Classification</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.majorClassification || "—"}</p>
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Major Classification</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.majorClassification || "—"}</p>
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">District & Barangay</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">District & Barangay</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">
                         {selectedOrg.district || "—"} &bull; {selectedOrg.barangay || "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Submitted Date</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Submitted Date</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">
                         {isRenewalCreatedDateValid ? format(renewalCreatedDate, "d MMM yyyy, h:mm a") : "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Head of Organization</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Head of Organization</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">
                         {[selectedOrg.repFirstName, selectedOrg.repLastName].filter(Boolean).join(" ") || "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Email Address</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.organizationEmail || "—"}</p>
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Email Address</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.organizationEmail || "—"}</p>
                       {selectedOrg.additionalEmails && selectedOrg.additionalEmails.length > 0 ? (
                         <div className="mt-1 space-y-0.5">
                           {selectedOrg.additionalEmails.map((email: string, idx: number) => (
-                            <p key={`admin-org-email-${idx}`} className="font-segoe text-xs text-slate-500">
+                            <p key={`admin-org-email-${idx}`} className="font-inter text-xs text-slate-500">
                               <span className="font-medium text-slate-400">Alt:</span> {email}
                             </p>
                           ))}
@@ -9175,12 +9175,12 @@ function AdminPortalContent({ section }: { section: string }) {
                       ) : null}
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Contact Number</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">{selectedOrg.contactNumber || "—"}</p>
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Contact Number</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.contactNumber || "—"}</p>
                       {selectedOrg.additionalContactNumbers && selectedOrg.additionalContactNumbers.length > 0 ? (
                         <div className="mt-1 space-y-0.5">
                           {selectedOrg.additionalContactNumbers.map((phone: string, idx: number) => (
-                            <p key={`admin-org-phone-${idx}`} className="font-segoe text-xs text-slate-500">
+                            <p key={`admin-org-phone-${idx}`} className="font-inter text-xs text-slate-500">
                               <span className="font-medium text-slate-400">Alt:</span> {phone}
                             </p>
                           ))}
@@ -9188,8 +9188,8 @@ function AdminPortalContent({ section }: { section: string }) {
                       ) : null}
                     </div>
                     <div>
-                      <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Facebook Page</p>
-                      <p className="mt-1 font-segoe text-sm text-text-default">
+                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Facebook Page</p>
+                      <p className="mt-1 font-inter text-sm text-text-default">
                         {selectedOrg.facebookPage ? (
                           <a
                             href={selectedOrg.facebookPage}
@@ -9216,7 +9216,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 {/* Left Column: Document Viewer */}
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 p-4">
-                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                       {activeReviewEntry ? activeReviewEntry.documentType.name : "Select a document"}
                     </p>
                     <div className="flex items-center gap-2">
@@ -9236,7 +9236,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           >
                             <ChevronLeft className="h-4 w-4 text-text-default" strokeWidth={1.6} />
                           </button>
-                          <span className="px-1 font-segoe text-xs text-slate-500">
+                          <span className="px-1 font-inter text-xs text-slate-500">
                             {activeReviewIndex >= 0 ? activeReviewIndex + 1 : 0} of {filteredQueueEntries.length}
                           </span>
                           <button
@@ -9317,8 +9317,8 @@ function AdminPortalContent({ section }: { section: string }) {
                       return (
                         <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                            <p className="font-inter text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
                               <input
                                 type="checkbox"
                                 ref={(el) => {
@@ -9333,7 +9333,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               Select all
                             </label>
                           </div>
-                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                          <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
                             Review the organization&rsquo;s renewal documents and select a document to preview.
                           </p>
                         </div>
@@ -9389,7 +9389,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               />
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-start justify-between gap-2">
-                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">
+                                  <p className="line-clamp-2 font-inter text-sm font-semibold leading-none text-text-default">
                                     {documentType.name}
                                   </p>
                                   <DocumentQueueStatusPill
@@ -9405,10 +9405,10 @@ function AdminPortalContent({ section }: { section: string }) {
                                   {file.fileName}
                                 </p>
                                 <div className="flex items-center gap-2 pt-1">
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
                                     Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
                                   </p>
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
                                     {formatFileSize(file.fileSize)}
                                   </p>
                                 </div>
@@ -9417,7 +9417,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           );
                         })
                       ) : (
-                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                        <p className="px-2 py-6 text-center font-inter text-sm text-slate-500">
                           No documents submitted yet.
                         </p>
                       )}
@@ -9426,27 +9426,27 @@ function AdminPortalContent({ section }: { section: string }) {
 
                   {isRenewalVerified ? (
                     <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-                      <p className="border-b border-slate-300 pb-4 font-segoe text-lg font-semibold leading-none text-text-default">
+                      <p className="border-b border-slate-300 pb-4 font-inter text-lg font-semibold leading-none text-text-default">
                         Review Decision
                       </p>
                       <div className="mt-4 flex flex-col items-center justify-center gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-5 text-center">
                         <CheckCircle className="h-8 w-8 text-positive-secondary" strokeWidth={1.8} />
                         <div>
-                          <p className="font-segoe text-sm font-semibold text-positive-secondary">Renewal Verified</p>
-                          <p className="mt-0.5 font-segoe text-xs text-text-default">
+                          <p className="font-inter text-sm font-semibold text-positive-secondary">Renewal Verified</p>
+                          <p className="mt-0.5 font-inter text-xs text-text-default">
                             All required renewal documents have been approved. This organization’s accreditation has been renewed.
                           </p>
                         </div>
                         {renewalCertificateUrn ? (
                           <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
-                            <span className="font-segoe text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
+                            <span className="font-inter text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
                             <span className="font-cascadia text-base font-bold text-positive-secondary">
                               {renewalCertificateUrn}
                             </span>
                           </div>
                         ) : null}
                         {renewalVerifiedAt ? (
-                          <p className="font-segoe text-[11px] text-slate-500">
+                          <p className="font-inter text-[11px] text-slate-500">
                             Verified on {formatVerifiedDateLabel(renewalVerifiedAt)}
                           </p>
                         ) : null}
@@ -9455,7 +9455,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   ) : (
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
-                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                      <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Decision</p>
                       <button
                         type="button"
                         ref={renewalDecisionHelpTriggerRef}
@@ -9470,11 +9470,11 @@ function AdminPortalContent({ section }: { section: string }) {
                           ref={renewalDecisionHelpPanelRef}
                           className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
                         >
-                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">Approve</span> &mdash; multiple files can be selected.
                           </p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">Request Revision / Reject</span> &mdash; one file at a time, remarks required.
                           </p>
                         </div>
@@ -9485,26 +9485,26 @@ function AdminPortalContent({ section }: { section: string }) {
                       {selectedBulkFiles.length === 0 ? (
                         <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                          <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                          <p className="font-inter text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
                         </div>
                       ) : renewalBulkDecision === "approve" && hasUnrevisedSelectedRenewalFiles ? (
                         <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
                           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
-                          <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                          <p className="font-inter text-[13px] leading-[120%] text-amber-700">
                             Awaiting Resubmission: The organization must submit a revised document before it can be approved.
                           </p>
                         </div>
                       ) : (
                         <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                          <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                          <p className="font-inter text-[13px] leading-[120%] text-public-bg-brand">
                             {selectedBulkFiles.length} document{selectedBulkFiles.length === 1 ? "" : "s"} selected.
                           </p>
                         </div>
                       )}
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                        <label className="font-inter text-[13px] text-text-default">Decision</label>
                         <Select
                           value={renewalBulkDecision}
                           onValueChange={(value) => setRenewalBulkDecision(value as RegistrationReviewDecision)}
@@ -9535,7 +9535,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
                       {selectedBulkFiles.length === 1 && decisionRequiresRemark ? (
                         <div className="flex flex-col gap-1.5">
-                          <label className="font-segoe text-[13px] text-text-default">
+                          <label className="font-inter text-[13px] text-text-default">
                             Remarks <span className="text-destructive">*</span>
                           </label>
                           <Textarea
@@ -9552,7 +9552,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         type="button"
                         disabled={isRenewalDecisionConfirmDisabled}
                         onClick={() => setIsRenewalDecisionConfirmOpen(true)}
-                        className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                        className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                       >
                         Confirm
                       </button>
@@ -9570,9 +9570,9 @@ function AdminPortalContent({ section }: { section: string }) {
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
                         <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
                           {selectedBulkFiles.map((entry) => {
@@ -9581,13 +9581,13 @@ function AdminPortalContent({ section }: { section: string }) {
                               : "—";
                             return (
                               <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
                                   {entry.documentType.name}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                <p className="font-inter text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
                                   {registrationReviewDecisionLabel[renewalBulkDecision]}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
                                   {remarkText}
                                 </p>
                               </div>
@@ -9607,17 +9607,17 @@ function AdminPortalContent({ section }: { section: string }) {
                   <Dialog open={isRenewalRevisionDialogOpen} onOpenChange={setIsRenewalRevisionDialogOpen}>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle className="font-segoe text-lg font-semibold text-text-default">
+                        <DialogTitle className="font-inter text-lg font-semibold text-text-default">
                           Request Renewal Revision
                         </DialogTitle>
-                        <DialogDescription className="font-segoe text-sm text-slate-500">
+                        <DialogDescription className="font-inter text-sm text-slate-500">
                           Explain what needs revision for{" "}
                           <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>. The organization
                           will be notified to update and resubmit.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-2 py-2">
-                        <label className="font-segoe text-xs font-semibold text-text-default">
+                        <label className="font-inter text-xs font-semibold text-text-default">
                           Remarks <span className="text-destructive">*</span>
                         </label>
                         <Textarea
@@ -9633,7 +9633,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           type="button"
                           disabled={renewalDecisionSubmitting}
                           onClick={() => setIsRenewalRevisionDialogOpen(false)}
-                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
+                          className="rounded-md border border-slate-300 px-4 py-2 font-inter text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
                         >
                           Cancel
                         </button>
@@ -9641,7 +9641,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           type="button"
                           disabled={renewalDecisionSubmitting || !renewalDecisionRemarksDraft.trim()}
                           onClick={handleRequestRevisionRenewalConfirm}
-                          className="inline-flex items-center gap-1.5 rounded-md bg-amber-600 px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-md bg-amber-600 px-4 py-2 font-inter text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
                         >
                           {renewalDecisionSubmitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -9658,17 +9658,17 @@ function AdminPortalContent({ section }: { section: string }) {
                   <Dialog open={isRenewalRejectDialogOpen} onOpenChange={setIsRenewalRejectDialogOpen}>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle className="font-segoe text-lg font-semibold text-destructive">
+                        <DialogTitle className="font-inter text-lg font-semibold text-destructive">
                           Reject Organization Renewal
                         </DialogTitle>
-                        <DialogDescription className="font-segoe text-sm text-slate-500">
+                        <DialogDescription className="font-inter text-sm text-slate-500">
                           Provide a clear justification for rejecting the renewal of{" "}
                           <span className="font-medium text-text-default">{selectedOrg.organizationName}</span>. This action is
                           permanent.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-2 py-2">
-                        <label className="font-segoe text-xs font-semibold text-text-default">
+                        <label className="font-inter text-xs font-semibold text-text-default">
                           Reason for Rejection <span className="text-destructive">*</span>
                         </label>
                         <Textarea
@@ -9684,7 +9684,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           type="button"
                           disabled={renewalDecisionSubmitting}
                           onClick={() => setIsRenewalRejectDialogOpen(false)}
-                          className="rounded-md border border-slate-300 px-4 py-2 font-segoe text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
+                          className="rounded-md border border-slate-300 px-4 py-2 font-inter text-sm font-medium text-text-default hover:bg-slate-50 disabled:opacity-50"
                         >
                           Cancel
                         </button>
@@ -9692,7 +9692,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           type="button"
                           disabled={renewalDecisionSubmitting || !renewalDecisionRemarksDraft.trim()}
                           onClick={handleRejectRenewalConfirm}
-                          className="inline-flex items-center gap-1.5 rounded-md bg-destructive px-4 py-2 font-segoe text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-md bg-destructive px-4 py-2 font-inter text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50"
                         >
                           {renewalDecisionSubmitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -10043,7 +10043,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <button
                   type="button"
                   onClick={closeBudgetRequestDetails}
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
                   Back to Requests
@@ -10056,7 +10056,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                     <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                   </div>
-                  <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                  <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                     {selectedBudgetRequest.activityTitle}
                   </h1>
                   <ReferenceCodeChip
@@ -10077,7 +10077,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   )}
                 >
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Budget Request Information</p>
+                    <p className="font-inter text-lg font-semibold leading-none text-text-default">Budget Request Information</p>
                     <ReferenceCodeChip
                       code={buildPublicRecordCode("BR", selectedBudgetRequest, state.budgetRequests)}
                       className="w-[109px] rounded"
@@ -10087,7 +10087,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     <button
                       type="button"
                       onClick={() => setBudgetInfoCollapsed((current) => !current)}
-                      className="font-segoe text-[11px] font-semibold leading-none text-slate-500"
+                      className="font-inter text-[11px] font-semibold leading-none text-slate-500"
                     >
                       {budgetInfoCollapsed ? "Expand Details" : "Collapse Details"}
                     </button>
@@ -10108,37 +10108,37 @@ function AdminPortalContent({ section }: { section: string }) {
                 {!budgetInfoCollapsed ? (
                   <div className="grid grid-cols-1 gap-2.5 p-4 lg:grid-cols-3">
                     <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
+                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
                       <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
                         <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Project Name</p>
-                        <p className="truncate font-segoe text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                        <p className="truncate font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
                           {selectedBudgetRequest.activityTitle}
                         </p>
                       </div>
                       {selectedBudgetRequest.activityDescription ? (
                         <div className="flex flex-col gap-1 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
                           <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Purpose Description</p>
-                          <p className="font-segoe text-[13px] font-normal leading-[140%] text-text-default whitespace-pre-wrap">
+                          <p className="font-inter text-[13px] font-normal leading-[140%] text-text-default whitespace-pre-wrap">
                             {selectedBudgetRequest.activityDescription}
                           </p>
                         </div>
                       ) : null}
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                             {formatAdvocacyLabel(selectedBudgetRequest.purposeCategory) || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                             {isProposedDateValid ? format(proposedDate, "d MMM yyyy") : "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                             {selectedBudgetRequest.venue || "—"}
                           </span>
                         </div>
@@ -10146,24 +10146,24 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Submitted By</p>
+                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Submitted By</p>
                       <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
                         <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Organization Name</p>
-                        <p className="truncate font-segoe text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                        <p className="truncate font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
                           {selectedBudgetOrganization?.organizationName ?? "Unknown organization"}
                         </p>
                         <ReferenceCodeChip code={selectedBudgetOrganization?.referenceId || "—"} className="w-[109px] rounded" />
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Head of Organization</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Head of Organization</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                             {selectedBudgetOrganization ? getRepresentativeDisplayName(selectedBudgetOrganization, "—") : "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Contact</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default text-right">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Contact</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default text-right">
                             {selectedBudgetOrganization?.contactNumber || "—"}
                             {selectedBudgetOrganization?.additionalContactNumbers && selectedBudgetOrganization.additionalContactNumbers.length > 0
                               ? ` (+${selectedBudgetOrganization.additionalContactNumbers.length})`
@@ -10171,8 +10171,8 @@ function AdminPortalContent({ section }: { section: string }) {
                           </span>
                         </div>
                         <div className="flex items-center justify-between py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Email</span>
-                          <span className="truncate font-segoe text-[13px] font-semibold leading-none text-text-default text-right">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Email</span>
+                          <span className="truncate font-inter text-[13px] font-semibold leading-none text-text-default text-right">
                             {selectedBudgetOrganization?.organizationEmail || "—"}
                             {selectedBudgetOrganization?.additionalEmails && selectedBudgetOrganization.additionalEmails.length > 0
                               ? ` (+${selectedBudgetOrganization.additionalEmails.length})`
@@ -10183,7 +10183,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
+                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
                       <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
                         <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Total Requested</p>
                         <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-border-info-tertiary">
@@ -10207,7 +10207,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         </div>
                       ) : null}
                       <div className="flex items-center justify-between py-2">
-                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Liquidation</span>
+                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Liquidation</span>
                         {linkedLiquidation && linkedLiquidationCode ? (
                           <button
                             type="button"
@@ -10220,7 +10220,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             <ArrowUpRight aria-hidden="true" className="h-2.5 w-2.5 shrink-0" strokeWidth={1.8} />
                           </button>
                         ) : (
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-slate-400">Not yet submitted</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-slate-400">Not yet submitted</span>
                         )}
                       </div>
                     </div>
@@ -10231,8 +10231,8 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
                   <div className="flex flex-col gap-1">
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
-                    <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                    <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                    <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                       Review your decisions before submitting.
                     </p>
                   </div>
@@ -10252,8 +10252,8 @@ function AdminPortalContent({ section }: { section: string }) {
                         className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
                       >
                         <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
-                          <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">Recent Activity</p>
-                          <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          <p className="font-inter text-lg font-semibold uppercase leading-none text-text-default">Recent Activity</p>
+                          <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                             A log of recent actions taken on this budget request.
                           </p>
                         </div>
@@ -10278,10 +10278,10 @@ function AdminPortalContent({ section }: { section: string }) {
                                           <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
                                         </span>
                                         <div className="min-w-0 flex-1 space-y-0.5">
-                                          <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                          <p className="font-inter text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
                                             <span className="font-semibold">{entry.adminName}</span> {entry.action}
                                           </p>
-                                          <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                          <p className="font-inter text-[11px] font-normal leading-none text-[#b3b3b3]">
                                             {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
                                           </p>
                                         </div>
@@ -10292,7 +10292,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               </div>
                             ))
                           ) : (
-                            <p className="py-6 text-center font-segoe text-sm text-slate-500">No activity recorded yet.</p>
+                            <p className="py-6 text-center font-inter text-sm text-slate-500">No activity recorded yet.</p>
                           )}
                         </div>
 
@@ -10301,7 +10301,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             <button
                               type="button"
                               onClick={() => setBudgetActivityVisibleCount((current) => current + 4)}
-                              className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                              className="font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
                             >
                               Load older activity
                             </button>
@@ -10314,16 +10314,16 @@ function AdminPortalContent({ section }: { section: string }) {
 
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{budgetApprovedCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{budgetApprovedCount}</p>
                   </div>
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{budgetNeedsRevisionCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{budgetNeedsRevisionCount}</p>
                   </div>
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{budgetUnreviewedCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{budgetUnreviewedCount}</p>
                   </div>
                 </div>
               </div>
@@ -10331,7 +10331,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                       {selectedBudgetRequestFile?.fileName ?? "No document selected"}
                     </p>
                     <div className="flex shrink-0 items-center gap-2">
@@ -10343,7 +10343,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             onClick={() =>
                               setSelectedBudgetFileId(selectedBudgetRequestFiles[Math.max(0, activeBudgetReviewIndex - 1)]?.id ?? null)
                             }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                           >
                             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
                             Previous
@@ -10355,7 +10355,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 type="button"
                                 onClick={() => setSelectedBudgetFileId(file.id)}
                                 className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                  "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
                                   selectedBudgetRequestFile?.id === file.id
                                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                                     : "text-text-default hover:bg-slate-50",
@@ -10373,7 +10373,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 selectedBudgetRequestFiles[Math.min(selectedBudgetRequestFiles.length - 1, activeBudgetReviewIndex + 1)]?.id ?? null,
                               )
                             }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                           >
                             Next
                             <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
@@ -10409,12 +10409,12 @@ function AdminPortalContent({ section }: { section: string }) {
                           <iframe src={withHiddenPdfToolbar(budgetPreviewUrl)} title={budgetPreviewTitle} className="h-full min-h-[500px] w-full border-0" />
                         )
                       ) : (
-                        <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
+                        <div className="flex flex-col items-center gap-3 p-4 text-center font-inter text-sm text-slate-500">
                           <p>This file cannot be previewed inline.</p>
                           <button
                             type="button"
                             onClick={() => window.open(budgetPreviewUrl, "_blank", "noopener,noreferrer")}
-                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
+                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-[13px] text-text-default transition-colors hover:bg-slate-50"
                           >
                             <Eye className="h-4 w-4" strokeWidth={1.6} />
                             Open File
@@ -10422,7 +10422,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         </div>
                       )
                     ) : selectedBudgetRequestFile && budgetPreviewLoading ? (
-                      <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
+                      <p className="font-inter text-sm text-slate-500">Loading preview…</p>
                     ) : (
                       <div
                         className="flex h-full min-h-[500px] w-full items-center justify-center"
@@ -10464,8 +10464,8 @@ function AdminPortalContent({ section }: { section: string }) {
                       return (
                         <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                            <p className="font-inter text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
                               <input
                                 type="checkbox"
                                 ref={(el) => {
@@ -10480,7 +10480,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               Select all
                             </label>
                           </div>
-                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                          <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
                             Review the organization's submitted documents and select a document to preview.
                           </p>
                         </div>
@@ -10534,7 +10534,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               />
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-start justify-between gap-2">
-                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">{file.fileName}</p>
+                                  <p className="line-clamp-2 font-inter text-sm font-semibold leading-none text-text-default">{file.fileName}</p>
                                   <DocumentQueueStatusPill
                                     status={file.adminStatus}
                                     isAwaiting={
@@ -10548,17 +10548,17 @@ function AdminPortalContent({ section }: { section: string }) {
                                   />
                                 </div>
                                 <div className="flex items-center gap-2 pt-1">
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
                                     Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
                                   </p>
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">{formatFileSize(file.fileSize)}</p>
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">{formatFileSize(file.fileSize)}</p>
                                 </div>
                               </div>
                             </div>
                           );
                         })
                       ) : (
-                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">No files submitted yet.</p>
+                        <p className="px-2 py-6 text-center font-inter text-sm text-slate-500">No files submitted yet.</p>
                       )}
                     </div>
                   </div>
@@ -10571,7 +10571,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       String(selectedBudgetRequest.status) === "completed") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
-                      <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
+                      <p className="font-inter text-[13px] font-semibold leading-[140%] text-text-positive-strong">
                         Approved · {format(new Date(selectedBudgetRequest.goSignalAt), "MMMM d, yyyy 'at' h:mm a")}
                       </p>
                     </div>
@@ -10580,11 +10580,11 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
                       <div className="min-w-0 flex-1">
-                        <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                        <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Decision</p>
                         {(selectedBudgetRequest.status === "submitted" ||
                           selectedBudgetRequest.status === "under_review" ||
                           selectedBudgetRequest.status === "needs_revision") && (
-                            <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate documents and issue formal budget proposal determination.</p>
+                            <p className="mt-1 font-inter text-xs text-slate-500">Evaluate documents and issue formal budget proposal determination.</p>
                           )}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -10611,11 +10611,11 @@ function AdminPortalContent({ section }: { section: string }) {
                           ref={budgetDecisionHelpPanelRef}
                           className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
                         >
-                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">Approve</span> — multiple files can be selected.
                           </p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">Request Revision</span> — one file at a time, remarks required.
                           </p>
                         </div>
@@ -10630,19 +10630,19 @@ function AdminPortalContent({ section }: { section: string }) {
                             {selectedBudgetReviewFiles.length === 0 ? (
                               <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                                <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                                <p className="font-inter text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
                               </div>
                             ) : (
                               <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
                                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                                <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                                <p className="font-inter text-[13px] leading-[120%] text-public-bg-brand">
                                   {selectedBudgetReviewFiles.length} document{selectedBudgetReviewFiles.length === 1 ? "" : "s"} selected.
                                 </p>
                               </div>
                             )}
 
                             <div className="flex flex-col gap-1.5">
-                              <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                              <label className="font-inter text-[13px] text-text-default">Decision</label>
                               <Select
                                 value={budgetBulkDecision}
                                 onValueChange={(value) => {
@@ -10678,13 +10678,13 @@ function AdminPortalContent({ section }: { section: string }) {
                                   </div>
                                 )}
                                 <div className="flex items-center justify-between">
-                                  <span className="font-segoe text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
+                                  <span className="font-inter text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
                                   <span className="font-mono text-[13px] font-bold text-text-default">
                                     {`₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                   </span>
                                 </div>
                                 <div className="flex flex-col gap-1.5">
-                                  <label htmlFor="budget-approved-amount-input" className="font-segoe text-[13px] font-medium text-text-default">
+                                  <label htmlFor="budget-approved-amount-input" className="font-inter text-[13px] font-medium text-text-default">
                                     Approved Amount (₱) <span className="text-destructive">*</span>
                                   </label>
                                   <Input
@@ -10735,7 +10735,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
                             {selectedBudgetReviewFiles.length === 1 && budgetBulkDecision === "needs_revision" && (
                               <div className="flex flex-col gap-1.5">
-                                <label className="font-segoe text-[13px] text-text-default">
+                                <label className="font-inter text-[13px] text-text-default">
                                   Remarks <span className="text-destructive">*</span>
                                 </label>
                                 <Textarea
@@ -10755,7 +10755,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               type="button"
                               disabled={isBudgetDecisionConfirmDisabled}
                               onClick={() => setIsBudgetDecisionConfirmOpen(true)}
-                              className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                              className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                             >
                               Confirm Document Decision
                             </button>
@@ -10842,7 +10842,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               };
                               void executeRelease();
                             }}
-                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
+                            className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-inter text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
                           >
                             {budgetLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
                             Budget Released
@@ -10857,7 +10857,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             <CheckCircle2 className="h-5 w-5 text-text-mandatory" />
                             <p className="font-semibold text-sm text-text-mandatory">Budget Released</p>
                           </div>
-                          <p className="font-segoe text-xs leading-[140%] text-slate-600">
+                          <p className="font-inter text-xs leading-[140%] text-slate-600">
                             This budget request has reached its final lifecycle stage. Liquidation processing is now available.
                           </p>
                         </div>
@@ -10894,9 +10894,9 @@ function AdminPortalContent({ section }: { section: string }) {
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
                         <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Proposal</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Proposal</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">
                             {budgetBulkDecision === "approve" ? "Approved Amount" : "Remarks"}
                           </p>
                         </div>
@@ -10907,13 +10907,13 @@ function AdminPortalContent({ section }: { section: string }) {
                               : budgetBulkRemark.trim() || "—";
                             return (
                               <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={selectedBudgetRequest.activityTitle}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={selectedBudgetRequest.activityTitle}>
                                   {selectedBudgetRequest.activityTitle}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                <p className="font-inter text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
                                   {budgetReviewDecisionLabel[budgetBulkDecision]}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={thirdColValue !== "—" ? thirdColValue : undefined}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={thirdColValue !== "—" ? thirdColValue : undefined}>
                                   {thirdColValue}
                                 </p>
                               </div>
@@ -11092,19 +11092,19 @@ function AdminPortalContent({ section }: { section: string }) {
                   {selectedLiquidationReviewFiles.length === 0 ? (
                     <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                       <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                      <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
+                      <p className="font-inter text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
                     </div>
                   ) : (
                     <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
                       <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                      <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                      <p className="font-inter text-[13px] leading-[120%] text-public-bg-brand">
                         {selectedLiquidationReviewFiles.length} document{selectedLiquidationReviewFiles.length === 1 ? "" : "s"} selected.
                       </p>
                     </div>
                   )}
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                    <label className="font-inter text-[13px] text-text-default">Decision</label>
                     <Select
                       value={liquidationBulkDecision}
                       onValueChange={(value) => setLiquidationBulkDecision(value as BudgetReviewDecision)}
@@ -11128,7 +11128,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
                   {selectedLiquidationReviewFiles.length === 1 && liquidationDecisionRequiresRemarkNow ? (
                     <div className="flex flex-col gap-1.5">
-                      <label className="font-segoe text-[13px] text-text-default">
+                      <label className="font-inter text-[13px] text-text-default">
                         Remarks <span className="text-destructive">*</span>
                       </label>
                       <Textarea
@@ -11145,7 +11145,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     type="button"
                     disabled={isLiquidationDecisionConfirmDisabled}
                     onClick={() => setIsLiquidationDecisionConfirmOpen(true)}
-                    className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                    className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                   >
                     Confirm Document Decision
                   </button>
@@ -11156,7 +11156,7 @@ function AdminPortalContent({ section }: { section: string }) {
             return (
               <div className="flex items-start gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
-                <p className="font-segoe text-[13px] leading-[140%] text-text-positive-strong">
+                <p className="font-inter text-[13px] leading-[140%] text-text-positive-strong">
                   {completionMessage}
                 </p>
               </div>
@@ -11404,7 +11404,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <button
                   type="button"
                   onClick={closeLiquidationDetails}
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
                   Back to Reports
@@ -11417,7 +11417,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                     <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                   </div>
-                  <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                  <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                     {linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}
                   </h1>
                   <ReferenceCodeChip
@@ -11435,7 +11435,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   )}
                 >
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Liquidation Report Information</p>
+                    <p className="font-inter text-lg font-semibold leading-none text-text-default">Liquidation Report Information</p>
                     <ReferenceCodeChip
                       code={buildPublicRecordCode("LR", selectedLiquidationReport, visibleLiquidationReports)}
                       className="w-[109px] rounded"
@@ -11445,7 +11445,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     <button
                       type="button"
                       onClick={() => setLiquidationInfoCollapsed((current) => !current)}
-                      className="font-segoe text-[11px] font-semibold leading-none text-slate-500"
+                      className="font-inter text-[11px] font-semibold leading-none text-slate-500"
                     >
                       {liquidationInfoCollapsed ? "Expand Details" : "Collapse Details"}
                     </button>
@@ -11466,29 +11466,29 @@ function AdminPortalContent({ section }: { section: string }) {
                 {!liquidationInfoCollapsed ? (
                   <div className="grid grid-cols-1 gap-2.5 p-4 lg:grid-cols-2">
                     <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
+                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
                       <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
                         <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Project Name</p>
-                        <p className="truncate font-segoe text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                        <p className="truncate font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
                           {linkedBudgetRequest?.activityTitle ?? "—"}
                         </p>
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                             {formatAdvocacyLabel(linkedBudgetRequest?.purposeCategory) || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                             {isProposedDateValid && proposedDate ? format(proposedDate, "d MMM yyyy") : "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between py-2">
-                          <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                             {linkedBudgetRequest?.venue || "—"}
                           </span>
                         </div>
@@ -11496,18 +11496,18 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
+                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
                       <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Released Budget</span>
-                        <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Released Budget</span>
+                        <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                           {formatPesoAmount(releasedBudgetAmount)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Total Liquidated</span>
+                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Total Liquidated</span>
                         <span
                           className={cn(
-                            "font-segoe text-[13px] font-semibold leading-none",
+                            "font-inter text-[13px] font-semibold leading-none",
                             totalLiquidatedAmount > 0 ? "text-bg-success-default" : "text-text-default",
                           )}
                         >
@@ -11515,13 +11515,13 @@ function AdminPortalContent({ section }: { section: string }) {
                         </span>
                       </div>
                       <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Unliquidated Variance</span>
-                        <span className="font-segoe text-[13px] font-semibold leading-none text-text-default">
+                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Unliquidated Variance</span>
+                        <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
                           {formatPesoAmount(unliquidatedVariance)} ({unliquidatedVariance === 0 ? "Balanced" : "Outstanding"})
                         </span>
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <span className="font-segoe text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Request</span>
+                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Request</span>
                         {linkedBudgetRequest ? (
                           <button
                             type="button"
@@ -11534,7 +11534,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             <ExternalLink className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
                           </button>
                         ) : (
-                          <span className="font-segoe text-[13px] font-semibold leading-none text-slate-400">—</span>
+                          <span className="font-inter text-[13px] font-semibold leading-none text-slate-400">—</span>
                         )}
                       </div>
                     </div>
@@ -11545,8 +11545,8 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
                   <div className="flex flex-col gap-1">
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Summary</p>
-                    <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                    <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Summary</p>
+                    <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                       Review your decisions before submitting.
                     </p>
                   </div>
@@ -11566,8 +11566,8 @@ function AdminPortalContent({ section }: { section: string }) {
                         className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
                       >
                         <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
-                          <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">Recent Activity</p>
-                          <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                          <p className="font-inter text-lg font-semibold uppercase leading-none text-text-default">Recent Activity</p>
+                          <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                             A log of recent actions taken on this liquidation report.
                           </p>
                         </div>
@@ -11592,10 +11592,10 @@ function AdminPortalContent({ section }: { section: string }) {
                                           <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
                                         </span>
                                         <div className="min-w-0 flex-1 space-y-0.5">
-                                          <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                          <p className="font-inter text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
                                             <span className="font-semibold">{entry.adminName}</span> {entry.action}
                                           </p>
-                                          <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                          <p className="font-inter text-[11px] font-normal leading-none text-[#b3b3b3]">
                                             {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
                                           </p>
                                         </div>
@@ -11606,7 +11606,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               </div>
                             ))
                           ) : (
-                            <p className="py-6 text-center font-segoe text-sm text-slate-500">No activity recorded yet.</p>
+                            <p className="py-6 text-center font-inter text-sm text-slate-500">No activity recorded yet.</p>
                           )}
                         </div>
 
@@ -11615,7 +11615,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             <button
                               type="button"
                               onClick={() => setLiquidationActivityVisibleCount((current) => current + 4)}
-                              className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                              className="font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
                             >
                               Load older activity
                             </button>
@@ -11628,16 +11628,16 @@ function AdminPortalContent({ section }: { section: string }) {
 
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{liquidationApprovedCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{liquidationApprovedCount}</p>
                   </div>
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{liquidationNeedsRevisionCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Request Revision</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{liquidationNeedsRevisionCount}</p>
                   </div>
                   <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
-                    <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
-                    <p className="mt-2 font-segoe text-xl font-bold leading-none text-text-default">{liquidationUnreviewedCount}</p>
+                    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Unreviewed</p>
+                    <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{liquidationUnreviewedCount}</p>
                   </div>
                 </div>
               </div>
@@ -11645,7 +11645,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                    <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                       {selectedLiquidationReportFile?.fileName ?? "No document selected"}
                     </p>
                     <div className="flex shrink-0 items-center gap-2">
@@ -11657,7 +11657,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             onClick={() =>
                               setSelectedLiquidationFileId(liquidationFiles[Math.max(0, activeLiquidationReviewIndex - 1)]?.id ?? null)
                             }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                           >
                             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
                             Previous
@@ -11669,7 +11669,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 type="button"
                                 onClick={() => setSelectedLiquidationFileId(file.id)}
                                 className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                  "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
                                   selectedLiquidationReportFile?.id === file.id
                                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                                     : "text-text-default hover:bg-slate-50",
@@ -11687,7 +11687,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 liquidationFiles[Math.min(liquidationFiles.length - 1, activeLiquidationReviewIndex + 1)]?.id ?? null,
                               )
                             }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                           >
                             Next
                             <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
@@ -11723,12 +11723,12 @@ function AdminPortalContent({ section }: { section: string }) {
                           <iframe src={withHiddenPdfToolbar(liquidationPreviewUrl)} title={liquidationPreviewTitle} className="h-full min-h-[500px] w-full border-0" />
                         )
                       ) : (
-                        <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
+                        <div className="flex flex-col items-center gap-3 p-4 text-center font-inter text-sm text-slate-500">
                           <p>This file cannot be previewed inline.</p>
                           <button
                             type="button"
                             onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}
-                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
+                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-[13px] text-text-default transition-colors hover:bg-slate-50"
                           >
                             <Eye className="h-4 w-4" strokeWidth={1.6} />
                             Open File
@@ -11736,7 +11736,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         </div>
                       )
                     ) : selectedLiquidationReportFile && liquidationPreviewLoading ? (
-                      <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
+                      <p className="font-inter text-sm text-slate-500">Loading preview…</p>
                     ) : (
                       <div
                         className="flex h-full min-h-[500px] w-full items-center justify-center"
@@ -11778,8 +11778,8 @@ function AdminPortalContent({ section }: { section: string }) {
                       return (
                         <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                            <p className="font-inter text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
                               <input
                                 type="checkbox"
                                 ref={(el) => {
@@ -11794,7 +11794,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               Select all
                             </label>
                           </div>
-                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                          <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
                             Review the organization&rsquo;s submitted liquidation documents and select one to preview.
                           </p>
                         </div>
@@ -11848,21 +11848,21 @@ function AdminPortalContent({ section }: { section: string }) {
                               />
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-start justify-between gap-2">
-                                  <p className="line-clamp-2 font-segoe text-sm font-semibold leading-none text-text-default">{file.fileName}</p>
+                                  <p className="line-clamp-2 font-inter text-sm font-semibold leading-none text-text-default">{file.fileName}</p>
                                   <DocumentQueueStatusPill status={file.adminStatus} />
                                 </div>
                                 <div className="flex items-center gap-2 pt-1">
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
                                     Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
                                   </p>
-                                  <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">{formatFileSize(file.fileSize)}</p>
+                                  <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">{formatFileSize(file.fileSize)}</p>
                                 </div>
                               </div>
                             </div>
                           );
                         })
                       ) : (
-                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">No documents submitted yet.</p>
+                        <p className="px-2 py-6 text-center font-inter text-sm text-slate-500">No documents submitted yet.</p>
                       )}
                     </div>
                   </div>
@@ -11873,7 +11873,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       selectedLiquidationReport.status === "completed_liquidated") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
-                      <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
+                      <p className="font-inter text-[13px] font-semibold leading-[140%] text-text-positive-strong">
                         Approved · {format(new Date(selectedLiquidationReport.goSignalAt), "MMMM d, yyyy 'at' h:mm a")}
                       </p>
                     </div>
@@ -11884,7 +11884,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       selectedLiquidationReport.status === "completed_liquidated") ? (
                     <div className="flex items-center gap-2 rounded-md border border-border-success-subtle bg-bg-success-subtle px-4 py-3">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-text-positive-strong" strokeWidth={1.6} />
-                      <p className="font-segoe text-[13px] font-semibold leading-[140%] text-text-positive-strong">
+                      <p className="font-inter text-[13px] font-semibold leading-[140%] text-text-positive-strong">
                         Hardcopy Received · {format(new Date(selectedLiquidationReport.hardCopySubmittedAt), "d MMM yyyy")}
                       </p>
                     </div>
@@ -11908,12 +11908,12 @@ function AdminPortalContent({ section }: { section: string }) {
                     <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                       <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
                         <div className="min-w-0 flex-1">
-                          <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                          <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Decision</p>
                           {(selectedLiquidationReport.status === "submitted" ||
                             selectedLiquidationReport.status === "under_review" ||
                             selectedLiquidationReport.status === "needs_revision" ||
                             selectedLiquidationReport.status === "overdue") && (
-                              <p className="mt-1 font-segoe text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
+                              <p className="mt-1 font-inter text-xs text-slate-500">Evaluate soft copies and issue formal liquidation determination.</p>
                             )}
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
@@ -11942,11 +11942,11 @@ function AdminPortalContent({ section }: { section: string }) {
                             ref={liquidationDecisionHelpPanelRef}
                             className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
                           >
-                            <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
-                            <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                            <p className="font-inter text-xs leading-[140%] text-text-default">
                               <span className="font-semibold">Approve</span> — multiple files can be selected.
                             </p>
-                            <p className="font-segoe text-xs leading-[140%] text-text-default">
+                            <p className="font-inter text-xs leading-[140%] text-text-default">
                               <span className="font-semibold">Needs Revision</span> — one file at a time, remarks required.
                             </p>
                           </div>
@@ -11995,7 +11995,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               type="button"
                               disabled={liquidationLifecycleSubmitting}
                               onClick={submitLiquidationLifecycleDecision}
-                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-segoe text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
+                              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-3 font-inter text-public-fs-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-[0.38]"
                             >
                               {liquidationLifecycleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                               Liquidated
@@ -12010,7 +12010,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               <CheckCircle2 className="h-5 w-5 text-positive-secondary" />
                               <p className="font-semibold text-sm text-positive-secondary">Liquidated</p>
                             </div>
-                            <p className="font-segoe text-xs leading-[140%] text-slate-600">
+                            <p className="font-inter text-xs leading-[140%] text-slate-600">
                               This liquidation report has been finalized and recorded as liquidated.
                             </p>
                           </div>
@@ -12040,9 +12040,9 @@ function AdminPortalContent({ section }: { section: string }) {
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
                         <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
                           {selectedLiquidationReviewFiles.map((file) => {
@@ -12051,13 +12051,13 @@ function AdminPortalContent({ section }: { section: string }) {
                               : "—";
                             return (
                               <div key={file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={file.fileName}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={file.fileName}>
                                   {file.fileName}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                <p className="font-inter text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
                                   {budgetReviewDecisionLabel[liquidationBulkDecision]}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
                                   {remarkText}
                                 </p>
                               </div>
@@ -12187,7 +12187,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     setNewsVisibilityDraft("draft");
                     setNewsCategoryDraft("");
                   }}
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                 >
                   <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                   Add News
@@ -12310,7 +12310,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 setActiveReportExport("budget-monitoring");
                               }
                             }}
-                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
                           >
                             <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
                             Export
@@ -12318,7 +12318,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           <button
                             type="button"
                             onClick={() => navigate("/admin/budget-utilization")}
-                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                            className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                           >
                             <ArrowUpRight className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                             Review Budget Requests
@@ -12338,7 +12338,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             type="button"
                             onClick={() => setBudgetMonitoringTab(tab)}
                             className={cn(
-                              "flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-3 font-segoe text-sm font-semibold leading-[140%] transition-colors",
+                              "flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-3 font-inter text-sm font-semibold leading-[140%] transition-colors",
                               isActive ? "bg-admin-surface text-public-text-brand" : "text-segmented-control-inactive-text",
                             )}
                           >
@@ -12400,7 +12400,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       <button
                         type="button"
                         onClick={() => setSelectedBudgetAllocation(null)}
-                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                       >
                         <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
                         Back to Allocation
@@ -12410,7 +12410,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                           <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                         </div>
-                        <h1 className="font-segoe text-lg font-semibold leading-none text-text-default">
+                        <h1 className="font-inter text-lg font-semibold leading-none text-text-default">
                           Barangay {selectedBudgetAllocation.barangay}
                         </h1>
                       </div>
@@ -12453,13 +12453,13 @@ function AdminPortalContent({ section }: { section: string }) {
                               value={budgetAllocationSearch}
                               onChange={(event) => setBudgetAllocationSearch(event.target.value)}
                               placeholder="Search by district or barangay..."
-                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
                             />
                           </div>
 
                           </div>
 
-                        <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
                           <span className="w-[22%]">Barangay</span>
                           <span className="w-[15%]">Released</span>
                           <span className="w-[15%]">Liquidated</span>
@@ -12470,8 +12470,8 @@ function AdminPortalContent({ section }: { section: string }) {
 
                         {groupedPagedBudgetAllocationRows.length === 0 ? (
                           <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-                            <p className="font-segoe text-sm font-semibold text-text-default">No matching barangays</p>
-                            <p className="font-segoe text-xs text-slate-500">Try adjusting the search, district, or barangay filters.</p>
+                            <p className="font-inter text-sm font-semibold text-text-default">No matching barangays</p>
+                            <p className="font-inter text-xs text-slate-500">Try adjusting the search, district, or barangay filters.</p>
                           </div>
                         ) : (
                           groupedPagedBudgetAllocationRows.map((group) => {
@@ -12480,8 +12480,8 @@ function AdminPortalContent({ section }: { section: string }) {
                               <div key={group.district} className="border-b border-slate-300 last:border-b-0">
                                 <div className="flex items-center justify-between gap-2 bg-slate-50 px-4 py-3">
                                   <div className="flex items-center gap-2">
-                                    <p className="font-segoe text-xs font-semibold uppercase leading-none text-text-default">{group.district}</p>
-                                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-1.5 py-0.5 font-segoe text-[10px] font-semibold leading-[140%] text-slate-500">
+                                    <p className="font-inter text-xs font-semibold uppercase leading-none text-text-default">{group.district}</p>
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-1.5 py-0.5 font-inter text-[10px] font-semibold leading-[140%] text-slate-500">
                                       {group.rows.length} barangay{group.rows.length === 1 ? "" : "s"} · {group.organizationCount} org{group.organizationCount === 1 ? "" : "s"}
                                     </span>
                                   </div>
@@ -12494,7 +12494,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     }
                                     className="flex shrink-0 items-center gap-1.5"
                                   >
-                                    <span className="font-segoe text-[11px] font-semibold leading-none text-slate-500">
+                                    <span className="font-inter text-[11px] font-semibold leading-none text-slate-500">
                                       {isCollapsed ? "Expand Details" : "Collapse Details"}
                                     </span>
                                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50">
@@ -12513,8 +12513,8 @@ function AdminPortalContent({ section }: { section: string }) {
                                         className="flex items-center justify-between gap-2 border-t border-slate-300 p-4 transition-colors hover:bg-slate-50"
                                       >
                                         <div className="flex w-[22%] min-w-0 items-center gap-2">
-                                          <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">Brgy. {entry.barangay}</p>
-                                          <span className="inline-flex shrink-0 items-center gap-1 rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                                          <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">Brgy. {entry.barangay}</p>
+                                          <span className="inline-flex shrink-0 items-center gap-1 rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1.5 font-inter text-xs font-semibold leading-[140%] text-text-tertiary-800">
                                             {entry.organizationCount} org{entry.organizationCount === 1 ? "" : "s"}
                                           </span>
                                         </div>
@@ -12531,13 +12531,13 @@ function AdminPortalContent({ section }: { section: string }) {
                                           <div className="h-2 w-full max-w-[140px] overflow-hidden rounded-full bg-bg-progress-track">
                                             <div className="h-full rounded-full bg-bg-success-default transition-all" style={{ width: `${Math.min(rowUtilization, 100)}%` }} />
                                           </div>
-                                          <span className="shrink-0 font-segoe text-xs font-semibold text-text-default">{rowUtilization}%</span>
+                                          <span className="shrink-0 font-inter text-xs font-semibold text-text-default">{rowUtilization}%</span>
                                         </div>
                                         <div className="flex w-[90px] shrink-0 items-center">
                                           <button
                                             type="button"
                                             onClick={() => setSelectedBudgetAllocation(entry)}
-                                            className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                                            className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                                           >
                                             <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                                             View
@@ -12553,7 +12553,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         )}
 
                         <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-                          <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+                          <p className="font-inter text-[13px] text-text-neutral-tertiary">
                             Showing <span className="text-text-default">{pagedBudgetAllocationRows.length}</span> of{" "}
                             <span className="text-text-default">{filteredBudgetAllocationRows.length}</span> records
                           </p>
@@ -12562,7 +12562,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               type="button"
                               onClick={() => setBudgetAllocationMobilePage((page) => Math.max(1, page - 1))}
                               disabled={budgetAllocationMobilePage === 1}
-                              className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+                              className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
                             >
                               <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
                               Previous
@@ -12576,7 +12576,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     type="button"
                                     onClick={() => setBudgetAllocationMobilePage(index + 1)}
                                     className={cn(
-                                      "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                                      "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                                       index + 1 === budgetAllocationMobilePage
                                         ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                                         : "text-text-default hover:bg-slate-50",
@@ -12590,7 +12590,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               type="button"
                               onClick={() => setBudgetAllocationMobilePage((page) => Math.min(budgetAllocationMobilePageCount, page + 1))}
                               disabled={budgetAllocationMobilePage >= budgetAllocationMobilePageCount}
-                              className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+                              className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
                             >
                               Next
                               <ChevronRight className="h-4 w-4" strokeWidth={1.6} />
@@ -12608,8 +12608,8 @@ function AdminPortalContent({ section }: { section: string }) {
                           <Globe className="h-5 w-5" />
                         </div>
                         <div>
-                          <h2 className="font-segoe text-sm font-bold text-text-default">Public Portal Preview</h2>
-                          <p className="font-segoe text-xs text-slate-500">
+                          <h2 className="font-inter text-sm font-bold text-text-default">Public Portal Preview</h2>
+                          <p className="font-inter text-xs text-slate-500">
                             Live public snapshot for the selected fiscal year. Admin filters apply to the monitoring views, while this preview shows the published citywide totals.
                           </p>
                         </div>
@@ -12618,7 +12618,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         href="https://ytrace.app/budget-transparency"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface px-3 py-1.5 font-segoe text-xs font-semibold text-text-default transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface px-3 py-1.5 font-inter text-xs font-semibold text-text-default transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
                         Open Live Public Page <ArrowUpRight className="h-3.5 w-3.5" />
                       </a>
@@ -12667,7 +12667,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     setTemplateFileDraft(null);
                     setTemplateCategoryDraft("");
                   }}
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                 >
                   <Upload className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                   Upload File
@@ -12948,7 +12948,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     type="button"
                     disabled={!filteredAdministrators.length}
                     onClick={() => setAdministratorsExportDialogOpen(true)}
-                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
                   >
                     <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
                     Export
@@ -12959,7 +12959,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       resetAdministratorForm();
                       setAdministratorModalMode("create");
                     }}
-                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                   >
                     <UserPlus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                     Add Administrator
@@ -12973,7 +12973,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 type="button"
                 onClick={() => setAdministratorsViewTab("accounts")}
                 className={cn(
-                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-inter text-sm font-semibold leading-none transition-colors",
                   administratorsViewTab === "accounts"
                     ? "bg-admin-surface text-public-bg-brand"
                     : "text-segmented-control-inactive-text",
@@ -12986,7 +12986,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 type="button"
                 onClick={() => setAdministratorsViewTab("roles-permissions")}
                 className={cn(
-                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 font-inter text-sm font-semibold leading-none transition-colors",
                   administratorsViewTab === "roles-permissions"
                     ? "bg-admin-surface text-public-bg-brand"
                     : "text-segmented-control-inactive-text",
@@ -13149,7 +13149,7 @@ function AdminPortalContent({ section }: { section: string }) {
             >
               <AlertDialogContent className="max-w-md">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+                  <AlertDialogTitle className="font-inter text-base font-bold text-text-default">
                     Send Password Reset Link?
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-xs text-slate-600 leading-relaxed space-y-2">
@@ -13206,7 +13206,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-9 rounded-md border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default hover:bg-slate-50"
+                      className="h-9 rounded-md border-slate-300 bg-admin-surface px-3 font-inter text-xs font-semibold text-text-default hover:bg-slate-50"
                       onClick={markAllAdminNotificationsRead}
                       disabled={isMarkingAllNotificationsRead}
                     >
@@ -13222,10 +13222,10 @@ function AdminPortalContent({ section }: { section: string }) {
             <section className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm" aria-label="Notification activity">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-slate-50/70 px-4 py-3 sm:px-5">
                 <div>
-                  <h2 className="font-segoe text-sm font-semibold text-text-default">Recent activity</h2>
-                  <p className="mt-0.5 font-segoe text-xs text-slate-500">Your latest administrative updates.</p>
+                  <h2 className="font-inter text-sm font-semibold text-text-default">Recent activity</h2>
+                  <p className="mt-0.5 font-inter text-xs text-slate-500">Your latest administrative updates.</p>
                 </div>
-                <span className="font-segoe text-xs text-slate-500">
+                <span className="font-inter text-xs text-slate-500">
                   {adminNotifications.length} {adminNotifications.length === 1 ? "notification" : "notifications"}
                 </span>
               </div>
@@ -13244,14 +13244,14 @@ function AdminPortalContent({ section }: { section: string }) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                          <span className={`min-w-0 break-words font-segoe text-sm leading-5 ${notification.isRead ? "font-medium text-slate-700" : "font-semibold text-text-default"}`}>
+                          <span className={`min-w-0 break-words font-inter text-sm leading-5 ${notification.isRead ? "font-medium text-slate-700" : "font-semibold text-text-default"}`}>
                             {notification.title}
                           </span>
-                          <span className="shrink-0 font-segoe text-xs tabular-nums text-slate-500">
+                          <span className="shrink-0 font-inter text-xs tabular-nums text-slate-500">
                             {new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(notification.createdAt))}
                           </span>
                         </span>
-                        <span className={`mt-0.5 block break-words font-segoe text-sm leading-5 ${notification.isRead ? "text-slate-500" : "text-slate-600"}`}>
+                        <span className={`mt-0.5 block break-words font-inter text-sm leading-5 ${notification.isRead ? "text-slate-500" : "text-slate-600"}`}>
                           {notification.message}
                         </span>
                       </span>
@@ -13264,8 +13264,8 @@ function AdminPortalContent({ section }: { section: string }) {
                   <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-500">
                     <Bell className="h-5 w-5" strokeWidth={1.7} />
                   </span>
-                  <p className="font-segoe text-sm font-semibold text-text-default">No notifications</p>
-                  <p className="mt-1 font-segoe text-sm text-slate-500">You&apos;re all caught up.</p>
+                  <p className="font-inter text-sm font-semibold text-text-default">No notifications</p>
+                  <p className="mt-1 font-inter text-sm text-slate-500">You&apos;re all caught up.</p>
                 </div>
               )}
             </section>
@@ -13357,7 +13357,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   type="button"
                   disabled={!adminListResult?.totalCount || activityExporting !== null}
                   onClick={() => setActivityExportDialogOpen(true)}
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
                 >
                   <Download className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                   Export
@@ -13923,7 +13923,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <button
                   type="button"
                   onClick={() => { setSelectedYpopId(null); setYpopAdminView("period-detail"); }}
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
                   Back to Submissions
@@ -13936,7 +13936,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                     <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                   </div>
-                  <h1 className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                  <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                     {entryOrg?.organizationName ?? "Unknown organization"}
                   </h1>
                   <ReferenceCodeChip code={entryOrg?.referenceId || "—"} className="w-[120px] rounded" />
@@ -13958,10 +13958,10 @@ function AdminPortalContent({ section }: { section: string }) {
                       className="absolute right-0 top-[calc(100%+8px)] z-10 flex max-h-[442px] w-[338px] flex-col gap-0 overflow-hidden rounded-md border border-slate-300 bg-admin-surface p-0 shadow-lg"
                     >
                       <div className="flex flex-col gap-1 border-b border-slate-300 p-4">
-                        <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">
+                        <p className="font-inter text-lg font-semibold uppercase leading-none text-text-default">
                           Recent Activity
                         </p>
-                        <p className="font-segoe text-[13px] font-normal leading-none text-slate-500">
+                        <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                           A log of recent actions taken on this organization.
                         </p>
                       </div>
@@ -13986,10 +13986,10 @@ function AdminPortalContent({ section }: { section: string }) {
                                         <Clock className="h-4 w-4 text-icon-info-secondary" strokeWidth={1.6} />
                                       </span>
                                       <div className="min-w-0 flex-1 space-y-0.5">
-                                        <p className="font-segoe text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
+                                        <p className="font-inter text-[13px] font-normal leading-[120%] text-public-text-neutral-default">
                                           <span className="font-semibold">{item.adminName}</span> {item.action}
                                         </p>
-                                        <p className="font-segoe text-[11px] font-normal leading-none text-[#b3b3b3]">
+                                        <p className="font-inter text-[11px] font-normal leading-none text-[#b3b3b3]">
                                           {isValidEntryDate ? format(entryDate, "h:mm a") : ""} · {group.label}
                                         </p>
                                       </div>
@@ -14000,7 +14000,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             </div>
                           ))
                         ) : (
-                          <p className="py-6 text-center font-segoe text-sm text-slate-500">
+                          <p className="py-6 text-center font-inter text-sm text-slate-500">
                             No activity recorded yet.
                           </p>
                         )}
@@ -14011,7 +14011,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           <button
                             type="button"
                             onClick={() => setYpopActivityVisibleCount((current) => current + 4)}
-                            className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
+                            className="font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand hover:underline"
                           >
                             Load older activity
                           </button>
@@ -14026,7 +14026,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <p className="font-segoe text-lg font-semibold uppercase leading-none text-text-default">Validation Summary</p>
+                      <p className="font-inter text-lg font-semibold uppercase leading-none text-text-default">Validation Summary</p>
                       <YpopValidationComputationPopover
                         entry={entry}
                         organizationName={entryOrg?.organizationName}
@@ -14041,11 +14041,11 @@ function AdminPortalContent({ section }: { section: string }) {
                         period={period}
                       />
                     </div>
-                    <p className="mt-1 font-segoe text-[13px] leading-none text-slate-500">Current computed eligibility points.</p>
+                    <p className="mt-1 font-inter text-[13px] leading-none text-slate-500">Current computed eligibility points.</p>
                   </div>
                   <div className="flex w-full max-w-[497px] flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-segoe text-lg font-semibold leading-none text-text-default">Qualification Progress</span>
+                      <span className="font-inter text-lg font-semibold leading-none text-text-default">Qualification Progress</span>
                       <span className="font-cascadia text-lg font-bold leading-none text-text-default">{displayScore}%</span>
                     </div>
                     <div className="relative h-2 w-full overflow-hidden rounded-full bg-bg-progress-track">
@@ -14062,10 +14062,10 @@ function AdminPortalContent({ section }: { section: string }) {
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
                         <FolderOpen className="h-6 w-6" strokeWidth={1.5} />
                       </div>
-                      <p className="font-segoe text-base font-semibold text-text-default">
+                      <p className="font-inter text-base font-semibold text-text-default">
                         Select a Submission to view the details and file previews
                       </p>
-                      <p className="mt-1 font-segoe text-sm text-slate-500 max-w-sm">
+                      <p className="mt-1 font-inter text-sm text-slate-500 max-w-sm">
                         Choose an item from the Document Queue on the right to inspect its activity information and preview uploaded documents.
                       </p>
                     </div>
@@ -14075,10 +14075,10 @@ function AdminPortalContent({ section }: { section: string }) {
                         <div className="space-y-4 rounded-md border border-slate-300 bg-admin-surface p-5 shadow-sm">
                           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                             <div className="min-w-0 flex-1">
-                              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+                              <p className="font-inter text-xs font-semibold uppercase tracking-wider text-slate-500">
                                 Organization-Led Activity Details
                               </p>
-                              <h2 className="mt-1 truncate font-segoe text-lg font-bold text-text-default">
+                              <h2 className="mt-1 truncate font-inter text-lg font-bold text-text-default">
                                 {activeOrgActivity.activityName || "Untitled Activity"}
                               </h2>
                             </div>
@@ -14092,8 +14092,8 @@ function AdminPortalContent({ section }: { section: string }) {
                                 <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
                               </div>
                               <div className="min-w-0">
-                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Date Conducted</p>
-                                <p className="mt-0.5 font-segoe text-sm font-semibold text-text-default">
+                                <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Date Conducted</p>
+                                <p className="mt-0.5 font-inter text-sm font-semibold text-text-default">
                                   {activeOrgActivity.activityDate
                                     ? (() => {
                                         const raw = activeOrgActivity.activityDate;
@@ -14120,8 +14120,8 @@ function AdminPortalContent({ section }: { section: string }) {
                                 <MapPin className="h-4 w-4" strokeWidth={1.75} />
                               </div>
                               <div className="min-w-0">
-                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Venue / Location</p>
-                                <p className="mt-0.5 font-segoe text-sm font-semibold text-text-default truncate">
+                                <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Venue / Location</p>
+                                <p className="mt-0.5 font-inter text-sm font-semibold text-text-default truncate">
                                   {activeOrgActivity.venue || "Not specified"}
                                 </p>
                               </div>
@@ -14131,8 +14131,8 @@ function AdminPortalContent({ section }: { section: string }) {
                           {/* Description / Narrative */}
                           {(activeOrgActivity.narrativeReport || (activeOrgActivity as any).description) ? (
                             <div className="rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3.5 space-y-1">
-                              <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Activity Description</p>
-                              <p className="font-segoe text-sm text-text-default leading-relaxed whitespace-pre-wrap">
+                              <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Activity Description</p>
+                              <p className="font-inter text-sm text-text-default leading-relaxed whitespace-pre-wrap">
                                 {activeOrgActivity.narrativeReport || (activeOrgActivity as any).description}
                               </p>
                             </div>
@@ -14141,14 +14141,14 @@ function AdminPortalContent({ section }: { section: string }) {
                           {/* Attendance Section */}
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <p className="font-segoe text-xs font-semibold uppercase tracking-wider text-slate-500">
+                              <p className="font-inter text-xs font-semibold uppercase tracking-wider text-slate-500">
                                 Attendance
                               </p>
                               {activeOrgActivity.totalAttendees != null &&
                               activeOrgActivity.girlsAttendees != null &&
                               activeOrgActivity.boysAttendees != null &&
                               activeOrgActivity.girlsAttendees + activeOrgActivity.boysAttendees === activeOrgActivity.totalAttendees ? (
-                                <span className="font-segoe text-[11px] font-medium text-text-success-default flex items-center gap-1">
+                                <span className="font-inter text-[11px] font-medium text-text-success-default flex items-center gap-1">
                                   <CheckCircle2 className="h-3 w-3" />
                                   Sum Verified
                                 </span>
@@ -14158,46 +14158,46 @@ function AdminPortalContent({ section }: { section: string }) {
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                               {/* Total */}
                               <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
-                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Total</p>
+                                <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Total</p>
                                 {activeOrgActivity.totalAttendees != null ? (
                                   <>
                                     <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
                                       {activeOrgActivity.totalAttendees.toLocaleString()}
                                     </p>
-                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                    <p className="font-inter text-[11px] text-slate-500">attendees</p>
                                   </>
                                 ) : (
-                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                  <p className="mt-1 font-inter text-xs italic text-slate-500">Not provided</p>
                                 )}
                               </div>
 
                               {/* Girls */}
                               <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
-                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Girls</p>
+                                <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Girls</p>
                                 {activeOrgActivity.girlsAttendees != null ? (
                                   <>
                                     <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
                                       {activeOrgActivity.girlsAttendees.toLocaleString()}
                                     </p>
-                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                    <p className="font-inter text-[11px] text-slate-500">attendees</p>
                                   </>
                                 ) : (
-                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                  <p className="mt-1 font-inter text-xs italic text-slate-500">Not provided</p>
                                 )}
                               </div>
 
                               {/* Boys */}
                               <div className="flex flex-col items-center justify-center rounded-md border border-slate-200/90 dark:border-slate-800 bg-bg-panel-subtle p-3 text-center">
-                                <p className="font-segoe text-[11px] font-semibold uppercase text-slate-500">Boys</p>
+                                <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Boys</p>
                                 {activeOrgActivity.boysAttendees != null ? (
                                   <>
                                     <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
                                       {activeOrgActivity.boysAttendees.toLocaleString()}
                                     </p>
-                                    <p className="font-segoe text-[11px] text-slate-500">attendees</p>
+                                    <p className="font-inter text-[11px] text-slate-500">attendees</p>
                                   </>
                                 ) : (
-                                  <p className="mt-1 font-segoe text-xs italic text-slate-500">Not provided</p>
+                                  <p className="mt-1 font-inter text-xs italic text-slate-500">Not provided</p>
                                 )}
                               </div>
                             </div>
@@ -14207,7 +14207,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
                       <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm min-h-[520px] lg:min-h-0">
                         <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                          <p className="truncate font-segoe text-lg font-semibold leading-none text-text-default">
+                          <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                             {activeReviewFile?.fileName ?? "No document selected"}
                           </p>
                           <div className="flex shrink-0 items-center gap-2">
@@ -14221,7 +14221,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                       activeGroupFiles[Math.max(0, activeReviewFileIndex - 1)]?.id ?? null,
                                     )
                                   }
-                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                                 >
                                   <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
                                   Previous
@@ -14233,7 +14233,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                       type="button"
                                       onClick={() => setActiveEntryReviewFileId(file.id)}
                                       className={cn(
-                                        "flex h-7 w-7 items-center justify-center rounded-md font-segoe text-[13px]",
+                                        "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
                                         activeReviewFile?.id === file.id
                                           ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                                           : "text-text-default hover:bg-slate-50",
@@ -14251,7 +14251,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                       activeGroupFiles[Math.min(activeGroupFiles.length - 1, activeReviewFileIndex + 1)]?.id ?? null,
                                     )
                                   }
-                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-segoe text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
                                 >
                                   Next
                                   <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
@@ -14293,12 +14293,12 @@ function AdminPortalContent({ section }: { section: string }) {
                                 />
                               )
                             ) : (
-                              <div className="flex flex-col items-center gap-3 p-4 text-center font-segoe text-sm text-slate-500">
+                              <div className="flex flex-col items-center gap-3 p-4 text-center font-inter text-sm text-slate-500">
                                 <p>This file cannot be previewed inline.</p>
                                 <button
                                   type="button"
                                   onClick={() => window.open(entryReviewPreviewUrl, "_blank", "noopener,noreferrer")}
-                                  className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-segoe text-[13px] text-text-default transition-colors hover:bg-slate-50"
+                                  className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-[13px] text-text-default transition-colors hover:bg-slate-50"
                                 >
                                   <Eye className="h-4 w-4" strokeWidth={1.6} />
                                   Open File
@@ -14306,7 +14306,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               </div>
                             )
                           ) : activeReviewFile && entryReviewPreviewLoading ? (
-                            <p className="font-segoe text-sm text-slate-500">Loading preview…</p>
+                            <p className="font-inter text-sm text-slate-500">Loading preview…</p>
                           ) : (
                             <div
                               className="flex h-full min-h-[500px] lg:min-h-[560px] w-full items-center justify-center"
@@ -14332,7 +14332,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         setActiveEntryReviewFileId(null);
                       }}
                       className={cn(
-                        "flex-1 rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                        "flex-1 rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                         entryReviewTab === "city_led"
                           ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                           : "bg-slate-50 text-text-default",
@@ -14349,7 +14349,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         setActiveEntryReviewFileId(null);
                       }}
                       className={cn(
-                        "flex-1 rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                        "flex-1 rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                         entryReviewTab === "org_led"
                           ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                           : "bg-slate-50 text-text-default",
@@ -14404,8 +14404,8 @@ function AdminPortalContent({ section }: { section: string }) {
                       return (
                         <div className="flex flex-col gap-1 border-b border-slate-300 pb-4">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-segoe text-base font-semibold leading-none text-text-default">Document Queue</p>
-                            <label className="flex shrink-0 items-center gap-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
+                            <p className="font-inter text-base font-semibold leading-none text-text-default">Document Queue</p>
+                            <label className="flex shrink-0 items-center gap-1.5 font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand cursor-pointer">
                               <input
                                 type="checkbox"
                                 ref={(el) => {
@@ -14420,7 +14420,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               Select all
                             </label>
                           </div>
-                          <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                          <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
                             Review the organization&rsquo;s submitted documents and select a document to preview.
                           </p>
                         </div>
@@ -14502,9 +14502,9 @@ function AdminPortalContent({ section }: { section: string }) {
                                     }}
                                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
                                   >
-                                    <p className="truncate font-segoe text-sm font-semibold leading-none text-text-default hover:underline">{group.title}</p>
+                                    <p className="truncate font-inter text-sm font-semibold leading-none text-text-default hover:underline">{group.title}</p>
                                     {group.categoryLabel ? (
-                                      <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-segoe text-[10px] font-semibold uppercase leading-[140%]", group.categoryPillClass)}>
+                                      <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-inter text-[10px] font-semibold uppercase leading-[140%]", group.categoryPillClass)}>
                                         {group.categoryLabel}
                                       </span>
                                     ) : null}
@@ -14569,7 +14569,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                               <p className="truncate font-cascadia text-xs font-semibold leading-none text-text-default">{file.fileName}</p>
                                               <YpopDocumentStatusPill status={group.status} isAwaiting={group.isAwaiting} />
                                             </div>
-                                            <p className="font-segoe text-xs font-normal leading-none text-[#b3b3b3]">
+                                            <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
                                               Submitted: {isUploadedDateValid ? format(uploadedDate, "d MMM yyyy") : "N/A"}
                                             </p>
                                           </div>
@@ -14577,9 +14577,9 @@ function AdminPortalContent({ section }: { section: string }) {
                                       );
                                     })
                                   ) : isRefreshingYpop ? (
-                                    <p className="px-2 py-3 text-center font-segoe text-xs text-slate-500">Loading files...</p>
+                                    <p className="px-2 py-3 text-center font-inter text-xs text-slate-500">Loading files...</p>
                                   ) : (
-                                    <p className="px-2 py-3 text-center font-segoe text-xs text-slate-500">No files uploaded yet.</p>
+                                    <p className="px-2 py-3 text-center font-inter text-xs text-slate-500">No files uploaded yet.</p>
                                   )}
                                 </div>
                               ) : null}
@@ -14587,7 +14587,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           );
                         })
                       ) : (
-                        <p className="px-2 py-6 text-center font-segoe text-sm text-slate-500">
+                        <p className="px-2 py-6 text-center font-inter text-sm text-slate-500">
                           No {entryReviewTab === "city_led" ? "city-led" : "organization-led"} activities yet.
                         </p>
                       )}
@@ -14596,7 +14596,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
-                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">Review Decision</p>
+                      <p className="font-inter text-lg font-semibold leading-none text-text-default">Review Decision</p>
                       <button
                         type="button"
                         ref={ypopDecisionHelpTriggerRef}
@@ -14611,11 +14611,11 @@ function AdminPortalContent({ section }: { section: string }) {
                           ref={ypopDecisionHelpPanelRef}
                           className="absolute right-0 top-full z-10 mt-2 w-[280px] space-y-1.5 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-lg"
                         >
-                          <p className="font-segoe text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Review Rules</p>
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">{entryReviewTab === "city_led" ? "Verify" : "Approve"}</span> — multiple files can be selected.
                           </p>
-                          <p className="font-segoe text-xs leading-[140%] text-text-default">
+                          <p className="font-inter text-xs leading-[140%] text-text-default">
                             <span className="font-semibold">Request Revision</span> — one file at a time, remarks required.
                           </p>
                         </div>
@@ -14626,7 +14626,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       {selectedBulkGroups.length === 0 ? (
                         <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
-                          <p className="font-segoe text-[13px] leading-[120%] text-neutral-tertiary">
+                          <p className="font-inter text-[13px] leading-[120%] text-neutral-tertiary">
                             {entryReviewBulkDecision === "needs_revision"
                               ? "No documents selected. Select one submission to request revision."
                               : "No documents selected."}
@@ -14635,14 +14635,14 @@ function AdminPortalContent({ section }: { section: string }) {
                       ) : selectedBulkGroups.length > 1 && entryReviewBulkDecision === "needs_revision" ? (
                         <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
                           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
-                          <p className="font-segoe text-[13px] leading-[120%] text-amber-700">
+                          <p className="font-inter text-[13px] leading-[120%] text-amber-700">
                             Request Revision is a single-submission action. Please select only one submission.
                           </p>
                         </div>
                       ) : (
                         <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-                          <p className="font-segoe text-[13px] leading-[120%] text-public-bg-brand">
+                          <p className="font-inter text-[13px] leading-[120%] text-public-bg-brand">
                             {selectedBulkGroups.length} document{selectedBulkGroups.length === 1 ? "" : "s"} selected.
                           </p>
                         </div>
@@ -14658,7 +14658,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       )}
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-segoe text-[13px] text-text-default">Decision</label>
+                        <label className="font-inter text-[13px] text-text-default">Decision</label>
                         <Select
                           value={entryReviewBulkDecision}
                           onValueChange={(value) => {
@@ -14692,7 +14692,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
                       {selectedBulkGroups.length === 1 && entryReviewDecisionRequiresRemark ? (
                         <div className="flex flex-col gap-1.5">
-                          <label className="font-segoe text-[13px] text-text-default">
+                          <label className="font-inter text-[13px] text-text-default">
                             Remarks <span className="text-icon-danger-secondary">*</span>
                           </label>
                           <Textarea
@@ -14714,7 +14714,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         type="button"
                         disabled={isEntryReviewConfirmDisabled}
                         onClick={() => setEntryReviewConfirmOpen(true)}
-                        className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
+                        className="mt-1 flex h-11 w-full items-center justify-center rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-[0.38]"
                       >
                         Confirm
                       </button>
@@ -14731,9 +14731,9 @@ function AdminPortalContent({ section }: { section: string }) {
                     content={
                       <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
                         <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Activity</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                          <p className="font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Activity</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
+                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
                         </div>
                         <div className="flex flex-col gap-2 pt-2">
                           {selectedBulkGroups.map((group) => {
@@ -14743,16 +14743,16 @@ function AdminPortalContent({ section }: { section: string }) {
                               : "—";
                             return (
                               <div key={group.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
-                                <p className="font-segoe text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={group.title}>
+                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={group.title}>
                                   {group.title}
                                 </p>
-                                <p className="font-segoe text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
+                                <p className="font-inter text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
                                   {entryReviewBulkDecision === "approve"
                                     ? entryReviewTab === "city_led" ? "Verify" : "Approve"
                                     : "Request Revision"}
                                 </p>
                                 <p className={cn(
-                                  "font-segoe text-[11px] leading-[140%] min-w-0 break-words [overflow-wrap:anywhere]",
+                                  "font-inter text-[11px] leading-[140%] min-w-0 break-words [overflow-wrap:anywhere]",
                                   remarkText === "[Remark required]" ? "font-bold text-icon-danger-secondary" : "font-semibold text-text-default"
                                 )} title={remarkText !== "—" ? remarkText : undefined}>
                                   {remarkText}
@@ -14849,7 +14849,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <button
                 type="button"
                 onClick={() => { setSelectedYpopPeriodId(null); setYpopAdminView("periods"); }}
-                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
                 Back to Semesters
@@ -14862,7 +14862,7 @@ function AdminPortalContent({ section }: { section: string }) {
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-segoe text-base font-semibold text-text-default">{period.semesterLabel} Submissions</h2>
+                <h2 className="font-inter text-base font-semibold text-text-default">{period.semesterLabel} Submissions</h2>
                 <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                   <YpopParticipationReportExport key={`${period.id}-participation`} periodId={period.id} semesterLabel={period.semesterLabel}
                     classification={ypopSubmissionClassificationFilter} status={ypopSubmissionFilter} search={ypopSubmissionSearch}
@@ -14877,8 +14877,8 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div role="alert" className="flex flex-col items-center gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-10 text-center">
                   <AlertCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
                   <div>
-                    <p className="font-segoe text-sm font-semibold text-red-800">YPOP submissions could not be loaded</p>
-                    <p className="mt-1 max-w-2xl break-words font-segoe text-xs text-red-700">
+                    <p className="font-inter text-sm font-semibold text-red-800">YPOP submissions could not be loaded</p>
+                    <p className="mt-1 max-w-2xl break-words font-inter text-xs text-red-700">
                       {adminYpopSubmissionsQuery.error instanceof Error
                         ? adminYpopSubmissionsQuery.error.message
                         : "The submission queue is temporarily unavailable."}
@@ -14896,7 +14896,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   </Button>
                 </div>
               ) : adminYpopSubmissionsQuery.isFetching && !periodSubmissionPage ? (
-                <p role="status" className="rounded-md border border-slate-200 bg-admin-surface py-12 text-center font-segoe text-sm text-slate-500">
+                <p role="status" className="rounded-md border border-slate-200 bg-admin-surface py-12 text-center font-inter text-sm text-slate-500">
                   Loading YPOP submissions…
                 </p>
               ) : (
@@ -15041,8 +15041,8 @@ function AdminPortalContent({ section }: { section: string }) {
             partnership: "border-border-partnership-subtle bg-bg-partnership-subtle text-text-partnership",
           };
 
-          const inlineInputClass = "flex h-8 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled";
-          const inlineLabelClass = "font-segoe text-[11px] font-semibold uppercase leading-none text-slate-500";
+          const inlineInputClass = "flex h-8 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 font-inter text-[13px] text-text-default outline-none placeholder:text-text-disabled";
+          const inlineLabelClass = "font-inter text-[11px] font-semibold uppercase leading-none text-slate-500";
 
           const isEditingActivity = Boolean((editingActivityId || editingDraftTempId) && editingActivityData);
           const activityModalData = isEditingActivity ? editingActivityData : createFormNewActivity;
@@ -15138,7 +15138,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <button
                 type="button"
                 onClick={() => { resetForm(); setYpopAdminView("periods"); }}
-                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+                className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
                 Cancel &amp; Back
@@ -15153,14 +15153,14 @@ function AdminPortalContent({ section }: { section: string }) {
                 {/* Group 1: Semester Information */}
                 <div className="flex flex-col gap-4 border-b border-slate-300 p-6">
                   <div>
-                    <p className="font-segoe text-lg font-semibold leading-none text-text-default">1. Semester Information</p>
-                    <p className="mt-1.5 font-segoe text-[13px] text-slate-500">General identification and deadline configuration for this validation period.</p>
+                    <p className="font-inter text-lg font-semibold leading-none text-text-default">1. Semester Information</p>
+                    <p className="mt-1.5 font-inter text-[13px] text-slate-500">General identification and deadline configuration for this validation period.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
-                      <label className="flex items-center justify-between gap-1.5 font-segoe text-[13px] text-text-default" htmlFor="cp-label">
+                      <label className="flex items-center justify-between gap-1.5 font-inter text-[13px] text-text-default" htmlFor="cp-label">
                         <span>
-                          Semester Label <span className="font-segoe text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
+                          Semester Label <span className="font-inter text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
                         </span>
                         <span className="flex h-[19px] shrink-0 items-center gap-1 rounded-[4px] border-[0.6px] border-slate-300 bg-admin-surface px-1.5 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
                           <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
@@ -15168,14 +15168,14 @@ function AdminPortalContent({ section }: { section: string }) {
                         </span>
                       </label>
                       <div className="flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-bg-neutral-subtle px-2.5">
-                        <span className="truncate font-segoe text-[13px] text-text-default">{generatedSemesterLabel}</span>
+                        <span className="truncate font-inter text-[13px] text-text-default">{generatedSemesterLabel}</span>
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="flex items-center justify-between gap-1.5 font-segoe text-[13px] text-text-default" htmlFor="cp-key">
+                      <label className="flex items-center justify-between gap-1.5 font-inter text-[13px] text-text-default" htmlFor="cp-key">
                         <span>
-                          Semester Key <span className="font-segoe text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
+                          Semester Key <span className="font-inter text-[13px] text-text-neutral-tertiary">(Read-Only Identifier)</span>
                         </span>
                         <span className="flex h-[19px] shrink-0 items-center gap-1 rounded-[4px] border-[0.6px] border-slate-300 bg-admin-surface px-1.5 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
                           <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
@@ -15188,7 +15188,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="font-segoe text-[13px] text-text-default" htmlFor="cp-deadline">
+                      <label className="font-inter text-[13px] text-text-default" htmlFor="cp-deadline">
                         Validation Deadline <span className="text-icon-danger-secondary">*</span>
                       </label>
                       <Popover open={deadlineDateOpen} onOpenChange={setDeadlineDateOpen}>
@@ -15196,7 +15196,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           <button
                             id="cp-deadline"
                             type="button"
-                            className="flex h-8 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-2.5 font-segoe text-[13px] text-text-default outline-none"
+                            className="flex h-8 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-2.5 font-inter text-[13px] text-text-default outline-none"
                           >
                             <span className={createPeriodForm.validationDeadline ? "" : "text-text-disabled"}>
                               {createPeriodForm.validationDeadline
@@ -15223,7 +15223,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             components={{ Caption: CalendarCaption }}
                             classNames={{
                               day_selected:
-                                "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                                "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-inter text-public-fs-subheading-sm leading-none text-center",
                             }}
                           />
                         </PopoverContent>
@@ -15231,7 +15231,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="font-segoe text-[13px] text-text-default" htmlFor="cp-status">
+                      <label className="font-inter text-[13px] text-text-default" htmlFor="cp-status">
                         {isEditMode ? "Status" : "Initial Status"}
                       </label>
                       <Select
@@ -15253,8 +15253,8 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div className="flex flex-col gap-4 border-b border-slate-300 p-6">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">2. City-Led Activities</p>
-                      <p className="mt-1.5 font-segoe text-[13px] text-slate-500">
+                      <p className="font-inter text-lg font-semibold leading-none text-text-default">2. City-Led Activities</p>
+                      <p className="mt-1.5 font-inter text-[13px] text-slate-500">
                         Assign each city-led activity a type. Points are automatic:{" "}
                         <span className="italic font-bold">Mandatory (4), Invitational (3), Partnership (2).</span>
                       </p>
@@ -15263,7 +15263,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       <button
                         type="button"
                         onClick={() => setCreateFormNewActivity({ name: "", startDate: "", endDate: "", venue: "", category: "mandatory" })}
-                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                       >
                         <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                         Add Activity
@@ -15273,24 +15273,24 @@ function AdminPortalContent({ section }: { section: string }) {
 
                   <div className="flex flex-col">
                     {(isEditMode ? editActivities : createPeriodActivities).length === 0 ? (
-                      <p className="py-6 text-center font-segoe text-xs text-slate-500">No activities added yet. Use "+ Add Activity" to start.</p>
+                      <p className="py-6 text-center font-inter text-xs text-slate-500">No activities added yet. Use "+ Add Activity" to start.</p>
                     ) : isEditMode ? (
                       editActivities.map((act: YPOPCityActivity) => (
                         <div key={act.id} className="flex items-center justify-between gap-2 border-b border-slate-300 py-4 last:border-b-0">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
-                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]", categoryPillClasses[resolveYpopCityLedCategory(act.category, act.points)])}>
+                              <p className="font-inter text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
+                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]", categoryPillClasses[resolveYpopCityLedCategory(act.category, act.points)])}>
                                 {YPOP_CITY_LED_CATEGORY_LABELS[resolveYpopCityLedCategory(act.category, act.points)]}
                               </span>
                             </div>
                             <div className="mt-1 flex items-center gap-3">
-                              <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                              <span className="flex items-center gap-1 font-inter text-xs leading-[140%] text-text-default">
                                 <CalendarDays className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
                                 {formatActivityDateRange(act.startDate, act.endDate)}
                               </span>
                               {act.venue ? (
-                                <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                <span className="flex items-center gap-1 font-inter text-xs leading-[140%] text-text-default">
                                   <MapPin className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
                                   {act.venue}
                                 </span>
@@ -15298,7 +15298,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             </div>
                           </div>
                           <div className="flex shrink-0 items-center gap-2">
-                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-inter text-xs font-semibold leading-[140%] text-text-tertiary-800">
                               {normalizeYpopCityLedPoints(act.points, act.category)} pts
                             </span>
                             {(() => {
@@ -15317,7 +15317,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     setAnnouncementDialogOpen(true);
                                   }}
                                   className={cn(
-                                    "flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-segoe text-xs font-semibold transition-colors",
+                                    "flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-inter text-xs font-semibold transition-colors",
                                     announcementInfo
                                       ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                                       : "border-slate-300 bg-admin-surface text-text-default hover:bg-slate-50 hover:text-public-bg-brand"
@@ -15352,18 +15352,18 @@ function AdminPortalContent({ section }: { section: string }) {
                         <div key={act.tempId} className="flex items-center justify-between gap-2 border-b border-slate-300 py-4 last:border-b-0">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <p className="font-segoe text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
-                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]", categoryPillClasses[act.category])}>
+                              <p className="font-inter text-sm font-semibold leading-[140%] text-text-default">{act.name}</p>
+                              <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]", categoryPillClasses[act.category])}>
                                 {YPOP_CITY_LED_CATEGORY_LABELS[act.category]}
                               </span>
                             </div>
                             <div className="mt-1 flex items-center gap-3">
-                              <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                              <span className="flex items-center gap-1 font-inter text-xs leading-[140%] text-text-default">
                                 <CalendarDays className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
                                 {formatActivityDateRange(act.startDate, act.endDate)}
                               </span>
                               {act.venue ? (
-                                <span className="flex items-center gap-1 font-segoe text-xs leading-[140%] text-text-default">
+                                <span className="flex items-center gap-1 font-inter text-xs leading-[140%] text-text-default">
                                   <MapPin className="h-3.5 w-3.5 shrink-0 text-icon-neutral-strong" strokeWidth={1.6} />
                                   {act.venue}
                                 </span>
@@ -15371,7 +15371,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             </div>
                           </div>
                           <div className="flex shrink-0 items-center gap-2">
-                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                            <span className="inline-flex items-center gap-1 rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-2 py-1.5 font-inter text-xs font-semibold leading-[140%] text-text-tertiary-800">
                               {getYpopCityLedPoints(act.category)} pts
                             </span>
                             <button
@@ -15404,7 +15404,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         ? editActivities.reduce((s, a) => s + normalizeYpopCityLedPoints(a.points, a.category), 0)
                         : createPeriodActivities.reduce((s, a) => s + getYpopCityLedPoints(a.category), 0);
                       return totalPts > 0 ? (
-                        <p className="pt-3 text-right font-segoe text-xs font-semibold text-slate-500">
+                        <p className="pt-3 text-right font-inter text-xs font-semibold text-slate-500">
                           Total: <span className="text-text-default">{totalPts} pts</span>
                         </p>
                       ) : null;
@@ -15430,19 +15430,19 @@ function AdminPortalContent({ section }: { section: string }) {
                     activityModalData ? (
                       <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-bg-panel-subtle p-6">
                         <div className="flex flex-col gap-1.5">
-                          <label className="font-segoe text-[13px] text-text-default">
+                          <label className="font-inter text-[13px] text-text-default">
                             Title <span className="text-icon-danger-secondary">*</span>
                           </label>
                           <input
                             value={activityModalData.name}
                             onChange={(e) => updateActivityModalField({ name: e.target.value })}
                             placeholder="Enter activity title"
-                            className="flex h-9 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled"
+                            className="flex h-9 w-full items-center rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-[13px] text-text-default outline-none placeholder:text-text-disabled"
                           />
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <label className="font-segoe text-[13px] text-text-default">
+                          <label className="font-inter text-[13px] text-text-default">
                             Location <span className="text-icon-danger-secondary">*</span>
                           </label>
                           <div className="flex h-9 w-full items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3">
@@ -15451,19 +15451,19 @@ function AdminPortalContent({ section }: { section: string }) {
                               value={activityModalData.venue}
                               onChange={(e) => updateActivityModalField({ venue: e.target.value })}
                               placeholder="Enter location"
-                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-[13px] text-text-default outline-none placeholder:text-text-disabled"
+                              className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-[13px] text-text-default outline-none placeholder:text-text-disabled"
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                           <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">Start Date</label>
+                            <label className="font-inter text-[13px] text-text-default">Start Date</label>
                             <Popover open={activityStartDateOpen} onOpenChange={setActivityStartDateOpen}>
                               <PopoverTrigger asChild>
                                 <button
                                   type="button"
-                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none"
+                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-[13px] text-text-default outline-none"
                                 >
                                   <span className={activityModalData.startDate ? "" : "text-text-disabled"}>
                                     {activityModalData.startDate
@@ -15490,19 +15490,19 @@ function AdminPortalContent({ section }: { section: string }) {
                                   components={{ Caption: CalendarCaption }}
                                   classNames={{
                                     day_selected:
-                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-inter text-public-fs-subheading-sm leading-none text-center",
                                   }}
                                 />
                               </PopoverContent>
                             </Popover>
                           </div>
                           <div className="flex flex-col gap-1.5">
-                            <label className="font-segoe text-[13px] text-text-default">End Date</label>
+                            <label className="font-inter text-[13px] text-text-default">End Date</label>
                             <Popover open={activityEndDateOpen} onOpenChange={setActivityEndDateOpen}>
                               <PopoverTrigger asChild>
                                 <button
                                   type="button"
-                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-[13px] text-text-default outline-none"
+                                  className="flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-[13px] text-text-default outline-none"
                                 >
                                   <span className={activityModalData.endDate ? "" : "text-text-disabled"}>
                                     {activityModalData.endDate
@@ -15529,7 +15529,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                   components={{ Caption: CalendarCaption }}
                                   classNames={{
                                     day_selected:
-                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-segoe text-public-fs-subheading-sm leading-none text-center",
+                                      "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-public-bg-brand hover:text-public-text-neutral-on-neutral focus:bg-public-bg-brand focus:text-public-text-neutral-on-neutral font-inter text-public-fs-subheading-sm leading-none text-center",
                                   }}
                                 />
                               </PopoverContent>
@@ -15538,8 +15538,8 @@ function AdminPortalContent({ section }: { section: string }) {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <label className="font-segoe text-[13px] text-text-default">Activity Type</label>
-                          <p className="text-justify font-segoe text-[11px] leading-none text-slate-500">
+                          <label className="font-inter text-[13px] text-text-default">Activity Type</label>
+                          <p className="text-justify font-inter text-[11px] leading-none text-slate-500">
                             Select the activity type that best fits. Points are assigned based on the selected type.
                           </p>
                           <div className="grid grid-cols-3 gap-2.5 pt-4 pb-2" role="radiogroup" aria-label="Activity Type">
@@ -15564,11 +15564,11 @@ function AdminPortalContent({ section }: { section: string }) {
                                       >
                                         {selected ? <span className="h-1.5 w-1.5 rounded-full bg-border-info-tertiary" /> : null}
                                       </span>
-                                      <span className="font-segoe text-xs font-semibold uppercase text-text-default">
+                                      <span className="font-inter text-xs font-semibold uppercase text-text-default">
                                         {YPOP_CITY_LED_CATEGORY_LABELS[cat]}
                                       </span>
                                     </span>
-                                    <span className="ml-[19px] font-segoe text-[10px] font-normal capitalize leading-[140%] text-slate-500">
+                                    <span className="ml-[19px] font-inter text-[10px] font-normal capitalize leading-[140%] text-slate-500">
                                       {cat === "mandatory"
                                         ? "Required Participation."
                                         : cat === "invitational"
@@ -15576,7 +15576,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                           : "Collaborative Participation."}
                                     </span>
                                   </div>
-                                  <span className="mt-1 inline-flex w-fit items-center self-center rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-1.5 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-tertiary-800">
+                                  <span className="mt-1 inline-flex w-fit items-center self-center rounded border border-border-tertiary-200 bg-bg-tertiary-subtle px-1.5 py-1 font-inter text-xs font-semibold leading-[140%] text-text-tertiary-800">
                                     {YPOP_CITY_LED_CATEGORY_POINTS[cat]} pts
                                   </span>
                                 </button>
@@ -15593,13 +15593,13 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div className="flex flex-col gap-4 p-6">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-segoe text-lg font-semibold leading-none text-text-default">3. Organization-Initiated Activities</p>
-                      <p className="mt-1.5 font-segoe text-[13px] text-slate-500">Set bonus percentages for organization-initiated activities. Default values are applied automatically.</p>
+                      <p className="font-inter text-lg font-semibold leading-none text-text-default">3. Organization-Initiated Activities</p>
+                      <p className="mt-1.5 font-inter text-[13px] text-slate-500">Set bonus percentages for organization-initiated activities. Default values are applied automatically.</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCreatePeriodOrgLedTiers(DEFAULT_ORG_LED_TIERS)}
-                      className="shrink-0 font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand transition-colors hover:underline"
+                      className="shrink-0 font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand transition-colors hover:underline"
                     >
                       Reset to defaults
                     </button>
@@ -15612,7 +15612,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         const actualIdx = createPeriodOrgLedTiers.indexOf(tier);
                         return (
                           <div key={displayIdx} className="flex items-center gap-2 rounded-md border border-slate-300 bg-bg-panel-subtle px-4 py-3">
-                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">&#8805;</span>
+                            <span className="shrink-0 font-inter text-[13px] font-semibold text-text-default">&#8805;</span>
                             <input
                               type="number"
                               min={0}
@@ -15620,9 +15620,9 @@ function AdminPortalContent({ section }: { section: string }) {
                               onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
                                 prev.map((t, i) => i === actualIdx ? { ...t, minProjects: Math.max(0, Number(e.target.value) || 0) } : t)
                               )}
-                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-segoe text-[13px] text-text-default outline-none"
+                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-inter text-[13px] text-text-default outline-none"
                             />
-                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">projects &#8594; +</span>
+                            <span className="shrink-0 font-inter text-[13px] font-semibold text-text-default">projects &#8594; +</span>
                             <input
                               type="number"
                               min={0}
@@ -15630,9 +15630,9 @@ function AdminPortalContent({ section }: { section: string }) {
                               onChange={(e) => setCreatePeriodOrgLedTiers((prev) =>
                                 prev.map((t, i) => i === actualIdx ? { ...t, bonus: Math.max(0, Number(e.target.value) || 0) } : t)
                               )}
-                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-segoe text-[13px] text-text-default outline-none"
+                              className="flex h-8 w-[52px] shrink-0 items-center rounded-md border border-slate-300 bg-admin-surface px-2.5 text-center font-inter text-[13px] text-text-default outline-none"
                             />
-                            <span className="shrink-0 font-segoe text-[13px] font-semibold text-text-default">% bonus</span>
+                            <span className="shrink-0 font-inter text-[13px] font-semibold text-text-default">% bonus</span>
                             <button
                               type="button"
                               aria-label="Remove tier"
@@ -15646,13 +15646,13 @@ function AdminPortalContent({ section }: { section: string }) {
                       })}
 
                     {createPeriodOrgLedTiers.length === 0 ? (
-                      <p className="py-3 text-center font-segoe text-xs text-slate-500">No tiers configured. Org-led activities will contribute 0 bonus points.</p>
+                      <p className="py-3 text-center font-inter text-xs text-slate-500">No tiers configured. Org-led activities will contribute 0 bonus points.</p>
                     ) : null}
 
                     <button
                       type="button"
                       onClick={() => setCreatePeriodOrgLedTiers((prev) => [...prev, { minProjects: 0, bonus: 0 }])}
-                      className="flex items-center justify-center gap-3 rounded-md border border-dashed border-slate-300 bg-admin-surface px-4 py-4 font-segoe text-public-fs-body-sm text-public-bg-brand transition-colors hover:bg-bg-panel-subtle"
+                      className="flex items-center justify-center gap-3 rounded-md border border-dashed border-slate-300 bg-admin-surface px-4 py-4 font-inter text-public-fs-body-sm text-public-bg-brand transition-colors hover:bg-bg-panel-subtle"
                     >
                       <Plus className="h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
                       Add Tier
@@ -15666,7 +15666,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     type="button"
                     disabled={submittingPeriodStatus !== null}
                     onClick={() => { resetForm(); setYpopAdminView("periods"); }}
-                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-disabled transition-colors hover:text-slate-500 disabled:opacity-50"
+                    className="flex h-11 w-fit shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-disabled transition-colors hover:text-slate-500 disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -15675,7 +15675,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       type="button"
                       disabled={submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
                       onClick={() => void submitPeriod("draft")}
-                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
                     >
                       {submittingPeriodStatus === "draft" ? <Loader className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.6} /> : null}
                       Save as Draft
@@ -15684,7 +15684,7 @@ function AdminPortalContent({ section }: { section: string }) {
                       type="button"
                       disabled={!canSubmit || submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
                       onClick={() => void submitPeriod()}
-                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
                     >
                       {submittingPeriodStatus === "publish" ? <Loader className="h-4 w-4 shrink-0 animate-spin text-public-text-neutral-on-neutral" strokeWidth={1.6} /> : null}
                       {isEditMode ? "Save Changes" : "Create Semester"}
@@ -15725,7 +15725,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     setEditingPeriodId(null);
                     setYpopAdminView("create-period");
                   }}
-                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                  className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                 >
                   <Plus className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
                   New Semester
@@ -16014,7 +16014,7 @@ function AdminPortalContent({ section }: { section: string }) {
         title={`Delete ${ypopDeletionTarget?.rows.length ?? 0} YPOP ${(ypopDeletionTarget?.rows.length ?? 0) === 1 ? "Submission" : "Submissions"}?`}
         description={<>This removes the selected organizations' attendance proofs, PPA files, and validation results for <strong>{ypopDeletionTarget?.semesterLabel}</strong>. They can submit again while the semester is open.</>}
         content={
-          <ul className="max-h-48 space-y-2 overflow-y-auto font-segoe text-sm text-text-default">
+          <ul className="max-h-48 space-y-2 overflow-y-auto font-inter text-sm text-text-default">
             {ypopDeletionTarget?.rows.map((row) => <li key={row.organizationId}>{row.organizationName}</li>)}
           </ul>
         }
@@ -16087,16 +16087,16 @@ function AdminPortalContent({ section }: { section: string }) {
       >
         <AlertDialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-y-auto overflow-x-hidden p-5 sm:p-6">
           <AlertDialogHeader className="space-y-1.5 text-left">
-            <AlertDialogTitle className="font-segoe text-lg font-bold text-text-default">
+            <AlertDialogTitle className="font-inter text-lg font-bold text-text-default">
               Delete Inquiry
             </AlertDialogTitle>
-            <AlertDialogDescription className="font-segoe text-sm text-slate-500">
+            <AlertDialogDescription className="font-inter text-sm text-slate-500">
               Are you sure you want to delete this inquiry? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           {inquiryToDelete ? (
-            <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/80 p-3.5 sm:p-4 font-segoe text-xs min-w-0 overflow-hidden">
+            <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/80 p-3.5 sm:p-4 font-inter text-xs min-w-0 overflow-hidden">
               {/* Reference ID */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
                 <span className="font-semibold text-slate-500 shrink-0 sm:w-24">Reference ID</span>
@@ -16137,7 +16137,7 @@ function AdminPortalContent({ section }: { section: string }) {
           ) : null}
 
           {deleteInquiryError ? (
-            <div className="rounded-md border border-rose-200 bg-rose-50 p-3 font-segoe text-xs text-rose-700 break-words" role="alert">
+            <div className="rounded-md border border-rose-200 bg-rose-50 p-3 font-inter text-xs text-rose-700 break-words" role="alert">
               {deleteInquiryError}
             </div>
           ) : null}
@@ -16149,7 +16149,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 setInquiryToDelete(null);
                 setDeleteInquiryError(null);
               }}
-              className="mt-0 font-segoe text-sm"
+              className="mt-0 font-inter text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -16158,7 +16158,7 @@ function AdminPortalContent({ section }: { section: string }) {
               variant="destructive"
               disabled={isDeletingInquiry}
               onClick={() => void handleConfirmDeleteInquiry()}
-              className="font-segoe text-sm active:scale-[0.98] transition-transform"
+              className="font-inter text-sm active:scale-[0.98] transition-transform"
             >
               {isDeletingInquiry ? (
                 <>
@@ -16464,7 +16464,7 @@ function AdminPortalContent({ section }: { section: string }) {
               </AlertDialogHeader>
 
               {registrationDeleteTarget.profileStatus === "suspended_inactive" ? (
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 space-y-1.5 font-segoe text-xs">
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 space-y-1.5 font-inter text-xs">
                   <div className="flex justify-between">
                     <span className="text-slate-500 font-medium">Organization:</span>
                     <strong className="font-semibold text-text-default">{registrationDeleteTarget.organizationName}</strong>
@@ -16490,7 +16490,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     <span>Calculating deletion manifest…</span>
                   </div>
                 ) : registrationDeleteCounts ? (
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-1 font-segoe text-xs text-text-default">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-1 font-inter text-xs text-text-default">
                     <div>
                       Documents: <strong className="font-semibold text-text-default">{registrationDeleteCounts.documentSubmissions}</strong>
                     </div>
@@ -16599,7 +16599,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <AlertDialogCancel
                   disabled={registrationDeleteLoading}
                   onClick={closeRegistrationDeleteDialog}
-                  className="font-segoe active:scale-[0.98] transition-transform"
+                  className="font-inter active:scale-[0.98] transition-transform"
                 >
                   Cancel
                 </AlertDialogCancel>
@@ -16618,7 +16618,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     )
                   }
                   onClick={() => void confirmRegistrationPermanentDeletion()}
-                  className="font-segoe active:scale-[0.98] transition-transform"
+                  className="font-inter active:scale-[0.98] transition-transform"
                 >
                   {registrationDeleteLoading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />Deleting registration account…</>
@@ -16807,7 +16807,7 @@ function SectionDivider() {
 
 function BadgePanel({ count }: { count: number }) {
   return (
-    <div className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-xs font-semibold text-text-default">
+    <div className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-xs font-semibold text-text-default">
       <Bell className="h-4 w-4 text-text-action" />
       <span>{count} unread</span>
     </div>

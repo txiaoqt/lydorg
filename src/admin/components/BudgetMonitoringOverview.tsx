@@ -211,10 +211,10 @@ export const BudgetMonitoringOverview = ({
       <div className="rounded-md border border-slate-300 bg-admin-surface shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
           <div className="flex flex-col gap-1">
-            <h2 className="font-segoe text-lg font-bold leading-none text-text-default">
+            <h2 className="font-inter text-lg font-bold leading-none text-text-default">
               Budget Monitoring
             </h2>
-            <p className="font-segoe text-xs text-slate-500">
+            <p className="font-inter text-xs text-slate-500">
               Track annual youth allocations, commitments, fund releases, and liquidation clearances.
             </p>
           </div>
@@ -225,7 +225,7 @@ export const BudgetMonitoringOverview = ({
               type="button"
               onClick={onOpenConfigureModal}
               className={cn(
-                "flex h-10 items-center justify-center gap-1.5 rounded-md px-3.5 py-2 font-segoe text-xs font-semibold shadow-sm transition-colors",
+                "flex h-10 items-center justify-center gap-1.5 rounded-md px-3.5 py-2 font-inter text-xs font-semibold shadow-sm transition-colors",
                 isConfigured
                   ? "border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface text-text-default hover:bg-slate-50 dark:hover:bg-slate-850"
                   : "bg-public-bg-brand text-white hover:bg-bg-brand-hover"
@@ -250,10 +250,10 @@ export const BudgetMonitoringOverview = ({
                 <AlertCircle className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="font-segoe text-xs font-bold text-amber-900">
+                <h3 className="font-inter text-xs font-bold text-amber-900">
                   {allocationLabel} Budget Allocation Not Configured
                 </h3>
-                <p className="font-segoe text-xs text-amber-800">
+                <p className="font-inter text-xs text-amber-800">
                   Budget Monitoring cannot calculate remaining headroom until the annual PCYDO allocation is configured.
                   Execution metrics below reflect active workflow requests for {periodLabel}.
                 </p>
@@ -262,7 +262,7 @@ export const BudgetMonitoringOverview = ({
             <button
               type="button"
               onClick={onOpenConfigureModal}
-              className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-amber-700 px-4 py-2 font-segoe text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-800"
+              className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-amber-700 px-4 py-2 font-inter text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-800"
             >
               <Coins className="h-4 w-4" />
               Configure FY Budget
@@ -278,10 +278,10 @@ export const BudgetMonitoringOverview = ({
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="font-segoe text-xs font-bold text-red-900">
+                <h3 className="font-inter text-xs font-bold text-red-900">
                   Budget Deficit Warning: -{formatPesoAmount(deficitAmount)}
                 </h3>
-                <p className="font-segoe text-xs text-red-800">
+                <p className="font-inter text-xs text-red-800">
                   Approved budget requests (
                   <span className="font-cascadia font-semibold">{formatPesoAmount(approvedBudget)}</span>) exceed
                   the configured statutory baseline ceiling (
@@ -292,7 +292,7 @@ export const BudgetMonitoringOverview = ({
             <button
               type="button"
               onClick={onOpenConfigureModal}
-              className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-red-700 px-4 py-2 font-segoe text-xs font-semibold text-white shadow-sm transition-colors hover:bg-red-800"
+              className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-red-700 px-4 py-2 font-inter text-xs font-semibold text-white shadow-sm transition-colors hover:bg-red-800"
             >
               <Settings className="h-3.5 w-3.5" />
               Adjust Baseline
@@ -307,12 +307,12 @@ export const BudgetMonitoringOverview = ({
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <p className="font-inter text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     {allYears ? "Combined FY Budget Allocation" : BUDGET_MONITORING_LABELS.allocation}
                   </p>
                   <span
                     className={cn(
-                      "rounded px-1.5 py-0.5 font-segoe text-[10px] font-bold uppercase",
+                      "rounded px-1.5 py-0.5 font-inter text-[10px] font-bold uppercase",
                       isConfigured
                         ? "bg-slate-100 text-slate-600 border border-slate-200"
                         : "bg-amber-100 text-amber-700 border border-amber-200"
@@ -324,13 +324,13 @@ export const BudgetMonitoringOverview = ({
                 <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.allocation.value)}>
                   {isConfigured ? formatPesoAmount(totalFYBudget) : "Not Configured"}
                 </p>
-                  <p className="font-segoe text-xs text-slate-600">
+                  <p className="font-inter text-xs text-slate-600">
                   {annualAllocation?.statutoryBaselineNotes || "Approved annual statutory ceiling"}
                 </p>
               </div>
 
               <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                <span className="font-segoe text-[11px] text-slate-500">{BUDGET_MONITORING_LABELS.remainingHeadroom}</span>
+                <span className="font-inter text-[11px] text-slate-500">{BUDGET_MONITORING_LABELS.remainingHeadroom}</span>
                 <span
                   className={cn(
                     "font-cascadia text-[11px] font-bold",
@@ -354,21 +354,21 @@ export const BudgetMonitoringOverview = ({
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-blue-700">
+                  <p className="font-inter text-[11px] font-semibold uppercase tracking-wider text-blue-700">
                     {BUDGET_MONITORING_LABELS.committed}
                   </p>
-                  <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 font-segoe text-[10px] font-bold text-blue-700 uppercase">
+                  <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 font-inter text-[10px] font-bold text-blue-700 uppercase">
                     Committed
                   </span>
                 </div>
                 <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.committed.value)}>
                   {formatPesoAmount(approvedBudget)}
                 </p>
-                <p className="font-segoe text-xs text-blue-800">Approved and committed by administrators</p>
+                <p className="font-inter text-xs text-blue-800">Approved and committed by administrators</p>
               </div>
 
               <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                <span className="font-segoe text-[11px] text-blue-700">{BUDGET_MONITORING_LABELS.pendingDisbursement}</span>
+                <span className="font-inter text-[11px] text-blue-700">{BUDGET_MONITORING_LABELS.pendingDisbursement}</span>
                 <span className={cn("font-cascadia text-[11px] font-bold", BUDGET_MONITORING_COLORS.pendingDisbursement.value)}>
                   {formatPesoAmount(pendingDisbursement)}
                 </span>
@@ -379,17 +379,17 @@ export const BudgetMonitoringOverview = ({
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-cyan-700">
+                  <p className="font-inter text-[11px] font-semibold uppercase tracking-wider text-cyan-700">
                     {BUDGET_MONITORING_LABELS.released}
                   </p>
-                    <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 font-segoe text-[10px] font-bold text-cyan-700 uppercase">
+                    <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 font-inter text-[10px] font-bold text-cyan-700 uppercase">
                     Released Budget
                   </span>
                 </div>
                 <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.released.value)}>
                   {formatPesoAmount(releasedBudget)}
                 </p>
-                <p className="font-segoe text-xs text-slate-500">Disbursed to youth organizations</p>
+                <p className="font-inter text-xs text-slate-500">Disbursed to youth organizations</p>
               </div>
 
             </div>
@@ -398,22 +398,22 @@ export const BudgetMonitoringOverview = ({
             <div className="flex flex-col justify-between rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-segoe text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                  <p className="font-inter text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
                     {BUDGET_MONITORING_LABELS.liquidated}
                   </p>
-                  <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-segoe text-[10px] font-bold text-emerald-700 uppercase">
+                  <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-inter text-[10px] font-bold text-emerald-700 uppercase">
                     Audited
                   </span>
                 </div>
                 <p className="font-cascadia text-lg font-bold leading-tight text-emerald-700">
                   {formatPesoAmount(liquidatedBudget)}
                 </p>
-                <p className="font-segoe text-xs text-emerald-800">Released funds cleared through liquidation review</p>
+                <p className="font-inter text-xs text-emerald-800">Released funds cleared through liquidation review</p>
               </div>
 
               <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                <span className="font-segoe text-[11px] text-emerald-800">Cleared of Released Budget</span>
-                <span className="font-segoe text-[11px] font-bold text-emerald-700">
+                <span className="font-inter text-[11px] text-emerald-800">Cleared of Released Budget</span>
+                <span className="font-inter text-[11px] font-bold text-emerald-700">
                   {percentClearedOfReleased}% Cleared
                 </span>
               </div>
@@ -424,24 +424,24 @@ export const BudgetMonitoringOverview = ({
           <div className="mt-6 rounded-md border border-slate-200 bg-slate-50/60 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <p className="font-segoe text-xs font-bold text-text-default">
+                <p className="font-inter text-xs font-bold text-text-default">
                   Budget Execution Pipeline &middot; {periodLabel}
                 </p>
-                <span className="font-segoe text-[11px] text-slate-500">
+                <span className="font-inter text-[11px] text-slate-500">
                   Current allocation position across released funds, pending disbursement, and remaining headroom
                 </span>
               </div>
 
               {isDeficit ? (
-                <span className="rounded bg-red-100 px-2 py-0.5 font-segoe text-xs font-bold text-red-700">
+                <span className="rounded bg-red-100 px-2 py-0.5 font-inter text-xs font-bold text-red-700">
                   Over-Budget Deficit
                 </span>
               ) : percentAvailable !== null ? (
-                <p className="font-segoe text-xs font-semibold text-slate-600">
+                <p className="font-inter text-xs font-semibold text-slate-600">
                   <span className="font-cascadia font-bold text-slate-700">{percentAvailable}%</span> of FY Budget Allocation remains uncommitted
                 </p>
               ) : (
-                <span className="font-segoe text-xs text-amber-800">{isConfigured ? "Headroom requires a full fiscal period with complete allocation coverage" : "Configure the FY Budget Allocation to calculate headroom"}</span>
+                <span className="font-inter text-xs text-amber-800">{isConfigured ? "Headroom requires a full fiscal period with complete allocation coverage" : "Configure the FY Budget Allocation to calculate headroom"}</span>
               )}
             </div>
 
@@ -462,10 +462,10 @@ export const BudgetMonitoringOverview = ({
       <div className="rounded-md border border-slate-300 bg-admin-surface shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
           <div>
-            <h3 className="font-segoe text-base font-bold leading-none text-text-default">
+            <h3 className="font-inter text-base font-bold leading-none text-text-default">
               Budget Allocation by Purpose
             </h3>
-            <p className="mt-1 font-segoe text-xs text-slate-500">
+            <p className="mt-1 font-inter text-xs text-slate-500">
               Committed and released budget distributions grouped by canonical youth purpose.
             </p>
           </div>
@@ -509,7 +509,7 @@ export const BudgetMonitoringOverview = ({
                           color: "var(--yt-text, #172033)",
                           borderRadius: "6px",
                           fontSize: "12px",
-                          fontFamily: "Segoe UI",
+                          fontFamily: "Inter, system-ui, sans-serif",
                           boxShadow: "var(--yt-shadow-md)",
                         }}
                         itemStyle={{
@@ -528,10 +528,10 @@ export const BudgetMonitoringOverview = ({
                     <p className="font-cascadia text-xl font-bold leading-tight text-public-text-brand">
                       {formatCompactPeso(donutTotal)}
                     </p>
-                    <p className="mt-0.5 font-segoe text-[11px] font-medium text-slate-500">
+                    <p className="mt-0.5 font-inter text-[11px] font-medium text-slate-500">
                       Total Approved
                     </p>
-                    <p className="font-segoe text-[10px] text-slate-400">
+                    <p className="font-inter text-[10px] text-slate-400">
                       {periodLabel}
                     </p>
                   </div>
@@ -553,17 +553,17 @@ export const BudgetMonitoringOverview = ({
               <div className="flex flex-col xl:col-span-6">
                 {/* Header count indicator */}
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <span className="font-segoe text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <span className="font-inter text-xs font-semibold text-slate-600 dark:text-slate-300">
                     Category Allocation Breakdown
                   </span>
-                  <span className="font-segoe text-xs text-slate-500 dark:text-slate-400">
+                  <span className="font-inter text-xs text-slate-500 dark:text-slate-400">
                     {categoryBreakdown.length} {categoryBreakdown.length === 1 ? "category" : "categories"}
                   </span>
                 </div>
 
                 {/* Compact Table */}
                 <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-admin-surface">
-                  <table className="w-full text-left font-segoe text-xs">
+                  <table className="w-full text-left font-inter text-xs">
                     <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 font-semibold text-slate-600 dark:text-slate-300">
                       <tr>
                         <th className="px-3 py-2.5">Purpose / Category</th>
@@ -616,7 +616,7 @@ export const BudgetMonitoringOverview = ({
                 {/* Table Pagination */}
                 {totalPages > 1 && (
                   <div className="mt-3 flex items-center justify-between">
-                    <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="font-inter text-[11px] text-slate-500 dark:text-slate-400">
                       Showing {clampedPage * TABLE_PAGE_SIZE + 1} &ndash;{" "}
                       {Math.min((clampedPage + 1) * TABLE_PAGE_SIZE, categoryBreakdown.length)} of{" "}
                       {categoryBreakdown.length}
@@ -631,7 +631,7 @@ export const BudgetMonitoringOverview = ({
                       >
                         <ChevronLeft className="h-3.5 w-3.5" />
                       </button>
-                      <span className="px-2 font-segoe text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      <span className="px-2 font-inter text-xs font-semibold text-slate-700 dark:text-slate-200">
                         {clampedPage + 1} / {totalPages}
                       </span>
                       <button
@@ -654,10 +654,10 @@ export const BudgetMonitoringOverview = ({
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                 <FileSpreadsheet className="h-6 w-6" />
               </div>
-              <h4 className="mt-3 font-segoe text-sm font-semibold text-text-default">
+              <h4 className="mt-3 font-inter text-sm font-semibold text-text-default">
                 No Approved Budget Requests for {periodLabel}
               </h4>
-              <p className="mt-1 max-w-sm font-segoe text-xs text-slate-500">
+              <p className="mt-1 max-w-sm font-inter text-xs text-slate-500">
                 As budget requests in this reporting period are reviewed and approved, their canonical purpose allocations will automatically appear here.
               </p>
             </div>

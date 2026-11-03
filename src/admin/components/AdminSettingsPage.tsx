@@ -242,7 +242,7 @@ export const AdminSettingsPage: React.FC = () => {
             <AlertTriangle className="h-5 w-5" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-segoe text-base font-semibold text-foreground">Unable to load system settings</h3>
+            <h3 className="font-inter text-base font-semibold text-foreground">Unable to load system settings</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">{error}</p>
           </div>
           <Button onClick={() => refreshSettings()} variant="outline" size="sm" className="gap-2 text-xs">
@@ -293,7 +293,7 @@ export const AdminSettingsPage: React.FC = () => {
           <aside className="w-full lg:w-[220px] lg:shrink-0">
             <nav aria-label="Settings Categories" className="sticky top-6 rounded-xl border border-border bg-card p-1.5 shadow-2xs">
               <div className="px-2.5 py-1 mb-1 border-b border-border">
-                <p className="font-segoe text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <p className="font-inter text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Settings Sections
                 </p>
               </div>
@@ -334,10 +334,10 @@ export const AdminSettingsPage: React.FC = () => {
               {/* Category Surface Header */}
               <div className="flex items-center justify-between gap-4 pb-3.5 mb-5 border-b border-border">
                 <div>
-                  <h2 className="font-segoe text-[15px] font-semibold text-foreground">
+                  <h2 className="font-inter text-[15px] font-semibold text-foreground">
                     {activeCategoryLabel}
                   </h2>
-                  <p className="font-segoe text-xs text-muted-foreground mt-0.5">
+                  <p className="font-inter text-xs text-muted-foreground mt-0.5">
                     {ADMIN_SETTING_CATEGORIES.find((c) => c.id === activeTab)?.description}
                   </p>
                 </div>
@@ -436,8 +436,8 @@ export const AdminSettingsPage: React.FC = () => {
                           className="grid grid-cols-12 items-center px-4 py-2.5 hover:bg-slate-50/50 transition-colors"
                         >
                           <div className="col-span-8 pr-3">
-                            <p className="font-segoe text-xs font-medium text-text-default leading-snug">{evt.label}</p>
-                            <p className="font-segoe text-[11px] text-slate-500 leading-tight">{evt.description}</p>
+                            <p className="font-inter text-xs font-medium text-text-default leading-snug">{evt.label}</p>
+                            <p className="font-inter text-[11px] text-slate-500 leading-tight">{evt.description}</p>
                           </div>
                           <div className="col-span-2 flex justify-center">
                             <Switch
@@ -710,10 +710,10 @@ export const AdminSettingsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-slate-200/80 bg-slate-50/60 p-4">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-segoe text-xs font-semibold text-text-default">Public Budget Snapshot</span>
+                        <span className="font-inter text-xs font-semibold text-text-default">Public Budget Snapshot</span>
                         <span className="text-[10px] uppercase tracking-wider font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Budget Monitoring</span>
                       </div>
-                      <p className="font-segoe text-[11px] text-slate-500 max-w-lg">
+                      <p className="font-inter text-[11px] text-slate-500 max-w-lg">
                         City youth budget allocations, category charts, and fund breakdowns can be configured directly in Budget Monitoring.
                       </p>
                     </div>
@@ -858,7 +858,7 @@ export const AdminSettingsPage: React.FC = () => {
                   <div className="grid gap-3.5 sm:grid-cols-2 pt-1">
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
-                        <Label className="font-segoe text-xs font-medium text-text-default">
+                        <Label className="font-inter text-xs font-medium text-text-default">
                           Sender Email Address
                         </Label>
                         <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
@@ -869,7 +869,7 @@ export const AdminSettingsPage: React.FC = () => {
                         type="text"
                         value="noreply@ytrace.app"
                         disabled
-                        className="h-8 font-segoe text-xs border-slate-300 bg-slate-50 text-slate-500 shadow-none cursor-not-allowed"
+                        className="h-8 font-inter text-xs border-slate-300 bg-slate-50 text-slate-500 shadow-none cursor-not-allowed"
                       />
                     </div>
                     <SettingInputField
@@ -1117,7 +1117,7 @@ export const AdminSettingsPage: React.FC = () => {
       >
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+            <AlertDialogTitle className="font-inter text-base font-bold text-text-default">
               Save System Settings?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-slate-600 leading-relaxed">
@@ -1156,7 +1156,7 @@ export const AdminSettingsPage: React.FC = () => {
       >
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-segoe text-base font-bold text-text-default">
+            <AlertDialogTitle className="font-inter text-base font-bold text-text-default">
               Reset section to defaults?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-slate-600 leading-relaxed">
@@ -1217,8 +1217,8 @@ function AdminAppearanceSettingSection() {
             )}
           </div>
           <div>
-            <p className="font-segoe text-xs font-semibold text-foreground">Light Mode</p>
-            <p className="font-segoe text-[11px] text-muted-foreground mt-0.5">Always use the bright, high-contrast light theme.</p>
+            <p className="font-inter text-xs font-semibold text-foreground">Light Mode</p>
+            <p className="font-inter text-[11px] text-muted-foreground mt-0.5">Always use the bright, high-contrast light theme.</p>
           </div>
         </button>
 
@@ -1248,8 +1248,8 @@ function AdminAppearanceSettingSection() {
             )}
           </div>
           <div>
-            <p className="font-segoe text-xs font-semibold text-foreground">Dark Mode</p>
-            <p className="font-segoe text-[11px] text-muted-foreground mt-0.5">Use the slate/navy dark appearance for reduced eye strain.</p>
+            <p className="font-inter text-xs font-semibold text-foreground">Dark Mode</p>
+            <p className="font-inter text-[11px] text-muted-foreground mt-0.5">Use the slate/navy dark appearance for reduced eye strain.</p>
           </div>
         </button>
 
@@ -1279,8 +1279,8 @@ function AdminAppearanceSettingSection() {
             )}
           </div>
           <div>
-            <p className="font-segoe text-xs font-semibold text-foreground">System Default</p>
-            <p className="font-segoe text-[11px] text-muted-foreground mt-0.5">Automatically match your operating system theme settings.</p>
+            <p className="font-inter text-xs font-semibold text-foreground">System Default</p>
+            <p className="font-inter text-[11px] text-muted-foreground mt-0.5">Automatically match your operating system theme settings.</p>
           </div>
         </button>
       </div>
@@ -1300,9 +1300,9 @@ function SettingSection({
   return (
     <div className="space-y-3">
       <div className="space-y-0.5">
-        <h3 className="font-segoe text-[13px] font-semibold text-foreground">{title}</h3>
+        <h3 className="font-inter text-[13px] font-semibold text-foreground">{title}</h3>
         {description && (
-          <p className="font-segoe text-xs text-muted-foreground leading-normal">{description}</p>
+          <p className="font-inter text-xs text-muted-foreground leading-normal">{description}</p>
         )}
       </div>
       <div className="space-y-3">{children}</div>
@@ -1322,9 +1322,9 @@ function SettingRow({
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-border last:border-0 min-h-[48px]">
       <div className="space-y-0.5 max-w-lg">
-        <p className="font-segoe text-xs font-medium text-foreground leading-snug">{title}</p>
+        <p className="font-inter text-xs font-medium text-foreground leading-snug">{title}</p>
         {description && (
-          <p className="font-segoe text-[11px] text-muted-foreground leading-tight">{description}</p>
+          <p className="font-inter text-[11px] text-muted-foreground leading-tight">{description}</p>
         )}
       </div>
       <div className="shrink-0">{children}</div>
@@ -1361,7 +1361,7 @@ function SettingInputField({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={settingKey} className="font-segoe text-xs font-medium text-foreground">
+        <Label htmlFor={settingKey} className="font-inter text-xs font-medium text-foreground">
           {label}
         </Label>
         {def.badge && (
@@ -1382,7 +1382,7 @@ function SettingInputField({
           onChange(e.target.value);
         }}
         className={cn(
-          "h-8 font-segoe text-xs border-border bg-background shadow-none focus-visible:ring-1",
+          "h-8 font-inter text-xs border-border bg-background shadow-none focus-visible:ring-1",
           Boolean(error) && "border-destructive focus-visible:ring-destructive",
           isReadOnly && "bg-muted text-muted-foreground cursor-not-allowed select-none",
         )}
@@ -1410,11 +1410,11 @@ function SettingSelectField({
 
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={settingKey} className="font-segoe text-xs font-medium text-foreground">
+      <Label htmlFor={settingKey} className="font-inter text-xs font-medium text-foreground">
         {def.label}
       </Label>
       <Select value={String(value ?? def.defaultValue)} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger id={settingKey} className="h-8 font-segoe text-xs border-border bg-background shadow-none">
+        <SelectTrigger id={settingKey} className="h-8 font-inter text-xs border-border bg-background shadow-none">
           <SelectValue placeholder="Select an option" />
         </SelectTrigger>
         <SelectContent>

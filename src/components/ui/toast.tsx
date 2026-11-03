@@ -86,7 +86,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-sm font-normal text-text-default ring-offset-background transition-colors hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-sm font-normal text-text-default ring-offset-background transition-colors hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
       className,
     )}
     {...props}
@@ -118,7 +118,7 @@ const ToastTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
-    className={cn("font-segoe text-sm font-semibold leading-[140%] text-text-default", className)}
+    className={cn("font-inter text-sm font-semibold leading-[140%] text-text-default", className)}
     {...props}
   />
 ));
@@ -130,7 +130,7 @@ const ToastDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
-    className={cn("font-segoe text-sm font-normal leading-[140%] text-slate-500", className)}
+    className={cn("font-inter text-sm font-normal leading-[140%] text-slate-500", className)}
     {...props}
   />
 ));

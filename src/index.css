@@ -1,18 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
-@font-face {
-  font-family: 'Segoe UI';
-  src: url('/fonts/segoeui.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Segoe UI';
-  src: url('/fonts/segoeuib.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -991,6 +978,23 @@
     background-size: cover, cover;
     background-repeat: no-repeat, no-repeat;
   }
+  /* Home hero: the PCYDO photo dissolves into the blue City Hall panel
+     instead of meeting it at a hard edge. */
+  .hero-photo-fade-x {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.45) 11%, rgba(0, 0, 0, 0.9) 22%, #000 30%);
+    mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.45) 11%, rgba(0, 0, 0, 0.9) 22%, #000 30%);
+  }
+  .hero-photo-fade-y {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 12%, #000 30%);
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 12%, #000 30%);
+  }
+  /* Editorial serif used for the Explore section headline. */
+  .font-editorial {
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .font-tnr {
+    font-family: "Times New Roman", Times, serif;
+  }
   .text-gradient {
     background: linear-gradient(135deg, hsl(var(--brand-sk-gold)), hsl(var(--brand-mid-blue)));
     -webkit-background-clip: text;
@@ -1235,9 +1239,9 @@
   }
 }
 
-/* Compact mobile budget cards use the public site's Segoe UI family. */
+/* Compact mobile budget cards use the public site's Inter family. */
 .public-budget-transparency-page,
-.public-budget-overview { font-family: "Segoe UI", system-ui, sans-serif; }
+.public-budget-overview { font-family: "Inter", ui-sans-serif, system-ui, sans-serif; }
 .public-budget-transparency-page .font-cascadia,
 .public-budget-overview .font-cascadia { font-family: inherit; font-variant-numeric: tabular-nums; }
 
@@ -1303,3 +1307,36 @@
   .public-budget-purpose-label > span:last-child { padding-left: 1.125rem; text-align: left; }
   .public-budget-purpose-label > span:last-child > span { color: #64748b; }
 }
+
+/* Public budget map: square, flat public-site skin over the shared admin PasigBudgetMap. */
+.public-budget-map .pasig-budget-map { border-color: var(--public-border-default); border-radius: 2px; }
+.public-budget-map .pasig-budget-map__header,
+.public-budget-map .pasig-budget-map__summary,
+.public-budget-map .pasig-budget-map__summary > div { border-color: var(--public-border-default); }
+.public-budget-map .pasig-budget-map__header h2 { color: var(--public-text-brand); }
+.public-budget-map .pasig-budget-map__summary { background: var(--public-bg-section); }
+.public-budget-map .pasig-budget-map__summary strong { color: var(--public-text-brand); }
+.public-budget-map .pasig-budget-map__barangay-list button { padding-inline: 0.5rem; border-left: 2px solid transparent; border-radius: 0; transition: background-color 150ms ease; }
+.public-budget-map .pasig-budget-map__barangay-list button:hover { background: var(--public-bg-section); }
+.public-budget-map .pasig-budget-map__barangay-list button[aria-pressed="true"] { border-left-color: var(--public-border-brand); background: var(--public-bg-section); }
+.public-budget-map .pasig-budget-map__pin,
+.public-budget-map .pasig-budget-map__transparency-toggle,
+.public-budget-map .pasig-budget-map__legend,
+.public-budget-map .pasig-budget-map__map-state button,
+.public-budget-map .leaflet-bar,
+.public-budget-map .leaflet-bar a { border-radius: 2px; }
+.public-budget-map .pasig-budget-map__pin { background: var(--public-bg-section); color: var(--public-text-brand); }
+.public-budget-map .pasig-budget-map__selected-value { color: var(--public-text-brand); }
+
+/* Public template drawer: square, flat public-site skin over the shared PortalDocumentDrawer. */
+.public-document-drawer.rounded-2xl,
+.public-document-drawer [class*="rounded-"] { border-radius: 2px; }
+.public-document-drawer [class*="shadow-"] { box-shadow: none; }
+.public-document-drawer [class*="border-border"] { border-color: var(--public-border-default); }
+.public-document-drawer .bg-primary { background-color: var(--public-bg-brand); color: var(--public-text-on-brand); }
+.public-document-drawer .bg-primary:hover { background-color: var(--public-bg-brand-hover); }
+.public-document-drawer .bg-primary\/10,
+.public-document-drawer .bg-blue-500\/10 { background-color: var(--public-bg-section); color: var(--public-text-brand); border-color: var(--public-border-default); }
+.public-document-drawer .text-primary { color: var(--public-text-brand); }
+.public-document-drawer .bg-slate-50\/50 { background-color: var(--public-bg-section); }
+

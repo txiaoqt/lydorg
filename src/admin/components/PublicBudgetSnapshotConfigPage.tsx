@@ -140,7 +140,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
       <button
         type="button"
         onClick={onBack}
-        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+        className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
       >
         <ArrowLeft className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
         Back to Budget Monitoring
@@ -153,7 +153,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
           <div className="flex items-center gap-2.5">
             <button
               type="button"
-              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
+              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
             >
               <ExternalLink className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
               Preview Public Page
@@ -162,7 +162,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
               type="button"
               disabled={isSaving}
               onClick={() => void handleSave()}
-              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
             >
               <Save className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
               {isSaving ? "Saving…" : "Save Changes"}
@@ -176,13 +176,13 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
           <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-admin-surface p-6">
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col gap-1">
-                <p className="font-segoe text-lg font-semibold leading-none text-text-default">Budget Allocation</p>
-                <p className="font-segoe text-[13px] font-normal leading-[140%] text-slate-500">
+                <p className="font-inter text-lg font-semibold leading-none text-text-default">Budget Allocation</p>
+                <p className="font-inter text-[13px] font-normal leading-[140%] text-slate-500">
                   Enter the budget source(s) available this fiscal year and what each is for. These make up the FY Budget Allocation — add as many as apply.
                 </p>
               </div>
               <Select value={String(sourcesFiscalYear)} onValueChange={(value) => setSourcesFiscalYear(Number(value))}>
-                <SelectTrigger className="h-10 w-[110px] shrink-0 border-slate-300 font-segoe text-[13px]">
+                <SelectTrigger className="h-10 w-[110px] shrink-0 border-slate-300 font-inter text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -197,12 +197,12 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
 
             <div className="flex flex-col gap-3">
               {isLoadingSources ? (
-                <p className="py-4 text-center font-segoe text-xs text-slate-500">Loading budget sources…</p>
+                <p className="py-4 text-center font-inter text-xs text-slate-500">Loading budget sources…</p>
               ) : (
                 draftSources.map((source, index) => (
                 <div key={index} className="flex items-end gap-2">
                   <div className="flex flex-1 flex-col gap-1.5">
-                    <label className="font-segoe text-xs font-normal text-slate-500">Amount</label>
+                    <label className="font-inter text-xs font-normal text-slate-500">Amount</label>
                     <div className="flex h-10 items-center gap-1 rounded-md border border-slate-300 bg-admin-surface px-3">
                       <span className="font-cascadia text-sm text-slate-500">₱</span>
                       <input
@@ -216,13 +216,13 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
                     </div>
                   </div>
                   <div className="flex flex-[2] flex-col gap-1.5">
-                    <label className="font-segoe text-xs font-normal text-slate-500">Purpose / What it&rsquo;s for</label>
+                    <label className="font-inter text-xs font-normal text-slate-500">Purpose / What it&rsquo;s for</label>
                     <input
                       type="text"
                       value={source.purpose}
                       onChange={(event) => handleSourceChange(index, { purpose: event.target.value })}
                       placeholder="e.g. Program & Activity Support"
-                      className="h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-sm text-text-default outline-none placeholder:text-text-disabled"
+                      className="h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-sm text-text-default outline-none placeholder:text-text-disabled"
                     />
                   </div>
                   <button
@@ -241,7 +241,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
               <button
                 type="button"
                 onClick={handleAddSource}
-                className="flex h-[52px] w-full items-center justify-center gap-3 rounded-md border border-dashed border-slate-300 bg-admin-surface p-4 font-segoe text-public-fs-body-sm font-normal text-public-text-brand transition-colors hover:bg-slate-50"
+                className="flex h-[52px] w-full items-center justify-center gap-3 rounded-md border border-dashed border-slate-300 bg-admin-surface p-4 font-inter text-public-fs-body-sm font-normal text-public-text-brand transition-colors hover:bg-slate-50"
               >
                 <Plus className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                 Add Budget Source
@@ -249,15 +249,15 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-300 pt-4">
-              <p className="font-segoe text-sm font-normal text-slate-500">FY Budget Allocation</p>
+              <p className="font-inter text-sm font-normal text-slate-500">FY Budget Allocation</p>
               <p className="font-cascadia text-lg font-bold text-text-default">{formatPeso(totalFyBudget)}</p>
             </div>
           </div>
 
           <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-admin-surface p-6">
             <div className="flex flex-col gap-1">
-              <p className="font-segoe text-lg font-semibold leading-none text-text-default">Snapshot Components</p>
-              <p className="font-segoe text-[13px] font-normal leading-[140%] text-slate-500">
+              <p className="font-inter text-lg font-semibold leading-none text-text-default">Snapshot Components</p>
+              <p className="font-inter text-[13px] font-normal leading-[140%] text-slate-500">
                 Turn sections on or off for the public-facing page. Internal admin data is unaffected either way.
               </p>
             </div>
@@ -266,8 +266,8 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
               {SNAPSHOT_COMPONENT_TOGGLES.map((toggle) => (
                 <div key={toggle.key} className="flex items-center justify-between gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <p className="font-segoe text-sm font-semibold text-text-default">{toggle.label}</p>
-                    <p className="font-segoe text-xs font-normal text-slate-500">{toggle.description}</p>
+                    <p className="font-inter text-sm font-semibold text-text-default">{toggle.label}</p>
+                    <p className="font-inter text-xs font-normal text-slate-500">{toggle.description}</p>
                   </div>
                   <Switch
                     checked={draftSettings[toggle.key]}
@@ -283,19 +283,19 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 rounded-md border border-slate-300 bg-admin-surface p-6">
             <div className="flex flex-col gap-1">
-              <p className="font-segoe text-lg font-semibold leading-none text-text-default">Default View</p>
-              <p className="font-segoe text-[13px] font-normal leading-[140%] text-slate-500">
+              <p className="font-inter text-lg font-semibold leading-none text-text-default">Default View</p>
+              <p className="font-inter text-[13px] font-normal leading-[140%] text-slate-500">
                 Controls what visitors see when they first land on the public page.
               </p>
             </div>
 
             <div className="flex items-center justify-between gap-3">
-              <p className="font-segoe text-sm font-semibold text-text-default">Default fiscal year</p>
+              <p className="font-inter text-sm font-semibold text-text-default">Default fiscal year</p>
               <Select
                 value={draftSettings.defaultFiscalYear !== null ? String(draftSettings.defaultFiscalYear) : String(CURRENT_YEAR)}
                 onValueChange={(value) => setDraftSettings((current) => ({ ...current, defaultFiscalYear: Number(value) }))}
               >
-                <SelectTrigger className="h-10 w-[160px] border-slate-300 font-segoe text-[13px]">
+                <SelectTrigger className="h-10 w-[160px] border-slate-300 font-inter text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -310,7 +310,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
             </div>
 
             <div className="flex items-center justify-between gap-3">
-              <p className="font-segoe text-sm font-semibold text-text-default">Let organizations switch fiscal year</p>
+              <p className="font-inter text-sm font-semibold text-text-default">Let organizations switch fiscal year</p>
               <Switch
                 checked={draftSettings.allowFiscalYearSwitch}
                 onCheckedChange={(checked) => setDraftSettings((current) => ({ ...current, allowFiscalYearSwitch: checked }))}
@@ -321,7 +321,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
 
           <div className="rounded-md border border-slate-300 bg-admin-surface p-4">
             <div className="flex items-start gap-2 rounded-md border border-brand-info-border bg-brand-info-subtle px-4 py-3">
-              <p className="font-segoe text-[13px] leading-[140%] text-public-text-brand">
+              <p className="font-inter text-[13px] leading-[140%] text-public-text-brand">
                 <span className="font-bold">Heads up:</span> These settings control the Public tab of Budget Monitoring
                 only. Nothing here changes what admins or organizations see inside Y-TRACE.
               </p>

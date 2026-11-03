@@ -64,7 +64,7 @@ const NavList = ({
     {groups.map((group) => (
       <div key={group.id} className={collapsed ? "space-y-1" : "space-y-2"}>
         {!collapsed && group.label ? (
-          <p className="px-4 py-2 font-segoe text-[11px] font-semibold uppercase leading-[140%] tracking-wide text-muted-foreground">
+          <p className="px-4 py-2 font-inter text-[11px] font-semibold uppercase leading-[140%] tracking-wide text-muted-foreground">
             {group.label}
           </p>
         ) : null}
@@ -103,7 +103,7 @@ const NavList = ({
                 type="button"
                 onClick={handleClick}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left font-segoe text-sm font-normal leading-[140%] transition-colors",
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left font-inter text-sm font-normal leading-[140%] transition-colors",
                   active
                     ? "bg-primary/15 text-primary font-semibold dark:bg-primary/25 dark:text-sky-300"
                     : "text-foreground/80 hover:bg-muted/70 hover:text-foreground",
@@ -147,14 +147,14 @@ const SidebarFooter = ({
   >
     {userProfile && !collapsed ? (
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-public-bg-brand font-segoe text-sm leading-[120%] text-public-text-on-brand">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-public-bg-brand font-inter text-sm leading-[120%] text-public-text-on-brand">
           {getAvatarInitial(userProfile.name)}
         </div>
         <div className="min-w-0 leading-none">
-          <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-foreground">
+          <p className="truncate font-inter text-sm font-semibold leading-[140%] text-foreground">
             {userProfile.name}
           </p>
-          <p className="truncate font-segoe text-xs leading-none text-muted-foreground">{userProfile.role}</p>
+          <p className="truncate font-inter text-xs leading-none text-muted-foreground">{userProfile.role}</p>
         </div>
       </div>
     ) : null}
@@ -238,10 +238,10 @@ export const PortalShell = ({
               <div className="flex min-w-0 items-center gap-3">
                 <img src="/y-trace-logo-blue.png" alt="Y-TRACE" className="h-8 w-8 shrink-0 object-contain" />
                 <div className="min-w-0 leading-none">
-                  <p className="font-segoe text-public-fs-subheading-sm font-semibold leading-[140%] text-foreground">
+                  <p className="font-inter text-public-fs-subheading-sm font-semibold leading-[140%] text-foreground">
                     Y-TRACE
                   </p>
-                  <p className="font-segoe text-xs leading-none text-muted-foreground">{title}</p>
+                  <p className="font-inter text-xs leading-none text-muted-foreground">{title}</p>
                 </div>
               </div>
             ) : null}
@@ -285,10 +285,10 @@ export const PortalShell = ({
             <div className="flex min-w-0 items-center gap-3">
               <img src="/y-trace-logo-blue.png" alt="Y-TRACE" className="h-8 w-8 shrink-0 object-contain" />
               <div className="min-w-0 leading-none">
-                <p className="font-segoe text-public-fs-subheading-sm font-semibold leading-[140%] text-foreground">
+                <p className="font-inter text-public-fs-subheading-sm font-semibold leading-[140%] text-foreground">
                   Y-TRACE
                 </p>
-                <p className="font-segoe text-xs leading-none text-muted-foreground">{title}</p>
+                <p className="font-inter text-xs leading-none text-muted-foreground">{title}</p>
               </div>
             </div>
             <button
@@ -359,9 +359,9 @@ export const PortalShell = ({
                         {/* Fixed Header */}
                         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-3.5 py-3">
                           <div className="flex min-w-0 items-center gap-2">
-                            <p className="font-segoe text-sm font-semibold text-text-default">Notifications</p>
+                            <p className="font-inter text-sm font-semibold text-text-default">Notifications</p>
                             {unreadCount > 0 && (
-                              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-blue-200 bg-blue-50 px-1.5 font-segoe text-[11px] font-semibold leading-none text-blue-800">
+                              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-blue-200 bg-blue-50 px-1.5 font-inter text-[11px] font-semibold leading-none text-blue-800">
                                 {unreadCount}
                               </span>
                             )}
@@ -374,7 +374,7 @@ export const PortalShell = ({
                                 e.stopPropagation();
                                 onMarkAllRead();
                               }}
-                              className="shrink-0 rounded px-1.5 py-1 font-segoe text-xs font-semibold text-text-action transition-colors hover:bg-slate-100 hover:text-text-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                              className="shrink-0 rounded px-1.5 py-1 font-inter text-xs font-semibold text-text-action transition-colors hover:bg-slate-100 hover:text-text-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                             >
                               {isMarkingAllRead ? "Marking as read…" : "Mark all read"}
                             </button>
@@ -384,7 +384,7 @@ export const PortalShell = ({
                         {/* Scrollable Notification List */}
                         <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
                           {recentNotifications.length === 0 ? (
-                            <div className="px-3 py-8 text-center font-segoe text-xs text-slate-500">
+                            <div className="px-3 py-8 text-center font-inter text-xs text-slate-500">
                               No notifications yet.
                             </div>
                           ) : (
@@ -419,20 +419,20 @@ export const PortalShell = ({
                                     <div className="flex items-baseline justify-between gap-1.5">
                                       <p
                                         className={cn(
-                                          "truncate font-segoe text-xs leading-tight",
+                                          "truncate font-inter text-xs leading-tight",
                                           n.isRead ? "font-medium text-slate-700" : "font-semibold text-text-default"
                                         )}
                                       >
                                         {n.title}
                                       </p>
-                                      <span className="shrink-0 font-segoe text-[10px] font-medium text-slate-500">
+                                      <span className="shrink-0 font-inter text-[10px] font-medium text-slate-500">
                                         {new Date(n.createdAt).toLocaleDateString("en-PH", {
                                           month: "short",
                                           day: "numeric",
                                         })}
                                       </span>
                                     </div>
-                                    <p className="line-clamp-1 font-segoe text-[11px] leading-snug text-slate-600">
+                                    <p className="line-clamp-1 font-inter text-[11px] leading-snug text-slate-600">
                                       {n.message}
                                     </p>
                                   </div>
@@ -448,7 +448,7 @@ export const PortalShell = ({
                             setNotificationDropdownOpen(false);
                             onNavigate("notifications");
                           }}
-                          className="shrink-0 justify-center rounded-none border-t border-slate-200 py-2.5 font-segoe text-xs font-semibold text-text-action hover:bg-slate-50 hover:text-text-default"
+                          className="shrink-0 justify-center rounded-none border-t border-slate-200 py-2.5 font-inter text-xs font-semibold text-text-action hover:bg-slate-50 hover:text-text-default"
                         >
                           View All Notifications →
                         </DropdownMenuItem>

@@ -41,11 +41,11 @@ const GROUP_PREVIEW_COUNT = 3;
 
 const StatusPill = ({ active }: { active: boolean }) =>
   active ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
       Archived
     </span>
   );
@@ -68,7 +68,7 @@ const ActionIconButton = forwardRef<
 ActionIconButton.displayName = "ActionIconButton";
 
 const MENU_ITEM_CLASS =
-  "flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 font-segoe text-sm font-normal leading-none";
+  "flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 font-inter text-sm font-normal leading-none";
 
 const fileFormatSwatch = (format: string) => {
   const upper = format.toUpperCase();
@@ -150,7 +150,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
             value={searchValue}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search forms and templates..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -163,7 +163,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                 type="button"
                 onClick={() => onStatusFilterChange(tab.value)}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -179,7 +179,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="whitespace-nowrap">{categoryFilter === "all" ? "All categories" : formatTemplateCategoryDropdownLabel(categoryFilter)}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -189,7 +189,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
             <DropdownMenuItem
               onClick={() => onCategoryFilterChange("all")}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 categoryFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -200,7 +200,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                 key={category}
                 onClick={() => onCategoryFilterChange(category)}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   categoryFilter === category && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -212,7 +212,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
         <span className="w-[28%]">Name &amp; Description</span>
         <span className="w-[12%]">Category</span>
         <span className="w-[14%]">File Type</span>
@@ -224,8 +224,8 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
       {/* Grouped rows */}
       {templates.length === 0 ? (
         <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-          <p className="font-segoe text-sm font-semibold text-text-default">No templates found</p>
-          <p className="font-segoe text-xs text-slate-500">Try adjusting your search or filters.</p>
+          <p className="font-inter text-sm font-semibold text-text-default">No templates found</p>
+          <p className="font-inter text-xs text-slate-500">Try adjusting your search or filters.</p>
         </div>
       ) : (
         visibleGroups.map((group) => {
@@ -235,10 +235,10 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
           return (
             <div key={group.category}>
               <div className="flex h-8 items-center gap-2.5 border-b border-slate-300 bg-neutral-hover-subtle px-4 py-3">
-                <span className="font-segoe text-[12px] font-semibold leading-[140%] text-public-text-neutral-default">
+                <span className="font-inter text-[12px] font-semibold leading-[140%] text-public-text-neutral-default">
                   {formatTemplateCategoryLabel(group.category)}
                 </span>
-                <span className="font-segoe text-[12px] font-semibold leading-[140%] text-text-disabled">
+                <span className="font-inter text-[12px] font-semibold leading-[140%] text-text-disabled">
                   {group.items.length} {group.items.length === 1 ? "document" : "documents"}
                 </span>
               </div>
@@ -261,10 +261,10 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                         <Icon className={cn("h-5 w-5", swatch.iconColor)} strokeWidth={1.6} />
                       </div>
                       <div className="flex min-w-0 flex-col gap-1">
-                        <p className="truncate font-segoe text-[14px] font-semibold leading-[140%] text-text-default">
+                        <p className="truncate font-inter text-[14px] font-semibold leading-[140%] text-text-default">
                           {template.name}
                         </p>
-                        <p className="line-clamp-1 font-segoe text-[12px] font-normal leading-[100%] text-slate-500">
+                        <p className="line-clamp-1 font-inter text-[12px] font-normal leading-[100%] text-slate-500">
                           {template.description || template.templateDescription}
                         </p>
                         {template.templateFileName ? (
@@ -282,12 +282,12 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                     </div>
 
                     <div className="flex w-[14%] flex-col gap-0.5">
-                      <p className="font-segoe text-xs font-semibold leading-[140%] text-text-default">{fileFormat}</p>
-                      <p className="font-segoe text-[11px] leading-[140%] text-slate-500">{formatFileSize(sizeBytes)}</p>
+                      <p className="font-inter text-xs font-semibold leading-[140%] text-text-default">{fileFormat}</p>
+                      <p className="font-inter text-[11px] leading-[140%] text-slate-500">{formatFileSize(sizeBytes)}</p>
                     </div>
 
                     <div className="flex w-[14%] items-center">
-                      <p className="font-segoe text-xs font-semibold leading-[140%] text-text-default">{updatedDate}</p>
+                      <p className="font-inter text-xs font-semibold leading-[140%] text-text-default">{updatedDate}</p>
                     </div>
 
                     <div className="flex w-[12%] items-center">
@@ -354,7 +354,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                   <button
                     type="button"
                     onClick={() => toggleExpanded(group.category)}
-                    className="flex items-center gap-1.5 font-segoe text-[13px] font-semibold leading-none text-public-bg-brand hover:underline"
+                    className="flex items-center gap-1.5 font-inter text-[13px] font-semibold leading-none text-public-bg-brand hover:underline"
                   >
                     <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", isExpanded && "rotate-180")} strokeWidth={1.6} />
                     {isExpanded ? "Show less" : `Show ${remaining} more`}
@@ -368,7 +368,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
 
       {/* Footer */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{templates.length}</span> {templates.length === 1 ? "record" : "records"}
         </p>
       </div>

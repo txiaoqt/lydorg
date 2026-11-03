@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, ExternalLink, Megaphone } from "lucide-react";
+import { ExternalLink, Megaphone } from "lucide-react";
 
 export type PublicNewsRelease = {
   id: string;
@@ -23,23 +23,16 @@ export const PublicNewsReleaseCard: React.FC<PublicNewsReleaseCardProps> = ({ ne
   }).format(new Date(news.date_posted));
 
   return (
-    <article className="group flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-[16px] lg:rounded-2xl border border-public-bg-brand-subtle lg:border-[#DCE4F0] bg-white shadow-public-nav lg:transition-all lg:duration-200 lg:hover:border-public-border-brand/50 lg:hover:shadow-md lg:hover:shadow-slate-200/60 h-full">
-      {/* Image frame with category badge */}
-      <div className="relative flex h-[160px] sm:h-[200px] lg:h-[200px] w-full items-center justify-center bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] p-2 sm:p-[10px] lg:p-0 overflow-hidden">
-        {news.category && (
-          <div className="absolute left-2.5 top-2.5 sm:left-[10px] sm:top-[10px] lg:left-3 lg:top-3 z-10 inline-flex w-fit items-center rounded-full border border-[#DCF0FD] lg:border-white/60 bg-white lg:bg-white/95 px-2.5 py-0.5 sm:px-[10px] sm:py-[4px] lg:px-2.5 lg:py-0.5 lg:shadow-2xs lg:backdrop-blur-xs">
-            <span className="font-segoe text-xs sm:text-public-fs-body-sm lg:text-xs font-semibold sm:font-semibold lg:font-bold leading-[140%] lg:leading-none text-public-text-brand">
-              {news.category}
-            </span>
-          </div>
-        )}
-        <Megaphone className="h-16 w-16 sm:h-20 sm:w-20 lg:h-16 lg:w-16 text-white/80" strokeWidth={1.5} />
+    <article className="group flex h-full flex-row overflow-hidden border border-slate-200 bg-white transition-colors duration-200 hover:border-public-border-brand/60 sm:flex-col">
+      {/* Image */}
+      <div className="relative flex aspect-[4/3] w-[38%] shrink-0 items-center justify-center overflow-hidden bg-gradient-to-b from-[#0E2F66] to-[#1A5CA8] sm:aspect-[16/9] sm:w-full sm:shrink">
+        <Megaphone className="h-14 w-14 text-white/70" strokeWidth={1.5} />
         {news.preview_image_url && (
           <img
             src={news.preview_image_url}
             alt={news.title}
             referrerPolicy="no-referrer"
-            className="absolute inset-0 h-full w-full object-cover lg:transition-transform lg:duration-300 lg:group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
@@ -48,31 +41,34 @@ export const PublicNewsReleaseCard: React.FC<PublicNewsReleaseCardProps> = ({ ne
       </div>
 
       {/* Details */}
-      <div className="flex flex-1 flex-col justify-between p-3.5 sm:p-5 lg:p-5 gap-2.5 sm:gap-3 lg:gap-3">
-        <h3 className="font-segoe font-semibold sm:font-semibold lg:font-bold leading-tight sm:leading-[120%] lg:leading-snug tracking-[-0.02em] lg:tracking-[-0.01em] text-public-text-brand lg:text-[#0E2F66] lg:group-hover:text-public-text-brand text-base sm:text-public-fs-subtitle-sm lg:text-base lg:transition-colors line-clamp-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-3.5 sm:gap-2 sm:p-[18px]">
+        {news.category && (
+          <span className="font-inter text-[10px] font-bold uppercase leading-none tracking-[0.12em] text-public-text-brand-secondary">
+            {news.category}
+          </span>
+        )}
+        <span className="font-inter text-xs font-normal leading-none text-slate-500">
+          {formattedDate}
+        </span>
+        <h3 className="font-editorial text-[15px] font-normal leading-snug text-public-text-brand line-clamp-3 sm:text-[17px] sm:line-clamp-2">
           {news.title}
         </h3>
-
-        <div className="space-y-2.5 pt-1">
-          <hr className="border-public-border-neutral-tertiary lg:border-border/60" />
-          <div className="flex items-center justify-between gap-1.5 sm:gap-2 text-xs lg:gap-2">
-            <div className="flex items-center gap-1.5 sm:gap-[8px] py-0.5 sm:py-[4px] lg:py-0 text-slate-500">
-              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-3.5 lg:w-3.5 shrink-0 text-public-text-secondary lg:text-slate-400" />
-              <span className="font-segoe text-xs sm:text-public-fs-body-sm lg:text-xs font-normal leading-none text-public-text-secondary lg:text-slate-500">
-                {formattedDate}
-              </span>
-            </div>
-            <a
-              href={news.facebook_post_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 sm:gap-[8px] lg:gap-1 font-segoe text-xs sm:text-public-fs-body-sm lg:text-xs font-semibold text-public-text-brand transition-colors hover:underline shrink-0"
-            >
-              <span>View on Facebook</span>
-              <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-3 lg:w-3 shrink-0" />
-            </a>
+        {news.description && (
+          <div className="hidden sm:block">
+            <p className="line-clamp-3 font-inter text-[13px] font-normal leading-[1.55] text-slate-500">
+              {news.description}
+            </p>
           </div>
-        </div>
+        )}
+        <a
+          href={news.facebook_post_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto inline-flex w-fit items-center gap-1.5 pt-2 font-inter text-xs font-semibold text-public-text-brand underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
+        >
+          <span>View on Facebook</span>
+          <ExternalLink aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+        </a>
       </div>
     </article>
   );

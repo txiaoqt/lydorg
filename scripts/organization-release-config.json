@@ -54,27 +54,11 @@
       "sha256": "941c225db66d2fadab9400931143e3ca19e791fefc37ed7a7137bf8bd9fd14a2"
     },
     {
-      "path": "api/sync-run-once.py",
-      "sha256": "f0184bfdfe8212d141c3d88d4eaa32312cefc1467a86cd3b7315f9dc4c7e311d"
-    },
-    {
-      "path": "worker/__init__.py",
-      "sha256": "77161e8de0386cc8325696b33d9a592cccd9310c3c32de50a287794c93c6bc51"
-    },
-    {
-      "path": "worker/gform_sync_worker.py",
-      "sha256": "4a2e46231dc36709be585ab37920e031217948c2c8ecd0ca30f0f94806330295"
-    },
-    {
       "path": "scripts/patch-radix-select.cjs",
       "sha256": "d90262517ab6f3b823a536330bd4b8106ca0694b56838ba87335560cdcfb8525"
-    },
-    {
-      "path": "requirements.txt",
-      "sha256": "54c3c61610b5fb8f907afa2b20293785ff61fe735734bc57e73120a8524abf5c"
     }
   ],
-  "routingAndHeadersSha256": "9c709c6bfb433627e1567a298e2e81b61c296c4dc9045645e8fd68acc3f42255",
+  "routingAndHeadersSha256": "9176102ff6e7c009b915d0850f2342eee146f3ff3606ce2662788b2ec31af970",
   "integrationProvenance": {
     "originalDeployedSourceRevision": "sha256:0e3f313a4ca9c4a96242ab539767a5d2ad9a5e906483031c101e906f179d01dd",
     "originalDeployedSourceArchiveSha256": "e7d43c8aa7d0d0a2cc42130eafd34ad9b1b5147aeb416aba55349353f7fa33c8",

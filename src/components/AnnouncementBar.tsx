@@ -66,7 +66,7 @@ const AnnouncementBar = () => {
     >
       <div className="flex min-w-0 max-w-7xl items-center justify-center gap-2 sm:gap-[10px] px-1 sm:px-[10px]">
         <Megaphone className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5 shrink-0 text-public-text-neutral-on-neutral" />
-        <span className="line-clamp-1 font-segoe text-[11px] sm:text-public-fs-body-sm font-semibold leading-tight sm:leading-[140%] text-public-text-neutral-on-neutral">
+        <span className="line-clamp-1 font-inter text-[11px] sm:text-public-fs-body-sm font-semibold leading-tight sm:leading-[140%] text-public-text-neutral-on-neutral">
           Reminder: {message}
         </span>
       </div>

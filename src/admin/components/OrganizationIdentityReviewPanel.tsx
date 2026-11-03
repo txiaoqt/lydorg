@@ -49,7 +49,7 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
   const clear = packet && ["NO_MATCH", "VERIFIED_SEPARATE"].includes(packet.outcome);
   return <section className="space-y-4 rounded-md border border-slate-300 bg-admin-surface p-4" aria-label="Organization identity review">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h2 className="font-segoe text-base font-semibold">Organization Identity Review</h2>
+      <div><h2 className="font-inter text-base font-semibold">Organization Identity Review</h2>
         <p className="text-sm text-slate-500">Compare official evidence before completing registration verification.</p></div>
       <Button type="button" variant="outline" size="sm" onClick={load} disabled={busy}>{busy ? "Checking…" : packet ? "Reload Identity Review" : "Check Organization Identity"}</Button>
     </div>

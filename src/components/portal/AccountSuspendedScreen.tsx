@@ -55,7 +55,7 @@ export const AccountSuspendedScreen = ({
               <ShieldAlert className="h-9 w-9" strokeWidth={1.8} />
             </div>
             <div className="space-y-1.5">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-segoe">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-inter">
                 Account Suspended
               </h1>
               <p className="text-sm sm:text-base font-semibold text-destructive max-w-lg mx-auto">

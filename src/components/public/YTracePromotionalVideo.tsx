@@ -88,7 +88,7 @@ export default function YTracePromotionalVideo() {
 
   return (
     <Dialog open={isExpanded} onOpenChange={onExpandedChange}>
-      <div ref={containerRef} className="w-full max-w-[540px] xl:shrink-0">
+      <div ref={containerRef} className="w-full">
         <button
           type="button"
           aria-label="Watch Y-TRACE overview"
@@ -96,7 +96,7 @@ export default function YTracePromotionalVideo() {
           aria-expanded={isExpanded}
           aria-controls={expandedDialogId}
           onClick={openExpandedVideo}
-          className="block aspect-video w-full overflow-hidden rounded-lg bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-4 sm:rounded-[12px]"
+          className="group relative block aspect-video w-full overflow-hidden rounded-[2px] bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-4"
         >
           <video
             ref={previewRef}
@@ -113,9 +113,40 @@ export default function YTracePromotionalVideo() {
             onError={() => setPreviewUnavailable(true)}
             className="pointer-events-none block h-full w-full object-contain"
           />
+
+          {/* Play affordance */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 shadow-[0_8px_24px_rgba(2,12,32,0.35)] transition-transform duration-200 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:h-16 sm:w-16">
+              <Play className="ml-0.5 h-6 w-6 fill-public-text-brand text-public-text-brand sm:h-7 sm:w-7" />
+            </span>
+          </span>
+
+          {/* Caption bar */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-slate-950/85 via-slate-950/35 to-transparent px-4 pb-3 pt-10 sm:px-5 sm:pb-4"
+          >
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-inter text-[10px] font-semibold uppercase leading-none tracking-[0.14em] text-white/70">
+                Getting started
+              </span>
+              <span className="truncate font-inter text-sm font-semibold leading-snug text-white sm:text-base">
+                Y-TRACE overview
+              </span>
+            </span>
+            <span
+              aria-label="Video duration: 1 minute 36 seconds"
+              className="shrink-0 font-inter text-xs tabular-nums text-white/80"
+            >
+              1:36
+            </span>
+          </span>
         </button>
 
-        <div className="mt-2 flex items-center justify-between gap-3 font-segoe">
+        <div className="mt-2 flex items-center justify-between gap-3 font-inter">
           <button
             type="button"
             aria-label="Expand Y-TRACE overview"
@@ -129,7 +160,6 @@ export default function YTracePromotionalVideo() {
             Watch full video
           </button>
           <div className="flex shrink-0 items-center gap-2">
-            <span aria-label="Video duration: 1 minute 36 seconds" className="text-xs tabular-nums text-public-text-secondary">1:36</span>
             {!previewUnavailable && (
               <button
                 type="button"
@@ -157,7 +187,7 @@ export default function YTracePromotionalVideo() {
         className="gap-0 overflow-hidden rounded-xl border-0 bg-slate-950 p-0 text-white shadow-xl motion-reduce:animate-none sm:max-h-[90dvh] sm:max-w-6xl sm:rounded-xl sm:p-0"
       >
         <div className="flex items-center justify-between gap-4 px-4 py-2 sm:px-5">
-          <DialogTitle className="font-segoe text-base font-semibold text-white">Y-TRACE overview</DialogTitle>
+          <DialogTitle className="font-inter text-base font-semibold text-white">Y-TRACE overview</DialogTitle>
           <DialogDescription className="sr-only">Discover the Y-TRACE portal and what your organization can do.</DialogDescription>
           <DialogClose asChild>
             <button
@@ -170,7 +200,7 @@ export default function YTracePromotionalVideo() {
           </DialogClose>
         </div>
         {isExpanded && (expandedUnavailable ? (
-          <div role="alert" className="flex aspect-video flex-col items-center justify-center gap-4 px-6 text-center font-segoe">
+          <div role="alert" className="flex aspect-video flex-col items-center justify-center gap-4 px-6 text-center font-inter">
             <p>We couldn’t load the video. Please try again.</p>
             <button type="button" onClick={() => setExpandedUnavailable(false)} className="rounded-lg bg-white px-4 py-2.5 font-semibold text-public-text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-slate-950">
               Try again

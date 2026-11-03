@@ -26,10 +26,10 @@ import type { AdminRoleRecord } from "@/lib/lydo-connect-data";
 import { checkAdminEmailAvailabilityInSupabase } from "@/lib/lydo-connect-supabase";
 
 const FIELD_CLASS =
-  "flex h-8 w-full items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-segoe text-[13px] font-normal leading-[140%] text-text-default outline-none placeholder:text-text-disabled";
+  "flex h-8 w-full items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-inter text-[13px] font-normal leading-[140%] text-text-default outline-none placeholder:text-text-disabled";
 
 const Label = ({ children }: { children: React.ReactNode }) => (
-  <label className="flex items-center gap-1 font-segoe text-[13px] font-normal leading-none text-text-default">
+  <label className="flex items-center gap-1 font-inter text-[13px] font-normal leading-none text-text-default">
     {children}
     <span className="text-icon-danger-secondary">*</span>
   </label>
@@ -146,10 +146,10 @@ export const AdministratorFormDialog = ({
               )}
             </div>
             <div className="flex flex-col gap-1">
-              <DialogTitle className="font-segoe text-lg font-semibold leading-none text-text-default">
+              <DialogTitle className="font-inter text-lg font-semibold leading-none text-text-default">
                 {mode === "edit" ? "Edit Administrator" : "Add Administrator"}
               </DialogTitle>
-              <p className="font-segoe text-sm font-normal leading-none text-slate-500">
+              <p className="font-inter text-sm font-normal leading-none text-slate-500">
                 {mode === "edit"
                   ? "Update an existing administrator's account and permissions."
                   : "Create a new administrator account and assign system access."}
@@ -182,7 +182,7 @@ export const AdministratorFormDialog = ({
             {mode === "edit" ? (
               <div className="flex items-center gap-1.5">
                 <Label>Email Address</Label>
-                <span className="font-segoe text-[13px] font-normal leading-none text-public-text-secondary">
+                <span className="font-inter text-[13px] font-normal leading-none text-public-text-secondary">
                   (Read-Only Identifier)
                 </span>
                 <span className="ml-auto inline-flex items-center gap-1 rounded border-[0.6px] border-slate-300 bg-admin-surface px-1.5 py-1 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
@@ -209,12 +209,12 @@ export const AdministratorFormDialog = ({
               )}
             />
             {mode === "edit" ? (
-              <p className="font-segoe text-[11px] font-normal leading-[140%] text-slate-500">
+              <p className="font-inter text-[11px] font-normal leading-[140%] text-slate-500">
                 Official email addresses cannot be altered after account creation to maintain audit logs and security
                 integrity.
               </p>
             ) : activeEmailError ? (
-              <p className="font-segoe text-[11px] font-normal leading-[140%] text-icon-danger-secondary">
+              <p className="font-inter text-[11px] font-normal leading-[140%] text-icon-danger-secondary">
                 {activeEmailError}
               </p>
             ) : null}
@@ -274,11 +274,11 @@ export const AdministratorFormDialog = ({
           <div className="flex items-center justify-between gap-2 rounded-md border border-status-active-border bg-bg-success-subtle p-4">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 shrink-0 rounded-full bg-positive-secondary" />
-              <p className="font-segoe text-[13px] font-semibold leading-[140%] text-positive-secondary">
+              <p className="font-inter text-[13px] font-semibold leading-[140%] text-positive-secondary">
                 Initial Status: Invitation Pending
               </p>
             </div>
-            <p className="font-segoe text-[13px] font-normal leading-[140%] text-positive-secondary">
+            <p className="font-inter text-[13px] font-normal leading-[140%] text-positive-secondary">
               They&rsquo;ll set their own password using the link after you create this account.
             </p>
           </div>
@@ -291,7 +291,7 @@ export const AdministratorFormDialog = ({
               onClick={() => setAccessPreviewExpanded((value) => !value)}
               className="flex h-12 items-center justify-between gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/40 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
-              <span className="flex items-center gap-2 font-segoe text-[13px] font-normal leading-[140%] text-text-default">
+              <span className="flex items-center gap-2 font-inter text-[13px] font-normal leading-[140%] text-text-default">
                 <Shield className="h-4 w-4 shrink-0 text-public-text-neutral-default" strokeWidth={1.6} />
                 Inherited Access Preview ({selectedRole.label})
               </span>
@@ -306,12 +306,12 @@ export const AdministratorFormDialog = ({
               <div className="flex flex-col gap-4">
                 {accessPreviewGroups.map((group) => (
                   <div key={group.label} className="flex flex-col gap-1.5">
-                    <p className="font-segoe text-[11px] font-semibold leading-none text-slate-500 dark:text-slate-400">{group.label}</p>
+                    <p className="font-inter text-[11px] font-semibold leading-none text-slate-500 dark:text-slate-400">{group.label}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {group.items.map((item) => (
                         <span
                           key={item.code}
-                          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-access-pill-border bg-access-pill-bg px-2 py-1.5 font-segoe text-[11px] font-semibold leading-[140%] text-public-text-brand-secondary"
+                          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-access-pill-border bg-access-pill-bg px-2 py-1.5 font-inter text-[11px] font-semibold leading-[140%] text-public-text-brand-secondary"
                         >
                           <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={1.6} />
                           {item.label}
@@ -331,17 +331,17 @@ export const AdministratorFormDialog = ({
 
             <div className="flex items-center justify-between gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/40 p-6">
               <div className="flex items-center gap-2">
-                <p className="font-segoe text-[13px] font-normal leading-none text-text-default">Current Status:</p>
+                <p className="font-inter text-[13px] font-normal leading-none text-text-default">Current Status:</p>
                 {!isPasswordSet ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 dark:bg-amber-950/30 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 dark:bg-amber-950/30 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-warning-secondary">
                     Invitation Pending
                   </span>
                 ) : isActive ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle dark:bg-emerald-950/30 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle dark:bg-emerald-950/30 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
                     Active
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 dark:bg-amber-950/30 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 dark:bg-amber-950/30 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-warning-secondary">
                     Suspended
                   </span>
                 )}
@@ -350,7 +350,7 @@ export const AdministratorFormDialog = ({
                 type="button"
                 onClick={onSuspendToggle}
                 disabled={isSelf || saving}
-                className="flex h-[34px] shrink-0 items-center gap-2 rounded-md border border-status-warning-border bg-admin-surface px-3 py-2 font-segoe text-[13px] font-normal leading-[140%] text-text-warning-secondary transition-colors hover:bg-amber-50 disabled:opacity-50 disabled:pointer-events-none"
+                className="flex h-[34px] shrink-0 items-center gap-2 rounded-md border border-status-warning-border bg-admin-surface px-3 py-2 font-inter text-[13px] font-normal leading-[140%] text-text-warning-secondary transition-colors hover:bg-amber-50 disabled:opacity-50 disabled:pointer-events-none"
               >
                 <UserX className="h-[13px] w-[13px] shrink-0" strokeWidth={1.6} />
                 {isActive ? "Suspend Administrator" : "Reactivate Administrator"}
@@ -360,16 +360,16 @@ export const AdministratorFormDialog = ({
             <div className="flex flex-col gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle p-6">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-icon-danger-secondary" strokeWidth={1.6} />
-                <p className="font-segoe text-[13px] font-bold uppercase leading-[120%] text-icon-danger-secondary">
+                <p className="font-inter text-[13px] font-bold uppercase leading-[120%] text-icon-danger-secondary">
                   Danger Zone
                 </p>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex max-w-[260px] flex-col gap-0.5">
-                  <p className="text-justify font-segoe text-[13px] font-semibold leading-[120%] text-icon-danger-secondary">
+                  <p className="text-justify font-inter text-[13px] font-semibold leading-[120%] text-icon-danger-secondary">
                     Delete Administrator Account
                   </p>
-                  <p className="text-justify font-segoe text-[11px] font-normal leading-[120%] text-icon-danger-secondary">
+                  <p className="text-justify font-inter text-[11px] font-normal leading-[120%] text-icon-danger-secondary">
                     Permanently removes this administrator&rsquo;s account and login access. Past activity will remain in
                     the Activity Log for audit purposes. This action cannot be undone.
                   </p>
@@ -378,7 +378,7 @@ export const AdministratorFormDialog = ({
                   type="button"
                   onClick={onDeleteAdministrator}
                   disabled={isSelf || saving}
-                  className="flex h-[34px] shrink-0 items-center gap-2 rounded-md border border-status-danger-border-strong bg-admin-surface px-3 py-2 font-segoe text-[13px] font-normal leading-[140%] text-icon-danger-secondary transition-colors hover:bg-danger-subtle disabled:opacity-50 disabled:pointer-events-none"
+                  className="flex h-[34px] shrink-0 items-center gap-2 rounded-md border border-status-danger-border-strong bg-admin-surface px-3 py-2 font-inter text-[13px] font-normal leading-[140%] text-icon-danger-secondary transition-colors hover:bg-danger-subtle disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <Trash2 className="h-[13px] w-[13px] shrink-0" strokeWidth={1.6} />
                   Delete Administrator
@@ -393,7 +393,7 @@ export const AdministratorFormDialog = ({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50"
+            className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -401,7 +401,7 @@ export const AdministratorFormDialog = ({
             type="button"
             onClick={onSave}
             disabled={saving || Boolean(activeEmailError)}
-            className="flex h-11 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+            className="flex h-11 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
           >
             {mode === "edit" ? (
               <Save className="h-4 w-4 shrink-0" strokeWidth={1.6} />

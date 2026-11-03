@@ -32,17 +32,17 @@ export function YpopParticipationReportExport({ periodId, semesterLabel, classif
   const pointsReport = reportKind === "points-qualification";
   const reportTitle = pointsReport ? "YPOP Points and Qualification Report" : "YPOP Participation Report";
   const currentYear = getCurrentAdminReportPeriod().year;
-  const selectClass = "h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-3 font-segoe text-sm text-text-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-public-bg-brand disabled:opacity-50";
+  const selectClass = "h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-sm text-text-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-public-bg-brand disabled:opacity-50";
   return <>
     <button type="button" onClick={() => { setQualification(status); setOpen(true); }}
-      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-public-bg-brand sm:w-fit sm:shrink-0 sm:whitespace-nowrap">
+      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-public-bg-brand sm:w-fit sm:shrink-0 sm:whitespace-nowrap">
       <Download className="h-4 w-4 shrink-0" strokeWidth={1.6} aria-hidden="true" />
       {pointsReport ? "Export Points and Qualification Report" : "Export Participation Report"}
     </button>
     <AdminExportDialog open={open} onOpenChange={setOpen} reportTitle={reportTitle}
       description={`Export ${semesterLabel}. ${pointsReport ? "Category and activity dates" : "Activity dates"} select rows; points and qualification reflect the complete semester.`}
       periodFilter={{ enabled: true, value: period, onChange: setPeriod, years: [currentYear, currentYear - 1, currentYear - 2] }}
-      filterContent={<div className="space-y-3 font-segoe">
+      filterContent={<div className="space-y-3 font-inter">
         {pointsReport && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label htmlFor={`${id}-category`} className="space-y-1 text-xs font-medium text-text-secondary">Category
             <select id={`${id}-category`} value={category} className={selectClass} onChange={event => setCategory(event.target.value as YpopReportCategory)}>

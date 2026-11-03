@@ -46,7 +46,7 @@ export function BudgetExecutionPipeline({
             <div key={state} className="flex min-w-0 items-start gap-2.5">
               <span aria-hidden="true" className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-sm", colors.dot)} />
               <div className="min-w-0 space-y-0.5">
-                <p className="font-segoe text-xs font-medium leading-snug text-slate-700">
+                <p className="font-inter text-xs font-medium leading-snug text-slate-700">
                   {BUDGET_MONITORING_LABELS[state]}
                 </p>
                 <p className={cn("break-words font-cascadia text-sm font-bold tabular-nums", remainingHeadroom !== null && state === "remainingHeadroom" && remainingHeadroom < 0 ? "text-rose-700" : colors.value)}>

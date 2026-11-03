@@ -184,18 +184,18 @@ export function BulkOrganizationDeleteDialog({
           <div className="space-y-4 py-2">
             {/* Status counts banner */}
             <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg border border-slate-200 bg-slate-50">
-              <div className="flex items-center gap-1.5 font-segoe text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+              <div className="flex items-center gap-1.5 font-inter text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Deleted: {deletionResults.deletedCount}
               </div>
               {deletionResults.blockedCount > 0 && (
-                <div className="flex items-center gap-1.5 font-segoe text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                <div className="flex items-center gap-1.5 font-inter text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
                   <AlertCircle className="h-3.5 w-3.5" />
                   Blocked: {deletionResults.blockedCount}
                 </div>
               )}
               {deletionResults.failedCount > 0 && (
-                <div className="flex items-center gap-1.5 font-segoe text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
+                <div className="flex items-center gap-1.5 font-inter text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
                   <XCircle className="h-3.5 w-3.5" />
                   Failed: {deletionResults.failedCount}
                 </div>
@@ -204,7 +204,7 @@ export function BulkOrganizationDeleteDialog({
 
             {/* Per-item list */}
             <div className="space-y-2">
-              <p className="font-segoe text-xs font-semibold text-slate-700 dark:text-slate-200">Detailed Results:</p>
+              <p className="font-inter text-xs font-semibold text-slate-700 dark:text-slate-200">Detailed Results:</p>
               <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1 border border-slate-200 dark:border-slate-800 rounded-md p-2 bg-white dark:bg-admin-surface">
                 {deletionResults.results.map((res) => {
                   const fallbackProfile = orgProfileMap.get(res.organizationId);
@@ -218,7 +218,7 @@ export function BulkOrganizationDeleteDialog({
                     <div
                       key={res.organizationId}
                       className={cn(
-                        "flex items-start justify-between gap-2 p-2 rounded text-xs font-segoe border",
+                        "flex items-start justify-between gap-2 p-2 rounded text-xs font-inter border",
                         isDeleted
                           ? "border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200"
                           : res.status === "blocked"
@@ -262,7 +262,7 @@ export function BulkOrganizationDeleteDialog({
               <Button
                 type="button"
                 onClick={handleClose}
-                className="w-full sm:w-auto font-segoe bg-primary text-primary-foreground hover:bg-primary/90"
+                className="w-full sm:w-auto font-inter bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 Close
               </Button>
@@ -290,7 +290,7 @@ export function BulkOrganizationDeleteDialog({
                   Target Organizations ({count})
                 </Label>
                 {preflightLoading && (
-                  <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-segoe">
+                  <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-inter">
                     <Loader2 className="h-3 w-3 animate-spin" />
                     Validating accounts…
                   </span>
@@ -306,7 +306,7 @@ export function BulkOrganizationDeleteDialog({
                     <div
                       key={org.id}
                       className={cn(
-                        "flex items-center justify-between gap-2 px-2.5 py-1.5 rounded text-xs font-segoe bg-white dark:bg-admin-surface border border-slate-200 dark:border-slate-800 shadow-2xs",
+                        "flex items-center justify-between gap-2 px-2.5 py-1.5 rounded text-xs font-inter bg-white dark:bg-admin-surface border border-slate-200 dark:border-slate-800 shadow-2xs",
                         isBlocked && "border-amber-300 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/30",
                       )}
                     >
@@ -400,7 +400,7 @@ export function BulkOrganizationDeleteDialog({
               <AlertDialogCancel
                 disabled={isDeleting}
                 onClick={handleClose}
-                className="font-segoe active:scale-[0.98] transition-transform"
+                className="font-inter active:scale-[0.98] transition-transform"
               >
                 Cancel
               </AlertDialogCancel>
@@ -414,7 +414,7 @@ export function BulkOrganizationDeleteDialog({
                   selectedOrganizations.length === 0
                 }
                 onClick={() => void handleConfirmBulkDelete()}
-                className="font-segoe active:scale-[0.98] transition-transform"
+                className="font-inter active:scale-[0.98] transition-transform"
               >
                 {isDeleting ? (
                   <>

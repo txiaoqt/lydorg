@@ -63,41 +63,41 @@ const PAGE_SIZE = 10;
 export const StatusPill = ({ status }: { status: OrganizationProfile["profileStatus"] }) => {
   if (status === "verified") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
         Verified
       </span>
     );
   }
   if (status === "needs_update") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-action">
         Needs Update
       </span>
     );
   }
   if (status === "incomplete") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-action">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-action-subtle bg-bg-action-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-action">
         Incomplete Profile
       </span>
     );
   }
   if (status === "suspended_inactive") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-danger-secondary">
         Suspended
       </span>
     );
   }
   if (status === "pending_review") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Pending Review
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-info-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Pending Review
     </span>
   );
@@ -106,7 +106,7 @@ export const StatusPill = ({ status }: { status: OrganizationProfile["profileSta
 const DocumentsPill = ({ submitted, required, unknownMessage }: { submitted: number; required: number | null; unknownMessage: string }) => {
   if (required === null) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-slate-600">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-slate-600">
         {submitted}/— {unknownMessage}
       </span>
     );
@@ -115,7 +115,7 @@ const DocumentsPill = ({ submitted, required, unknownMessage }: { submitted: num
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-segoe text-xs font-semibold leading-[140%]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
         complete
           ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
           : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
@@ -253,7 +253,7 @@ export const RegistrationsTable = ({
                 serverPagination?.onPageChange(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -278,7 +278,7 @@ export const RegistrationsTable = ({
               serverPagination?.onPageChange(0);
             }}
             placeholder="Search by registration ID or organization..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -286,7 +286,7 @@ export const RegistrationsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{districtFilter === "all" ? "All districts" : districtFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -299,7 +299,7 @@ export const RegistrationsTable = ({
             <DropdownMenuItem
               onClick={() => handleDistrictFilterChange("all")}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 districtFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -310,7 +310,7 @@ export const RegistrationsTable = ({
                 key={district}
                 onClick={() => handleDistrictFilterChange(district)}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   districtFilter === district && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -324,7 +324,7 @@ export const RegistrationsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{barangayFilter === "all" ? "All barangays" : barangayFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -341,7 +341,7 @@ export const RegistrationsTable = ({
                 serverPagination?.onPageChange(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 barangayFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -356,7 +356,7 @@ export const RegistrationsTable = ({
                   serverPagination?.onPageChange(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   barangayFilter === barangay.name && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -370,7 +370,7 @@ export const RegistrationsTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="whitespace-nowrap">{classificationFilter === "all" ? "All major classifications" : classificationFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -387,7 +387,7 @@ export const RegistrationsTable = ({
                 serverPagination?.onPageChange(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 classificationFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -402,7 +402,7 @@ export const RegistrationsTable = ({
                   serverPagination?.onPageChange(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   classificationFilter === classification && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -417,7 +417,7 @@ export const RegistrationsTable = ({
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[920px]">
           {/* Column headers */}
-          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
             <span className="w-6 shrink-0 flex items-center justify-center">
               <input
                 type="checkbox"
@@ -442,8 +442,8 @@ export const RegistrationsTable = ({
           {/* Rows */}
           {pageItems.length === 0 ? (
             <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-              <p className="font-segoe text-sm font-semibold text-text-default">No matching registrations</p>
-              <p className="font-segoe text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
+              <p className="font-inter text-sm font-semibold text-text-default">No matching registrations</p>
+              <p className="font-inter text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
             </div>
           ) : (
             pageItems.map((org) => {
@@ -480,16 +480,16 @@ export const RegistrationsTable = ({
                   </div>
 
                   <div className="flex w-[20%] min-w-0 flex-col gap-0.5">
-                    <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                    <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                       {org.organizationName}
                     </p>
-                    <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">
+                    <p className="truncate font-inter text-xs leading-[140%] text-slate-500">
                       {[org.district, org.barangay].filter(Boolean).join(" · ") || "No location provided"}
                     </p>
                   </div>
 
                   <div className="flex w-[16%] items-center">
-                    {org.majorClassification ? <CategoryChip category={org.majorClassification} /> : <span className="font-segoe text-xs text-slate-500">—</span>}
+                    {org.majorClassification ? <CategoryChip category={org.majorClassification} /> : <span className="font-inter text-xs text-slate-500">—</span>}
                   </div>
 
                   <div className="flex w-[13%] items-center">
@@ -497,7 +497,7 @@ export const RegistrationsTable = ({
                   </div>
 
                   <div className="flex w-[10%] items-center">
-                    <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">
+                    <p className="font-inter text-sm font-normal leading-[140%] text-text-default">
                       {isValidDate ? format(submittedDate, "d MMM yyyy") : "—"}
                     </p>
                   </div>
@@ -510,7 +510,7 @@ export const RegistrationsTable = ({
                     <button
                       type="button"
                       onClick={() => onReview(org.id)}
-                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1"
+                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-inter text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1"
                     >
                       <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                       Review
@@ -519,7 +519,7 @@ export const RegistrationsTable = ({
                       <button
                         type="button"
                         onClick={() => onDelete(org)}
-                        className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md border border-red-200 bg-red-50/70 px-2.5 font-segoe text-public-fs-body-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1"
+                        className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md border border-red-200 bg-red-50/70 px-2.5 font-inter text-public-fs-body-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1"
                         aria-label={`Delete registration for ${org.organizationName}`}
                       >
                         <Trash2 className="h-3.5 w-3.5 shrink-0 text-red-600" strokeWidth={1.6} />
@@ -536,7 +536,7 @@ export const RegistrationsTable = ({
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{serverPagination?.totalCount ?? registrations.length}</span> submissions
           {selectedIds.size > 0 && (
@@ -550,7 +550,7 @@ export const RegistrationsTable = ({
             type="button"
             onClick={() => changePage(clampedPage - 1)}
             disabled={clampedPage === 0}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
             Previous
@@ -564,7 +564,7 @@ export const RegistrationsTable = ({
                   type="button"
                   onClick={() => changePage(index)}
                   className={cn(
-                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                     index === clampedPage
                       ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                       : "text-text-default hover:bg-slate-50",
@@ -578,7 +578,7 @@ export const RegistrationsTable = ({
             type="button"
             onClick={() => changePage(clampedPage + 1)}
             disabled={clampedPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

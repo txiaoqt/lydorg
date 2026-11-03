@@ -67,14 +67,14 @@ export const OrganizationFundingTable = ({
               setPage(0);
             }}
             placeholder="Search by URN or organization..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
         <span className="w-6 shrink-0">
           <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
         </span>
@@ -89,8 +89,8 @@ export const OrganizationFundingTable = ({
       {/* Rows */}
       {pageItems.length === 0 ? (
         <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-          <p className="font-segoe text-sm font-semibold text-text-default">No matching organizations</p>
-          <p className="font-segoe text-xs text-slate-500">Try adjusting the search or classification filter.</p>
+          <p className="font-inter text-sm font-semibold text-text-default">No matching organizations</p>
+          <p className="font-inter text-xs text-slate-500">Try adjusting the search or classification filter.</p>
         </div>
       ) : (
         pageItems.map((row) => (
@@ -107,7 +107,7 @@ export const OrganizationFundingTable = ({
             </div>
 
             <div className="flex w-[24%] min-w-0 items-center">
-              <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">{row.organizationName}</p>
+              <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">{row.organizationName}</p>
             </div>
 
             <div className="flex w-[16%] items-center">
@@ -132,7 +132,7 @@ export const OrganizationFundingTable = ({
               <button
                 type="button"
                 onClick={() => onView(row.organizationId)}
-                className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
               >
                 <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                 View
@@ -144,7 +144,7 @@ export const OrganizationFundingTable = ({
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{filteredRows.length}</span> organizations
         </p>
@@ -153,7 +153,7 @@ export const OrganizationFundingTable = ({
             type="button"
             onClick={() => changePage(clampedPage - 1)}
             disabled={clampedPage === 0}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
             Previous
@@ -167,7 +167,7 @@ export const OrganizationFundingTable = ({
                   type="button"
                   onClick={() => changePage(index)}
                   className={cn(
-                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                     index === clampedPage
                       ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                       : "text-text-default hover:bg-slate-50",
@@ -181,7 +181,7 @@ export const OrganizationFundingTable = ({
             type="button"
             onClick={() => changePage(clampedPage + 1)}
             disabled={clampedPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

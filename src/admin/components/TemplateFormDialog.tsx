@@ -18,10 +18,10 @@ import {
 import { getTemplateFileFormat, formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 
 const FIELD_CLASS =
-  "flex h-8 w-full items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-segoe text-[13px] font-normal leading-[140%] text-text-default outline-none placeholder:text-text-disabled";
+  "flex h-8 w-full items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-2.5 py-2 font-inter text-[13px] font-normal leading-[140%] text-text-default outline-none placeholder:text-text-disabled";
 
 const Label = ({ children }: { children: React.ReactNode }) => (
-  <label className="flex items-center gap-1 font-segoe text-[13px] font-normal leading-none text-text-default">
+  <label className="flex items-center gap-1 font-inter text-[13px] font-normal leading-none text-text-default">
     {children}
     <span className="text-icon-danger-secondary">*</span>
   </label>
@@ -270,10 +270,10 @@ export const TemplateFormDialog = ({
               )}
             </div>
             <div className="flex flex-col gap-1">
-              <DialogTitle className="font-segoe text-lg font-semibold leading-none text-text-default">
+              <DialogTitle className="font-inter text-lg font-semibold leading-none text-text-default">
                 {mode === "edit" ? "Edit File" : "Upload File"}
               </DialogTitle>
-              <DialogDescription className="font-segoe text-sm font-normal leading-none text-slate-500">
+              <DialogDescription className="font-inter text-sm font-normal leading-none text-slate-500">
                 {mode === "edit"
                   ? "Update an existing form or template for users to download and use."
                   : "Add a new form or template for users to download and use."}
@@ -312,7 +312,7 @@ export const TemplateFormDialog = ({
             {isAddingCategory || editingCategoryKey ? (
               <div className="flex flex-col gap-2 rounded-md border border-slate-300 dark:border-slate-800 bg-admin-surface p-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-segoe text-xs font-semibold text-text-default">
+                  <span className="font-inter text-xs font-semibold text-text-default">
                     {editingCategoryKey ? "Edit Category" : "Add New Category"}
                   </span>
                   <button
@@ -332,7 +332,7 @@ export const TemplateFormDialog = ({
                   </button>
                 </div>
                 {editingCategoryKey ? (
-                  <p className="font-segoe text-[11px] leading-relaxed text-slate-500">
+                  <p className="font-inter text-[11px] leading-relaxed text-slate-500">
                     Renaming this category updates every template currently assigned to it.
                   </p>
                 ) : null}
@@ -364,7 +364,7 @@ export const TemplateFormDialog = ({
                   </button>
                 </div>
                 {newCategoryError ? (
-                  <p className="font-segoe text-xs text-rose-600">{newCategoryError}</p>
+                  <p className="font-inter text-xs text-rose-600">{newCategoryError}</p>
                 ) : null}
               </div>
             ) : (
@@ -383,7 +383,7 @@ export const TemplateFormDialog = ({
                     return (
                       <div key={option} className="flex items-center gap-1 px-1">
                         <DropdownMenuItem
-                          className="min-w-0 flex-1 cursor-pointer font-segoe text-xs"
+                          className="min-w-0 flex-1 cursor-pointer font-inter text-xs"
                           onSelect={() => onCategoryChange(option)}
                         >
                           <span className="truncate">{formatTemplateCategoryDropdownLabel(option)}</span>
@@ -473,7 +473,7 @@ export const TemplateFormDialog = ({
               onChange={(event) => onDescriptionChange(event.target.value)}
               placeholder="Enter a brief description of the form or template."
               rows={3}
-              className="w-full resize-none rounded-md border border-slate-300 bg-admin-surface px-2 py-1.5 font-segoe text-[13px] font-normal leading-[140%] text-text-default outline-none placeholder:text-text-disabled"
+              className="w-full resize-none rounded-md border border-slate-300 bg-admin-surface px-2 py-1.5 font-inter text-[13px] font-normal leading-[140%] text-text-default outline-none placeholder:text-text-disabled"
             />
           </div>
 
@@ -489,10 +489,10 @@ export const TemplateFormDialog = ({
                   <Upload className="h-5 w-5 text-public-text-brand-secondary" strokeWidth={1.6} />
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <p className="font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand">
+                  <p className="font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand">
                     Click to browse file
                   </p>
-                  <p className="font-segoe text-[11px] font-normal leading-[140%] text-slate-500">
+                  <p className="font-inter text-[11px] font-normal leading-[140%] text-slate-500">
                     Supports PDF, DOCX, and XLSX documents up to 10 MB
                   </p>
                 </div>
@@ -512,7 +512,7 @@ export const TemplateFormDialog = ({
                       {SwatchIcon ? <SwatchIcon className={cn("h-5 w-5", swatch?.iconColor)} strokeWidth={1.6} /> : null}
                     </div>
                     <div className="flex min-w-0 flex-col gap-0.5">
-                      <p className="truncate font-segoe text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
+                      <p className="truncate font-inter text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
                         {displayFileName}
                       </p>
                       <p className="truncate font-cascadia text-[11px] font-normal leading-[140%] text-segmented-control-inactive-text">
@@ -537,7 +537,7 @@ export const TemplateFormDialog = ({
         {mode === "create" ? (
           <div className="flex items-start gap-2.5 rounded-md border border-brand-info-border bg-brand-info-subtle p-6">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-            <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-public-bg-brand">
+            <p className="text-justify font-inter text-[13px] font-normal leading-[120%] text-public-bg-brand">
               Newly uploaded forms and templates are automatically set to <span className="font-semibold">Active</span> and
               available to organization users.
             </p>
@@ -549,7 +549,7 @@ export const TemplateFormDialog = ({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50"
+            className="h-11 rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-text-default transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -557,7 +557,7 @@ export const TemplateFormDialog = ({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="flex h-11 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+            className="flex h-11 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
           >
             {mode === "edit" ? (
               <Save className="h-4 w-4 shrink-0" strokeWidth={1.6} />

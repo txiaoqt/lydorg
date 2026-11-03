@@ -45,13 +45,13 @@ const LegalPolicy = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+            <h1 className="font-inter font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Legal Policies
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
+            <p className="font-inter font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
               Review how Y-TRACE handles your data and the terms for using the platform.
             </p>
           </div>
@@ -64,7 +64,7 @@ const LegalPolicy = () => {
           <div className="flex gap-2 sm:gap-[10px] rounded-xl sm:rounded-[16px] border border-public-border-default bg-white p-2 sm:p-[16px] shadow-2xs sm:shadow-public-nav">
             <Link
               to="/privacy"
-              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
+              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-inter text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
                 !isTerms
                   ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                   : "text-public-text-brand hover:bg-slate-50"
@@ -74,7 +74,7 @@ const LegalPolicy = () => {
             </Link>
             <Link
               to="/terms"
-              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-segoe text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
+              className={`flex h-9 sm:h-[48px] flex-1 items-center justify-center rounded-lg sm:rounded-[8px] px-3 sm:px-[16px] font-inter text-sm sm:text-public-fs-body-sm font-semibold sm:font-normal leading-none sm:leading-[100%] transition-colors shadow-2xs sm:shadow-none ${
                 isTerms
                   ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                   : "text-public-text-brand hover:bg-slate-50"

@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/dialog";
 
 const linkClass =
-  "inline-block rounded-sm py-1 font-segoe text-sm font-normal leading-relaxed text-white/75 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
+  "inline-block rounded-sm py-1 font-inter text-[13px] font-normal leading-[1.5] text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
-const groupTitleClass = "font-segoe text-sm font-semibold leading-[140%] text-white";
+const groupTitleClass = "font-editorial text-base font-normal leading-[1.2] text-white";
 
 const utilityLinkClass =
-  "rounded-sm py-1 font-segoe text-xs font-normal text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
+  "rounded-sm py-1 font-inter text-xs font-normal text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
 const FooterLinkGroup = ({
   title,
@@ -31,7 +31,7 @@ const FooterLinkGroup = ({
 }) => (
   <nav aria-label={title} className={`flex flex-col ${className}`}>
     <h2 className={groupTitleClass}>{title}</h2>
-    <ul className="mt-3 flex flex-col gap-2.5">
+    <ul className="mt-3 flex flex-col gap-2">
       {links.map(({ label, to }) => (
         <li key={to}>
           <Link to={to} className={linkClass}>
@@ -62,11 +62,11 @@ const Footer = () => {
           {/* Brand column */}
           <div className="col-span-2 flex flex-col gap-4 lg:col-span-6 lg:row-span-2 lg:gap-5 lg:pr-10">
             <img src="/FullFooter.svg" alt="Y-TRACE — Pasig City" className="h-10 w-auto self-start object-contain sm:h-12" />
-            <p className="max-w-[360px] font-segoe text-sm font-normal leading-relaxed text-white/80">
+            <p className="max-w-[360px] font-inter text-[13px] font-normal leading-[1.6] text-white/70">
               Supporting Pasig City youth organizations through streamlined registration, accessible digital services, and transparent compliance processes.
             </p>
             <div className="mt-1 flex flex-col gap-2.5">
-              <p className="flex items-start gap-2 font-segoe text-sm font-normal leading-relaxed text-white/80">
+              <p className="flex items-start gap-2 font-inter text-sm font-normal leading-relaxed text-white/80">
                 <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{address}</span>
               </p>
@@ -74,7 +74,7 @@ const Footer = () => {
                 href={gmailComposeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex w-fit items-center gap-2 rounded-sm py-1 font-segoe text-sm font-normal leading-relaxed text-white/80 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="inline-flex w-fit items-center gap-2 rounded-sm py-1 font-inter text-[13px] font-normal leading-[1.6] text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
                 {email}
@@ -121,7 +121,7 @@ const Footer = () => {
 
         {/* Utility bar */}
         <div className="mt-9 flex flex-col gap-3 border-t border-white/20 pt-5 sm:mt-10 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <p className="font-segoe text-xs font-normal leading-relaxed text-white/70">
+          <p className="font-inter text-xs font-normal leading-relaxed text-white/70">
             © 2026 Pasig City Youth Development Office. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -147,12 +147,12 @@ const Footer = () => {
       <Dialog open={cookiePrefsOpen} onOpenChange={setCookiePrefsOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-segoe">Cookie preferences</DialogTitle>
-            <DialogDescription className="font-segoe">
+            <DialogTitle className="font-inter">Cookie preferences</DialogTitle>
+            <DialogDescription className="font-inter">
               Y-TRACE uses only the storage needed to run the portal. Nothing here is used for advertising or cross-site tracking.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-3 font-segoe text-sm">
+          <div className="flex flex-col gap-3 font-inter text-sm">
             <div className="rounded-lg border border-border p-3">
               <p className="font-semibold text-foreground">Essential storage — always active</p>
               <p className="mt-1 leading-relaxed text-muted-foreground">

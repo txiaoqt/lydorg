@@ -172,6 +172,11 @@ const YPOP_EVENT_PARTICIPATION_COLUMNS = "id,organization_id,activity_id,activit
 const YPOP_ORG_ACTIVITY_COLUMNS = "id,ypop_entry_id,organization_id,submitted_by,activity_name,activity_date,venue,narrative_report,total_attendees,girls_attendees,boys_attendees,status,admin_remarks,submitted_at,approved_at,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at";
 const INQUIRY_COLUMNS = "id,organization_id,submitted_by,submitter_name,organization_name,email,subject,description,status,admin_remarks,reviewed_at,created_at,updated_at";
 
+// crypto.randomUUID only exists on https/localhost; getRandomValues also works on LAN http dev URLs.
+const randomPathId = () =>
+  globalThis.crypto?.randomUUID?.() ??
+  Array.from(globalThis.crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+
 export const assertOrganizationNotSuspended = (
   profile?: { profile_status?: string | null; profileStatus?: string | null } | null,
   actionName = "This action",
@@ -4183,7 +4188,7 @@ export const submitOrganizationDocumentToSupabase = async (params: {
   }
 
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${organizationProfile.id}/${documentTypeRow.id}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+  const objectPath = `${organizationProfile.id}/${documentTypeRow.id}/${Date.now()}-${randomPathId()}-${safeFileName}`;
   const submitMode = params.submitMode ?? "review";
 
   const storageUri = await uploadRegistrationObject({ client: supabase, configuration: () => supabaseUrl, userId: session.user.id,
@@ -4321,7 +4326,7 @@ export const replaceOrganizationDocumentFileInSupabase = async (params: {
 
   const documentTypeId = await resolveTemplateDatabaseId(params.documentTypeId);
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${organizationProfile.id}/${documentTypeId}/revisions/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+  const objectPath = `${organizationProfile.id}/${documentTypeId}/revisions/${Date.now()}-${randomPathId()}-${safeFileName}`;
   const storageUri = await uploadRegistrationObject({ client: supabase, configuration: () => supabaseUrl, userId: session.user.id,
     bucket: ORGANIZATION_DOCUMENTS_BUCKET, objectPath, file: params.file, options: params.uploadOptions });
 
@@ -4851,7 +4856,7 @@ const getAuthenticatedAdminSession = () => {
 
 const uploadFileToStorage = async (bucket: string, pathPrefix: string, file: File) => {
   const safeFileName = sanitizeFileName(file.name);
-  const objectPath = `${pathPrefix}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+  const objectPath = `${pathPrefix}/${Date.now()}-${randomPathId()}-${safeFileName}`;
   const { error: uploadError } = await supabase!.storage.from(bucket).upload(objectPath, file, {
     upsert: false,
     contentType: file.type || "application/octet-stream",
@@ -8856,7 +8861,7 @@ export const uploadRenewalDocumentFileInSupabase = async (params: {
     throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
   }
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/${Date.now()}-${randomPathId()}-${safeFileName}`;
 
   // Check if an existing file is already registered for this document type
   const { data: existingRows } = await supabase
@@ -8941,7 +8946,7 @@ export const replaceRenewalDocumentFileInSupabase = async (params: {
     throw new Error(`Could not find the configured renewal requirement${documentTypeName ? ` “${documentTypeName}”` : ""}. Refresh the page and try again.`);
   }
   const safeFileName = sanitizeFileName(params.file.name);
-  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+  const objectPath = `${params.organizationId}/renewal/${params.renewalId}/${resolvedTypeId}/revisions/${Date.now()}-${randomPathId()}-${safeFileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from(ORGANIZATION_DOCUMENTS_BUCKET)

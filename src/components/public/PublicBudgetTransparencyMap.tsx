@@ -59,40 +59,39 @@ export default function PublicBudgetTransparencyMap({
   );
 
   return (
-    <section aria-label={`Public budget map for FY ${fiscalYear}`} className="space-y-3">
+    <section aria-label={`Public budget map for FY ${fiscalYear}`} className="public-budget-map space-y-3">
       <div className="public-budget-map__filters flex justify-end gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
               aria-label={`Select Fiscal Year. Currently FY ${fiscalYear}`}
-              className="flex h-11 min-w-[130px] items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-segoe text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="group flex h-10 min-w-[130px] items-center justify-between gap-2 rounded-[2px] border border-public-border-default bg-white px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2"
             >
               <span className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.75} aria-hidden="true" />
+                <Calendar className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.75} aria-hidden="true" />
                 <span>FY {fiscalYear}</span>
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.75} aria-hidden="true" />
+              <ChevronDown className="h-4 w-4 shrink-0 text-public-text-brand transition-transform group-data-[state=open]:rotate-180" strokeWidth={1.75} aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-[1000] w-44 rounded-lg border-slate-200 bg-white p-1 shadow-lg">
+          <DropdownMenuContent align="end" sideOffset={4} className="z-[1000] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[130px] rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg">
             {availableFiscalYears.map((year) => (
               <DropdownMenuItem
                 key={year}
                 onSelect={() => onFiscalYearChange(year)}
                 className={cn(
-                  "flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm font-medium",
-                  year === fiscalYear ? "bg-primary/10 font-bold text-primary" : "text-slate-700 hover:bg-slate-100",
+                  "flex cursor-pointer items-center justify-between rounded-none border-b border-l-2 border-public-border-default px-3 py-3 text-sm last:border-b-0 focus:bg-public-bg-section focus:text-public-text-brand",
+                  year === fiscalYear ? "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand" : "border-l-transparent text-public-text-neutral-default",
                 )}
               >
                 <span>FY {year}</span>
-                {year === fiscalYear && <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <label className="public-budget-map__barangay-filter inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-segoe text-sm font-semibold text-slate-800 focus-within:ring-2 focus-within:ring-blue-600">
-          <MapPin className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+        <label className="public-budget-map__barangay-filter inline-flex min-h-10 items-center gap-2 rounded-[2px] border border-public-border-default bg-white px-3 font-inter text-sm font-semibold text-public-text-brand focus-within:border-public-border-brand">
+          <MapPin className="h-4 w-4 shrink-0 text-public-text-secondary" aria-hidden="true" />
           <span className="sr-only">Filter by barangay</span>
           <select aria-label="Filter by barangay" value={selectedBarangay} onChange={(event) => setSelectedBarangay(event.target.value)} className="min-w-0 w-full bg-transparent outline-none">
             <option value="all">All barangays</option>
@@ -101,9 +100,9 @@ export default function PublicBudgetTransparencyMap({
         </label>
       </div>
       {error && (
-        <div role="alert" className="flex flex-col gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+        <div role="alert" className="flex flex-col gap-3 rounded-[2px] border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
           <span className="flex items-center gap-2 text-sm"><AlertCircle className="h-4 w-4 shrink-0" />{error}</span>
-          <button type="button" onClick={() => setRetryKey((key) => key + 1)} className="inline-flex min-h-9 items-center gap-2 self-start rounded-md border border-amber-300 bg-white px-3 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-100 sm:self-auto"><RefreshCw className="h-3.5 w-3.5" />Retry</button>
+          <button type="button" onClick={() => setRetryKey((key) => key + 1)} className="inline-flex min-h-9 items-center gap-2 self-start rounded-[2px] border border-amber-300 bg-white px-3 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-100 sm:self-auto"><RefreshCw className="h-3.5 w-3.5" />Retry</button>
         </div>
       )}
       <PasigBudgetMap

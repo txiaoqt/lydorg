@@ -23,12 +23,12 @@ export const NewsPreviewDialog = ({ news, onOpenChange }: NewsPreviewDialogProps
             <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
               <div className="flex flex-col gap-2">
                 {news.category ? (
-                  <span className="flex w-fit items-center gap-1 rounded-[4px] border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1 font-segoe text-[13px] font-semibold leading-[140%] text-text-tertiary-800">
+                  <span className="flex w-fit items-center gap-1 rounded-[4px] border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1 font-inter text-[13px] font-semibold leading-[140%] text-text-tertiary-800">
                     <Tag className="h-[13px] w-[13px] shrink-0" strokeWidth={1.3} />
                     {news.category}
                   </span>
                 ) : null}
-                <DialogTitle className="font-segoe text-lg font-semibold leading-none text-text-default">
+                <DialogTitle className="font-inter text-lg font-semibold leading-none text-text-default">
                   {news.title}
                 </DialogTitle>
                 <p className="flex items-center gap-1 font-cascadia text-xs font-normal leading-[140%] text-slate-500">
@@ -64,13 +64,13 @@ export const NewsPreviewDialog = ({ news, onOpenChange }: NewsPreviewDialogProps
                 </div>
               )}
 
-              <p className="border-b border-slate-300 py-4 text-justify font-segoe text-sm font-normal leading-[120%] text-text-default">
+              <p className="border-b border-slate-300 py-4 text-justify font-inter text-sm font-normal leading-[120%] text-text-default">
                 {news.description}
               </p>
 
               {news.facebookPostUrl ? (
                 <div className="flex items-center justify-between gap-2 rounded-md border border-bg-info-secondary bg-info-panel-subtle px-6 py-4">
-                  <p className="flex items-center gap-2 font-segoe text-xs font-normal leading-[140%] text-slate-500">
+                  <p className="flex items-center gap-2 font-inter text-xs font-normal leading-[140%] text-slate-500">
                     <AlertCircle className="h-[13px] w-[13px] shrink-0" strokeWidth={1.3} />
                     Also posted on the PCYDO&apos;s Facebook page
                   </p>
@@ -78,7 +78,7 @@ export const NewsPreviewDialog = ({ news, onOpenChange }: NewsPreviewDialogProps
                     href={news.facebookPostUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex h-9 w-[159px] shrink-0 items-center justify-center gap-1.5 rounded-md bg-public-bg-brand px-3 py-2 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                    className="flex h-9 w-[159px] shrink-0 items-center justify-center gap-1.5 rounded-md bg-public-bg-brand px-3 py-2 font-inter text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                   >
                     View on Facebook
                     <ExternalLink className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />

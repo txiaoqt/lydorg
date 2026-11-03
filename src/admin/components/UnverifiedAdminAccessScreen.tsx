@@ -84,10 +84,10 @@ export const UnverifiedAdminAccessScreen = ({
               <ShieldAlert className="h-7 w-7" strokeWidth={1.8} />
             </div>
             <div className="space-y-1">
-              <h1 className="font-segoe text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              <h1 className="font-inter text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 Administrator Email Verification Required
               </h1>
-              <p className="font-segoe text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
+              <p className="font-inter text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
                 Your administrator account email address must be verified before you can access the Admin Portal.
               </p>
             </div>
@@ -100,10 +100,10 @@ export const UnverifiedAdminAccessScreen = ({
                 <MailCheck className="h-4 w-4 text-public-bg-brand" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-segoe text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <p className="font-inter text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Target Administrator Email
                 </p>
-                <p className="font-segoe text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
+                <p className="font-inter text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
                   {email}
                 </p>
               </div>
@@ -158,7 +158,7 @@ export const UnverifiedAdminAccessScreen = ({
 
       {/* Footer */}
       <footer className="w-full max-w-5xl mx-auto pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
-        <p className="font-segoe text-xs text-slate-400 dark:text-slate-500">
+        <p className="font-inter text-xs text-slate-400 dark:text-slate-500">
           Pasig City Youth Development Office (PCYDO) — Y-TRACE Security Gateway
         </p>
       </footer>

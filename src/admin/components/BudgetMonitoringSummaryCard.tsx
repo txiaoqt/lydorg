@@ -32,7 +32,7 @@ const BudgetStatChip = ({
   valueClassName?: string;
 }) => (
   <div className={`flex h-[90px] min-w-0 w-full flex-col justify-between rounded-lg border px-3 py-3 shadow-2xs ${className}`}>
-    <p className={`break-words font-segoe text-[11px] font-semibold uppercase leading-tight tracking-wider ${titleClassName ?? "text-muted-foreground"}`}>
+    <p className={`break-words font-inter text-[11px] font-semibold uppercase leading-tight tracking-wider ${titleClassName ?? "text-muted-foreground"}`}>
       {title}
     </p>
     <p className={`font-cascadia text-base font-bold leading-[120%] tracking-tight ${valueClassName ?? "text-foreground"}`}>
@@ -59,15 +59,15 @@ export const BudgetMonitoringSummaryCard = ({
     <div className="flex min-w-0 flex-1 flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 shadow-xs lg:flex-[3]">
       <div className="flex items-start justify-between gap-3 border-b border-border px-2 py-3 pb-4">
         <div className="flex flex-col gap-1">
-          <h2 className="font-segoe text-lg font-semibold leading-none text-foreground">Budget Monitoring</h2>
-          <p className="font-segoe text-[13px] font-normal leading-none text-muted-foreground">
+          <h2 className="font-inter text-lg font-semibold leading-none text-foreground">Budget Monitoring</h2>
+          <p className="font-inter text-[13px] font-normal leading-none text-muted-foreground">
             Track the office&rsquo;s allocation, approved commitments, releases, and completed liquidations for this fiscal year.
           </p>
         </div>
         <button
           type="button"
           onClick={onManageRequests}
-          className="shrink-0 rounded-md p-1.5 font-segoe text-[13px] font-semibold leading-[140%] text-primary transition-all hover:underline"
+          className="shrink-0 rounded-md p-1.5 font-inter text-[13px] font-semibold leading-[140%] text-primary transition-all hover:underline"
         >
           Manage requests
         </button>
@@ -75,7 +75,7 @@ export const BudgetMonitoringSummaryCard = ({
 
       <div className="flex flex-col gap-3 px-3 py-3">
         <div className="flex items-center justify-between">
-          <p className="font-segoe text-[13px] font-semibold leading-none text-foreground">
+          <p className="font-inter text-[13px] font-semibold leading-none text-foreground">
             {BUDGET_MONITORING_LABELS.allocation} &middot; {fiscalYearLabel}
           </p>
           <p className="font-cascadia text-[13px] font-bold leading-none text-foreground/90">
@@ -84,7 +84,7 @@ export const BudgetMonitoringSummaryCard = ({
         </div>
 
         <div className="border-t border-border pt-3">
-          <p className="mb-3 font-segoe text-xs font-semibold text-foreground">
+          <p className="mb-3 font-inter text-xs font-semibold text-foreground">
             Budget Execution Pipeline &middot; {fiscalYearLabel}
           </p>
           <BudgetExecutionPipeline

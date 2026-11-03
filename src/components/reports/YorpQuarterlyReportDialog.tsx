@@ -166,7 +166,7 @@ export function YorpQuarterlyReportDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !generating && onOpenChange(nextOpen)}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto font-segoe">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto font-inter">
         <DialogHeader className="space-y-1 pb-1">
           <DialogTitle className="flex items-center gap-2 text-public-fs-title-base sm:text-public-fs-title-lg font-bold text-slate-900">
             <BarChart3 className="h-5 w-5 text-public-bg-brand" strokeWidth={1.8} />

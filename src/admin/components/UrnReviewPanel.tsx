@@ -85,7 +85,7 @@ export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
         {profile.profileStatus === "suspended_inactive" ? (
           <div className="mt-6 flex items-start gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle p-4">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-icon-danger-secondary" />
-            <p className="font-segoe text-sm text-icon-danger-secondary">
+            <p className="font-inter text-sm text-icon-danger-secondary">
               Review actions are unavailable because this organization account is permanently suspended.
             </p>
           </div>

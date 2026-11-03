@@ -59,20 +59,20 @@ const PAGE_SIZE = 10;
 const StatusPill = ({ status }: { status: YorpStatus }) => {
   if (status === "active") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-positive-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
         Active
       </span>
     );
   }
   if (status === "expired") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-icon-danger-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-danger-secondary">
         Expired
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-text-warning-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-warning-secondary">
       Expiring Soon
     </span>
   );
@@ -193,7 +193,7 @@ export const YorpRegistryTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-segoe text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -217,7 +217,7 @@ export const YorpRegistryTable = ({
               setPage(0);
             }}
             placeholder="Search by URN or organization..."
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-public-fs-body-sm text-text-default outline-none placeholder:text-text-disabled"
           />
         </div>
 
@@ -225,7 +225,7 @@ export const YorpRegistryTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[156px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{districtFilter === "all" ? "All districts" : districtFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -238,7 +238,7 @@ export const YorpRegistryTable = ({
             <DropdownMenuItem
               onClick={() => handleDistrictFilterChange("all")}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 districtFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -249,7 +249,7 @@ export const YorpRegistryTable = ({
                 key={district}
                 onClick={() => handleDistrictFilterChange(district)}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   districtFilter === district && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -263,7 +263,7 @@ export const YorpRegistryTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-[180px] shrink-0 items-center justify-between gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="truncate">{barangayFilter === "all" ? "All barangays" : barangayFilter}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-text-disabled" strokeWidth={1.6} />
@@ -279,7 +279,7 @@ export const YorpRegistryTable = ({
                 setPage(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 barangayFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -293,7 +293,7 @@ export const YorpRegistryTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   barangayFilter === barangay.name && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -307,7 +307,7 @@ export const YorpRegistryTable = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-segoe text-public-fs-body-sm text-text-default"
+              className="flex h-10 w-fit shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-2 font-inter text-public-fs-body-sm text-text-default"
             >
               <span className="whitespace-nowrap">
                 {classificationFilter === "all" ? "All major classifications" : classificationFilter}
@@ -325,7 +325,7 @@ export const YorpRegistryTable = ({
                 setPage(0);
               }}
               className={cn(
-                "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                 classificationFilter === "all" && "bg-bg-info-tertiary text-public-text-brand",
               )}
             >
@@ -339,7 +339,7 @@ export const YorpRegistryTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "rounded-none px-4 py-2.5 font-segoe text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
+                  "rounded-none px-4 py-2.5 font-inter text-sm text-text-default focus:bg-slate-50 focus:text-text-default",
                   classificationFilter === classification && "bg-bg-info-tertiary text-public-text-brand",
                 )}
               >
@@ -358,13 +358,13 @@ export const YorpRegistryTable = ({
           className="flex items-center justify-between gap-4 border-b border-slate-300 bg-slate-50/95 px-4 py-2.5 transition-all animate-in fade-in slide-in-from-top-1 duration-150"
         >
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center rounded-full bg-slate-200/80 px-2.5 py-0.5 font-segoe text-xs font-semibold text-slate-800">
+            <span className="inline-flex items-center rounded-full bg-slate-200/80 px-2.5 py-0.5 font-inter text-xs font-semibold text-slate-800">
               {selectedIds.size} {selectedIds.size === 1 ? "organization" : "organizations"} selected
             </span>
             <button
               type="button"
               onClick={() => setSelectedIds(new Set())}
-              className="font-segoe text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors px-2 py-1 rounded hover:bg-slate-200/60 active:scale-[0.98]"
+              className="font-inter text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors px-2 py-1 rounded hover:bg-slate-200/60 active:scale-[0.98]"
             >
               Clear selection
             </button>
@@ -372,7 +372,7 @@ export const YorpRegistryTable = ({
 
           <div className="flex items-center gap-3">
             {selectedIds.size > 25 && (
-              <span className="font-segoe text-xs text-amber-700 font-medium">
+              <span className="font-inter text-xs text-amber-700 font-medium">
                 Maximum 25 organizations per bulk deletion
               </span>
             )}
@@ -386,7 +386,7 @@ export const YorpRegistryTable = ({
                   : undefined
               }
               className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-md border px-3 font-segoe text-xs font-semibold transition-all active:scale-[0.98]",
+                "inline-flex h-8 items-center gap-1.5 rounded-md border px-3 font-inter text-xs font-semibold transition-all active:scale-[0.98]",
                 selectedIds.size > 0 && selectedIds.size <= 25
                   ? "border-red-300 bg-red-50/80 text-red-700 hover:bg-red-100 hover:border-red-400 cursor-pointer"
                   : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-60",
@@ -403,7 +403,7 @@ export const YorpRegistryTable = ({
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[840px]">
           {/* Column headers */}
-          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
             <span className="w-6 shrink-0 flex items-center justify-center">
               <input
                 type="checkbox"
@@ -428,8 +428,8 @@ export const YorpRegistryTable = ({
           {/* Rows */}
           {pageItems.length === 0 ? (
             <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
-              <p className="font-segoe text-sm font-semibold text-text-default">No matching organizations</p>
-              <p className="font-segoe text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
+              <p className="font-inter text-sm font-semibold text-text-default">No matching organizations</p>
+              <p className="font-inter text-xs text-slate-500">Try adjusting the search, status, or location filters.</p>
             </div>
           ) : (
             pageItems.map(({ org, registrationDate, expiryDate, yorpStatus }) => {
@@ -457,10 +457,10 @@ export const YorpRegistryTable = ({
                   </div>
 
                   <div className="flex w-[19%] min-w-0 flex-col gap-0.5">
-                    <p className="truncate font-segoe text-sm font-semibold leading-[140%] text-text-default">
+                    <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                       {org.organizationName}
                     </p>
-                    <p className="truncate font-segoe text-xs leading-[140%] text-slate-500">
+                    <p className="truncate font-inter text-xs leading-[140%] text-slate-500">
                       {[org.district, org.barangay].filter(Boolean).join(" · ") || "No location provided"}
                     </p>
                   </div>
@@ -469,18 +469,18 @@ export const YorpRegistryTable = ({
                     {org.majorClassification ? (
                       <CategoryChip category={org.majorClassification} />
                     ) : (
-                      <span className="font-segoe text-xs text-slate-500">—</span>
+                      <span className="font-inter text-xs text-slate-500">—</span>
                     )}
                   </div>
 
                   <div className="flex w-[12%] items-center">
-                    <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">
+                    <p className="font-inter text-sm font-normal leading-[140%] text-text-default">
                       {format(registrationDate, "d MMM yyyy")}
                     </p>
                   </div>
 
                   <div className="flex w-[13%] items-center">
-                    <p className="font-segoe text-sm font-normal leading-[140%] text-text-default">
+                    <p className="font-inter text-sm font-normal leading-[140%] text-text-default">
                       {format(expiryDate, "d MMM yyyy")}
                     </p>
                   </div>
@@ -493,7 +493,7 @@ export const YorpRegistryTable = ({
                     <button
                       type="button"
                       onClick={() => onView(org.id)}
-                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-segoe text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover active:scale-[0.98]"
+                      className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover active:scale-[0.98]"
                     >
                       <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
                       View
@@ -508,7 +508,7 @@ export const YorpRegistryTable = ({
 
       {/* Footer / pagination */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-300 p-4">
-        <p className="font-segoe text-[13px] text-text-neutral-tertiary">
+        <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{entries.length}</span> records
         </p>
@@ -517,7 +517,7 @@ export const YorpRegistryTable = ({
             type="button"
             onClick={() => changePage(clampedPage - 1)}
             disabled={clampedPage === 0}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-neutral-tertiary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-neutral-tertiary disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.6} />
             Previous
@@ -531,7 +531,7 @@ export const YorpRegistryTable = ({
                   type="button"
                   onClick={() => changePage(index)}
                   className={cn(
-                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-segoe text-[13px]",
+                    "flex h-[29px] w-8 items-center justify-center rounded-lg font-inter text-[13px]",
                     index === clampedPage
                       ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                       : "text-text-default hover:bg-slate-50",
@@ -545,7 +545,7 @@ export const YorpRegistryTable = ({
             type="button"
             onClick={() => changePage(clampedPage + 1)}
             disabled={clampedPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-md px-3 py-2 font-segoe text-[13px] text-text-default disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md px-3 py-2 font-inter text-[13px] text-text-default disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" strokeWidth={1.6} />

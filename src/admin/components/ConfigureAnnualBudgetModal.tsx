@@ -105,10 +105,10 @@ export const ConfigureAnnualBudgetModal = ({
               <Coins className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="font-segoe text-lg font-bold text-text-default">
+              <DialogTitle className="font-inter text-lg font-bold text-text-default">
                 {existingAllocation ? `Edit FY ${fiscalYear} Budget Allocation` : `Configure FY ${fiscalYear} Budget Allocation`}
               </DialogTitle>
-              <DialogDescription className="font-segoe text-xs text-slate-500">
+              <DialogDescription className="font-inter text-xs text-slate-500">
                 Establish the statutory annual youth funding baseline for the Local Youth Development Office.
               </DialogDescription>
             </div>
@@ -117,20 +117,20 @@ export const ConfigureAnnualBudgetModal = ({
 
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
           {errorMsg ? (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 font-segoe text-xs text-red-700">
+            <div className="rounded-md border border-red-200 bg-red-50 p-3 font-inter text-xs text-red-700">
               {errorMsg}
             </div>
           ) : null}
 
           <div className="space-y-1.5">
-            <label className="font-segoe text-xs font-semibold text-text-default">Fiscal Year</label>
+            <label className="font-inter text-xs font-semibold text-text-default">Fiscal Year</label>
             <div className="flex h-10 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 font-cascadia text-sm font-bold text-text-default">
               FY {fiscalYear}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="budget-amount" className="font-segoe text-xs font-semibold text-text-default">
+            <label htmlFor="budget-amount" className="font-inter text-xs font-semibold text-text-default">
               Total FY Allocation Amount (₱) <span className="text-red-500">*</span>
             </label>
             <input
@@ -149,14 +149,14 @@ export const ConfigureAnnualBudgetModal = ({
                 Preview: {formatCurrencyPreview(parsedAmount)}
               </p>
             ) : (
-              <p className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="font-inter text-[11px] text-slate-500 dark:text-slate-400">
                 Enter the approved statutory budget ceiling appropriated for youth PPAs in this fiscal year.
               </p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="statutory-notes" className="font-segoe text-xs font-semibold text-text-default">
+            <label htmlFor="statutory-notes" className="font-inter text-xs font-semibold text-text-default">
               Statutory Baseline Notes / Authority
             </label>
             <textarea
@@ -165,14 +165,14 @@ export const ConfigureAnnualBudgetModal = ({
               placeholder="e.g. City Ordinance No. 2026-XX, Approved PCYDO Youth Development Fund Appropriation..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="flex w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface p-3 font-segoe text-xs text-text-default outline-none transition-colors focus:border-public-bg-brand placeholder:text-slate-400"
+              className="flex w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface p-3 font-inter text-xs text-text-default outline-none transition-colors focus:border-public-bg-brand placeholder:text-slate-400"
             />
           </div>
 
           <div className="flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
             <div className="flex flex-col">
-              <span className="font-segoe text-xs font-semibold text-text-default">Active Allocation</span>
-              <span className="font-segoe text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="font-inter text-xs font-semibold text-text-default">Active Allocation</span>
+              <span className="font-inter text-[11px] text-slate-500 dark:text-slate-400">
                 Mark as the authoritative active budget for monitoring and headroom calculation.
               </span>
             </div>
@@ -189,14 +189,14 @@ export const ConfigureAnnualBudgetModal = ({
               type="button"
               disabled={saving}
               onClick={() => onOpenChange(false)}
-              className="flex h-10 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-admin-surface px-4 py-2 font-segoe text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+              className="flex h-10 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-admin-surface px-4 py-2 font-inter text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving || !isAmountValid}
-              className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-segoe text-xs font-semibold text-white transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+              className="flex h-10 items-center justify-center gap-2 rounded-md bg-public-bg-brand px-5 py-2 font-inter text-xs font-semibold text-white transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
             >
               {saving ? (
                 <>

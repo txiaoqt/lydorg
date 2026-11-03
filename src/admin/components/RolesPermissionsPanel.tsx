@@ -79,7 +79,7 @@ const PermissionGrid = ({ permissionCodes, readOnly, disabled, onToggle, onDesel
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-neutral-100 p-2">
                 <GroupIcon className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.6} />
               </div>
-              <p className="font-segoe text-sm font-semibold leading-none text-public-text-neutral-default">{group.label}</p>
+              <p className="font-inter text-sm font-semibold leading-none text-public-text-neutral-default">{group.label}</p>
             </div>
             <div className="flex items-center gap-1">
               <span className="inline-flex items-center rounded border-[0.6px] border-slate-300 bg-admin-surface px-1.5 py-1 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
@@ -90,7 +90,7 @@ const PermissionGrid = ({ permissionCodes, readOnly, disabled, onToggle, onDesel
                   type="button"
                   disabled={disabled}
                   onClick={() => onDeselectAll(groupCodes)}
-                  className="font-segoe text-[13px] font-semibold leading-none text-public-bg-brand hover:underline disabled:opacity-50"
+                  className="font-inter text-[13px] font-semibold leading-none text-public-bg-brand hover:underline disabled:opacity-50"
                 >
                   Deselect All
                 </button>
@@ -113,10 +113,10 @@ const PermissionGrid = ({ permissionCodes, readOnly, disabled, onToggle, onDesel
                     className="mt-0.5 border-slate-300 data-[state=checked]:border-public-bg-brand data-[state=checked]:bg-public-bg-brand data-[state=checked]:text-public-text-neutral-on-neutral"
                   />
                   <div className="flex flex-col gap-0.5">
-                    <p className="font-segoe text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
+                    <p className="font-inter text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
                       {item.label}
                     </p>
-                    <p className="font-segoe text-[11px] font-normal leading-[140%] text-segmented-control-inactive-text">
+                    <p className="font-inter text-[11px] font-normal leading-[140%] text-segmented-control-inactive-text">
                       {item.description}
                     </p>
                   </div>
@@ -185,10 +185,10 @@ export const RolesPermissionsPanel = ({
         <div className="flex items-center gap-3">
           <Shield className="h-6 w-6 shrink-0 text-public-text-neutral-default" strokeWidth={2.5} />
           <div className="flex flex-col gap-0.5">
-            <p className="font-segoe text-lg font-semibold leading-[120%] tracking-[-0.02em] text-text-default">
+            <p className="font-inter text-lg font-semibold leading-[120%] tracking-[-0.02em] text-text-default">
               Roles &amp; Permissions
             </p>
-            <p className="font-segoe text-public-fs-body-sm font-normal leading-[140%] text-slate-500">
+            <p className="font-inter text-public-fs-body-sm font-normal leading-[140%] text-slate-500">
               Configure administrator roles and manage feature-level permissions.
             </p>
           </div>
@@ -199,7 +199,7 @@ export const RolesPermissionsPanel = ({
             type="button"
             onClick={() => onSubTabChange("edit")}
             className={cn(
-              "flex h-11 items-center justify-center whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-[140%] transition-colors",
+              "flex h-11 items-center justify-center whitespace-nowrap rounded-md px-4 font-inter text-sm font-semibold leading-[140%] transition-colors",
               subTab === "edit" ? "bg-admin-surface text-public-bg-brand" : "text-segmented-control-inactive-text",
             )}
           >
@@ -209,7 +209,7 @@ export const RolesPermissionsPanel = ({
             type="button"
             onClick={() => onSubTabChange("compare")}
             className={cn(
-              "flex h-11 items-center justify-center whitespace-nowrap rounded-md px-4 font-segoe text-sm font-semibold leading-[140%] transition-colors",
+              "flex h-11 items-center justify-center whitespace-nowrap rounded-md px-4 font-inter text-sm font-semibold leading-[140%] transition-colors",
               subTab === "compare" ? "bg-admin-surface text-public-bg-brand" : "text-segmented-control-inactive-text",
             )}
           >
@@ -221,16 +221,16 @@ export const RolesPermissionsPanel = ({
       {subTab === "compare" ? (
         <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
           <div className="flex flex-col gap-2.5 border-b border-slate-300 px-4 pb-4 pt-6">
-            <p className="font-segoe text-lg font-semibold leading-none text-text-default">
+            <p className="font-inter text-lg font-semibold leading-none text-text-default">
               Compare Roles: <span className="font-bold text-role-pink-text">Super Admin</span> vs.{" "}
               <span className="font-bold text-role-blue-text">Admin</span>
             </p>
-            <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+            <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
               Compare administrator roles and review differences in their access and permissions.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-segoe text-xs font-semibold uppercase leading-[140%]">
+          <div className="flex items-center gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%]">
             <span className="flex-1 text-text-neutral-tertiary">Module</span>
             <span className="w-[140px] shrink-0 text-center text-role-pink-text">Super Admin</span>
             <span className="w-[140px] shrink-0 text-center text-role-blue-text">Admin</span>
@@ -238,7 +238,7 @@ export const RolesPermissionsPanel = ({
 
           {ADMIN_PERMISSION_GROUPS.map((group) => (
               <div key={group.code}>
-                <div className="border-b border-slate-300 bg-neutral-hover-subtle px-4 py-2 font-segoe text-[12px] font-semibold leading-[140%] text-public-text-neutral-default">
+                <div className="border-b border-slate-300 bg-neutral-hover-subtle px-4 py-2 font-inter text-[12px] font-semibold leading-[140%] text-public-text-neutral-default">
                   {group.label}
                 </div>
                 {group.items.map((item) => {
@@ -247,10 +247,10 @@ export const RolesPermissionsPanel = ({
                   return (
                     <div key={item.code} className="flex items-center gap-2 border-b border-slate-300 p-4 last:border-b-0">
                       <div className="flex flex-1 flex-col gap-0.5">
-                        <p className="font-segoe text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
+                        <p className="font-inter text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
                           {item.label}
                         </p>
-                        <p className="font-segoe text-xs font-normal leading-[140%] text-slate-500">{item.description}</p>
+                        <p className="font-inter text-xs font-normal leading-[140%] text-slate-500">{item.description}</p>
                       </div>
                       <div className="flex w-[140px] shrink-0 items-center justify-center">
                         <PermissionStatusBadge granted={superAdminGranted} />
@@ -275,15 +275,15 @@ export const RolesPermissionsPanel = ({
                 configuringRoleCode === "super_admin" ? "bg-slate-50" : "bg-admin-surface",
               )}
             >
-              <p className="font-segoe text-base font-semibold uppercase leading-[140%] text-role-pink-text">Super Admin</p>
-              <p className="text-justify font-segoe text-sm font-normal leading-[140%] text-slate-500">
+              <p className="font-inter text-base font-semibold uppercase leading-[140%] text-role-pink-text">Super Admin</p>
+              <p className="text-justify font-inter text-sm font-normal leading-[140%] text-slate-500">
                 Full administrative access, including administrator accounts, roles, permissions, and system-wide controls.
               </p>
               <div className="flex items-center justify-between gap-2 border-t border-slate-300 pt-3">
-                <p className="font-segoe text-sm font-semibold leading-[140%] text-slate-500">
+                <p className="font-inter text-sm font-semibold leading-[140%] text-slate-500">
                   {superAdminCount} {superAdminCount === 1 ? "administrator" : "administrators"} assigned
                 </p>
-                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-neutral-200 bg-neutral-100 px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-secondary">
+                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-neutral-200 bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
                   {superAdminPermsLabel} perms
                 </span>
               </div>
@@ -297,15 +297,15 @@ export const RolesPermissionsPanel = ({
                 configuringRoleCode === "admin" ? "bg-slate-50" : "bg-admin-surface",
               )}
             >
-              <p className="font-segoe text-base font-semibold uppercase leading-[140%] text-role-blue-text">Admin</p>
-              <p className="text-justify font-segoe text-sm font-normal leading-[140%] text-slate-500">
+              <p className="font-inter text-base font-semibold uppercase leading-[140%] text-role-blue-text">Admin</p>
+              <p className="text-justify font-inter text-sm font-normal leading-[140%] text-slate-500">
                 Access to administrative features, excluding administrator accounts, roles, and permission management.
               </p>
               <div className="flex items-center justify-between gap-2 border-t border-slate-300 pt-3">
-                <p className="font-segoe text-sm font-semibold leading-[140%] text-slate-500">
+                <p className="font-inter text-sm font-semibold leading-[140%] text-slate-500">
                   {adminCount} {adminCount === 1 ? "administrator" : "administrators"} assigned
                 </p>
-                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-access-pill-border bg-access-pill-bg px-2 py-1 font-segoe text-xs font-semibold leading-[140%] text-public-text-brand-secondary">
+                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-access-pill-border bg-access-pill-bg px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-brand-secondary">
                   {adminPermsLabel} perms
                 </span>
               </div>
@@ -315,7 +315,7 @@ export const RolesPermissionsPanel = ({
           <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
             <div className="flex items-start justify-between gap-4 border-b border-slate-300 px-4 pb-4 pt-6">
               <div className="flex flex-col gap-2.5">
-                <p className="font-segoe text-lg font-semibold leading-none text-text-default">
+                <p className="font-inter text-lg font-semibold leading-none text-text-default">
                   Configuring Role:{" "}
                   <span
                     className={cn(
@@ -326,7 +326,7 @@ export const RolesPermissionsPanel = ({
                     {configuringRoleCode === "super_admin" ? "Super Admin" : "Admin"}
                   </span>
                 </p>
-                <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
                   {configuringRoleCode === "super_admin"
                     ? "Full administrative access across all modules, administrator accounts, permissions, and system settings."
                     : "Standard administrative access across day-to-day modules, without administrator account or role management."}
@@ -344,7 +344,7 @@ export const RolesPermissionsPanel = ({
                       void handleConfirmSavePermissions();
                     }
                   }}
-                  className="flex h-11 shrink-0 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
+                  className="flex h-11 shrink-0 items-center gap-2 rounded-md bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                   Save Changes
@@ -357,10 +357,10 @@ export const RolesPermissionsPanel = ({
                 <div className="flex items-start gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle p-6">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-icon-danger-secondary" strokeWidth={2} />
                   <div className="flex flex-col gap-0.5">
-                    <p className="text-justify font-segoe text-[13px] font-semibold leading-[120%] text-icon-danger-secondary">
+                    <p className="text-justify font-inter text-[13px] font-semibold leading-[120%] text-icon-danger-secondary">
                       Super Admin — Full Access
                     </p>
-                    <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-icon-danger-secondary">
+                    <p className="text-justify font-inter text-[13px] font-normal leading-[120%] text-icon-danger-secondary">
                       This role has full administrative access. Permissions cannot be restricted or modified for the Super
                       Admin role.
                     </p>
@@ -375,15 +375,15 @@ export const RolesPermissionsPanel = ({
                   <div className="flex items-start gap-2.5">
                     <Lock className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" strokeWidth={2} />
                     <div className="flex flex-col gap-0.5 text-left">
-                      <p className="text-justify font-segoe text-[13px] font-semibold leading-[120%] text-text-default">
+                      <p className="text-justify font-inter text-[13px] font-semibold leading-[120%] text-text-default">
                         Super Admin — Full Access
                       </p>
-                      <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-slate-500">
+                      <p className="text-justify font-inter text-[13px] font-normal leading-[120%] text-slate-500">
                         All available permissions are granted to this role and cannot be modified.
                       </p>
                     </div>
                   </div>
-                  <span className="flex shrink-0 items-center gap-1 whitespace-nowrap font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand">
+                  <span className="flex shrink-0 items-center gap-1 whitespace-nowrap font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand">
                     {superAdminFullListExpanded ? "Hide Full List" : "View Full List"}
                     {superAdminFullListExpanded ? (
                       <ChevronDown className="h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
@@ -405,7 +405,7 @@ export const RolesPermissionsPanel = ({
 
                 <div className="flex items-center gap-2 border-t border-slate-300 pt-4">
                   <Info className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
-                  <p className="font-segoe text-sm font-normal leading-[140%] text-slate-500">
+                  <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
                     Switch to the <span className="font-semibold text-text-default">Admin</span> role above to configure its
                     permissions by category.
                   </p>
@@ -421,15 +421,15 @@ export const RolesPermissionsPanel = ({
                   <div className="flex items-start gap-2.5">
                     <Lock className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" strokeWidth={2} />
                     <div className="flex flex-col gap-0.5 text-left">
-                      <p className="text-justify font-segoe text-[13px] font-semibold leading-[120%] text-text-default">
+                      <p className="text-justify font-inter text-[13px] font-semibold leading-[120%] text-text-default">
                         Admin — Configurable Access
                       </p>
-                      <p className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-slate-500">
+                      <p className="text-justify font-inter text-[13px] font-normal leading-[120%] text-slate-500">
                         Manage the permissions available to administrators assigned to this role.
                       </p>
                     </div>
                   </div>
-                  <span className="flex shrink-0 items-center gap-1 whitespace-nowrap font-segoe text-[13px] font-semibold leading-[140%] text-public-bg-brand">
+                  <span className="flex shrink-0 items-center gap-1 whitespace-nowrap font-inter text-[13px] font-semibold leading-[140%] text-public-bg-brand">
                     {adminFullListExpanded ? "Hide Full List" : "View Full List"}
                     {adminFullListExpanded ? (
                       <ChevronDown className="h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />

@@ -1,8 +1,7 @@
-import { ChevronDown, Facebook, Filter, Search } from "lucide-react";
+import { ChevronDown, Facebook, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -72,13 +71,13 @@ const NewsReleases = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+            <h1 className="font-inter font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               News Releases
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
+            <p className="font-inter font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
               Official announcements and updates on the programs, services, and activities of the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
@@ -89,150 +88,69 @@ const NewsReleases = () => {
       <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[64px] sm:pt-[48px] lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
 
-          {/* Mobile Unified Toolbar: Single Search + [Category: All] [Visit Facebook] */}
-          <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden mb-1">
-            {/* Full-width Search Input */}
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          {/* Toolbar: search spans the row on mobile; category + Facebook split the second row */}
+          <div className="grid grid-cols-2 gap-2 font-inter md:flex md:items-center md:gap-3">
+            <div className="relative col-span-2 min-w-0 md:flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-public-text-secondary" aria-hidden="true" />
               <Input
                 type="text"
+                aria-label="Search news releases"
                 placeholder={NEWS_RELEASES_SEARCH_PLACEHOLDER}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
+                className="h-10 rounded-[2px] border-public-border-default bg-white pl-9 pr-3 text-base sm:text-sm placeholder:text-public-text-secondary focus-visible:border-public-border-brand focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
 
-            {/* Row 2: Equal-width Action Buttons (50/50 split) */}
-            <div className="flex items-center gap-2">
-              {/* Category Action Button */}
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 flex-1 rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
-                  >
-                    <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">
-                      {activeFilter === "all" ? "Category: All" : `Category: ${activeFilter}`}
-                    </span>
-                    <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-auto" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
-                  <DropdownMenuItem
-                    onClick={() => setActiveFilter("all")}
-                    className={cn(
-                      "text-xs font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                      activeFilter === "all" && "bg-primary/10 text-primary font-bold"
-                    )}
-                  >
-                    <span>All Categories</span>
-                    <span className="text-[10px] text-muted-foreground">({releases?.length ?? 0})</span>
-                  </DropdownMenuItem>
-                  {availableCategories.map((cat) => {
-                    const count = (releases ?? []).filter((r) => r.category === cat).length;
-                    return (
-                      <DropdownMenuItem
-                        key={cat}
-                        onClick={() => setActiveFilter(cat)}
-                        className={cn(
-                          "text-xs font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                          activeFilter === cat && "bg-primary/10 text-primary font-bold"
-                        )}
-                      >
-                        <span>{cat}</span>
-                        <span className="text-[10px] text-muted-foreground">({count})</span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Visit Facebook Page Action Button */}
-              <a
-                href={LYDO_FACEBOOK_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-8 flex-1 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5 transition-colors"
-              >
-                <Facebook className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="truncate">Visit Facebook</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Desktop Compact Horizontal Toolbar (visible on md and up) */}
-          <div className="hidden md:flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3.5 rounded-2xl shadow-xs">
-            {/* Search Input (fills majority of width) */}
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder={NEWS_RELEASES_SEARCH_PLACEHOLDER}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
-              />
-            </div>
-
-            {/* Category Dropdown Button (compact content-width) */}
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-2 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5"
+                  className="group flex h-10 min-w-0 items-center gap-2 rounded-[2px] border border-public-border-default bg-white px-3 text-sm text-public-text-neutral-default transition-colors hover:border-public-border-brand md:min-w-[200px]"
                 >
-                  <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span>
-                    {activeFilter === "all" ? "Category: All" : `Category: ${activeFilter}`}
+                  <span className="min-w-0 flex-1 truncate text-left">
+                    <span className="text-public-text-secondary">Category: </span>
+                    <span className="font-semibold text-public-text-brand">{activeFilter === "all" ? "All" : activeFilter}</span>
                   </span>
-                  <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-0.5" />
-                </Button>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-public-text-brand transition-transform group-data-[state=open]:rotate-180" aria-hidden="true" />
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
-                <DropdownMenuItem
-                  onClick={() => setActiveFilter("all")}
-                  className={cn(
-                    "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                    activeFilter === "all" && "bg-primary/10 text-primary font-bold"
-                  )}
-                >
-                  <span>All Categories</span>
-                  <span className="text-[10px] text-muted-foreground">({releases?.length ?? 0})</span>
-                </DropdownMenuItem>
-                {availableCategories.map((cat) => {
-                  const count = (releases ?? []).filter((r) => r.category === cat).length;
-                  return (
-                    <DropdownMenuItem
-                      key={cat}
-                      onClick={() => setActiveFilter(cat)}
-                      className={cn(
-                        "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                        activeFilter === cat && "bg-primary/10 text-primary font-bold"
-                      )}
-                    >
-                      <span>{cat}</span>
-                      <span className="text-[10px] text-muted-foreground">({count})</span>
-                    </DropdownMenuItem>
-                  );
-                })}
+              <DropdownMenuContent
+                align="end"
+                sideOffset={4}
+                className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[200px] rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg"
+              >
+                {[{ id: "all", label: "All Categories", count: releases?.length ?? 0 }, ...availableCategories.map((cat) => ({
+                  id: cat,
+                  label: cat,
+                  count: (releases ?? []).filter((r) => r.category === cat).length,
+                }))].map((item) => (
+                  <DropdownMenuItem
+                    key={item.id}
+                    onClick={() => setActiveFilter(item.id)}
+                    className={cn(
+                      "flex cursor-pointer items-center justify-between gap-3 rounded-none border-b border-l-2 border-public-border-default px-3 py-3 text-sm leading-snug last:border-b-0 focus:bg-public-bg-section focus:text-public-text-brand",
+                      activeFilter === item.id
+                        ? "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand"
+                        : "border-l-transparent text-public-text-neutral-default"
+                    )}
+                  >
+                    <span>{item.label}</span>
+                    <span className="text-xs text-public-text-secondary">{item.count}</span>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Visit Facebook Action Button (compact content-width) */}
             <a
               href={LYDO_FACEBOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-9 shrink-0 rounded-xl border border-border/80 bg-background text-sm font-semibold inline-flex items-center justify-center gap-1.5 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5 transition-colors"
+              className="inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-[2px] bg-public-bg-brand px-4 text-sm font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover md:shrink-0"
             >
-              <Facebook className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span>Visit Facebook</span>
+              <Facebook className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">Visit Facebook</span>
+              <span className="sr-only">(opens in a new tab)</span>
             </a>
           </div>
 
@@ -244,7 +162,7 @@ const NewsReleases = () => {
               ))}
             </div>
           ) : filteredReleases.length === 0 ? (
-            <div className="rounded-xl sm:rounded-2xl border border-dashed border-public-bg-brand-subtle bg-white px-5 py-12 text-center font-segoe text-xs sm:text-sm text-public-text-secondary">
+            <div className="rounded-xl sm:rounded-2xl border border-dashed border-public-bg-brand-subtle bg-white px-5 py-12 text-center font-inter text-xs sm:text-sm text-public-text-secondary">
               {query || activeFilter !== "all"
                 ? "No news releases match your search."
                 : "No news releases published yet."}

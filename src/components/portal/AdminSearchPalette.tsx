@@ -41,7 +41,7 @@ export const AdminSearchPalette = ({ pages, onNavigate }: AdminSearchPaletteProp
           className="group flex h-10 w-full max-w-[400px] items-center gap-2 rounded-md border border-border bg-admin-surface px-3.5 py-2.5 text-left transition-colors hover:border-primary/50"
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary" strokeWidth={1.6} />
-          <span className="min-w-0 flex-1 truncate font-segoe text-sm leading-[140%] text-muted-foreground group-hover:text-foreground">
+          <span className="min-w-0 flex-1 truncate font-inter text-sm leading-[140%] text-muted-foreground group-hover:text-foreground">
             Search pages...
           </span>
           <span
@@ -64,17 +64,17 @@ export const AdminSearchPalette = ({ pages, onNavigate }: AdminSearchPaletteProp
             <Search className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.6} />
             <CommandPrimitive.Input
               placeholder="Search pages..."
-              className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 font-segoe text-sm leading-[140%] text-foreground outline-none placeholder:text-muted-foreground"
+              className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 font-inter text-sm leading-[140%] text-foreground outline-none placeholder:text-muted-foreground"
             />
             <span className={kbdPillClasses}>ESC</span>
           </div>
           <CommandList className="max-h-[559px] p-2">
-            <CommandEmpty className="py-6 text-center font-segoe text-sm text-muted-foreground">
+            <CommandEmpty className="py-6 text-center font-inter text-sm text-muted-foreground">
               No matching pages.
             </CommandEmpty>
             <CommandGroup
               heading="Pages"
-              className="p-0 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:font-segoe [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:leading-[140%] [&_[cmdk-group-heading]]:text-muted-foreground"
+              className="p-0 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:font-inter [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:leading-[140%] [&_[cmdk-group-heading]]:text-muted-foreground"
             >
               {pages.map((item) => {
                 const Icon = item.icon;
@@ -84,7 +84,7 @@ export const AdminSearchPalette = ({ pages, onNavigate }: AdminSearchPaletteProp
                     value={item.label}
                     onSelect={() => handleSelect(item.id)}
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 font-segoe text-sm leading-[140%] text-foreground transition-colors",
+                      "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 font-inter text-sm leading-[140%] text-foreground transition-colors",
                       "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground",
                     )}
                   >

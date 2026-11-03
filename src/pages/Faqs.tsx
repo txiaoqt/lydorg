@@ -1,9 +1,22 @@
-import { ChevronDown, ChevronUp, CircleHelp, Filter, Search, Send } from "lucide-react";
+import {
+  Award,
+  ChevronDown,
+  ClipboardList,
+  FileText,
+  LifeBuoy,
+  type LucideIcon,
+  MessageSquare,
+  Minus,
+  Monitor,
+  Plus,
+  Search,
+  Send,
+  Wallet,
+} from "lucide-react";
 import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -15,7 +28,6 @@ import { cn } from "@/lib/utils";
 import { usePublicContactInfo } from "@/lib/admin-system-settings";
 
 type FaqCategory = "general" | "yorp" | "forms" | "ypop" | "budget" | "support";
-type FilterId = "all" | FaqCategory;
 
 type Faq = {
   question: string;
@@ -191,8 +203,7 @@ const faqs: Faq[] = [
   },
 ];
 
-const filterTabs: { id: FilterId; label: string }[] = [
-  { id: "all", label: "All" },
+const filterTabs: { id: FaqCategory; label: string }[] = [
   { id: "general", label: "General Information" },
   { id: "yorp", label: "YORP" },
   { id: "forms", label: "Forms & Templates" },
@@ -201,13 +212,13 @@ const filterTabs: { id: FilterId; label: string }[] = [
   { id: "support", label: "Account & Portal Support" },
 ];
 
-const categoryDefs: { id: FaqCategory; title: string }[] = [
-  { id: "general", title: "Section 1 · General Information" },
-  { id: "yorp", title: "Section 2 · Youth Organization Registration Program (YORP)" },
-  { id: "forms", title: "Section 3 · Forms and Templates" },
-  { id: "ypop", title: "Section 4 · Youth Participation Organization Passport (YPOP)" },
-  { id: "budget", title: "Section 5 · Budget Requests" },
-  { id: "support", title: "Section 6 · Account and Portal Support" },
+const categoryDefs: { id: FaqCategory; title: string; icon: LucideIcon }[] = [
+  { id: "general", title: "General Information", icon: Monitor },
+  { id: "yorp", title: "Youth Organization Registration Program (YORP)", icon: ClipboardList },
+  { id: "forms", title: "Forms and Templates", icon: FileText },
+  { id: "ypop", title: "Youth Participation Organization Passport (YPOP)", icon: Award },
+  { id: "budget", title: "Budget Requests", icon: Wallet },
+  { id: "support", title: "Account and Portal Support", icon: LifeBuoy },
 ];
 
 const Faqs = () => {
@@ -215,14 +226,14 @@ const Faqs = () => {
   const { email } = usePublicContactInfo();
   const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState<FilterId>("all");
+  const [activeFilter, setActiveFilter] = useState<FaqCategory>("general");
   const [openId, setOpenId] = useState<string | null>(null);
 
   const query = searchTerm.trim().toLowerCase();
 
   const filteredFaqs = faqs.filter((faq) => {
-    if (activeFilter !== "all" && faq.category !== activeFilter) return false;
-    if (!query) return true;
+    // Search spans every category; browsing shows the selected one.
+    if (!query) return faq.category === activeFilter;
     const searchableText = [
       faq.question,
       faq.answer,
@@ -248,20 +259,20 @@ const Faqs = () => {
     }))
     .filter((group) => group.items.length > 0);
 
-  const activeFilterLabel = filterTabs.find((t) => t.id === activeFilter)?.label || "All";
+  const activeFilterLabel = filterTabs.find((t) => t.id === activeFilter)?.label;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-4 pt-4 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2 text-center sm:items-start sm:text-left sm:gap-2.5">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+            <h1 className="font-inter font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Frequently Asked Questions
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
+            <p className="font-inter font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
               Find information about Y-TRACE, YORP, YPOP, and other programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
@@ -269,170 +280,158 @@ const Faqs = () => {
       </section>
 
       {/* Catalog */}
-      <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[48px] sm:pt-[40px] lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-[24px]">
+      <section className="bg-white px-4 pb-10 pt-5 sm:px-6 sm:pb-[64px] sm:pt-[48px] lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-12">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
 
-          {/* Mobile Unified Toolbar: Single Search + [Category: All] */}
-          <div className="flex flex-col gap-2.5 bg-card border border-border/60 p-2.5 px-3 rounded-2xl shadow-xs md:hidden mb-1">
-            {/* Full-width Search Input */}
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="Search questions by keyword, topic, or answer..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-base sm:text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground"
-              />
-            </div>
-
-            {/* Row 2: Category Action Button */}
-            <div className="flex items-center">
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
+            {/* Category sidebar — lg and up */}
+            <nav aria-label="FAQ categories" className="hidden lg:flex flex-col font-inter">
+              <p className="pb-3 text-xs font-semibold uppercase tracking-wider text-public-text-neutral-default">
+                Browse by Category
+              </p>
+              {filterTabs.map((tab) => {
+                const active = activeFilter === tab.id;
+                const count = faqs.filter((f) => f.category === tab.id).length;
+                const label = categoryDefs.find((c) => c.id === tab.id)?.title;
+                return (
+                  <button
+                    key={tab.id}
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-full rounded-xl border-border/80 bg-background text-sm font-semibold gap-1.5 justify-center shadow-2xs cursor-pointer truncate text-primary hover:text-primary hover:bg-primary/5"
+                    aria-pressed={active}
+                    onClick={() => setActiveFilter(tab.id)}
+                    className={cn(
+                      "flex items-center justify-between gap-3 border-b border-public-border-default border-l-2 px-3 py-3 text-left text-sm leading-snug transition-colors",
+                      active
+                        ? "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand"
+                        : "border-l-transparent text-public-text-neutral-default hover:bg-public-bg-section hover:text-public-text-brand"
+                    )}
                   >
-                    <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">Category: {activeFilterLabel}</span>
-                    <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-auto" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
-                  {filterTabs.map((tab) => {
-                    const count = tab.id === "all" ? faqs.length : faqs.filter((f) => f.category === tab.id).length;
-                    return (
-                      <DropdownMenuItem
-                        key={tab.id}
-                        onClick={() => setActiveFilter(tab.id)}
-                        className={cn(
-                          "text-xs font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                          activeFilter === tab.id && "bg-primary/10 text-primary font-bold"
-                        )}
-                      >
-                        <span>{tab.label}</span>
-                        <span className="text-[10px] text-muted-foreground">({count})</span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+                    <span>{label}</span>
+                    <span className="text-xs text-public-text-secondary">{count}</span>
+                  </button>
+                );
+              })}
+            </nav>
 
-          {/* Desktop Search + Category Filter Row — visible on md and up */}
-          <div className="hidden md:flex items-center gap-3 bg-card border border-border/60 p-2.5 px-3.5 rounded-2xl shadow-xs max-w-4xl mx-auto w-full">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="Search questions by keyword, topic, or answer..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9 pl-9 pr-3 text-sm rounded-xl bg-background border-border/80 shadow-2xs font-segoe placeholder:text-muted-foreground w-full"
-              />
-            </div>
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 rounded-xl border-border/80 bg-background text-sm font-semibold gap-2 px-3.5 shadow-2xs cursor-pointer text-primary hover:text-primary hover:bg-primary/5"
-                >
-                  <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span>Category: {activeFilterLabel}</span>
-                  <ChevronDown className="h-3 w-3 text-primary shrink-0 opacity-70 ml-0.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-xl bg-card border-border/80 shadow-lg">
-                {filterTabs.map((tab) => {
-                  const count = tab.id === "all" ? faqs.length : faqs.filter((f) => f.category === tab.id).length;
-                  return (
-                    <DropdownMenuItem
-                      key={tab.id}
-                      onClick={() => setActiveFilter(tab.id)}
-                      className={cn(
-                        "text-sm font-semibold rounded-lg cursor-pointer flex items-center justify-between py-1.5 px-2.5",
-                        activeFilter === tab.id && "bg-primary/10 text-primary font-bold"
-                      )}
+            <div className="flex min-w-0 flex-col gap-6 sm:gap-8">
+              {/* Mobile toolbar: search + category dropdown */}
+              <div className="flex flex-col gap-2.5 lg:hidden">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="text"
+                    placeholder="Search questions by keyword, topic, or answer..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-10 rounded-[2px] border-public-border-default bg-white pl-9 pr-3 font-inter text-base sm:text-sm placeholder:text-public-text-secondary focus-visible:border-public-border-brand focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="group flex w-full items-center gap-3 border border-l-2 border-public-border-default border-l-public-border-brand bg-public-bg-section px-3 py-2.5 text-left font-inter transition-colors hover:bg-public-bg-brand-subtle"
                     >
-                      <span>{tab.id === "all" ? "All Categories" : tab.label}</span>
-                      <span className="text-[10px] text-muted-foreground">({count})</span>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* FAQ groups — readable centered max-width */}
-          {groups.length > 0 ? (
-            <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 sm:gap-8">
-              {groups.map((group) => (
-                <div key={group.id} className="flex flex-col gap-3">
-                  <h2 className="font-segoe text-xs sm:text-sm font-bold uppercase tracking-wider text-[#0E2F66] flex items-center gap-2 px-1">
-                    <span>{group.title}</span>
-                    <span className="text-xs font-semibold text-slate-400">({group.items.length})</span>
-                  </h2>
-                  <div className="flex flex-col gap-2.5">
-                    {group.items.map((faq) => {
-                      const isOpen = openId === faq.question;
-                      const questionId = `${accordionId}-question-${faqs.indexOf(faq)}`;
-                      const answerId = `${accordionId}-answer-${faqs.indexOf(faq)}`;
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-public-text-secondary">
+                          Browse by Category
+                        </span>
+                        <span className="truncate text-sm font-semibold text-public-text-brand">{activeFilterLabel}</span>
+                      </span>
+                      <ChevronDown className="h-4 w-4 shrink-0 text-public-text-brand transition-transform group-data-[state=open]:rotate-180" aria-hidden="true" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    sideOffset={4}
+                    className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg"
+                  >
+                    {filterTabs.map((tab) => {
+                      const active = activeFilter === tab.id;
+                      const count = faqs.filter((f) => f.category === tab.id).length;
                       return (
-                        <div
-                          key={faq.question}
+                        <DropdownMenuItem
+                          key={tab.id}
+                          onClick={() => setActiveFilter(tab.id)}
                           className={cn(
-                            "rounded-2xl border bg-white transition-all duration-200 shadow-2xs overflow-hidden",
-                            isOpen
-                              ? "border-public-border-brand/60 shadow-xs ring-1 ring-public-border-brand/20"
-                              : "border-border/70 hover:border-public-border-brand/40"
+                            "flex cursor-pointer items-center justify-between gap-3 rounded-none border-b border-l-2 border-public-border-default px-3 py-3 text-sm leading-snug last:border-b-0 focus:bg-public-bg-section focus:text-public-text-brand",
+                            active
+                              ? "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand"
+                              : "border-l-transparent text-public-text-neutral-default"
                           )}
                         >
-                          <button
-                            id={questionId}
-                            type="button"
-                            aria-expanded={isOpen}
-                            aria-controls={answerId}
-                            onClick={() => setOpenId(isOpen ? null : faq.question)}
-                            className="flex w-full items-center justify-between gap-3 p-4 sm:p-4.5 text-left cursor-pointer transition-colors hover:bg-slate-50/50"
-                          >
-                            <span className="font-segoe text-sm sm:text-base font-semibold leading-snug text-[#0E2F66]">
-                              {faq.question}
-                            </span>
-                            <span
-                              className={cn(
-                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all duration-200",
-                                isOpen
-                                  ? "bg-public-bg-brand text-white"
-                                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                              )}
+                          <span>{categoryDefs.find((c) => c.id === tab.id)?.title}</span>
+                          <span className="text-xs text-public-text-secondary">{count}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Desktop summary + search */}
+              <div className="hidden lg:flex items-center justify-between gap-6 font-inter">
+                <p className="text-xs text-public-text-secondary">
+                  {faqs.length} questions across {categoryDefs.length} categories
+                </p>
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="text"
+                    placeholder="Search questions by keyword, topic, or answer..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-10 rounded-[2px] border-public-border-default bg-white pl-9 pr-3 font-inter text-sm placeholder:text-public-text-secondary focus-visible:border-public-border-brand focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+              </div>
+
+              {/* FAQ groups */}
+              {groups.length > 0 ? (
+                groups.map((group) => {
+                  const Icon = group.icon;
+                  return (
+                    <div key={group.id} className="flex flex-col font-inter">
+                      <div className="flex items-center justify-between gap-4 border-b border-public-border-default pb-3">
+                        <h2 className="flex items-center gap-3 text-base sm:text-xl font-semibold leading-snug text-public-text-brand">
+                          <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                          {group.title}
+                        </h2>
+                        <span className="shrink-0 text-xs text-public-text-secondary">
+                          {group.items.length} {group.items.length === 1 ? "question" : "questions"}
+                        </span>
+                      </div>
+                      {group.items.map((faq) => {
+                        const isOpen = openId === faq.question;
+                        const questionId = `${accordionId}-question-${faqs.indexOf(faq)}`;
+                        const answerId = `${accordionId}-answer-${faqs.indexOf(faq)}`;
+                        return (
+                          <div key={faq.question} className="border-b border-public-border-default">
+                            <button
+                              id={questionId}
+                              type="button"
+                              aria-expanded={isOpen}
+                              aria-controls={answerId}
+                              onClick={() => setOpenId(isOpen ? null : faq.question)}
+                              className="flex w-full items-center justify-between gap-4 py-4 text-left text-sm sm:text-base font-semibold leading-snug text-public-text-neutral-default transition-colors hover:text-public-text-brand"
                             >
+                              <span>{faq.question}</span>
                               {isOpen ? (
-                                <ChevronUp className="h-4 w-4" />
+                                <Minus className="h-4 w-4 shrink-0 text-public-text-brand" aria-hidden="true" />
                               ) : (
-                                <ChevronDown className="h-4 w-4" />
+                                <Plus className="h-4 w-4 shrink-0 text-public-text-brand" aria-hidden="true" />
                               )}
-                            </span>
-                          </button>
-                          <div
-                            id={answerId}
-                            role="region"
-                            aria-labelledby={questionId}
-                            hidden={!isOpen}
-                            className="border-t border-border/50 bg-slate-50/30 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4"
-                          >
-                              {faq.answer && (
-                                <p className="font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700">
-                                  {faq.answer}
-                                </p>
-                              )}
+                            </button>
+                            <div
+                              id={answerId}
+                              role="region"
+                              aria-labelledby={questionId}
+                              hidden={!isOpen}
+                              className="pb-5 text-sm leading-relaxed text-public-text-secondary"
+                            >
+                              {faq.answer && <p>{faq.answer}</p>}
                               {faq.answerLink && (
-                                <p className="mt-2 font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700">
+                                <p className="mt-2">
                                   {faq.answerLink.before}
                                   <Link
                                     to={faq.answerLink.to}
@@ -444,22 +443,19 @@ const Faqs = () => {
                                 </p>
                               )}
                               {faq.supportingParagraphs?.map((paragraph) => (
-                                <p
-                                  key={paragraph.label}
-                                  className="mt-2 font-segoe text-sm sm:text-public-fs-subheading-sm font-normal leading-relaxed text-slate-700"
-                                >
-                                  {paragraph.label && <strong>{paragraph.label}</strong>}
+                                <p key={paragraph.label} className="mt-2">
+                                  {paragraph.label && <strong className="text-public-text-neutral-default">{paragraph.label}</strong>}
                                   {paragraph.text}
                                 </p>
                               ))}
                               {faq.listItems && (
-                                <ul className="mt-2 list-disc space-y-1 pl-5 font-segoe text-sm sm:text-public-fs-subheading-sm leading-relaxed text-slate-700">
+                                <ul className="mt-2 list-disc space-y-1 pl-5">
                                   {faq.listItems.map((item) => <li key={item}>{item}</li>)}
                                 </ul>
                               )}
                               {faq.learnMore && (
-                                <p className="mt-3 font-segoe text-sm sm:text-public-fs-subheading-sm leading-relaxed text-slate-700">
-                                  <strong>Learn more: </strong>
+                                <p className="mt-4">
+                                  <strong className="text-public-text-neutral-default">Learn more: </strong>
                                   {faq.learnMore.before}
                                   <Link
                                     to={faq.learnMore.to}
@@ -470,46 +466,40 @@ const Faqs = () => {
                                   {faq.learnMore.after}
                                 </p>
                               )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="border border-dashed border-public-border-default px-4 py-12 text-center font-inter text-sm text-public-text-secondary">
+                  No questions found matching your search.
                 </div>
-              ))}
+              )}
             </div>
-          ) : (
-            <div className="mx-auto max-w-4xl w-full rounded-2xl border border-dashed border-public-bg-brand-subtle bg-white px-4 py-12 text-center font-segoe text-sm text-public-text-secondary">
-              No questions found matching your search.
-            </div>
-          )}
+          </div>
 
           {/* Need Assistance */}
-          <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-2.5 sm:gap-4 rounded-2xl border border-public-border-default bg-white p-6 sm:p-10 text-center shadow-public-nav mt-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-public-bg-tertiary-100 text-[#0E2F66]">
-              <CircleHelp className="h-6 w-6 text-public-text-brand" />
-            </div>
-            <div className="flex flex-col gap-1 sm:gap-1.5 max-w-md">
-              <h3 className="font-segoe text-base sm:text-lg font-bold text-[#0E2F66]">
-                Need Assistance?
-              </h3>
-              <p className="font-segoe text-xs sm:text-sm text-slate-500 leading-relaxed">
-                For further inquiries, please contact the PCYDO through its official email address.
-                Include the purpose of your inquiry and any relevant details to help the office
-                address your request.
+          <div className="flex flex-col gap-4 border-l-4 border-public-border-brand bg-public-bg-section p-5 font-inter sm:flex-row sm:items-center sm:gap-6 sm:p-6">
+            <MessageSquare className="h-7 w-7 shrink-0 text-public-text-brand" aria-hidden="true" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <h3 className="text-base sm:text-lg font-semibold text-public-text-brand">Need Assistance?</h3>
+              <p className="text-xs sm:text-sm leading-relaxed text-public-text-secondary">
+                For further inquiries, please contact the PCYDO through its official email address. Include the purpose of your inquiry and any relevant details to help the office address your request.
               </p>
             </div>
             <a
               href={gmailComposeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-public-bg-brand px-5 py-2.5 font-segoe text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-public-bg-brand-hover shadow-xs mt-1"
+              className="inline-flex w-fit shrink-0 items-center gap-2 rounded-[2px] bg-public-bg-brand px-5 py-2.5 text-xs sm:text-sm font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
             >
-              <Send className="h-4 w-4 shrink-0" />
+              <Send className="h-4 w-4 shrink-0" aria-hidden="true" />
               Send an Email
             </a>
           </div>
-
         </div>
       </section>
 

@@ -9,13 +9,13 @@ export const AdminDesktopWarningScreen = (_props: AdminDesktopWarningScreenProps
   const currentWidth = useCurrentViewportWidth();
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-admin-page-bg p-4 sm:p-6 font-segoe text-text-default">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-admin-page-bg p-4 sm:p-6 font-inter text-text-default">
       {/* Brand Header */}
       <div className="mb-6 flex items-center gap-3">
         <img src="/y-trace-logo-blue.png" alt="Y-TRACE" className="h-9 w-9 object-contain" />
         <div className="min-w-0 text-left leading-none">
-          <p className="font-segoe text-base font-semibold text-text-default">Y-TRACE</p>
-          <p className="font-segoe text-xs text-slate-500">Admin Portal</p>
+          <p className="font-inter text-base font-semibold text-text-default">Y-TRACE</p>
+          <p className="font-inter text-xs text-slate-500">Admin Portal</p>
         </div>
       </div>
 
@@ -28,17 +28,17 @@ export const AdminDesktopWarningScreen = (_props: AdminDesktopWarningScreenProps
 
         {/* Status Pill */}
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2.5 py-1 font-segoe text-xs font-semibold text-text-warning-secondary">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border-warning-subtle bg-amber-50 px-2.5 py-1 font-inter text-xs font-semibold text-text-warning-secondary">
             Desktop / Laptop Only
           </span>
         </div>
 
         {/* Required Heading & Body Copy */}
         <div className="space-y-2">
-          <h1 className="font-segoe text-xl sm:text-2xl font-semibold leading-tight text-text-default">
+          <h1 className="font-inter text-xl sm:text-2xl font-semibold leading-tight text-text-default">
             Desktop Display Required
           </h1>
-          <p className="font-segoe text-sm leading-[150%] text-slate-500">
+          <p className="font-inter text-sm leading-[150%] text-slate-500">
             The Y-TRACE Admin Portal is designed for desktop and laptop computers to support detailed data tables, document review queues, and financial records. Mobile and tablet access is restricted.
           </p>
         </div>

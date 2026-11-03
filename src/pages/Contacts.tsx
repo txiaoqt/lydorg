@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapPin, Mail, CircleHelp, Send, Clock } from "lucide-react";
+import { MapPin, Mail, MessageSquare, Send, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { usePublicContactInfo } from "@/lib/admin-system-settings";
@@ -26,13 +26,13 @@ const Contacts = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-segoe font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+            <h1 className="font-inter font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Contact Us
             </h1>
-            <p className="font-segoe font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
+            <p className="font-inter font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
               For inquiries regarding services provided by the Pasig City Youth Development Office (PCYDO), please use the official contact information provided below.
             </p>
           </div>
@@ -40,13 +40,68 @@ const Contacts = () => {
       </section>
 
       {/* Body */}
-      <section className="bg-public-bg-section px-4 pb-10 pt-5 sm:px-6 sm:pb-[64px] sm:pt-[36px] lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-[936px] flex-col gap-3.5 sm:gap-5">
+      <section className="bg-white px-4 pb-10 pt-8 sm:px-6 sm:pb-[64px] sm:pt-[48px] lg:px-[64px]">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-12">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10">
 
-          {/* Row 1 — Map */}
-          <div
-            className="isolate h-[180px] overflow-hidden rounded-xl sm:rounded-2xl border border-public-bg-brand-subtle shadow-2xs sm:shadow-xs sm:h-[260px]"
-          >
+            {/* Left — Contact details */}
+            <div className="flex flex-col gap-6 font-inter">
+              <div className="flex flex-col gap-2">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-public-text-brand">
+                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                  Office Address
+                </p>
+                <p className="text-sm sm:text-base leading-relaxed text-public-text-neutral-default break-words">
+                  {address}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-public-text-brand">
+                  <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+                  Official Email
+                </p>
+                <a
+                  href={gmailComposeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-fit text-sm sm:text-base font-semibold text-public-text-brand hover:underline break-all"
+                >
+                  {email}
+                </a>
+                <p className="text-xs sm:text-sm leading-relaxed text-public-text-secondary">
+                  For official correspondence, document-related inquiries, and assistance with youth organization-related matters, please contact the PCYDO through the official email address provided above.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 bg-public-bg-section p-4 sm:p-5">
+                <p className="flex items-center gap-2 text-sm sm:text-base font-semibold text-public-text-brand">
+                  <Clock className="h-4 w-4" aria-hidden="true" />
+                  Office Hours
+                </p>
+                <table className="w-full text-left text-xs sm:text-sm">
+                  <thead className="sr-only">
+                    <tr>
+                      <th scope="col">Day</th>
+                      <th scope="col">Operating Hours</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="py-1 text-public-text-neutral-default">Monday–Thursday</td>
+                      <td className="py-1 text-right font-semibold text-public-text-brand">7:00 AM–6:00 PM</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1 text-public-text-secondary">Friday–Sunday</td>
+                      <td className="py-1 text-right text-public-text-secondary">Closed</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Right — Map */}
+            <div className="isolate h-[260px] overflow-hidden border border-public-border-default sm:h-[340px] lg:h-full lg:min-h-[400px]">
             <MapContainer
               center={COORDS}
               zoom={16}
@@ -66,120 +121,28 @@ const Contacts = () => {
                 </Popup>
               </Marker>
             </MapContainer>
-          </div>
-
-          {/* Row 2 — Office Address */}
-          <div className="flex items-center gap-3 rounded-xl sm:rounded-2xl border border-public-bg-brand-subtle bg-white p-4 sm:p-5 shadow-2xs sm:shadow-xs sm:gap-4">
-            <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-public-bg-tertiary-100 p-2 sm:p-2.5 text-public-text-brand">
-              <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-public-text-brand" />
-            </div>
-            <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0">
-              <p className="font-segoe text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Office Address
-              </p>
-              <p className="font-segoe text-sm sm:text-base font-bold leading-snug text-[#0E2F66] break-words">
-                {address}
-              </p>
             </div>
           </div>
 
-          {/* Row 3 — Official Email (left) | Office Hours (right) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
-
-            {/* Left: Official Email */}
-            <div className="flex flex-col justify-center gap-2 rounded-xl sm:rounded-2xl border border-public-bg-brand-subtle bg-white p-4 sm:p-5 shadow-2xs sm:shadow-xs">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-public-bg-tertiary-100 p-2 sm:p-2.5 text-public-text-brand">
-                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-public-text-brand" />
-                </div>
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <p className="font-segoe text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Official Email
-                  </p>
-                  <a
-                    href={gmailComposeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-segoe text-sm sm:text-base font-bold leading-snug text-[#0E2F66] hover:underline break-all"
-                  >
-                    {email}
-                  </a>
-                </div>
-              </div>
-              <p className="font-segoe text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                For official correspondence, document-related inquiries, and assistance with youth organization-related matters, please contact the PCYDO through the official email address provided above.
-              </p>
-            </div>
-
-            {/* Right: Office Hours */}
-            <div className="flex flex-col gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl border border-public-bg-brand-subtle bg-white p-4 sm:p-5 sm:px-6 shadow-2xs sm:shadow-xs justify-center">
-              <div className="flex items-center gap-2 mb-0.5">
-                <Clock className="h-4 w-4 text-public-text-brand" />
-                <p className="font-segoe text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Office Hours
-                </p>
-              </div>
-              <div className="overflow-hidden rounded-xl border border-public-border-default">
-                <table className="w-full border-collapse text-left font-segoe text-xs sm:text-sm">
-                  <thead>
-                    <tr>
-                      <th scope="col" className="w-1/2 border-b border-r border-public-border-default bg-public-bg-section px-3 py-2 font-semibold text-public-text-brand">
-                        Day
-                      </th>
-                      <th scope="col" className="w-1/2 border-b border-public-border-default bg-public-bg-section px-3 py-2 font-semibold text-public-text-brand">
-                        Operating Hours
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="border-b border-r border-public-border-default px-3 py-2 font-medium text-public-text-brand">
-                        Monday–Thursday
-                      </td>
-                      <td className="border-b border-public-border-default px-3 py-2 font-semibold text-public-text-brand">
-                        7:00 AM–6:00 PM
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border-r border-public-border-default px-3 py-2 text-public-text-secondary">
-                        Friday–Sunday
-                      </td>
-                      <td className="px-3 py-2 text-public-text-secondary">
-                        Closed
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Row 4 — Still Need Help? */}
-          <div className="flex flex-col items-center gap-2.5 sm:gap-3.5 rounded-xl sm:rounded-2xl border border-public-border-default bg-white p-5 sm:p-8 text-center shadow-2xs sm:shadow-xs mt-1 sm:mt-1">
-            <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-public-bg-tertiary-100 text-[#0E2F66]">
-              <CircleHelp className="h-5 w-5 sm:h-6 sm:w-6 text-public-text-brand" />
-            </div>
-            <div className="flex flex-col gap-1 sm:gap-1.5 px-1 max-w-md">
-              <h3 className="font-segoe text-base sm:text-lg font-bold text-[#0E2F66]">
-                Still Need Help?
-              </h3>
-              <p className="font-segoe text-xs sm:text-sm text-slate-500 leading-relaxed">
-                Can't find the answer you're looking for? Reach out to the PCYDO office directly
-                and we'll get back to you as soon as possible.
+          {/* Need Assistance */}
+          <div className="flex flex-col gap-4 border-l-4 border-public-border-brand bg-public-bg-section p-5 font-inter sm:flex-row sm:items-center sm:gap-6 sm:p-6">
+            <MessageSquare className="h-7 w-7 shrink-0 text-public-text-brand" aria-hidden="true" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <h2 className="text-base sm:text-lg font-semibold text-public-text-brand">Need Assistance?</h2>
+              <p className="text-xs sm:text-sm leading-relaxed text-public-text-secondary">
+                For further inquiries, please contact the PCYDO through its official email address. Include the purpose of your inquiry and any relevant details to help the office address your request.
               </p>
             </div>
             <a
               href={gmailComposeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-public-bg-brand px-5 py-2.5 font-segoe text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-public-bg-brand-hover shadow-xs mt-1"
+              className="inline-flex w-fit shrink-0 items-center gap-2 rounded-[2px] bg-public-bg-brand px-5 py-2.5 text-xs sm:text-sm font-semibold text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
             >
-              <Send className="h-4 w-4 shrink-0" />
+              <Send className="h-4 w-4 shrink-0" aria-hidden="true" />
               Send an Email
             </a>
           </div>
-
         </div>
       </section>
 

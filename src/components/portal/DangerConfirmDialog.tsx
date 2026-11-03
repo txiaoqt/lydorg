@@ -113,10 +113,10 @@ export const DangerConfirmDialog = ({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <DialogTitle className="font-segoe text-lg font-semibold leading-none text-text-default">
+            <DialogTitle className="font-inter text-lg font-semibold leading-none text-text-default">
               {title}
             </DialogTitle>
-            {subtitle ? <p className="font-segoe text-sm font-normal leading-none text-slate-500">{subtitle}</p> : null}
+            {subtitle ? <p className="font-inter text-sm font-normal leading-none text-slate-500">{subtitle}</p> : null}
           </div>
         </div>
         <DialogClose asChild>
@@ -132,7 +132,7 @@ export const DangerConfirmDialog = ({
 
       {description ? (
         <DialogDescription asChild>
-          <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-text-default">
+          <div className="text-justify font-inter text-[13px] font-normal leading-[120%] text-text-default">
             {description}
           </div>
         </DialogDescription>
@@ -144,28 +144,28 @@ export const DangerConfirmDialog = ({
         variant === "info" ? (
           <div className="flex items-start gap-2.5 rounded-md border border-brand-info-border bg-brand-info-subtle p-6">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-public-bg-brand" strokeWidth={1.6} />
-            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-public-bg-brand">
+            <div className="text-justify font-inter text-[13px] font-normal leading-[120%] text-public-bg-brand">
               {warning}
             </div>
           </div>
         ) : variant === "success" ? (
           <div className="flex items-start gap-2.5 rounded-md border border-border-success-subtle bg-bg-success-subtle p-6">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-positive-secondary" strokeWidth={1.6} />
-            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-positive-secondary">
+            <div className="text-justify font-inter text-[13px] font-normal leading-[120%] text-positive-secondary">
               {warning}
             </div>
           </div>
         ) : warningTone === "danger" ? (
           <div className="flex items-start gap-2.5 rounded-md border border-danger-subtle bg-danger-subtle p-6">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-icon-danger-secondary" strokeWidth={1.6} />
-            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-icon-danger-secondary">
+            <div className="text-justify font-inter text-[13px] font-normal leading-[120%] text-icon-danger-secondary">
               {warning}
             </div>
           </div>
         ) : (
           <div className="flex items-start gap-2.5 rounded-md border border-border-warning-subtle bg-amber-50 p-6">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-text-warning-secondary" strokeWidth={1.6} />
-            <div className="text-justify font-segoe text-[13px] font-normal leading-[120%] text-text-warning-secondary">
+            <div className="text-justify font-inter text-[13px] font-normal leading-[120%] text-text-warning-secondary">
               {warning}
             </div>
           </div>
@@ -178,7 +178,7 @@ export const DangerConfirmDialog = ({
             type="button"
             disabled={isConfirming}
             className={cn(
-              "inline-flex h-11 items-center justify-center whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] text-text-default shadow-none transition-colors disabled:opacity-50",
+              "inline-flex h-11 items-center justify-center whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] text-text-default shadow-none transition-colors disabled:opacity-50",
               "hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900",
             )}
           >
@@ -190,7 +190,7 @@ export const DangerConfirmDialog = ({
           onClick={handleConfirmClick}
           disabled={isConfirming || confirmDisabled}
           className={cn(
-            "inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-3 font-segoe text-public-fs-body-sm font-normal leading-[140%] shadow-none transition-colors disabled:opacity-50",
+            "inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-3 font-inter text-public-fs-body-sm font-normal leading-[140%] shadow-none transition-colors disabled:opacity-50",
             variant === "info"
               ? "bg-public-bg-brand text-public-text-neutral-on-neutral hover:bg-bg-brand-hover"
               : variant === "warning"
