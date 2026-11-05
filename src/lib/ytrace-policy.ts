@@ -43,16 +43,19 @@ const normalizeTermsOfficeName = (content: string) =>
 
 export const resolveDisplayPolicy = (policy: DatabasePolicy): DisplayPolicy => {
   if (policy && hasPublishablePolicyContent(policy.terms_content, policy.privacy_content)) {
+    const effectiveDate = policy.effective_date
+      ? new Date(`${policy.effective_date}T00:00:00`).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+      : YTRACE_POLICY_EFFECTIVE_DATE;
     return {
       ...policy,
       terms_content: normalizeTermsOfficeName(policy.terms_content),
-      effectiveDate: policy.effective_date
-        ? new Date(`${policy.effective_date}T00:00:00`).toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })
-        : YTRACE_POLICY_EFFECTIVE_DATE,
+      effectiveDate,
+      // Stored versions have no separate "last updated" field; a version's text is fixed from its effective date.
+      updatedAt: effectiveDate,
       isActive: true,
     };
   }

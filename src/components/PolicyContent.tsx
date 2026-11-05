@@ -64,7 +64,7 @@ export const PolicyContent = ({
       }
       index -= 1;
       blocks.push(
-        <ul key={`ul-${index}`} className="space-y-1.5 sm:space-y-2 pl-4 sm:pl-5 text-sm sm:text-[15px] leading-relaxed sm:leading-[1.65] text-foreground marker:text-primary">
+        <ul key={`ul-${index}`} className="list-disc space-y-1.5 sm:space-y-2 pl-4 sm:pl-5text-sm sm:text-[15px] leading-relaxed sm:leading-[1.65] text-foreground marker:text-primary">
           {items.map((item, itemIndex) => <li key={`${itemIndex}-${item.slice(0, 24)}`} className="pl-1">{item}</li>)}
         </ul>,
       );

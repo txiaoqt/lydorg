@@ -139,7 +139,7 @@ export const LegalPolicyView = ({ type, policy }: LegalPolicyViewProps) => {
               {title}
             </h2>
             <p className="font-inter text-xs sm:text-public-fs-body-sm font-normal leading-relaxed sm:leading-[120%] text-public-text-secondary">
-              Last Updated: {policy.updatedAt ?? "June 30, 2026"}
+              Last Updated: {policy.updatedAt ?? policy.effectiveDate}
             </p>
           </div>
 

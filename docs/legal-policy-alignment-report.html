@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Legal Policy Alignment Review</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f8fafc; --text: #0f172a; --muted: #475569; --border: #e2e8f0;
+    --brand: #0e2f66; --red: #b42318; --red-bg: #fef3f2; --amber: #b54708; --amber-bg: #fffaeb; --green: #067647; --green-bg: #ecfdf3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1220; --surface: #111a2e; --text: #e2e8f0; --muted: #94a3b8; --border: #22304a;
+      --brand: #9cc0f5; --red: #fda29b; --red-bg: #2a1414; --amber: #fec84b; --amber-bg: #2a2010; --green: #75e0a7; --green-bg: #0f2a1d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1220; --surface: #111a2e; --text: #e2e8f0; --muted: #94a3b8; --border: #22304a;
+    --brand: #9cc0f5; --red: #fda29b; --red-bg: #2a1414; --amber: #fec84b; --amber-bg: #2a2010; --green: #75e0a7; --green-bg: #0f2a1d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font: 400 34px/1.15 "Times New Roman", Times, serif; color: var(--brand); margin: 0 0 8px; }
+  h2 { font: 400 24px/1.2 "Times New Roman", Times, serif; color: var(--brand); margin: 40px 0 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  p { margin: 0 0 10px; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .summary { background: var(--surface); border: 1px solid var(--border); padding: 16px 18px; }
+  .counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 2px; }
+  .must { color: var(--red); background: var(--red-bg); }
+  .should { color: var(--amber); background: var(--amber-bg); }
+  .ok { color: var(--green); background: var(--green-bg); }
+  .finding { border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 12px; }
+  .finding .head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+  .finding dl { margin: 0; display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 14px; }
+  .finding dt { color: var(--muted); font-weight: 600; }
+  .finding dd { margin: 0; }
+  code { font: 12.5px ui-monospace, Consolas, monospace; background: var(--surface); padding: 1px 4px; border: 1px solid var(--border); overflow-wrap: anywhere; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  ol li, ul li { margin-bottom: 6px; }
+  @media (max-width: 560px) { .finding dl { grid-template-columns: 1fr; } .finding dt { margin-top: 6px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Legal Policy Alignment Review</h1>
+  <p class="meta">Y-TRACE Privacy Policy and Terms of Service, version 1.0 (effective June 30, 2026) · Checked against the codebase and both Supabase databases on November 5, 2026</p>
+
+  <div class="summary">
+    <p><strong>Verdict:</strong> Most of what the policies promise is true in the system: per-version policy acceptance, role-based access with Row Level Security, audit logs with IP and user agent, no analytics or advertising tracking, no payments or e-signatures, and retention of official records on account closure. Four gaps must be closed before launch: the office name, unlisted service providers, the data location, and an undefined backup retention period.</p>
+    <div class="counts">
+      <span class="pill must">4 must fix</span>
+      <span class="pill should">6 should fix</span>
+      <span class="pill ok">11 confirmed aligned</span>
+    </div>
+  </div>
+
+  <h2>Must fix before launch</h2>
+
+  <div class="finding">
+    <div class="head"><span class="pill must">1</span><h3>The live policy says "LYDO"; the rest of the site says "PCYDO"</h3></div>
+    <dl>
+      <dt>Found</dt><dd>The active policy in both databases (<code>policy_versions</code>, version 1.0) uses "LYDO" throughout and defines it as "(LYDO/PCYDO)". The copy built into the app uses "PCYDO". The public website, About page and footer all use PCYDO. Visitors see the database copy.</dd>
+      <dt>Decision</dt><dd>Use PCYDO everywhere.</dd>
+      <dt>Action</dt><dd>Replace LYDO with PCYDO in the source document and publish it as version 1.1 (see "Next steps").</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill must">2</span><h3>Service providers are missing from the policy</h3></div>
+    <dl>
+      <dt>Found</dt><dd>The policy names only Supabase and Vercel. The system also sends personal data to:
+        <ul>
+          <li><strong>Google</strong>: "Sign in with Google" receives and returns the user's name and email.</li>
+          <li><strong>Brevo</strong>: sends transactional, admin-notification and activity-announcement emails (Edge Functions <code>send-org-transactional-email</code>, <code>send-admin-notification</code>, <code>send-activity-announcement</code>). It receives recipients' email addresses and message content.</li>
+          <li><strong>GitHub Actions</strong>: runs the database and file-storage backup (<code>ytrace-backup.yml</code>, triggered by <code>admin-backup-control</code>).</li>
+          <li><strong>Cloudflare R2</strong>: stores the backup archives.</li>
+        </ul>
+        Public pages also load content from outside services, which see the visitor's IP address: OpenStreetMap map tiles and unpkg marker icons on Contacts, and Google Fonts on every page.</dd>
+      <dt>Decision</dt><dd>List all of them.</dd>
+      <dt>Action</dt><dd>Privacy Policy: name Google, Brevo, GitHub and Cloudflare in "at a Glance" and §8, add backup storage to §9, and mention map and font services in §13. Terms of Service: same list in §14.</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill must">3</span><h3>The data location is not stated</h3></div>
+    <dl>
+      <dt>Found</dt><dd>The new Supabase project (<code>epfmqkgyggfpvjbjtvmv</code>) is in <strong>ap-southeast-2 (Sydney, Australia)</strong>. §9 only says data "may be handled outside the Philippines", and it ends with an internal instruction ("Before production launch, the deploying office should confirm and document…") that was never done and doesn't belong in a public policy.</dd>
+      <dt>Decision</dt><dd>Name the location.</dd>
+      <dt>Action</dt><dd>Rewrite §9 to say that the database and files are stored with Supabase in Australia (Sydney), that the site is served through Vercel's global network, and that backups are kept in Cloudflare R2 (with its region). Then delete the internal instruction sentence.</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill must">4</span><h3>Backups are never deleted</h3></div>
+    <dl>
+      <dt>Found</dt><dd>§10 says backups are "securely overwritten under the applicable backup cycle". No such cycle exists: nothing in <code>scripts/backup/</code> removes old backups, so every backup stays in R2 indefinitely, including personal data that was later deleted.</dd>
+      <dt>Decision</dt><dd>Keep backups for 30 days.</dd>
+      <dt>Action</dt><dd>Add a lifecycle rule on the R2 bucket that deletes objects after 30 days, and change §10 to "Backups are kept for up to 30 days and then deleted."</dd>
+    </dl>
+  </div>
+
+  <h2>Should fix</h2>
+
+  <div class="finding">
+    <div class="head"><span class="pill should">5</span><h3>The app's built-in copy and the database copy differ</h3></div>
+    <dl>
+      <dt>Found</dt><dd>The text in <code>src/lib/ytrace-policy-content.generated.ts</code> doesn't match the active database version. The only difference is LYDO vs PCYDO. The built-in copy is shown when the database can't be reached, so the wording depends on connectivity.</dd>
+      <dt>Action</dt><dd>When version 1.1 is published, regenerate the built-in copy from the same source document so both match exactly.</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill should">6</span><h3>Internal drafting notes appear in the public text</h3></div>
+    <dl>
+      <dt>Found</dt><dd>§3 (last bullet) reads: "This feature must be disclosed and configured consistently with the production deployment." The code has no automated document checking or text extraction (OCR), so the bullet describes a feature that doesn't exist. The same applies to the §9 sentence in finding 3.</dd>
+      <dt>Action</dt><dd>Remove the bullet. Add it back only if automated document checking is ever built.</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill should">7</span><h3>Cookie preferences says no cross-site tracking, but outside services are loaded</h3></div>
+    <dl>
+      <dt>Found</dt><dd>The footer's Cookie preferences dialog is accurate that there are no analytics or advertising cookies. However, Google Fonts, OpenStreetMap tiles and the unpkg marker icons still send each visitor's IP address to those companies.</dd>
+      <dt>Action</dt><dd>Serve the fonts and the three marker icons from the site itself; this is a small code change. Then only the map tiles remain, and §13 can name them.</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill should">8</span><h3>The Data Protection Officer contact is not named</h3></div>
+    <dl>
+      <dt>Found</dt><dd>The policy offers to "refer your request to the appropriate Data Protection Officer" but gives no DPO name or email. The National Privacy Commission expects the DPO's contact details to be published.</dd>
+      <dt>Action</dt><dd>PCYDO to get the City of Pasig DPO's official email and add it to "at a Glance", §2 and §19.</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill should">9</span><h3>The office address is spelled differently</h3></div>
+    <dl>
+      <dt>Found</dt><dd>The policy says "E. Amang Rodriguez Ave."; the website, footer and Contacts page say "Eulogio Amang Rodriguez Ave."</dd>
+      <dt>Action</dt><dd>Use the same spelling in both places.</dd>
+    </dl>
+  </div>
+
+  <div class="finding">
+    <div class="head"><span class="pill should">10</span><h3>The "Last updated" date must change with version 1.1</h3></div>
+    <dl>
+      <dt>Found</dt><dd>Both documents say "Last updated: June 30, 2026". After findings 1 to 4 they no longer describe the system as of that date.</dd>
+      <dt>Action</dt><dd>Set the new effective date when version 1.1 is published.</dd>
+    </dl>
+  </div>
+
+  <h2>Confirmed aligned</h2>
+  <table>
+    <thead><tr><th>Policy claim</th><th>Where it holds in the system</th></tr></thead>
+    <tbody>
+      <tr><td>Users accept the active version; material updates require re-acceptance (PP §18, ToS §1, §21)</td><td><code>PolicyAgreementGate</code> in <code>App.tsx</code> checks <code>user_policy_acceptance</code> per <code>policy_version_id</code>, so publishing a new version prompts every user again</td></tr>
+      <tr><td>Acceptance records the date and time, user ID and user agent (ToS §12)</td><td><code>use-policy-agreement.ts</code> stores <code>user_agent</code> with each acceptance; 12 acceptances on record</td></tr>
+      <tr><td>IP address "where collected" (PP §3)</td><td>Audit records save <code>x-forwarded-for</code> as <code>ip_address</code> (<code>audit_records_hardening</code> migration)</td></tr>
+      <tr><td>Role-based access, Row Level Security, audit logs (PP §11)</td><td>RLS policies and audit tables across <code>supabase/migrations</code></td></tr>
+      <tr><td>No analytics or advertising tracking (PP §12)</td><td>No analytics libraries in the code; the Cookie preferences dialog says the same</td></tr>
+      <tr><td>The PWA caches application assets (PP §12, ToS §13)</td><td><code>public/sw.js</code> caches only the app shell and static files, not personal data. The policy's wording is broader than what the app does, which is acceptable</td></tr>
+      <tr><td>No payments, e-signatures, fund transfers or national-database links (ToS §3, §9)</td><td>None exist in the code</td></tr>
+      <tr><td>Account closure does not automatically delete official records (ToS §16, PP §10)</td><td>Deletion is admin-only, and the retention guard (<code>has_retained_history</code>) blocks deleting organizations that have official history</td></tr>
+      <tr><td>Privacy requests go through PCYDO (PP §15)</td><td>No in-app request form; email is the channel, as stated</td></tr>
+      <tr><td>Minors: the organization is responsible for consent (PP §14, ToS §2)</td><td>The system collects no birthdates, and the policy correctly puts consent on the organization representative</td></tr>
+      <tr><td>Scores are preliminary and admins decide (PP §7, ToS §8)</td><td>YPOP points are calculated automatically, and admin validation steps exist in the review workflows</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Next steps</h2>
+  <ol>
+    <li><strong>Before launch (developer):</strong> add the 30-day lifecycle rule to the R2 backup bucket. Optionally, serve Google Fonts and the map marker icons from the site itself.</li>
+    <li><strong>PCYDO / legal:</strong> update the source document (<code>Y-TRACE_Privacy_Policy_and_Terms_of_Service_Draft</code>) with findings 1–4, 6, 8, 9 and 10. Get the DPO contact from the City of Pasig.</li>
+    <li><strong>Developer:</strong> regenerate <code>ytrace-policy-content.generated.ts</code> from the reviewed document, insert it as version 1.1 in <code>policy_versions</code>, and make it the active version. All users will then be asked to accept again.</li>
+    <li><strong>Check:</strong> confirm the public Legal Policies page and the sign-up agreement show version 1.1, and that the built-in copy and the database copy match.</li>
+  </ol>
+</main>
+</body>
+</html>

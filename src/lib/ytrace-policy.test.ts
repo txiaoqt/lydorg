@@ -8,8 +8,8 @@ import {
 
 describe("Y-TRACE policy content", () => {
   it("ships the complete user-facing Terms and Privacy sections", () => {
-    expect(bundledPolicy.version).toBe("1.0");
-    expect(bundledPolicy.effectiveDate).toBe("June 30, 2026");
+    expect(bundledPolicy.version).toBe("1.1");
+    expect(bundledPolicy.effectiveDate).toBe("November 6, 2026");
     expect(bundledPolicy.privacy_content).toContain("## 19. Contact and Complaints");
     expect(bundledPolicy.terms_content).toContain("## 23. Contact");
     expect(bundledPolicy.privacy_content).toContain("lydo@pasigcity.gov.ph");
