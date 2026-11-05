@@ -59,14 +59,22 @@ export default function PublicBudgetTransparencyMap({
   );
 
   return (
-    <section aria-label={`Public budget map for FY ${fiscalYear}`} className="public-budget-map space-y-3">
+    <section aria-label={`Public budget map for FY ${fiscalYear}`} className="public-budget-map space-y-5">
+      <div className="flex flex-col gap-4 border-b border-public-border-default pb-5 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="font-inter text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">Official PCYDO Records</p>
+          <h2 className="mt-2 font-tnr text-[28px] font-normal leading-[1.15] text-public-text-brand sm:text-[32px]">Budget by Barangay</h2>
+          <p className="mt-1.5 max-w-2xl font-inter text-sm text-slate-600">
+            An overview of the Local Youth Development Fund's allocation and utilization across Pasig City's barangays.
+          </p>
+        </div>
       <div className="public-budget-map__filters flex justify-end gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
               aria-label={`Select Fiscal Year. Currently FY ${fiscalYear}`}
-              className="group flex h-10 min-w-[130px] items-center justify-between gap-2 rounded-[2px] border border-public-border-default bg-white px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2"
+              className="group flex h-9 items-center gap-2 rounded-[2px] border border-[#C9D8EE] bg-[#EAF1FB] px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2"
             >
               <span className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.75} aria-hidden="true" />
@@ -90,14 +98,15 @@ export default function PublicBudgetTransparencyMap({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <label className="public-budget-map__barangay-filter inline-flex min-h-10 items-center gap-2 rounded-[2px] border border-public-border-default bg-white px-3 font-inter text-sm font-semibold text-public-text-brand focus-within:border-public-border-brand">
+        <label className="public-budget-map__barangay-filter inline-flex min-h-9 items-center gap-2 rounded-[2px] border border-[#C9D8EE] bg-[#EAF1FB] px-3 font-inter text-sm font-semibold text-public-text-brand focus-within:border-public-border-brand">
           <MapPin className="h-4 w-4 shrink-0 text-public-text-secondary" aria-hidden="true" />
           <span className="sr-only">Filter by barangay</span>
           <select aria-label="Filter by barangay" value={selectedBarangay} onChange={(event) => setSelectedBarangay(event.target.value)} className="min-w-0 w-full bg-transparent outline-none">
-            <option value="all">All barangays</option>
+            <option value="all">Pasig City</option>
             {CANONICAL_PASIG_BARANGAYS.map(({ name }) => <option key={name} value={name}>{name}</option>)}
           </select>
         </label>
+      </div>
       </div>
       {error && (
         <div role="alert" className="flex flex-col gap-3 rounded-[2px] border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
@@ -117,6 +126,9 @@ export default function PublicBudgetTransparencyMap({
         mobileBrowseAsFilter
         onSelectedBarangayChange={(barangay) => setSelectedBarangay(barangay)}
       />
+      <p className="font-inter text-[11px] leading-relaxed text-slate-500">
+        Barangay boundaries are based on a publicly available Philippine administrative boundary dataset. The red outline is provided for visualization purposes only and should not be used as an official boundary reference. For official boundary information, consult Pasig City's authorized GIS records.
+      </p>
       {loading && <p className="sr-only" role="status">Loading public budget totals…</p>}
     </section>
   );

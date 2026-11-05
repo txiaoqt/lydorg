@@ -45,14 +45,14 @@ const SiteMap = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 sm:px-6 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-inter font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+            <h1 className="font-tnr font-normal leading-[1.1] tracking-[-0.01em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Site Map
             </h1>
-            <p className="font-inter font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
-              Complete directory of the Y-TRACE public website pages and Organization Portal workflows.
+            <p className="font-inter text-base font-normal leading-[1.6] text-white/85">
+              Browse the directory of the Y-TRACE public website and the Organization Portal to find information, services, and portal functions.
             </p>
           </div>
         </div>

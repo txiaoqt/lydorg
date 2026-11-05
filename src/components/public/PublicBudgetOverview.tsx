@@ -1,21 +1,5 @@
 import { useState, useEffect, useId, useMemo } from "react";
-import {
-  AlertCircle,
-  AlertTriangle,
-  ArrowRight,
-  Banknote,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  ChevronDown,
-  Coins,
-  FileCheck,
-  Globe,
-  Info,
-  Layers,
-  MapPin,
-  RefreshCw,
-} from "lucide-react";
+import { AlertCircle, AlertTriangle, Building2, Calendar, ChevronDown, Clock, Info, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -26,8 +10,7 @@ import {
 import { formatBudgetPurposeCategory, type PublicBudgetSummary } from "@/lib/lydo-connect-data";
 import { getPublicBudgetSummaryFromSupabase } from "@/lib/lydo-connect-supabase";
 import { getCategoryColor, isCanonicalPurposeCategory } from "@/lib/budget-category-colors";
-import { BUDGET_MONITORING_COLORS, BUDGET_MONITORING_LABELS, deriveBudgetMonitoringMetrics } from "@/lib/budget-monitoring-presentation";
-import { BudgetExecutionPipeline } from "@/components/portal/BudgetExecutionPipeline";
+import { deriveBudgetMonitoringMetrics, getBudgetExecutionSegmentWidths } from "@/lib/budget-monitoring-presentation";
 
 export interface PublicBudgetOverviewProps {
   data?: PublicBudgetSummary | null;
@@ -178,57 +161,82 @@ export default function PublicBudgetOverview({
     .reduce((sum, item) => sum + item.amount, 0);
   const lastUpdatedText = formatLastUpdated(activeData?.lastUpdated);
 
-  const auditedPctDisplay = useMemo(() => {
-    if (!releasedBudget || releasedBudget <= 0 || !liquidatedBudget || liquidatedBudget <= 0) {
-      return "0% of Released Budget";
-    }
-    const pct = (liquidatedBudget / releasedBudget) * 100;
-    if (pct >= 100) return "100% of Released Budget";
-    if (pct >= 10) return `${pct.toFixed(1).replace(/\.0$/, "")}% of Released Budget`;
-    if (pct >= 0.1) return `${pct.toFixed(1).replace(/\.0$/, "")}% of Released Budget`;
-    return `${pct.toFixed(2)}% of Released Budget`;
-  }, [liquidatedBudget, releasedBudget]);
+  const percentOf = (part: number, whole: number | null) => {
+    if (!whole || whole <= 0) return null;
+    const pct = (part / whole) * 100;
+    return pct >= 0.1 || pct === 0 ? pct.toFixed(1) : pct.toFixed(2);
+  };
+  const approvedPct = percentOf(approvedBudget, isConfigured ? annualBudget : null);
+  const releasedPct = percentOf(releasedBudget, approvedBudget);
+  const liquidatedPct = percentOf(liquidatedBudget, releasedBudget);
 
-  const committedPctDisplay = useMemo(() => {
-    if (!annualBudget || annualBudget <= 0) return "Approved budget commitments";
-    const pct = (approvedBudget / annualBudget) * 100;
-    if (pct >= 10) return `${pct.toFixed(1).replace(/\.0$/, "")}% committed`;
-    if (pct >= 0.1) return `${pct.toFixed(1).replace(/\.0$/, "")}% committed`;
-    return `${pct.toFixed(2)}% committed`;
-  }, [approvedBudget, annualBudget]);
+  const stageCards = [
+    {
+      key: "allocation",
+      label: "1. FY Budget Allocation",
+      info: "The total Local Youth Development Fund allocated by the city for the fiscal year.",
+      value: isConfigured ? formatPesoAmount(annualBudget) : "—",
+      valueClass: "text-slate-900",
+      note: isConfigured ? "Annual statutory allocation" : "Pending appropriation",
+    },
+    {
+      key: "approved",
+      label: "2. Approved Budget",
+      info: "Budget requests approved by PCYDO and committed against the allocation.",
+      value: formatPesoAmount(approvedBudget),
+      valueClass: "text-[#2F6FD1]",
+      note: approvedPct === null ? "Approved budget commitments" : `${approvedPct}% of FY allocation approved`,
+    },
+    {
+      key: "released",
+      label: "3. Released Budget",
+      info: "Approved budget that has been released to organizations.",
+      value: formatPesoAmount(releasedBudget),
+      valueClass: "text-[#C98A0B]",
+      note: releasedPct === null ? "Released amount" : `${releasedPct}% of approved budget released`,
+    },
+    {
+      key: "liquidated",
+      label: "4. Liquidated Budget",
+      info: "Released budget that organizations have accounted for through liquidation reports.",
+      value: formatPesoAmount(liquidatedBudget),
+      valueClass: "text-[#16956B]",
+      note: liquidatedPct === null ? "Liquidated amount" : `${liquidatedPct}% of released budget liquidated`,
+    },
+  ];
 
-  const releasedPctDisplay = useMemo(() => {
-    if (!approvedBudget || approvedBudget <= 0) return "Released amount";
-    const pct = (releasedBudget / approvedBudget) * 100;
-    if (pct >= 100) return "100% of Approved / Committed";
-    if (pct >= 10) return `${pct.toFixed(1).replace(/\.0$/, "")}% of Approved / Committed`;
-    if (pct >= 0.1) return `${pct.toFixed(1).replace(/\.0$/, "")}% of Approved / Committed`;
-    return `${pct.toFixed(2)}% of Approved / Committed`;
-  }, [releasedBudget, approvedBudget]);
+  const trackWidths = getBudgetExecutionSegmentWidths({
+    releasedAndLiquidated: releasedBudget,
+    pendingDisbursement,
+    remainingHeadroom,
+    totalAllocation: isConfigured ? annualBudget : null,
+  });
+  const trackSegments = [
+    { key: "releasedAndLiquidated" as const, label: "Released & Liquidated", amount: releasedBudget as number | null, color: "bg-[#16956B]" },
+    { key: "pendingDisbursement" as const, label: "Pending Disbursement", amount: pendingDisbursement as number | null, color: "bg-[#D4960E]" },
+    { key: "remainingHeadroom" as const, label: "Remaining Balance", amount: remainingHeadroom, color: "bg-slate-300" },
+  ];
 
   return (
     <section
       aria-label="Public Youth Budget Overview"
-      className={cn("public-budget-overview w-full max-w-7xl mx-auto space-y-6 sm:space-y-8", className)}
+      className={cn("public-budget-overview w-full max-w-7xl mx-auto space-y-6", className)}
     >
-      {/* 1. Header Section */}
-      <div className="public-budget-overview-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-public-border-default pb-6">
+      {/* 1. Header */}
+      <div className="public-budget-overview-header flex flex-col gap-4 border-b border-public-border-default pb-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="public-budget-record-context flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-public-text-brand mb-1">
-            <span>Pasig City Youth Development</span>
-            <span className="text-slate-300">•</span>
-            <span>Official PCYDO Records</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-inter">
-            Budget Transparency
-          </h1>
-          <p className="text-sm text-slate-600 mt-1 max-w-2xl font-inter">
-            Official financial snapshot of the Local Youth Development Fund.
+          <p className="public-budget-record-context font-inter text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
+            Official PCYDO Records
+          </p>
+          <h2 className="mt-2 font-tnr text-[28px] font-normal leading-[1.15] text-public-text-brand sm:text-[32px]">
+            From Allocation to Liquidation
+          </h2>
+          <p className="mt-1.5 max-w-2xl font-inter text-sm text-slate-600">
+            A summary of the Local Youth Development Fund's allocation, utilization, and remaining balance.
           </p>
         </div>
 
-        <div className="public-budget-controls flex flex-wrap items-center gap-3 self-start md:self-auto">
-          {/* Interactive FY Selector */}
+        <div className="public-budget-controls flex flex-wrap items-center gap-4 self-start md:self-auto">
           {showFiscalYearSelector && (
             <div className="flex items-center gap-2">
               <label htmlFor={fySelectorId} className="sr-only">
@@ -240,13 +248,11 @@ export default function PublicBudgetOverview({
                     id={fySelectorId}
                     type="button"
                     aria-label={`Select Fiscal Year. Currently FY ${activeFY}`}
-                    className="group flex h-10 min-w-[130px] items-center justify-between gap-2 rounded-[2px] border border-public-border-default bg-white px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2"
+                    className="group flex h-9 items-center gap-2 rounded-[2px] border border-[#C9D8EE] bg-[#EAF1FB] px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2"
                   >
-                    <span className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-public-text-secondary shrink-0" strokeWidth={1.75} aria-hidden="true" />
-                      <span>FY {activeFY}</span>
-                    </span>
-                    <ChevronDown className="h-4 w-4 text-public-text-brand shrink-0 transition-transform group-data-[state=open]:rotate-180" strokeWidth={1.75} aria-hidden="true" />
+                    <Calendar className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                    <span>FY {activeFY}</span>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" strokeWidth={1.75} aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" sideOffset={4} className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[130px] rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg">
@@ -269,11 +275,10 @@ export default function PublicBudgetOverview({
             </div>
           )}
 
-          {/* Freshness Badge */}
-          <div className="public-budget-freshness flex h-10 items-center gap-1.5 rounded-[2px] border border-public-border-default bg-white px-3.5 text-xs text-public-text-secondary">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            <span className="font-inter">Last updated: {lastUpdatedText}</span>
-          </div>
+          <p className="public-budget-freshness flex items-center gap-1.5 font-inter text-xs text-public-text-secondary">
+            <Clock className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <span>Last updated: {lastUpdatedText}</span>
+          </p>
         </div>
       </div>
 
@@ -310,14 +315,13 @@ export default function PublicBudgetOverview({
 
       {!isLoading && !fetchError && (
         <>
-          {/* Deficit Alert Banner if Commitments Exceed Annual Baseline */}
           {isDeficit && (
             <div className="rounded-[2px] border border-rose-200 border-l-4 border-l-rose-600 bg-rose-50 p-5 flex items-start gap-3.5">
               <AlertTriangle className="h-5 w-5 text-rose-600 mt-0.5 shrink-0" />
               <div className="space-y-1">
-                <h2 className="text-sm font-bold text-rose-950 font-inter">
+                <h3 className="text-sm font-bold text-rose-950 font-inter">
                   Allocation Ceiling Reached
-                </h2>
+                </h3>
                 <p className="text-xs sm:text-sm text-rose-800 font-inter leading-relaxed">
                   Approved youth project commitments exceed the current annual city allocation baseline by{" "}
                   <span className="font-cascadia font-bold underline">
@@ -329,142 +333,94 @@ export default function PublicBudgetOverview({
             </div>
           )}
 
-          {/* Unconfigured FY Graceful Notice */}
           {!isConfigured && (
             <div className="rounded-[2px] border border-public-border-default bg-white p-6 text-center space-y-2">
               <Building2 className="h-8 w-8 text-slate-400 mx-auto" strokeWidth={1.5} />
-              <h2 className="text-base font-semibold text-slate-800 font-inter">
+              <h3 className="text-base font-semibold text-slate-800 font-inter">
                 FY Budget Allocation Not Configured for FY {activeFY}
-              </h2>
+              </h3>
               <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto font-inter">
                 The City Government of Pasig has not published a statutory baseline allocation for this fiscal year yet. When approved, official allocations and grant distributions will appear here.
               </p>
             </div>
           )}
 
-          {/* 2. Budget Execution Pipeline — Single Visual Source of Truth */}
-          <div className="public-budget-pipeline rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-inter">
-                  Budget Execution Pipeline &middot; FY {activeFY}
-                </h2>
-                <p className="text-xs text-slate-500 font-inter mt-0.5">
-                  Current allocation position across released funds, pending disbursement, and remaining headroom.
-                </p>
-              </div>
-
+          {/* 2. Budget execution pipeline */}
+          <div className="public-budget-pipeline space-y-5 rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6">
+            <div>
+              <h3 className="sr-only">Budget Execution Pipeline &middot; FY {activeFY}</h3>
+              <p className="font-inter text-xs text-slate-600">
+                Current allocation status, including released funds, pending disbursements, and remaining available balance.
+              </p>
             </div>
 
-              {/* Canonical financial summary */}
-            <div className="public-budget-stages grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-              {/* Stage 1: FY Budget Allocation */}
-              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.allocation.value)}>
-                    1. {BUDGET_MONITORING_LABELS.allocation}
-                  </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-slate-100 text-slate-600">
-                    <Coins className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  </span>
-                </div>
-                <div className="mt-2.5">
-                  <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.allocation.value)}>
-                    {isConfigured ? formatPesoAmount(annualBudget) : "—"}
+            <div className="public-budget-stages grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+              {stageCards.map((card) => (
+                <div key={card.key} className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-inter text-[11px] font-semibold uppercase tracking-wider text-slate-800">
+                      {card.label}
+                    </span>
+                    <span title={card.info} aria-label={card.info} role="img" className="text-slate-400">
+                      <Info className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                    </span>
                   </div>
-                  <div className="text-xs text-slate-500 font-inter mt-1">
-                    {isConfigured ? "Annual statutory allocation" : "Pending appropriation"}
-                  </div>
-                </div>
-              </div>
-
-              {/* Stage 2: Approved / Committed */}
-              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.committed.value)}>
-                    2. {BUDGET_MONITORING_LABELS.committed}
-                  </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-blue-50 text-blue-700">
-                    <FileCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  </span>
-                </div>
-                <div className="mt-2.5">
-                  <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.committed.value)}>
-                    {formatPesoAmount(approvedBudget)}
-                  </div>
-                  <div className="text-xs text-blue-700 font-inter mt-1 font-medium">
-                    {committedPctDisplay}
+                  <div className="mt-2.5">
+                    <div className={cn("text-xl font-bold tracking-tight font-cascadia sm:text-2xl", card.valueClass)}>
+                      {card.value}
+                    </div>
+                    <div className="mt-1 font-inter text-xs text-slate-500">
+                      {card.note}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Stage 3: Released Budget */}
-              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.released.value)}>
-                    3. {BUDGET_MONITORING_LABELS.released}
-                  </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-cyan-50 text-cyan-700">
-                    <Banknote className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  </span>
-                </div>
-                <div className="mt-2.5">
-                  <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.released.value)}>
-                    {formatPesoAmount(releasedBudget)}
-                  </div>
-                  <div className="text-xs text-cyan-800 font-inter mt-1 font-medium">
-                    {releasedPctDisplay}
-                  </div>
-                </div>
-              </div>
-
-              {/* Stage 4: Liquidated Budget */}
-              <div className="rounded-[2px] border border-public-border-default bg-public-bg-section p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider font-inter", BUDGET_MONITORING_COLORS.liquidated.value)}>
-                    4. {BUDGET_MONITORING_LABELS.liquidated}
-                  </span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-emerald-50 text-emerald-700">
-                    <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  </span>
-                </div>
-                <div className="mt-2.5">
-                  <div className={cn("text-xl sm:text-2xl font-bold font-cascadia tracking-tight", BUDGET_MONITORING_COLORS.liquidated.value)}>
-                    {formatPesoAmount(liquidatedBudget)}
-                  </div>
-                  <div className="text-xs text-emerald-800 font-inter mt-1 font-medium">
-                    {auditedPctDisplay}
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
 
-            <div className="border-t border-slate-100 pt-4">
-              <BudgetExecutionPipeline
-                releasedAndLiquidated={releasedBudget}
-                pendingDisbursement={pendingDisbursement}
-                remainingHeadroom={remainingHeadroom}
-                totalAllocation={isConfigured ? annualBudget : null}
-                formatAmount={formatPesoAmount}
-                className="public-budget-execution-track"
-              />
+            <div className="public-budget-execution-track space-y-3">
+              <ul className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8">
+                {trackSegments.map((segment) => (
+                  <li key={segment.key} className="flex items-center gap-2 font-inter text-xs text-slate-700">
+                    <span aria-hidden="true" className={cn("h-2.5 w-2.5 shrink-0 rounded-sm", segment.color)} />
+                    <span>{segment.label}</span>
+                    <span className={cn("font-cascadia font-bold tabular-nums", segment.amount !== null && segment.amount < 0 ? "text-rose-700" : "text-slate-900")}>
+                      {segment.amount === null ? "Unavailable" : formatPesoAmount(segment.amount)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div
+                role="img"
+                aria-label={`Budget execution pipeline. ${trackSegments.map((segment) => `${segment.label}: ${segment.amount === null ? "Unavailable" : formatPesoAmount(segment.amount)}`).join("; ")}.`}
+                className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
+              >
+                {trackSegments.map((segment) => (
+                  <div
+                    key={segment.key}
+                    aria-hidden="true"
+                    data-budget-state={segment.key}
+                    className={cn("h-full shrink-0", segment.color)}
+                    style={{ width: `${trackWidths[segment.key]}%` }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* 4. Purpose Categories: Where the Youth Budget Goes */}
-          <div className="public-budget-distribution grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="public-budget-purpose lg:col-span-2 rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-slate-100 pb-3">
+          {/* 3. Purpose and district distribution */}
+          <div className="public-budget-distribution grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+            <div className="public-budget-purpose space-y-4 rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6 lg:col-span-2">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900 font-inter">
-                    Where the Youth Budget Goes
-                  </h2>
-                  <p className="text-xs text-slate-500 font-inter">
-                    Approved allocations by canonical purpose, ordered by amount.
+                  <h3 className="font-inter text-base font-semibold text-public-text-brand">
+                    Youth Budget Allocation by Purpose
+                  </h3>
+                  <p className="font-inter text-xs text-slate-500">
+                    Approved allocations grouped by purpose and arranged by amount.
                   </p>
                 </div>
-                <span className="text-xs font-semibold text-slate-500 font-cascadia">
-                  Total: {formatCompactPeso(approvedBudget)}
+                <span className="font-inter text-xs text-slate-500">
+                  Total: <span className="font-cascadia font-bold text-slate-900">{formatCompactPeso(approvedBudget)}</span>
                 </span>
               </div>
 
@@ -477,33 +433,24 @@ export default function PublicBudgetOverview({
                   role="region"
                   aria-label={`Purpose allocations for FY ${activeFY}`}
                   tabIndex={0}
-                  className="public-budget-purpose-list max-h-[240px] space-y-3.5 overflow-y-auto overscroll-contain pt-1 pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [scrollbar-color:#94a3b8_transparent] [scrollbar-width:thin]"
+                  className="public-budget-purpose-list max-h-[320px] space-y-3 overflow-y-auto overscroll-contain pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [scrollbar-color:#94a3b8_transparent] [scrollbar-width:thin]"
                 >
                   {purposeCategories.map((item) => {
                     const color = getCategoryColor(item.category);
                     return (
                       <div key={item.category} className="space-y-1.5">
-                        <div className="public-budget-purpose-label flex items-start justify-between gap-3 text-xs font-semibold">
-                          <span className="flex min-w-0 flex-1 items-start gap-2 text-slate-800 font-inter">
-                            <span
-                              className="mt-0.5 h-2.5 w-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: color }}
-                            />
+                        <div className="public-budget-purpose-label flex items-start justify-between gap-3 font-inter text-xs">
+                          <span className="flex min-w-0 flex-1 items-center gap-2 text-slate-700">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: color }} />
                             <span className="min-w-0 break-words">{formatBudgetPurposeCategory(item.category)}</span>
                           </span>
-                          <span className="shrink-0 text-right text-slate-900 font-cascadia">
-                            {formatPesoAmount(item.amount)}
-                            <span className="text-slate-400 font-normal ml-1.5">
-                              ({item.percentage}%)
-                            </span>
+                          <span className="shrink-0 text-right font-cascadia font-semibold text-slate-900">
+                            {formatPesoAmount(item.amount)} ({item.percentage}%)
                           </span>
                         </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                           <div
-                            style={{
-                              width: `${Math.min(item.percentage, 100)}%`,
-                              backgroundColor: color,
-                            }}
+                            style={{ width: `${Math.min(item.percentage, 100)}%`, backgroundColor: color }}
                             className="h-full rounded-full transition-all duration-500"
                           />
                         </div>
@@ -519,14 +466,13 @@ export default function PublicBudgetOverview({
               )}
             </div>
 
-            {/* 5. Geographic Transparency: District Allocations */}
-            <div className="rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6 space-y-4">
-              <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-base font-bold text-slate-900 font-inter">
+            <div className="space-y-4 rounded-[2px] border border-public-border-default bg-white p-5 sm:p-6">
+              <div>
+                <h3 className="font-inter text-base font-semibold text-public-text-brand">
                   District Distribution
-                </h2>
-                <p className="text-xs text-slate-500 font-inter">
-                  Aggregated distribution across Pasig legislative districts.
+                </h3>
+                <p className="font-inter text-xs text-slate-500">
+                  Summary of budget allocations across Pasig City's two legislative districts.
                 </p>
               </div>
 
@@ -545,30 +491,24 @@ export default function PublicBudgetOverview({
                 <div
                   role="region"
                   aria-label={`District allocations for FY ${activeFY}`}
-                  tabIndex={0}
-                  className="max-h-[320px] space-y-3 overflow-y-auto overscroll-contain pt-1 pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [scrollbar-color:#94a3b8_transparent] [scrollbar-width:thin]"
+                  className="space-y-3"
                 >
                   {districtAllocations.map((dist) => (
                     <div
                       key={dist.district}
-                      className="rounded-[2px] border border-public-border-default bg-public-bg-section p-3.5 space-y-1.5"
+                      className="space-y-2 rounded-[4px] border border-public-border-default bg-public-bg-section p-4"
                     >
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-public-text-brand shrink-0" />
-                          <span>{dist.district}</span>
-                        </span>
-                        <span className="font-bold text-slate-900 font-cascadia">
-                          {dist.percentage}%
-                        </span>
+                      <div className="flex items-center justify-between font-inter text-xs">
+                        <span className="font-semibold text-slate-800">{dist.district}</span>
+                        <span className="font-cascadia font-bold text-slate-900">{dist.percentage}%</span>
                       </div>
-                      <div className="text-sm font-bold text-slate-900 font-cascadia">
+                      <div className="font-cascadia text-xl font-bold text-public-text-brand">
                         {formatPesoAmount(dist.amount)}
                       </div>
-                      <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                         <div
                           style={{ width: `${Math.min(dist.percentage, 100)}%` }}
-                          className="h-full bg-public-bg-brand rounded-full transition-all duration-500"
+                          className="h-full rounded-full bg-public-bg-brand transition-all duration-500"
                         />
                       </div>
                     </div>
@@ -582,8 +522,11 @@ export default function PublicBudgetOverview({
                 </p>
               )}
 
-              <div className="border-l-4 border-public-border-brand bg-public-bg-section p-3 text-[11px] text-public-text-neutral-default leading-relaxed font-inter">
-                <span className="font-bold">Public Privacy Standard:</span> Organization identities and specific grant applications remain confidential in accordance with public transparency standards.
+              <div className="rounded-[4px] border border-[#C9D8EE] bg-[#EEF4FC] p-3 font-inter text-[11px] leading-relaxed text-public-text-neutral-default">
+                <p className="font-semibold text-public-text-brand">Public Privacy Standard</p>
+                <p className="mt-0.5">
+                  Organization identities and individual grant applications are kept confidential in accordance with applicable data privacy laws and public disclosure requirements.
+                </p>
               </div>
             </div>
           </div>

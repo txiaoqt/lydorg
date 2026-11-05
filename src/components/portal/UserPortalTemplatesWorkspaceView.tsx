@@ -879,8 +879,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
                                     )}
                                   </div>
                                   <p
-                                    className="text-[11px] text-muted-foreground truncate max-w-[280px]"
-                                    title={tpl.description}
+                                    className="max-w-[360px] break-words text-[11px] leading-relaxed text-muted-foreground"
                                   >
                                     {tpl.description || "Official template"}
                                   </p>

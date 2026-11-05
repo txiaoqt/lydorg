@@ -291,7 +291,7 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     );
 
     const purposeRegion = screen.getByRole("region", { name: "Purpose allocations for FY 2026" });
-    expect(purposeRegion).toHaveClass("max-h-[240px]");
+    expect(purposeRegion).toHaveClass("max-h-[320px]");
     expect(Array.from(purposeRegion.children)).toHaveLength(6);
     expect(screen.getByText("Active Citizenship")).toBeInTheDocument();
     expect(screen.queryByText("Other Programs")).toBeNull();
@@ -353,7 +353,6 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
       const headings = screen.getAllByRole("heading", { name: "Budget Transparency" });
       expect(headings.length).toBeGreaterThanOrEqual(1);
     });
-    expect(screen.getByText("Civic Fiscal Openness")).toBeInTheDocument();
     expect(screen.getAllByText(/Pasig City Youth Development/i).length).toBeGreaterThan(0);
     expect(screen.getByText("Budget Execution Pipeline · FY 2026")).toBeInTheDocument();
   });
@@ -369,9 +368,8 @@ describe("Public Budget Transparency Test Suite (TEST PUB 1 - TEST PUB 12)", () 
     );
 
     expect(screen.queryByText("Section not found")).toBeNull();
-    const headings = screen.getAllByText(/Budget Transparency/i);
-    expect(headings.length).toBeGreaterThan(0);
-    expect(screen.getByText(/Where the Youth Budget Goes/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "From Allocation to Liquidation" })).toBeInTheDocument();
+    expect(screen.getByText(/Youth Budget Allocation by Purpose/i)).toBeInTheDocument();
   });
 
   // TEST PUB 9 — Admin Preview uses the same shared component
@@ -590,7 +588,7 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
     );
 
     expect(screen.getByText("1. FY Budget Allocation")).toBeInTheDocument();
-    expect(screen.getByText("2. Approved / Committed")).toBeInTheDocument();
+    expect(screen.getByText("2. Approved Budget")).toBeInTheDocument();
     expect(screen.getByText("3. Released Budget")).toBeInTheDocument();
     expect(screen.getByText("4. Liquidated Budget")).toBeInTheDocument();
     expect(screen.queryByText("Approved Grants")).toBeNull();
@@ -600,8 +598,8 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
     expect(screen.queryByRole("progressbar")).toBeNull();
 
     // Verifies accurate decimal formatting for small non-zero audit rates
-    expect(screen.getByText("0.02% of Released Budget")).toBeInTheDocument();
-    expect(screen.queryByText("0% of Released Budget")).toBeNull();
+    expect(screen.getByText("0.02% of released budget liquidated")).toBeInTheDocument();
+    expect(screen.queryByText("0.0% of released budget liquidated")).toBeNull();
   });
 
   // TEST C — Available amount preserved
@@ -612,7 +610,7 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Remaining Headroom")).toBeInTheDocument();
+    expect(screen.getByText("Remaining Balance")).toBeInTheDocument();
     expect(screen.getByText("-₱43,687,070.00")).toBeInTheDocument();
   });
 
@@ -669,10 +667,10 @@ describe("UI/UX Single Visual Source of Truth Suite (TEST A - TEST G)", () => {
       </MemoryRouter>
     );
 
-    // All surfaces render identical Financial Execution Progression heading
-    expect(publicView.querySelector("h2")?.textContent).toBe("Allocation Ceiling Reached");
-    expect(userPortalView.querySelector("h2")?.textContent).toBe("Allocation Ceiling Reached");
-    expect(adminPreview.querySelector("h2")?.textContent).toBe("Allocation Ceiling Reached");
+    // All surfaces render the same overview heading
+    expect(publicView.querySelector("h2")?.textContent).toBe("From Allocation to Liquidation");
+    expect(userPortalView.querySelector("h2")?.textContent).toBe("From Allocation to Liquidation");
+    expect(adminPreview.querySelector("h2")?.textContent).toBe("From Allocation to Liquidation");
   });
 
   // TEST G — Responsive

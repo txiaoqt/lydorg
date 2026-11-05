@@ -149,7 +149,7 @@ export default function NewsReleaseRecord() {
           <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10 md:py-14">
             <div className="mx-auto max-w-4xl space-y-3 rounded-2xl border border-secondary-foreground/15 bg-secondary-foreground/10 p-4 shadow-sm backdrop-blur-sm sm:space-y-4 sm:p-6 md:p-8">
               <p className="text-[11px] font-medium text-secondary-foreground/75 sm:text-sm">Official Source Post</p>
-              <h1 className="text-2xl font-bold leading-tight text-secondary-foreground sm:text-3xl md:text-4xl">
+              <h1 className="font-tnr text-2xl font-normal leading-tight text-secondary-foreground sm:text-3xl md:text-4xl">
                 {newsRelease.title}
               </h1>
               <p className="max-w-3xl text-sm leading-relaxed text-secondary-foreground/80 sm:text-base">

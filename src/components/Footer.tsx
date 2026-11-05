@@ -60,13 +60,13 @@ const Footer = () => {
         <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:gap-x-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-9">
 
           {/* Brand column */}
-          <div className="col-span-2 flex flex-col gap-4 lg:col-span-6 lg:row-span-2 lg:gap-5 lg:pr-10">
+          <div className="col-span-2 flex flex-col gap-4 lg:col-span-7 lg:row-span-2 lg:gap-5 lg:pr-10">
             <img src="/FullFooter.svg" alt="Y-TRACE — Pasig City" className="h-10 w-auto self-start object-contain sm:h-12" />
-            <p className="max-w-[360px] font-inter text-[13px] font-normal leading-[1.6] text-white/70">
+            <p className="font-inter text-[13px] font-normal leading-[1.6] text-white/70">
               Supporting Pasig City youth organizations through streamlined registration, accessible digital services, and transparent compliance processes.
             </p>
             <div className="mt-1 flex flex-col gap-2.5">
-              <p className="flex items-start gap-2 font-inter text-sm font-normal leading-relaxed text-white/80">
+              <p className="flex items-start gap-2 font-inter text-[13px] font-normal leading-relaxed text-white/80">
                 <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{address}</span>
               </p>
@@ -84,7 +84,7 @@ const Footer = () => {
 
           {/* Navigation groups */}
           <FooterLinkGroup
-            className="lg:col-span-3 lg:col-start-7 lg:row-start-1"
+            className="lg:col-span-3 lg:col-start-8 lg:row-start-1"
             title="General Information"
             links={[
               { label: "Home", to: "/" },
@@ -93,7 +93,7 @@ const Footer = () => {
             ]}
           />
           <FooterLinkGroup
-            className="lg:col-span-3 lg:col-start-10 lg:row-start-1"
+            className="lg:col-span-2 lg:col-start-11 lg:row-start-1"
             title="Support"
             links={[
               { label: "FAQs", to: "/faqs" },
@@ -101,7 +101,7 @@ const Footer = () => {
             ]}
           />
           <FooterLinkGroup
-            className="lg:col-span-3 lg:col-start-7 lg:row-start-2"
+            className="lg:col-span-3 lg:col-start-8 lg:row-start-2"
             title="Resources"
             links={[
               { label: "Budget Transparency", to: "/budget-transparency" },
@@ -109,7 +109,7 @@ const Footer = () => {
             ]}
           />
           <FooterLinkGroup
-            className="lg:col-span-3 lg:col-start-10 lg:row-start-2"
+            className="lg:col-span-2 lg:col-start-11 lg:row-start-2"
             title="Legal"
             links={[
               { label: "Privacy Policy", to: "/privacy" },

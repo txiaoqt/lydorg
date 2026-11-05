@@ -1,6 +1,9 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { MapPin, Mail, MessageSquare, Send, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,9 +12,9 @@ import { usePublicContactInfo } from "@/lib/admin-system-settings";
 // Fix Leaflet default marker icon in bundlers
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 });
 
 // Temporary Pasig City Hall coordinates (Brgy. Rosario, Pasig City)
@@ -26,13 +29,13 @@ const Contacts = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 pt-16 sm:px-6 sm:pt-20 xl:pt-32 lg:px-[64px]">
+      <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 sm:px-6 lg:px-[64px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
-            <h1 className="font-inter font-bold leading-[105%] tracking-[-0.03em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
+            <h1 className="font-tnr font-normal leading-[1.1] tracking-[-0.01em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Contact Us
             </h1>
-            <p className="font-inter font-normal leading-relaxed sm:leading-[120%] text-public-text-neutral-on-neutral text-sm sm:text-public-fs-subtitle-sm max-w-xl lg:max-w-5xl lg:min-h-[65px]">
+            <p className="font-inter text-base font-normal leading-[1.6] text-white/85">
               For inquiries regarding services provided by the Pasig City Youth Development Office (PCYDO), please use the official contact information provided below.
             </p>
           </div>
@@ -105,6 +108,10 @@ const Contacts = () => {
             <MapContainer
               center={COORDS}
               zoom={16}
+              minZoom={13}
+              // Pasig City with a small margin; panning stops at the edge.
+              maxBounds={[[14.52, 121.03], [14.63, 121.13]]}
+              maxBoundsViscosity={1}
               scrollWheelZoom={true}
               zoomControl={true}
               style={{ height: "100%", width: "100%" }}

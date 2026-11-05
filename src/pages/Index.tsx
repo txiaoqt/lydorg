@@ -1,4 +1,4 @@
-import { ArrowRight, Banknote, Check, Clock, FileText, Globe, HelpCircle, Info, Mail, MapPin, Minus, MoveRight, Plus } from "lucide-react";
+import { Archive, ArrowRight, Check, Clock, FileText, HelpCircle, Mail, MapPin, Minus, MoveRight, Newspaper, Phone, Plus, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -45,12 +45,12 @@ const overviewHighlights = [
 ];
 
 const quickLinks = [
-  { icon: Info, title: "Learn About Y-TRACE", description: "Understand the portal and the services available to youth organizations in Pasig City.", href: "/about" },
-  { icon: Banknote, title: "View Budget Information", description: "Review information on youth development funding and budget allocations.", href: "/budget-transparency" },
+  { icon: Search, title: "Learn About Y-TRACE", description: "Understand the portal and the services available to youth organizations in Pasig City.", href: "/about" },
+  { icon: Archive, title: "View Budget Information", description: "Review information on youth development funding and budget allocations.", href: "/budget-transparency" },
   { icon: FileText, title: "Access Forms and Templates", description: "Browse and download official PCYDO forms, templates, and reference documents.", href: "/public-templates" },
-  { icon: Globe, title: "Read the Latest News", description: "View official announcements and updates from PCYDO.", href: "/news-releases" },
+  { icon: Newspaper, title: "Read the Latest News", description: "View official announcements and updates from PCYDO.", href: "/news-releases" },
   { icon: HelpCircle, title: "Find Answers", description: "Get answers to common questions about the Y-TRACE portal and PCYDO services.", href: "/faqs" },
-  { icon: MapPin, title: "Contact PCYDO", description: "Find official contact information for inquiries and assistance.", href: "/contacts" },
+  { icon: Phone, title: "Contact PCYDO", description: "Find official contact information for inquiries and assistance.", href: "/contacts" },
 ];
 
 const Index = () => {
@@ -171,14 +171,11 @@ const Index = () => {
           {/* Title block */}
           <div className="flex flex-col gap-2.5 sm:gap-3">
             <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-public-text-brand-secondary">
-              Quick Links
+              Explore
             </span>
             <h2 className="font-editorial font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand text-[28px] sm:text-[34px] lg:text-[38px]">
-              Explore Y-TRACE
+              How can we help you today?
             </h2>
-            <p className="max-w-[54ch] font-inter font-normal leading-[1.6] text-public-text-secondary text-sm sm:text-base">
-              Access official information, resources, and services related to youth organization registration, compliance, and PCYDO programs.
-            </p>
           </div>
 
           {/* Link rows */}
@@ -195,7 +192,7 @@ const Index = () => {
                   className="mt-px h-6 w-6 shrink-0 text-public-text-brand"
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <h3 className="font-inter text-[15px] font-semibold leading-snug text-public-text-brand">
+                  <h3 className="font-inter text-base font-medium leading-snug text-public-text-brand">
                     {title}
                   </h3>
                   <p className="font-inter text-[13px] font-normal leading-[1.55] text-public-text-secondary">
@@ -375,7 +372,7 @@ const Index = () => {
                     )}
                   </button>
                   {isOpen && (
-                    <p className="max-w-[62ch] pb-4 pr-8 font-inter text-[13px] font-normal leading-[1.6] text-public-text-secondary sm:pb-5">
+                    <p className="pb-4 font-inter text-[13px] font-normal leading-[1.6] text-public-text-secondary sm:pb-5">
                       {answer}
                     </p>
                   )}

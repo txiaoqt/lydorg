@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
@@ -12,6 +12,15 @@ const navItems = [
   { label: "FAQs", href: "/faqs" },
   { label: "Contacts", href: "/contacts" },
 ];
+
+// Pages outside the main nav that still get a breadcrumb.
+const breadcrumbLabels: Record<string, string> = {
+  ...Object.fromEntries(navItems.map((item) => [item.href, item.label])),
+  "/site-map": "Site Map",
+  "/terms": "Legal Policies",
+  "/privacy": "Legal Policies",
+  "/advocacy": "About",
+};
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,10 +69,12 @@ const Navbar = () => {
     return location.pathname === href;
   };
 
+  const breadcrumbLabel = location.pathname === "/" ? null : breadcrumbLabels[location.pathname] ?? null;
   const portalHref = role === "admin" ? "/admin" : "/dashboard";
   const portalLabel = role === "admin" ? "Admin Portal" : "Open Portal";
 
   return (
+    <>
     <nav className="fixed left-0 right-0 top-0 z-50 bg-white shadow-public-nav border-b border-slate-100/80">
       <div className="mx-auto flex h-14 sm:h-16 lg:h-20 w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-10 lg:px-20">
         <Link to="/" className="min-w-0 shrink-0 flex items-center gap-3">
@@ -226,6 +237,25 @@ const Navbar = () => {
         </div>
       ) : null}
     </nav>
+    {/* In page flow below the fixed nav; it carries the nav offset that the page hero used to. */}
+    {breadcrumbLabel ? (
+      <nav aria-label="Breadcrumb" className="mt-14 border-b border-slate-200 bg-white sm:mt-16 lg:mt-20 xl:mt-32">
+        <ol className="mx-auto flex h-10 w-full max-w-[1440px] items-center gap-2 px-4 font-inter text-xs sm:px-10 lg:px-20">
+          <li>
+            <Link to="/" className="text-public-text-brand underline underline-offset-[3px] hover:text-public-text-brand-secondary">
+              Home
+            </Link>
+          </li>
+          <li aria-hidden="true">
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+          </li>
+          <li aria-current="page" className="text-slate-600">
+            {breadcrumbLabel}
+          </li>
+        </ol>
+      </nav>
+    ) : null}
+    </>
   );
 };
 
