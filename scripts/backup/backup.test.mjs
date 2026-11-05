@@ -11,7 +11,7 @@ import { backupStorage, enumerateObjects, discoverBuckets, storageApi, StorageAp
 import { generateManifest, rejectCredentials } from './generate-manifest.mjs';
 import { BASE_DATABASE_ARTIFACTS, inspectDatabase, backupDatabase } from './backup-database.mjs';
 import { backupIdentity } from './run-backup.mjs';
-import { uploadR2, preflightR2, classifyR2Diagnostic, classifyR2Error, SAFE_R2_ERROR_CODES, formatR2Diagnostic, getR2Diagnostic, extractAwsServiceCode, extractHttpStatus, buildR2AwsEnv } from './upload-r2.mjs';
+import { uploadR2, preflightR2, enforceBackupRetention, classifyR2Diagnostic, classifyR2Error, SAFE_R2_ERROR_CODES, formatR2Diagnostic, getR2Diagnostic, extractAwsServiceCode, extractHttpStatus, buildR2AwsEnv } from './upload-r2.mjs';
 import { checkR2 } from './check-r2.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -866,4 +866,33 @@ test('ProfileNotFound and missing config profile errors are safely classified as
     assert.doesNotMatch(formatted, new RegExp(secretProfile));
     assert.doesNotMatch(formatted, /service_code/);
   }
+});
+
+test('backup retention deletes only manual backups older than 30 days and keeps the new one', async () => {
+  const now = new Date('2026-11-06T00:00:00Z');
+  const removed = [];
+  const keepKey = 'manual/2026/09/01/new/ytrace-backup-new.tar.gz';
+  const execute = async (command, args) => {
+    if (args.includes('put-bucket-lifecycle-configuration')) {
+      const rule = JSON.parse(args[args.indexOf('--lifecycle-configuration') + 1]).Rules[0];
+      assert.equal(rule.Expiration.Days, 30);
+      assert.equal(rule.Filter.Prefix, 'manual/');
+      throw new Error('AccessDenied');
+    }
+    if (args.includes('list-objects-v2')) return JSON.stringify({ Contents: [
+      { Key: 'manual/2026/09/01/old/ytrace-backup-old.tar.gz', LastModified: '2026-09-01T00:00:00Z' },
+      { Key: 'manual/2026/09/01/old/ytrace-backup-old.tar.gz.sha256', LastModified: '2026-09-01T00:00:00Z' },
+      { Key: 'manual/2026/10/20/recent/ytrace-backup-recent.tar.gz', LastModified: '2026-10-20T00:00:00Z' },
+      { Key: keepKey, LastModified: '2026-09-01T00:00:00Z' },
+      { Key: 'other/keep-me.txt', LastModified: '2020-01-01T00:00:00Z' },
+    ] });
+    if (args.includes('rm')) removed.push(args[args.indexOf('rm') + 1]);
+    return '';
+  };
+  const result = await enforceBackupRetention({ env: secrets, now, execute, keepKey });
+  assert.deepEqual(removed, [
+    `s3://${secrets.R2_BUCKET_NAME}/manual/2026/09/01/old/ytrace-backup-old.tar.gz`,
+    `s3://${secrets.R2_BUCKET_NAME}/manual/2026/09/01/old/ytrace-backup-old.tar.gz.sha256`,
+  ]);
+  assert.deepEqual(result, { deleted: 2, lifecycleApplied: false });
 });

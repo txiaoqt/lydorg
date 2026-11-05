@@ -261,3 +261,43 @@ export async function uploadR2({ archive, backupId, createdAtUtc, env, execute =
   if (remoteHash.size !== hash.size || remoteHash.sha256 !== hash.sha256) throw new Error('R2 read-back archive checksum mismatch');
   return { key, size: hash.size, sha256: hash.sha256, readBackVerified: true };
 }
+
+// The Privacy Policy promises backups are deleted after 30 days.
+export const BACKUP_RETENTION_DAYS = 30;
+const BACKUP_ROOT_PREFIX = 'manual/';
+
+/**
+ * Deletes backups older than the retention period. Run only after a new backup is verified,
+ * so a fresh copy always remains. Also asks R2 to expire objects on its own (bucket lifecycle),
+ * which keeps the 30 days even when no backup runs; that needs an admin-scoped token, so it is best effort.
+ */
+export async function enforceBackupRetention({ env, now = new Date(), execute = runQuiet, keepKey }) {
+  const awsEnv = buildR2AwsEnv(env);
+  const aws = (args, capture = false) => execute('aws', ['--endpoint-url', env.R2_ENDPOINT, '--region', 'auto', ...args], awsEnv, capture, classifyR2Diagnostic);
+
+  let lifecycleApplied = true;
+  try {
+    await aws(['s3api', 'put-bucket-lifecycle-configuration', '--bucket', env.R2_BUCKET_NAME, '--lifecycle-configuration', JSON.stringify({
+      Rules: [{
+        ID: 'ytrace-backup-retention',
+        Status: 'Enabled',
+        Filter: { Prefix: BACKUP_ROOT_PREFIX },
+        Expiration: { Days: BACKUP_RETENTION_DAYS },
+        AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 },
+      }],
+    })]);
+  } catch {
+    lifecycleApplied = false;
+  }
+
+  const listing = JSON.parse(await aws(['s3api', 'list-objects-v2', '--bucket', env.R2_BUCKET_NAME, '--prefix', BACKUP_ROOT_PREFIX, '--output', 'json'], true) || '{}');
+  const cutoff = now.getTime() - BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const expired = (listing.Contents ?? [])
+    .filter(item => typeof item.Key === 'string' && item.Key.startsWith(BACKUP_ROOT_PREFIX) && item.Key !== keepKey && item.Key !== `${keepKey}.sha256`)
+    .filter(item => Date.parse(item.LastModified) < cutoff)
+    .map(item => item.Key);
+  for (const key of expired) {
+    await aws(['s3', 'rm', `s3://${env.R2_BUCKET_NAME}/${key}`, '--only-show-errors']);
+  }
+  return { deleted: expired.length, lifecycleApplied };
+}

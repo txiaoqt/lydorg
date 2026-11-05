@@ -5,7 +5,7 @@ import { validateSecrets, redact, runQuiet } from './common.mjs';
 import { backupDatabase } from './backup-database.mjs';
 import { backupStorage, storageApi } from './backup-storage.mjs';
 import { generateManifest } from './generate-manifest.mjs';
-import { preflightR2, uploadR2 } from './upload-r2.mjs';
+import { BACKUP_RETENTION_DAYS, enforceBackupRetention, preflightR2, uploadR2 } from './upload-r2.mjs';
 
 export function backupIdentity(env, now = new Date()) {
   if (!/^\d+$/.test(env.GITHUB_RUN_ID || '') || !/^\d+$/.test(env.GITHUB_RUN_ATTEMPT || '') ||
@@ -51,6 +51,9 @@ export async function runBackup(env = process.env) {
     await runQuiet('tar', ['-tzf', archive]);
     const remote = await uploadR2({ archive, ...identity, env });
     console.log(`R2 backup verified by HEAD and downloaded SHA-256 (${remote.size} bytes)`);
+    const retention = await enforceBackupRetention({ env, keepKey: remote.key });
+    console.log(`Retention: deleted ${retention.deleted} backup file(s) older than ${BACKUP_RETENTION_DAYS} days`);
+    if (!retention.lifecycleApplied) console.log('WARNING: R2 lifecycle rule not applied (token lacks bucket-admin scope); old backups are removed only when a backup runs');
   } finally {
     // Only delete the unique directory allocated by this run inside the validated temporary parent.
     await rm(temporary, { recursive: true, force: true });
