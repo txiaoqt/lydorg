@@ -1218,7 +1218,6 @@
   }
 
   .public-budget-map__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .public-budget-map__filters > label,
   .public-budget-map__filters > button {
     width: 100%;
     min-width: 0;
@@ -1226,7 +1225,6 @@
     padding-inline: 0.55rem;
     font-size: 0.75rem;
   }
-  .public-budget-map__barangay-filter { display: inline-flex; }
 }
 
 @media (max-width: 640px) {

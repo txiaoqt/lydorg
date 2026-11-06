@@ -83,9 +83,10 @@ const Navbar = () => {
             alt="Y-TRACE"
             className="h-9 w-9 lg:h-11 lg:w-11 rounded-[6px] object-contain"
           />
-          <span aria-hidden="true" className="flex flex-col font-inter leading-none text-public-text-brand">
-            <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-[0.04em]">Pasig City</span>
-            <span className="mt-1 text-base lg:text-lg font-semibold">Y-TRACE</span>
+          {/* Same lockup as the sign-in logo (FullNavbar.svg): Y-TRACE over PASIG CITY. */}
+          <span aria-hidden="true" className="flex flex-col font-inter leading-none">
+            <span className="text-[16.5px] font-bold tracking-[-0.01em] text-public-text-brand lg:text-[20px]">Y-TRACE</span>
+            <span className="mt-[5px] pl-[2px] text-[12.5px] font-normal uppercase text-[#536579] lg:mt-[6px] lg:text-[15px]">Pasig City</span>
           </span>
         </Link>
 

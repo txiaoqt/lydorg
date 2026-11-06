@@ -377,15 +377,22 @@ const ResetPassword = () => {
 
   return (
     <div
-      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} relative flex min-h-screen min-h-[100dvh] w-full flex-col items-center justify-center overflow-x-hidden bg-background px-4 py-8 sm:py-12 text-foreground`}
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page bg-background" : "bg-[#0E2F66]"} relative flex min-h-screen min-h-[100dvh] w-full flex-col items-center justify-center overflow-x-hidden px-4 py-8 sm:py-12 text-foreground`}
       data-pwa-theme={pwaFlow ? pwaTheme : undefined}
       style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
     >
-      {/* Background ambient lighting */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
-      </div>
+      {pwaFlow ? (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-[-140px] top-[-180px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
+          <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
+        </div>
+      ) : (
+        // The PCYDO YDC building, washed in Y-TRACE blue so the card stays the focus.
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <img src="/auth/ydc-building.jpg" alt="" className="h-full w-full scale-105 object-cover blur-[2px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0E2F66]/85 via-[#16468A]/82 to-[#1A5CA8]/85" />
+        </div>
+      )}
 
       <div className="relative z-10 w-full max-w-[390px] sm:max-w-md mx-auto space-y-4 sm:space-y-6">
         {/* Brand Logo — centered above card */}
@@ -394,7 +401,18 @@ const ResetPassword = () => {
             to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
             className="inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-transform hover:opacity-95 active:scale-[0.98]"
           >
-            <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+            {pwaFlow ? (
+              <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+            ) : (
+              // Same lockup as the navbar, in white for the blue photo background.
+              <span className="flex items-center gap-3">
+                <img src="/navbar-mark.svg" alt="Y-TRACE" className="h-11 w-11 rounded-[6px] object-contain" />
+                <span aria-hidden="true" className="flex flex-col font-inter leading-none">
+                  <span className="text-[20px] font-bold tracking-[-0.01em] text-white">Y-TRACE</span>
+                  <span className="mt-[6px] pl-[2px] text-[15px] font-normal uppercase text-white/75">Pasig City</span>
+                </span>
+              </span>
+            )}
           </Link>
         </div>
 
@@ -582,13 +600,13 @@ const ResetPassword = () => {
         </div>
 
         {mode !== "updated" ? (
-          <div className="space-y-2 text-center text-sm text-muted-foreground pt-1">
+          <div className={`space-y-2 text-center text-sm pt-1 ${pwaFlow ? "text-muted-foreground" : "text-white/80"}`}>
             <p className="text-sm">
               Remember your password?{" "}
               <button
                 type="button"
                 onClick={() => cancelRecovery(pwaFlow ? pwaAuthRoute("/signin") : "/signin")}
-                className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors focus-visible:outline-none focus-visible:underline cursor-pointer"
+                className={`font-semibold hover:underline transition-colors focus-visible:outline-none focus-visible:underline cursor-pointer ${pwaFlow ? "text-primary hover:text-primary/80" : "text-white"}`}
               >
                 Sign in
               </button>
@@ -597,7 +615,7 @@ const ResetPassword = () => {
               <button
                 type="button"
                 onClick={() => cancelRecovery(pwaFlow ? PWA_ENTRY_ROUTE : "/")}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline cursor-pointer"
+                className={`text-xs transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline cursor-pointer ${pwaFlow ? "text-muted-foreground hover:text-foreground" : "text-white/75 hover:text-white"}`}
               >
                 ← Back to {pwaFlow ? "welcome" : "home"}
               </button>

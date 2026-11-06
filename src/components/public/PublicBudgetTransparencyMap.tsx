@@ -14,6 +14,15 @@ const formatMoney = (amount: number) => new Intl.NumberFormat("en-PH", {
   maximumFractionDigits: 2,
 }).format(amount);
 
+// Both map filters share one look: the site's light-blue filter chip and a flat bordered menu.
+const filterTriggerClass = "group flex h-9 shrink-0 items-center whitespace-nowrap justify-between gap-2 rounded-[2px] border border-[#C9D8EE] bg-[#EAF1FB] px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2";
+const filterChevronClass = "h-4 w-4 shrink-0 text-public-text-brand transition-transform group-data-[state=open]:rotate-180";
+const filterMenuClass = "z-[1000] w-[var(--radix-dropdown-menu-trigger-width)] rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg";
+const filterItemClass = (active: boolean) => cn(
+  "flex cursor-pointer items-center rounded-none border-b border-l-2 border-public-border-default px-3 py-3 text-sm last:border-b-0 focus:bg-public-bg-section focus:text-public-text-brand",
+  active ? "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand" : "border-l-transparent text-public-text-neutral-default",
+);
+
 export default function PublicBudgetTransparencyMap({
   fiscalYear,
   availableFiscalYears,
@@ -71,41 +80,44 @@ export default function PublicBudgetTransparencyMap({
       <div className="public-budget-map__filters flex justify-end gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label={`Select Fiscal Year. Currently FY ${fiscalYear}`}
-              className="group flex h-9 items-center gap-2 rounded-[2px] border border-[#C9D8EE] bg-[#EAF1FB] px-3 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:border-public-border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-border-brand focus-visible:ring-offset-2"
-            >
-              <span className="flex items-center gap-2">
+            <button type="button" aria-label={`Select Fiscal Year. Currently FY ${fiscalYear}`} className={filterTriggerClass}>
+              <span className="flex min-w-0 items-center gap-2">
                 <Calendar className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.75} aria-hidden="true" />
                 <span>FY {fiscalYear}</span>
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-public-text-brand transition-transform group-data-[state=open]:rotate-180" strokeWidth={1.75} aria-hidden="true" />
+              <ChevronDown className={filterChevronClass} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" sideOffset={4} className="z-[1000] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[130px] rounded-[2px] border-public-border-default bg-white p-0 font-inter shadow-lg">
+          <DropdownMenuContent align="end" sideOffset={4} className={cn(filterMenuClass, "min-w-[130px]")}>
             {availableFiscalYears.map((year) => (
-              <DropdownMenuItem
-                key={year}
-                onSelect={() => onFiscalYearChange(year)}
-                className={cn(
-                  "flex cursor-pointer items-center justify-between rounded-none border-b border-l-2 border-public-border-default px-3 py-3 text-sm last:border-b-0 focus:bg-public-bg-section focus:text-public-text-brand",
-                  year === fiscalYear ? "border-l-public-border-brand bg-public-bg-section font-semibold text-public-text-brand" : "border-l-transparent text-public-text-neutral-default",
-                )}
-              >
-                <span>FY {year}</span>
+              <DropdownMenuItem key={year} onSelect={() => onFiscalYearChange(year)} className={filterItemClass(year === fiscalYear)}>
+                FY {year}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <label className="public-budget-map__barangay-filter inline-flex min-h-9 items-center gap-2 rounded-[2px] border border-[#C9D8EE] bg-[#EAF1FB] px-3 font-inter text-sm font-semibold text-public-text-brand focus-within:border-public-border-brand">
-          <MapPin className="h-4 w-4 shrink-0 text-public-text-secondary" aria-hidden="true" />
-          <span className="sr-only">Filter by barangay</span>
-          <select aria-label="Filter by barangay" value={selectedBarangay} onChange={(event) => setSelectedBarangay(event.target.value)} className="min-w-0 w-full bg-transparent outline-none">
-            <option value="all">Pasig City</option>
-            {CANONICAL_PASIG_BARANGAYS.map(({ name }) => <option key={name} value={name}>{name}</option>)}
-          </select>
-        </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Filter by barangay. Currently ${selectedBarangay === "all" ? "Pasig City" : selectedBarangay}`}
+              className={cn(filterTriggerClass, "min-w-[180px]")}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <MapPin className="h-4 w-4 shrink-0 text-public-text-secondary" strokeWidth={1.75} aria-hidden="true" />
+                <span className="truncate">{selectedBarangay === "all" ? "Pasig City" : selectedBarangay}</span>
+              </span>
+              <ChevronDown className={filterChevronClass} strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" sideOffset={4} className={cn(filterMenuClass, "max-h-[min(360px,var(--radix-dropdown-menu-content-available-height))] min-w-[200px] overflow-y-auto")}>
+            {[{ value: "all", label: "Pasig City" }, ...CANONICAL_PASIG_BARANGAYS.map(({ name }) => ({ value: name, label: name }))].map(({ value, label }) => (
+              <DropdownMenuItem key={value} onSelect={() => setSelectedBarangay(value)} className={filterItemClass(value === selectedBarangay)}>
+                {label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       </div>
       {error && (
