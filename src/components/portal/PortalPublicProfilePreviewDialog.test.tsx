@@ -30,12 +30,14 @@ describe("PortalPublicProfilePreviewDialog", () => {
         title: "Barangay Youth Leadership Summit",
         date: "2026-08-15T00:00:00Z",
         organizer: "PCYDO",
+        status: "verified",
       },
       {
         id: "ypop-2",
         title: "Pasig Green Youth Initiative",
         date: "2026-07-20T00:00:00Z",
         organizer: "PCYDO",
+        status: "verified",
       },
     ],
     formatShortPortalDate: (d: string) => "Aug 15, 2026",
@@ -56,13 +58,13 @@ describe("PortalPublicProfilePreviewDialog", () => {
   it("renders verified institutional details correctly in editorial grid", () => {
     render(<PortalPublicProfilePreviewDialog {...defaultProps} />);
 
-    expect(screen.getByText("Authorized Head of Organization")).toBeDefined();
+    expect(screen.getByText("Head of Organization")).toBeDefined();
     expect(screen.getByText("Juan Dela Cruz")).toBeDefined();
 
-    expect(screen.getByText("Organization Adviser")).toBeDefined();
+    expect(screen.getByText("Adviser")).toBeDefined();
     expect(screen.getByText("Maria Santos")).toBeDefined();
 
-    expect(screen.getByText("Unique Registration Number (URN)")).toBeDefined();
+    expect(screen.getByText("Registration URN")).toBeDefined();
     expect(screen.getByText("URN-PASIG-2026-0089")).toBeDefined();
 
     expect(screen.getByText("Centers of Youth Participation")).toBeDefined();
@@ -96,7 +98,7 @@ describe("PortalPublicProfilePreviewDialog", () => {
   it("renders recent city-led activities with title, date, organizer, and verified status", () => {
     render(<PortalPublicProfilePreviewDialog {...defaultProps} />);
 
-    expect(screen.getByText("Recent City-Led Activities")).toBeDefined();
+    expect(screen.getByText("Recent City-led Activities")).toBeDefined();
     expect(screen.getByText("Barangay Youth Leadership Summit")).toBeDefined();
     expect(screen.getByText("Pasig Green Youth Initiative")).toBeDefined();
   });
@@ -110,7 +112,7 @@ describe("PortalPublicProfilePreviewDialog", () => {
     );
 
     expect(
-      screen.getByText(/No recent city-led YPOP activities recorded for this organization/i)
+      screen.getByText(/No city-led activities recorded for this organization/i)
     ).toBeDefined();
   });
 
@@ -170,15 +172,15 @@ describe("PortalPublicProfilePreviewDialog", () => {
     expect(img.getAttribute("src")).toBe("https://example.com/logo.png");
   });
 
-  it("does not render URN block when displayUrn is 'Not required' or empty", () => {
+  it("does not render URN block when displayUrn is not yet generated or empty", () => {
     const { rerender } = render(
       <PortalPublicProfilePreviewDialog
         {...defaultProps}
-        displayUrn="Not required"
+        displayUrn="Not yet generated"
       />
     );
 
-    expect(screen.queryByText("Unique Registration Number (URN)")).toBeNull();
+    expect(screen.queryByText("Registration URN")).toBeNull();
 
     rerender(
       <PortalPublicProfilePreviewDialog
@@ -187,7 +189,7 @@ describe("PortalPublicProfilePreviewDialog", () => {
       />
     );
 
-    expect(screen.queryByText("Unique Registration Number (URN)")).toBeNull();
+    expect(screen.queryByText("Registration URN")).toBeNull();
   });
 
   it("handles unassigned representatives, advisers, and omitted advocacies", () => {

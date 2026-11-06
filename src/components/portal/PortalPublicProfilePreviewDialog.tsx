@@ -47,6 +47,7 @@ export interface PortalPublicProfilePreviewDialogProps {
   displayUrn?: string;
   profilePercent: number;
   joinedYpopEvents?: Array<any>;
+  orgInitiatedActivities?: Array<any>;
   formatShortPortalDate: (dateStr: string) => string;
 }
 
@@ -85,6 +86,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
   displayUrn,
   profilePercent,
   joinedYpopEvents = [],
+  orgInitiatedActivities = [],
   formatShortPortalDate,
 }) => {
   const [imageError, setImageError] = useState(false);
@@ -97,7 +99,20 @@ export const PortalPublicProfilePreviewDialog: React.FC<
   const hasAdvocacies = Array.isArray(profile?.advocacies) && profile.advocacies.length > 0;
   const headquartersBarangay = profile?.addressBarangay || profile?.barangay;
   const headquartersDistrict = getPasigDistrictForBarangay(headquartersBarangay) || profile?.district;
-  const recentEvents = (joinedYpopEvents || []).slice(0, 3);
+  const recentGroups = [
+    {
+      key: "city-led",
+      title: "Recent City-led Activities",
+      empty: "No city-led activities recorded for this organization.",
+      items: (joinedYpopEvents || []).filter((act: any) => act.status === "verified").slice(0, 3),
+    },
+    {
+      key: "org-initiated",
+      title: "Recent Organization-initiated Activities",
+      empty: "No organization-initiated activities recorded for this organization.",
+      items: (orgInitiatedActivities || []).filter((act: any) => act.status === "approved").slice(0, 3),
+    },
+  ];
   const initials = getInitials(profileName);
 
   return (
@@ -118,7 +133,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                 Public Profile Preview
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
-                Simulated public view reflecting verified credentials currently on file with PCYDO.
+                Preview of the organization's public profile based on verified records maintained by PCYDO.
               </DialogDescription>
             </div>
 
@@ -195,7 +210,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                <span>Verified Institutional Information</span>
+                <span>Organization Information</span>
               </div>
 
               <div className="bg-card rounded-2xl border border-border/70 p-4 sm:p-5 space-y-4">
@@ -203,7 +218,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-xs">
                   <div className="space-y-0.5">
                     <dt className="text-[11px] font-semibold text-muted-foreground">
-                      Authorized Head of Organization
+                      Head of Organization
                     </dt>
                     <dd className="font-bold text-foreground text-sm flex items-center gap-1.5 pt-0.5">
                       <User className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
@@ -215,7 +230,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
 
                   <div className="space-y-0.5">
                     <dt className="text-[11px] font-semibold text-muted-foreground">
-                      Organization Adviser
+                      Adviser
                     </dt>
                     <dd className="font-bold text-foreground text-sm flex items-center gap-1.5 pt-0.5">
                       <User className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
@@ -232,7 +247,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-xs">
                   <div className="space-y-0.5">
                     <dt className="text-[11px] font-semibold text-muted-foreground">
-                      Jurisdiction / Location
+                      Barangay & District
                     </dt>
                     <dd className="font-bold text-foreground text-xs sm:text-sm pt-0.5">
                       {headquartersBarangay || "Pasig City"}, {headquartersDistrict || "District I"}
@@ -241,17 +256,17 @@ export const PortalPublicProfilePreviewDialog: React.FC<
 
                   <div className="space-y-0.5">
                     <dt className="text-[11px] font-semibold text-muted-foreground">
-                      Classification
+                      Organization Classification
                     </dt>
                     <dd className="font-bold text-foreground text-xs sm:text-sm pt-0.5 truncate">
                       {profile?.majorClassification || "Youth Organization"} ({profileSubClass})
                     </dd>
                   </div>
 
-                  {displayUrn && displayUrn !== "Not required" && (
+                  {displayUrn && !["Not yet generated", "Not set"].includes(displayUrn) && (
                     <div className="space-y-1 sm:col-span-2 pt-1">
                       <dt className="text-[11px] font-semibold text-muted-foreground">
-                        Unique Registration Number (URN)
+                        Registration URN
                       </dt>
                       <dd>
                         <span className="font-mono text-xs font-bold text-foreground bg-muted/50 px-2.5 py-1 rounded-md border border-border/60 inline-block tracking-wide">
@@ -290,7 +305,7 @@ export const PortalPublicProfilePreviewDialog: React.FC<
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
                 <Globe className="h-3.5 w-3.5 text-primary" />
-                <span>Public Channels & Contact</span>
+                <span>Contact Information</span>
               </div>
 
               <div className="p-3.5 sm:p-4 rounded-2xl border border-border/70 bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
@@ -324,52 +339,58 @@ export const PortalPublicProfilePreviewDialog: React.FC<
               </div>
             </div>
 
-            {/* 5. RECENT CITY-LED ACTIVITIES */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                  <Award className="h-3.5 w-3.5 text-primary" />
-                  <span>Recent City-Led Activities</span>
+            {/* 5. RECENT YPOP ACTIVITIES */}
+            {recentGroups.map((group) => (
+              <div key={group.key} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
+                    <Award className="h-3.5 w-3.5 text-primary" />
+                    <span>{group.title}</span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-muted-foreground">
+                    Verified YPOP Records
+                  </span>
                 </div>
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  Verified YPOP Records
-                </span>
-              </div>
 
-              {recentEvents.length === 0 ? (
-                <div className="p-4 rounded-2xl border border-border/60 bg-muted/20 text-center text-xs text-muted-foreground italic">
-                  No recent city-led YPOP activities recorded for this organization.
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-border/70 bg-card divide-y divide-border/50 overflow-hidden shadow-2xs">
-                  {recentEvents.map((act: any) => (
-                    <div
-                      key={act.id}
-                      className="p-3 sm:px-4 flex items-center justify-between gap-3 text-xs hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="space-y-0.5 min-w-0 flex-1">
-                        <p className="font-bold text-foreground truncate">
-                          {act.title || act.activityName}
-                        </p>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                          <CalendarDays className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-                          <span>
-                            {act.date ? formatShortPortalDate(act.date) : "Recently"}
-                          </span>
-                          <span>•</span>
-                          <span className="truncate">{act.organizer || "PCYDO"}</span>
+                {group.items.length === 0 ? (
+                  <div className="p-4 rounded-2xl border border-border/60 bg-muted/20 text-center text-xs text-muted-foreground italic">
+                    {group.empty}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-border/70 bg-card divide-y divide-border/50 overflow-hidden shadow-2xs">
+                    {group.items.map((act: any) => (
+                      <div
+                        key={act.id}
+                        className="p-3 sm:px-4 flex items-center justify-between gap-3 text-xs hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="space-y-0.5 min-w-0 flex-1">
+                          <p className="font-bold text-foreground truncate">
+                            {act.activityName || act.title}
+                          </p>
+                          <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                            <CalendarDays className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                            <span>
+                              {act.activityDate || act.date ? formatShortPortalDate(act.activityDate || act.date) : "Date not set"}
+                            </span>
+                            {act.venue ? (
+                              <>
+                                <span>•</span>
+                                <span className="truncate">{act.venue}</span>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full shrink-0">
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          <span>Verified</span>
                         </div>
                       </div>
-
-                      <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full shrink-0">
-                        <CheckCircle2 className="h-2.5 w-2.5" />
-                        <span>Verified</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* 6. CIVIC FOOTER BAR */}

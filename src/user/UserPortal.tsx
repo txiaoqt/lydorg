@@ -4170,6 +4170,8 @@ export default function UserPortal({ section }: { section: string }) {
             advocacyOptions={advocacyOptions}
             subClassificationOptions={subClassificationOptions}
             joinedYpopEvents={ypopEventParticipations}
+            orgInitiatedActivities={ypopOrgActivities}
+            budgetEligibility={budgetEligibility}
             activityLogs={profileActivityLogEntries}
             onViewAllActivities={() => setProfileActivityModalOpen(true)}
             formatShortPortalDate={formatShortPortalDate}

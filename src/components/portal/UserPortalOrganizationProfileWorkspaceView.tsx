@@ -44,6 +44,8 @@ import {
   getOrganizationAddressDisplay,
 } from "@/lib/lydo-connect-data";
 import { cn } from "@/lib/utils";
+import type { BudgetEligibility } from "@/lib/budget-eligibility";
+import type { YPOPOrgActivity } from "@/lib/lydo-connect-data";
 import {
   getBarangayOptionsForDistrict,
   getPasigDistrictForBarangay,
@@ -78,6 +80,8 @@ export interface UserPortalOrganizationProfileWorkspaceViewProps {
   openFile?: (url: string, name: string) => void;
   navigate: (path: string) => void;
   userRouteMap: Record<string, string>;
+  budgetEligibility?: BudgetEligibility;
+  orgInitiatedActivities?: YPOPOrgActivity[];
 }
 
 export const UserPortalOrganizationProfileWorkspaceView: React.FC<
@@ -107,6 +111,8 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
   formatSubClassificationLabel,
   navigate,
   userRouteMap,
+  budgetEligibility,
+  orgInitiatedActivities = [],
 }) => {
   const profileStatus = currentProfile?.profileStatus ?? profileDraft.profileStatus;
   const profileName = currentProfile?.organizationName?.trim() || profile.organizationName || "Organization Profile";
@@ -127,7 +133,16 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
     ? profileUrn
     : profile.isExistingOrganization
     ? "Not set"
-    : "Not required";
+    : "Not yet generated";
+
+  const ypopQualificationLabel = {
+    qualified: "Qualified",
+    ypop_under_review: "Under Review",
+    ypop_needs_revision: "Needs Revision",
+    ypop_not_qualified: "Not Qualified",
+    ypop_not_submitted: "Not Yet Submitted",
+    no_active_period: "No Open Semester",
+  }[budgetEligibility?.reason ?? "no_active_period"];
 
   // Form dirty tracker
   const [isFormDirty, setIsFormDirty] = useState(false);
@@ -212,23 +227,12 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <span>{profileSubClass}</span>
               </p>
 
-              {/* Row 3: Location & Head of Organization */}
+              {/* Row 3: Location */}
               <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-4 gap-y-0.5 text-xs text-muted-foreground font-medium pt-0.5 leading-snug">
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span>{headquartersDistrict || "District I"} • {headquartersBarangay || "Pasig City"}</span>
                 </span>
-                {getRepresentativeDisplayName(profile) && (
-                  <>
-                    <span className="text-muted-foreground/40">•</span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="truncate max-w-[180px] sm:max-w-[220px]">
-                        {getRepresentativeDisplayName(profile)}
-                      </span>
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           </div>
@@ -281,10 +285,10 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
           <div className="flex items-center gap-1.5 bg-card border border-border/60 p-1.5 rounded-2xl overflow-x-auto shadow-xs overscroll-x-contain touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {[
               { id: "overview", label: "Overview" },
-              { id: "organization-details", label: "Organization Details" },
-              { id: "classification", label: "Classification" },
+              { id: "organization-details", label: "Organization Information" },
+              { id: "classification", label: "Organization Classification" },
               { id: "advocacy", label: "Centers of Youth Participation" },
-              { id: "contacts-socials", label: "Contacts & Socials" },
+              { id: "contacts-socials", label: "Contact Information" },
               { id: "ypop-participation", label: "YPOP Participation" },
             ].map((tab) => (
               <button
@@ -924,57 +928,37 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
               {/* Left Column (8 Cols Desktop) */}
               <div className="lg:col-span-8 space-y-5 sm:space-y-6">
-                {/* Organization Information Card */}
+                {/* Organization Standing: registration, YPOP and budget status in one place */}
                 <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 space-y-4 shadow-xs">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-primary" /> Organization Overview
-                  </h3>
+                  <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-primary" /> Organization Standing
+                    </h3>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Organization Name</span>
-                      <p className="font-bold text-foreground text-sm">{profile.organizationName || "Name not set"}</p>
-                    </div>
-                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Organization Type</span>
-                      <p className="font-bold text-foreground text-sm">{profile.isExistingOrganization ? "Existing Organization" : "Youth Organization"}</p>
-                    </div>
-                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                      <span className="text-xs font-semibold text-muted-foreground">District & Barangay</span>
-                      <p className="font-bold text-foreground text-sm">{headquartersDistrict || "District I"} • {headquartersBarangay || "Pasig City"}</p>
+                      <span className="text-xs font-semibold text-muted-foreground">YORP Registration</span>
+                      <div><PortalStatusBadge status={profileStatus} /></div>
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                       <span className="text-xs font-semibold text-muted-foreground">Registration URN</span>
                       <p className="font-bold text-foreground text-sm font-mono">{displayUrn}</p>
                     </div>
-                  </div>
-                </Card>
-
-                {/* Verification Card */}
-                <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 space-y-4 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-border/60 pb-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Compliance Verification
-                    </h3>
-                    <PortalStatusBadge status={profileStatus} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                       <span className="text-xs font-semibold text-muted-foreground">Verified Date</span>
-                      <p className="font-bold text-foreground text-sm">
-                        {currentProfile?.verifiedAt
+                      <p className="font-bold text-foreground text-sm">{currentProfile?.verifiedAt
                           ? formatShortPortalDate(currentProfile.verifiedAt)
                           : currentProfile?.profileStatus === "verified"
                           ? "Verified"
-                          : "Pending Review"}
-                      </p>
+                          : "Not yet verified"}</p>
                     </div>
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
-                      <p className="font-bold text-foreground text-sm truncate">{getRepresentativeDisplayName(profile) || "Unassigned Head of Organization"}</p>
+                      <span className="text-xs font-semibold text-muted-foreground">YPOP Qualification</span>
+                      <p className="font-bold text-foreground text-sm">{ypopQualificationLabel}</p>
                     </div>
-                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
-                      <p className="font-bold text-foreground text-sm truncate">{getAdviserDisplayName(profile) || "Unassigned Adviser"}</p>
+                    <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1 sm:col-span-2">
+                      <span className="text-xs font-semibold text-muted-foreground">Budget Request</span>
+                      <p className="font-bold text-foreground text-sm">{budgetEligibility?.eligible ? "Eligible to submit" : "Not yet eligible"}</p>
                     </div>
                   </div>
                 </Card>
@@ -1025,8 +1009,8 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
           {activeProfileTab === "organization-details" && (
             <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
               <div className="border-b border-border/40 pb-2.5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Basic Information Definition</h3>
-                <p className="text-xs text-muted-foreground/80 mt-0.5">Official registered credentials and administrative location.</p>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Organization Information</h3>
+                <p className="text-xs text-muted-foreground/80 mt-0.5">Official registered details of the organization.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
                 <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
@@ -1034,8 +1018,8 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                   <p className="font-bold text-foreground text-sm sm:text-base">{profile.organizationName || "Not set"}</p>
                 </div>
                 <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
-                  <span className="text-xs font-semibold text-muted-foreground">Organization Type</span>
-                  <p className="font-bold text-foreground text-sm sm:text-base">{profile.isExistingOrganization ? "Existing Organization" : "Youth Organization"}</p>
+                  <span className="text-xs font-semibold text-muted-foreground">Major Classification</span>
+                  <p className="font-bold text-foreground text-sm sm:text-base">{profile.majorClassification || "Not set"}</p>
                 </div>
                 <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
                   <span className="text-xs font-semibold text-muted-foreground">District</span>
@@ -1045,9 +1029,13 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                   <span className="text-xs font-semibold text-muted-foreground">Barangay</span>
                   <p className="font-bold text-foreground text-sm sm:text-base">{headquartersBarangay || "Not set"}</p>
                 </div>
-                <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1 sm:col-span-2">
-                  <span className="text-xs font-semibold text-muted-foreground">Unique Registration Number (URN)</span>
-                  <p className="font-bold text-foreground text-sm sm:text-base font-mono">{displayUrn}</p>
+                <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
+                  <span className="text-xs font-semibold text-muted-foreground">Head of Organization</span>
+                  <p className="font-bold text-foreground text-sm sm:text-base">{getRepresentativeDisplayName(profile) || "Not set"}</p>
+                </div>
+                <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
+                  <span className="text-xs font-semibold text-muted-foreground">Adviser</span>
+                  <p className="font-bold text-foreground text-sm sm:text-base">{getAdviserDisplayName(profile) || "Not set"}</p>
                 </div>
               </div>
             </Card>
@@ -1062,7 +1050,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 </div>
                 <span className="text-xs font-semibold text-muted-foreground">Major Classification</span>
                 <p className="text-lg sm:text-xl font-black text-foreground">{profile.majorClassification || "Youth Organization"}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">Official primary tier classification defined by PCYDO.</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">Primary organization classification based on membership composition, age requirements, and organizational purpose.</p>
               </Card>
 
               <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-2.5">
@@ -1071,7 +1059,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 </div>
                 <span className="text-xs font-semibold text-muted-foreground">Sub Classification</span>
                 <p className="text-lg sm:text-xl font-black text-foreground">{profileSubClass}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">Specialized organization category sub-classification.</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">Further classification based on the majority of the organization's membership and its locality, affiliation, or organizational structure.</p>
               </Card>
             </div>
           )}
@@ -1081,7 +1069,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
               <div className="border-b border-border/40 pb-2.5">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Centers of Youth Participation</h3>
-                <p className="text-xs text-muted-foreground/80 mt-0.5">Selected areas of engagement and public community initiatives.</p>
+                <p className="text-xs text-muted-foreground/80 mt-0.5">Priority development areas that reflect the organization's areas of youth engagement.</p>
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-2.5">
                 {(profile.advocacies && profile.advocacies.length > 0
@@ -1109,7 +1097,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                     <Mail className="h-4 w-4 text-primary" /> Contact Channels
                   </h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Official communication endpoints registered for this organization.
+                    Official contact details and communication channels designated for the organization.
                   </p>
                 </div>
 
@@ -1264,7 +1252,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
               <div className="space-y-4 sm:space-y-6">
                 <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Users className="h-4 w-4 text-primary" /> Leadership & Head of Organization
+                    <Users className="h-4 w-4 text-primary" /> Leadership & Organization Officials
                   </h3>
                   <div className="space-y-3 text-xs">
                     <div className="bg-accent/20 p-3.5 sm:p-4 rounded-xl border border-border/50 space-y-1">
@@ -1319,66 +1307,81 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
 
           {/* TAB 6: YPOP PARTICIPATION */}
           {activeProfileTab === "ypop-participation" && (
-            <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Medal className="h-4 w-4 text-primary" /> Recent City-Led Activities
-                  </h3>
-                  <p className="text-xs text-muted-foreground/80 mt-0.5">Recorded participation in Pasig City Youth Development Office events.</p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(userRouteMap.ypop || "/ypop")}
-                  className="text-xs text-primary font-bold hover:bg-primary/10 gap-1 cursor-pointer shrink-0"
-                >
-                  View all <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {joinedYpopEvents.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic p-4 text-center border border-border/60 rounded-xl bg-accent/20">
-                    No recent city-led YPOP activities recorded.
-                  </p>
-                ) : (
-                  joinedYpopEvents.map((act: any) => (
-                    <div key={act.id} className="p-3.5 sm:p-4 rounded-xl border border-border/60 bg-accent/20 hover:bg-accent/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <CalendarDays className="h-5 w-5" />
-                        </div>
-                        <div className="space-y-0.5 min-w-0 flex-1">
-                          <p className="font-bold text-foreground text-sm truncate">{act.title || act.activityName}</p>
-                          <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                            <span>{act.date ? formatShortPortalDate(act.date) : "Recently"}</span>
-                            <span className="text-muted-foreground/40">•</span>
-                            <span>Organizer: {act.organizer || "PCYDO"}</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t border-border/30 sm:border-t-0">
-                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
-                          Verified
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(userRouteMap.ypop || "/ypop")}
-                          className="h-8 text-xs font-semibold rounded-xl border-border hover:bg-accent cursor-pointer"
-                        >
-                          View Details
-                        </Button>
-                      </div>
+            <div className="space-y-4 sm:space-y-6">
+              {[
+                {
+                  key: "city-led",
+                  title: "Recent City-led Activities",
+                  description: "Recorded participation in activities organized by the Pasig City Youth Development Office (PCYDO).",
+                  empty: "No city-led activities recorded yet.",
+                  items: joinedYpopEvents
+                    .filter((act: any) => act.status === "verified")
+                    .map((act: any) => ({ id: act.id, name: act.activityName || act.title, date: act.activityDate || act.date, venue: act.venue })),
+                },
+                {
+                  key: "org-initiated",
+                  title: "Recent Organization-initiated Activities",
+                  description: "Recorded participation in programs and activities independently organized by the organization.",
+                  empty: "No organization-initiated activities recorded yet.",
+                  items: orgInitiatedActivities
+                    .filter((act) => act.status === "approved")
+                    .map((act) => ({ id: act.id, name: act.activityName, date: act.activityDate, venue: act.venue })),
+                },
+              ].map((group) => (
+                <Card key={group.key} className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <Medal className="h-4 w-4 text-primary" /> {group.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground/80 mt-0.5">{group.description}</p>
                     </div>
-                  ))
-                )}
-              </div>
-            </Card>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(userRouteMap.ypop || "/ypop")}
+                      className="text-xs text-primary font-bold hover:bg-primary/10 gap-1 cursor-pointer shrink-0"
+                    >
+                      View all <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {group.items.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic p-4 text-center border border-border/60 rounded-xl bg-accent/20">
+                        {group.empty}
+                      </p>
+                    ) : (
+                      group.items.slice(0, 5).map((act) => (
+                        <div key={act.id} className="p-3.5 sm:p-4 rounded-xl border border-border/60 bg-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                              <CalendarDays className="h-5 w-5" />
+                            </div>
+                            <div className="space-y-0.5 min-w-0 flex-1">
+                              <p className="font-bold text-foreground text-sm truncate">{act.name}</p>
+                              <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <span>{act.date ? formatShortPortalDate(act.date) : "Date not set"}</span>
+                                {act.venue ? (
+                                  <>
+                                    <span className="text-muted-foreground/40">•</span>
+                                    <span>{act.venue}</span>
+                                  </>
+                                ) : null}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="self-start sm:self-center text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                            Verified
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -1394,6 +1397,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
         displayUrn={displayUrn}
         profilePercent={profilePercent}
         joinedYpopEvents={joinedYpopEvents}
+        orgInitiatedActivities={orgInitiatedActivities}
         formatShortPortalDate={formatShortPortalDate}
       />
     </div>
