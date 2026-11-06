@@ -971,6 +971,21 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                 <span className="text-muted-foreground/50">•</span>
                 <span className="text-muted-foreground">Review Time: 2–3 Business days</span>
               </div>
+              {!readOnly && !activeRenewal && !userRenewalState?.canStartRenewal && userRenewalState?.renewalBlockedReason && (
+                <div className="mt-2 flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2.5 text-xs sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-muted-foreground">{userRenewalState.renewalBlockedReason}</span>
+                  {userRenewalState.key === "expired_beyond_renewal_window" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => navigate(userRouteMap["document-submission"])}
+                      className="h-8 shrink-0 rounded-full px-3 text-xs font-bold"
+                    >
+                      Go to YORP Registration
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col items-stretch sm:items-end gap-2.5 w-full sm:w-auto shrink-0">
@@ -997,6 +1012,16 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                         ))}
                     </SelectContent>
                   </Select>
+                )}
+                {!readOnly && approvedRenewals.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate(userRouteMap.renewals)}
+                    className="h-9 shrink-0 rounded-full px-4 text-xs font-bold"
+                  >
+                    View Past Cycles
+                  </Button>
                 )}
                 {!readOnly && (
                   <Button

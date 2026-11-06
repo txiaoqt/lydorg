@@ -721,31 +721,34 @@ export const userNavigationGroups: PortalNavGroup[] = [
     id: "compliance-workflow",
     label: "Compliance",
     items: [
-      { id: "document-submission", label: "Registration Requirements", icon: FileText },
-      { id: "liquidation-reporting", label: "Liquidation Reports", icon: CalendarDays },
+      { id: "document-submission", label: "YORP Registration", icon: FileText },
     ],
+  },
+  {
+    id: "participation",
+    label: "Participation",
+    items: [{ id: "ypop", label: "YPOP Participation", icon: Medal }],
   },
   {
     id: "grants-incentives",
     label: "Grants & Incentives",
     items: [
-      { id: "budget-request", label: "Budget Requests", icon: ClipboardList },
-      { id: "ypop", label: "YPOP Incentive", icon: Medal },
+      { id: "budget-request", label: "Budget Request", icon: ClipboardList },
+      { id: "liquidation-reporting", label: "Liquidation Report", icon: CalendarDays },
     ],
   },
   {
-    id: "templates",
-    label: "Templates",
-    items: [{ id: "templates", label: "Templates", icon: FileText }],
-  },
-  {
-    id: "updates",
-    label: "News Releases",
+    id: "information-resources",
+    label: "Information & Resources",
     items: [
+      { id: "templates", label: "Forms and Templates", icon: FileText },
       { id: "news-releases", label: "News Releases", icon: Megaphone },
     ],
   },
 ];
+
+// Shown in Compliance only once the organization is verified (nothing to renew before that).
+export const yorpRenewalNavItem = { id: "organization-renewal", label: "YORP Renewal", icon: RefreshCw };
 
 export const userNavigation = userNavigationGroups.flatMap((group) => group.items);
 

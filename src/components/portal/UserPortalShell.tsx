@@ -184,7 +184,8 @@ export const UserPortalShell = ({
                       aria-label="Open My Profile"
                       className="mt-3 w-full rounded-2xl border border-border/70 bg-accent/30 p-3 text-left transition-all hover:bg-accent focus-visible:outline-none"
                     >
-                      {userDisplayName && <p className="text-xs font-bold text-foreground">{userDisplayName}</p>}
+                      {/* The sheet title already shows the name; only repeat it if it differs. */}
+                      {userDisplayName && userDisplayName !== title && <p className="text-xs font-bold text-foreground">{userDisplayName}</p>}
                       {userEmail && <p className="mt-0.5 text-[11px] text-muted-foreground">{userEmail}</p>}
                     </button>
                   </SheetClose>

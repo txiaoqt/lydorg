@@ -38,7 +38,6 @@ import {
   MoreHorizontal,
   PenSquare,
   Plus,
-  RefreshCw,
   Receipt,
   Search,
   SlidersHorizontal,
@@ -202,6 +201,7 @@ import {
   normalizeYpopCityLedPoints,
   resolveYpopCityLedCategory,
   userNavigationGroups,
+  yorpRenewalNavItem,
   userRouteMap,
   YPOP_CITY_LED_CATEGORY_LABELS,
   YPOP_BASE_TOTAL_POINTS,
@@ -1045,14 +1045,13 @@ export default function UserPortal({ section }: { section: string }) {
     [currentProfile?.id, state.activityLogs],
   );
 
+  const isOrganizationVerified = currentProfile?.profileStatus === "verified";
   const portalNavigationGroups = useMemo(() => {
-    if (approvedRenewals.length === 0) return userNavigationGroups;
+    if (!isOrganizationVerified) return userNavigationGroups;
     return userNavigationGroups.map((group) => group.id === "compliance-workflow"
-      ? { ...group, items: group.items.some((item) => item.id === "renewals")
-        ? group.items
-        : [...group.items.slice(0, 1), { id: "renewals", label: "Renewal Requirements", icon: RefreshCw }, ...group.items.slice(1)] }
+      ? { ...group, items: [...group.items, yorpRenewalNavItem] }
       : group);
-  }, [approvedRenewals.length]);
+  }, [isOrganizationVerified]);
 
   const handleContinueRenewal = () => {
     navigate(userRouteMap["organization-renewal"]);
@@ -4251,6 +4250,7 @@ export default function UserPortal({ section }: { section: string }) {
             currentProfile={currentProfile}
             userRenewalState={userRenewalState}
             activeRenewal={userRenewalState.activeRenewal ?? latestApprovedRenewal}
+            approvedRenewals={approvedRenewals}
             renewalSyncVersion={renewalRealtimeVersion}
             navigate={navigate}
             userRouteMap={userRouteMap}

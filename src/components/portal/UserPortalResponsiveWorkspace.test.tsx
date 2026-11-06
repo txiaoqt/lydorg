@@ -735,20 +735,20 @@ describe("UserPortalShell Mobile Sidebar Navigation (Notifications Removed & Pre
 
       // COMPLIANCE
       expect(sheetWithin.getByText("Compliance")).toBeInTheDocument();
-      expect(sheetWithin.getByRole("button", { name: /Registration Requirements/i })).toBeInTheDocument();
-      expect(sheetWithin.getByRole("button", { name: /Liquidation Reports/i })).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /YORP Registration/i })).toBeInTheDocument();
+
+      // PARTICIPATION
+      expect(sheetWithin.getByText("Participation")).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /YPOP Participation/i })).toBeInTheDocument();
 
       // GRANTS & INCENTIVES
       expect(sheetWithin.getByText("Grants & Incentives")).toBeInTheDocument();
-      expect(sheetWithin.getByRole("button", { name: /Budget Requests/i })).toBeInTheDocument();
-      expect(sheetWithin.getByRole("button", { name: /YPOP Incentive/i })).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /Budget Request/i })).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /Liquidation Report/i })).toBeInTheDocument();
 
-      // TEMPLATES
-      expect(sheetWithin.getAllByText("Templates").length).toBe(2);
-      expect(sheetWithin.getByRole("button", { name: /Templates/i })).toBeInTheDocument();
-
-      // NEWS RELEASES
-      expect(sheetWithin.getAllByText("News Releases").length).toBe(2);
+      // INFORMATION & RESOURCES
+      expect(sheetWithin.getByText("Information & Resources")).toBeInTheDocument();
+      expect(sheetWithin.getByRole("button", { name: /Forms and Templates/i })).toBeInTheDocument();
       expect(sheetWithin.getByRole("button", { name: /News Releases/i })).toBeInTheDocument();
 
       // Sign Out
@@ -780,12 +780,13 @@ describe("UserPortalShell Mobile Sidebar Navigation (Notifications Removed & Pre
     expect(nav).toBeInTheDocument();
     const navWithin = within(nav);
 
-    // Single item pill
+    // Single item pills (Compliance has one item until the org is verified)
     expect(navWithin.getByRole("button", { name: "Dashboard" })).toBeInTheDocument();
+    expect(navWithin.getByRole("button", { name: /YORP Registration/i })).toBeInTheDocument();
+    expect(navWithin.getByRole("button", { name: /YPOP Participation/i })).toBeInTheDocument();
     // Dropdown triggers for multi-item groups
-    expect(navWithin.getByRole("button", { name: /Compliance/i })).toBeInTheDocument();
     expect(navWithin.getByRole("button", { name: /Grants & Incentives/i })).toBeInTheDocument();
-    expect(navWithin.getByRole("button", { name: /News Releases/i })).toBeInTheDocument();
+    expect(navWithin.getByRole("button", { name: /Information & Resources/i })).toBeInTheDocument();
 
     // Desktop nav does NOT contain Notifications
     expect(navWithin.queryByText(/Notifications/i)).not.toBeInTheDocument();
