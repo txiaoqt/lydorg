@@ -20,11 +20,17 @@ const faqs = [
   {
     id: 2,
     question: "Who can create an account?",
+    learnMore: { before: "Visit the ", label: "About page", to: "/about", after: " for information about YORP." },
     answer: "The head of a youth organization may register for an account on behalf of the organization. Each account is associated with one youth organization. If your organization already has an active Unique Registration Number (URN), select the option for a previously registered organization during sign-up.",
   },
   {
     id: 3,
     question: "What should I do after signing up?",
+    supportingParagraphs: [
+      { label: "For organizations with an active URN: ", text: "Complete and save your Organization Profile to access the other sections of the portal." },
+      { label: "For organizations without a URN: ", text: "Complete and save your Organization Profile, then proceed to the YORP Registration section to submit the required registration documents." },
+    ],
+    learnMore: { before: "Visit the ", label: "Forms & Templates page", to: "/public-templates", after: " to access the official YORP registration forms and templates." },
     answer: "You can sign up using either your Google account or the standard sign-up method. Regardless of which method you choose, you must complete and save your Organization Profile before proceeding to other sections of the Organization Portal.",
   },
 ];
@@ -353,7 +359,7 @@ const Index = () => {
 
           {/* Right column — accordion */}
           <div className="w-full flex-1 border-b border-slate-200">
-            {faqs.map(({ id, question, answer, learnMore }) => {
+            {faqs.map(({ id, question, answer, supportingParagraphs, learnMore }) => {
               const isOpen = openFaq === id;
               return (
                 <div key={id} className="border-t border-slate-200">
@@ -375,6 +381,12 @@ const Index = () => {
                   {isOpen && (
                     <div className="flex flex-col gap-4 pb-4 font-inter text-[13px] font-normal leading-[1.6] text-public-text-secondary sm:pb-5">
                       <p>{answer}</p>
+                      {supportingParagraphs?.map((paragraph) => (
+                        <p key={paragraph.label}>
+                          <span className="font-medium text-public-text-brand">{paragraph.label}</span>
+                          {paragraph.text}
+                        </p>
+                      ))}
                       {learnMore ? (
                         <p>
                           <span className="font-medium text-public-text-brand">Learn more:</span> {learnMore.before}

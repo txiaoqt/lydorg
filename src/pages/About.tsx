@@ -46,13 +46,13 @@ const programCards = [
     tag: "YORP",
     image: "/images/program-yorp.jpg",
     facebookUrl: "https://www.facebook.com/story.php?story_fbid=1327153006097055&id=100064071040238",
-    guidelinesText: "YORP guidelines",
+    guidelinesText: "YORP Guidelines",
     guidelinesUrl: "/guidelines/yorp-guidelines.pdf",
     title: "Youth Organization Registration Program (YORP)",
     description: [
       "The Youth Organization Registration Program (YORP) is a program of the National Youth Commission (NYC) that facilitates the registration of youth and youth-serving organizations in the Philippines. It supports the recognition of youth organizations and their engagement in youth development initiatives and community and national development.",
       "Upon successful registration, an organization is assigned a Unique Registration Number (URN), which serves as its registration identifier.",
-      "For more information, read the official PCYDO Facebook post about YORP and refer to the YORP guidelines for detailed information on registration requirements, required documents, and the registration process.",
+      "For more information, read the official PCYDO Facebook post about YORP and refer to the YORP Guidelines for detailed information on registration requirements, required documents, and the registration process.",
     ],
   },
   {
