@@ -188,7 +188,7 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     expect(screen.getByText("Verified Organization")).toBeInTheDocument();
 
     // 2. Activity History is NOT present in the greeting/status header
-    const greetingHeader = screen.getByText(/Pasig City Y-TRACE/i).closest("div.bg-card")!;
+    const greetingHeader = screen.getByText(/Organization Portal/i).closest("div.bg-card")!;
     expect(greetingHeader).toBeInTheDocument();
     expect(greetingHeader.querySelector("button[aria-label='Activity history']")).toBeNull();
 
@@ -207,7 +207,7 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     expect(screen.queryByText("Required Templates")).not.toBeInTheDocument();
 
     // Official Templates shortcut remains accessible and clickable
-    const templatesCard = screen.getByText("Official Templates").closest("[role='button']")!;
+    const templatesCard = screen.getByText("Official Forms & Templates").closest("[role='button']")!;
     expect(templatesCard).toBeInTheDocument();
     fireEvent.click(templatesCard);
     expect(mockNavigate).toHaveBeenCalledWith("/templates");
@@ -229,7 +229,7 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     render(<UserPortalRedesignView {...defaultProps} inquiries={[]} />);
 
     expect(screen.getByText("No submitted inquiries")).toBeInTheDocument();
-    expect(screen.getByText(/Need assistance with compliance requirements/i)).toBeInTheDocument();
+    expect(screen.getByText(/Need assistance with YORP registration/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Ask PCYDO/i })).toBeInTheDocument();
   });
 
@@ -240,7 +240,7 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     fireEvent.click(newInquiryBtn);
 
     expect(screen.getByRole("heading", { name: /Submit Inquiry/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("e.g. Question about liquidation requirement")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("e.g. Question about YORP registration")).toBeInTheDocument();
   });
 
   it("submits inquiry from modal without page reload, calling handleSendInquiry and closing modal on completion", async () => {
@@ -274,7 +274,7 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     );
 
     // 1. Situation banner exists and contains greeting, verification, message, and renewal
-    const greetingHeader = screen.getByText(/Pasig City Y-TRACE/i).closest("div.bg-card")!;
+    const greetingHeader = screen.getByText(/Organization Portal/i).closest("div.bg-card")!;
     expect(greetingHeader).toBeInTheDocument();
 
     // 2. Awkward bottom divider line (border-t border-border/40 pt-2) is removed
@@ -429,5 +429,16 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     expect(screen.getByText("3 of 3 completed (100%)")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("data-value", "100");
   });
-});
 
+  it("labels registration requirements by real document state instead of always In Review", () => {
+    const { rerender } = render(<UserPortalRedesignView {...defaultProps} dashboardDocumentPercent={0} dashboardDocumentStatus="not_started" />);
+    expect(screen.getByText("Not Started")).toBeInTheDocument();
+    expect(screen.queryByText("In Review")).not.toBeInTheDocument();
+
+    rerender(<UserPortalRedesignView {...defaultProps} dashboardDocumentPercent={33} dashboardDocumentStatus="needs_revision" />);
+    expect(screen.getByText("Needs Revision")).toBeInTheDocument();
+
+    rerender(<UserPortalRedesignView {...defaultProps} dashboardDocumentPercent={100} dashboardDocumentStatus="approved_green" />);
+    expect(screen.getByText("✓ Approved")).toBeInTheDocument();
+  });
+});

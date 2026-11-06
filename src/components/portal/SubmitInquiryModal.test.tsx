@@ -24,10 +24,10 @@ describe("SubmitInquiryModal Component", () => {
       />
     );
 
-    expect(screen.getByText("PCYDO Support Desk · Pasig City")).toBeInTheDocument();
+    expect(screen.getByText("PCYDO Support Desk")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Submit Inquiry/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/Send your official question or assistance request directly to the PCYDO administrative team/i)
+      screen.getByText(/Submit your official inquiries or requests for assistance directly to the PCYDO/i)
     ).toBeInTheDocument();
   });
 
@@ -112,7 +112,7 @@ describe("SubmitInquiryModal Component", () => {
     expect(screen.getByText("Email Address")).toBeInTheDocument();
     expect(screen.getByText(/Uses the email associated with your account/i)).toBeInTheDocument();
 
-    const subjectInput = screen.getByPlaceholderText("e.g. Question about liquidation requirement");
+    const subjectInput = screen.getByPlaceholderText("e.g. Question about YORP registration");
     fireEvent.change(subjectInput, { target: { value: "New liquidation query" } });
     expect(handleSetInquiryForm).toHaveBeenCalled();
   });
@@ -268,7 +268,7 @@ describe("SubmitInquiryModal Component", () => {
     expect(submitBtn.className).toContain("rounded-lg");
     expect(submitBtn.className).not.toContain("rounded-xl");
 
-    // Routing info present in footer
-    expect(screen.getByText("Direct administrative routing")).toBeInTheDocument();
+    // Routing note removed: the dialog subheading already says it goes to PCYDO
+    expect(screen.queryByText("Direct administrative routing")).not.toBeInTheDocument();
   });
 });

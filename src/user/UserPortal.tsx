@@ -3749,6 +3749,12 @@ export default function UserPortal({ section }: { section: string }) {
         const pendingDocumentIssues = docFiles.filter((file) => file.validationStatus !== "correct");
         const approvedDashboardDocuments = docFiles.filter((file) => file.adminStatus === "approved" || file.adminStatus === "approved_green").length;
         const dashboardDocumentPercent = getReadiness(approvedDashboardDocuments, templateDocuments.length);
+        const overallDocumentStatus = deriveOverallDocumentSubmissionStatus(docFiles);
+        // Only "approved" once every requirement is approved; partial approvals still need uploads from the org.
+        const dashboardDocumentStatus =
+          dashboardDocumentPercent >= 100 ? "approved_green"
+            : overallDocumentStatus === "approved_green" ? "draft"
+            : overallDocumentStatus;
         const dashboardDocumentHelper = templateDocuments.length > 0
           ? `${approvedDashboardDocuments} of ${templateDocuments.length} approved`
           : "No requirements";
@@ -4001,10 +4007,10 @@ export default function UserPortal({ section }: { section: string }) {
           } else if (budgetEligibility.reason === "ypop_not_submitted") {
             dashboardTasks.push({
               key: "budget-ypop-required",
-              title: "Budget request unavailable",
+              title: "Complete YPOP participation",
               description:
-                "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request.",
-              ctaLabel: "Open YPOP Incentive",
+                "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request. Complete the required YPOP participation activities and meet the qualification criteria to proceed.",
+              ctaLabel: "Open YPOP Participation",
               onClick: () => navigate(userRouteMap.ypop),
               icon: ClipboardList,
               tone: "bg-amber-500/10 text-amber-600",
@@ -4012,10 +4018,10 @@ export default function UserPortal({ section }: { section: string }) {
           } else {
             dashboardTasks.push({
               key: "budget-no-period",
-              title: "Budget request unavailable",
+              title: "Waiting for the next YPOP semester",
               description:
-                "Your organization is verified, but budget request creation requires an active, qualified YPOP period.",
-              ctaLabel: "View YPOP Status",
+                "Your organization is verified. YPOP participation opens when PCYDO starts the next validation semester.",
+              ctaLabel: "View YPOP Participation",
               onClick: () => navigate(userRouteMap.ypop),
               icon: ClipboardList,
               tone: "bg-muted text-muted-foreground",
@@ -4111,6 +4117,7 @@ export default function UserPortal({ section }: { section: string }) {
             profilePercent={profilePercent}
             dashboardDocumentPercent={dashboardDocumentPercent}
             dashboardDocumentHelper={dashboardDocumentHelper}
+            dashboardDocumentStatus={dashboardDocumentStatus}
             budgetPercent={budgetPercent}
             budgetOverviewLabel={budgetOverviewLabel}
             liquidationPercent={liquidationPercent}
@@ -5656,7 +5663,7 @@ export default function UserPortal({ section }: { section: string }) {
               Submitted Inquiries
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Filter by status and tap any inquiry to view its full details and admin response.
+              Filter inquiries by status, then select an inquiry to view its details and admin response.
             </DialogDescription>
           </DialogHeader>
 
@@ -5776,40 +5783,40 @@ export default function UserPortal({ section }: { section: string }) {
                 </>
               ) : null}
             </div>
-            <DialogTitle className="break-words text-lg font-bold text-foreground leading-snug">
-              {selectedInquiry?.subject || "General Inquiry"}
+            <DialogTitle className="text-lg font-bold text-foreground leading-snug">
+              Inquiry Details
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Review your submitted inquiry details and administrative response.
+              Review your submitted inquiries and track their status.
             </DialogDescription>
           </DialogHeader>
 
           {selectedInquiry ? (
             <div className="space-y-3.5 pt-0.5">
-              {/* Metadata Card: Created Date & Status */}
-              <div className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-muted/30 p-3.5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span>
-                    Submitted on{" "}
-                    <strong className="font-semibold text-foreground">
-                      {formatDateTimeLabel(selectedInquiry.createdAt)}
-                    </strong>
-                  </span>
+              {/* Subject, status, date and message in one card */}
+              <div className="rounded-xl border border-border/70 bg-background p-4 space-y-3 shadow-2xs">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Subject</p>
+                    <p className="break-words text-base font-bold leading-snug text-primary">
+                      {selectedInquiry.subject || "General Inquiry"}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <PortalStatusBadge status={selectedInquiry.status} />
+                  </div>
                 </div>
-                <div className="w-full sm:w-auto">
-                  <PortalStatusBadge status={selectedInquiry.status} />
+                <div className="h-px bg-border/60" />
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  <span>{formatDateTimeLabel(selectedInquiry.createdAt)}</span>
                 </div>
-              </div>
-
-              {/* Message Content */}
-              <div className="rounded-xl border border-border/70 bg-background p-4 space-y-1.5 shadow-2xs">
-                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-                  Inquiry Message
-                </p>
-                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
-                  {selectedInquiry.description}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Inquiry Message</p>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+                    {selectedInquiry.description}
+                  </p>
+                </div>
               </div>
 
               {/* Admin Note / Response */}

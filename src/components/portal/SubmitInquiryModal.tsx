@@ -1,5 +1,5 @@
 import React from "react";
-import { HelpCircle, Send, Loader2, ShieldCheck } from "lucide-react";
+import { HelpCircle, Send, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -62,13 +62,13 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
         <DialogHeader className="px-4 sm:px-5 pt-5 pb-4 border-b border-border/60 bg-muted/10 text-left shrink-0">
           <div className="flex items-center gap-1.5 text-muted-foreground font-medium text-[11px] mb-1 tracking-wide">
             <HelpCircle className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span>PCYDO Support Desk · Pasig City</span>
+            <span>PCYDO Support Desk</span>
           </div>
           <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-foreground">
             Submit Inquiry
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-            Send your official question or assistance request directly to the PCYDO administrative team.
+            Submit your official inquiries or requests for assistance directly to the PCYDO.
           </DialogDescription>
         </DialogHeader>
 
@@ -164,14 +164,14 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
                       subject: e.target.value.slice(0, 120),
                     }))
                   }
-                  placeholder="e.g. Question about liquidation requirement"
+                  placeholder="e.g. Question about YORP registration"
                   className="rounded-xl text-xs h-9 bg-background border-border/80 focus-visible:ring-1.5 focus-visible:ring-primary focus-visible:border-primary transition-all duration-150"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="inquiry-description" className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
-                  <span>Message / Details</span>
+                  <span>Message</span>
                   <span className="text-destructive font-normal text-xs" aria-hidden="true">*</span>
                 </Label>
                 <Textarea
@@ -194,10 +194,7 @@ export const SubmitInquiryModal: React.FC<SubmitInquiryModalProps> = ({
 
           {/* Action Footer */}
           <DialogFooter className="px-4 sm:px-5 py-3 sm:py-3.5 border-t border-border/60 bg-muted/10 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
-            <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-medium justify-center sm:justify-start">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>Direct administrative routing</span>
-            </div>
+            <span className="hidden sm:block" aria-hidden="true" />
 
             <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
               <Button

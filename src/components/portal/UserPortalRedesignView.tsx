@@ -51,6 +51,7 @@ export interface UserPortalRedesignViewProps {
   stepsCompleted: number;
   profilePercent: number;
   dashboardDocumentPercent: number;
+  dashboardDocumentStatus?: "not_started" | "draft" | "under_admin_review" | "needs_revision" | "approved_green";
   dashboardDocumentHelper: string;
   budgetPercent: number;
   budgetOverviewLabel: string;
@@ -222,6 +223,14 @@ const formatInquiryStatusLabel = (status?: string): string => {
 const OVERVIEW_METRIC_VALUE_CLASS =
   "text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-none py-1 tabular-nums";
 
+const DOCUMENT_STATUS_PILLS = {
+  not_started: { label: "Not Started", className: "text-muted-foreground bg-accent border-border/60" },
+  draft: { label: "Draft", className: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" },
+  under_admin_review: { label: "In Review", className: "text-primary bg-primary/10 border-primary/20" },
+  needs_revision: { label: "Needs Revision", className: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20" },
+  approved_green: { label: "✓ Approved", className: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+} as const;
+
 export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   profile,
   currentProfile,
@@ -232,6 +241,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
   stepsCompleted,
   profilePercent,
   dashboardDocumentPercent,
+  dashboardDocumentStatus = "not_started",
   dashboardDocumentHelper,
   budgetPercent,
   budgetOverviewLabel,
@@ -296,7 +306,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
             <div className="flex items-center gap-2 text-xs font-semibold text-primary">
               <span>{todayDateStr}</span>
               <span className="text-muted-foreground/40">•</span>
-              <span className="text-muted-foreground font-normal">Pasig City Y-TRACE</span>
+              <span className="text-muted-foreground font-normal">Organization Portal</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
@@ -328,7 +338,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {isVerified
                 ? "Your organization is verified and in good standing for city grants, youth initiatives, and program authorizations."
-                : "Welcome back. Complete your pending compliance verification to unlock budget requests and grant access."}
+                : "Welcome back. Complete your YORP registration to qualify for YPOP and unlock budget requests."}
             </p>
           </div>
 
@@ -376,7 +386,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                 Compliance Verification Workflow
               </h3>
               <p className="text-xs text-muted-foreground/80 mt-0.5">
-                Complete the remaining requirements to qualify for budget requests.
+                Complete the remaining requirements to qualify for YPOP.
               </p>
             </div>
             <span className="text-xs font-semibold text-muted-foreground">
@@ -628,12 +638,10 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
               <span
                 className={cn(
                   "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
-                  dashboardDocumentPercent >= 100
-                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                    : "text-primary bg-primary/10 border-primary/20"
+                  DOCUMENT_STATUS_PILLS[dashboardDocumentStatus].className
                 )}
               >
-                {dashboardDocumentPercent >= 100 ? "✓ Approved" : "In Review"}
+                {DOCUMENT_STATUS_PILLS[dashboardDocumentStatus].label}
               </span>
             </div>
             <p className={OVERVIEW_METRIC_VALUE_CLASS}>
@@ -714,7 +722,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
               Support & Resources
             </h2>
             <p className="text-xs text-muted-foreground">
-              Official PCYDO communication channel, templates, bulletins, and programs.
+              Official PCYDO communications, announcements, forms and templates, and program information.
             </p>
           </div>
         </div>
@@ -730,7 +738,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                     Support & Inquiries
                   </h3>
                   <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-                    Direct inquiries to PCYDO administrative staff.
+                    Need assistance with YORP registration, YPOP participation, budget requests, or liquidation reports? Submit an inquiry to the PCYDO for assistance.
                   </p>
                 </div>
 
@@ -817,7 +825,7 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                       No submitted inquiries
                     </h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Need assistance with compliance requirements, budget requests, or registration? Submit an inquiry directly to the PCYDO team.
+                      Your submitted inquiries and PCYDO responses will appear here.
                     </p>
                   </div>
                   <Button
@@ -855,10 +863,10 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <h4 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                    Official Templates
+                    Official Forms & Templates
                   </h4>
                   <p className="text-[11px] text-muted-foreground leading-snug truncate">
-                    Download official registration forms, by-laws, and compliance documents.
+                    Access official registration forms, by-laws, and compliance documents.
                   </p>
                 </div>
               </div>
@@ -884,10 +892,10 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <h4 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                    News & Official Releases
+                    Official News and Announcements
                   </h4>
                   <p className="text-[11px] text-muted-foreground leading-snug truncate">
-                    PCYDO announcements, registration schedules, and official notices.
+                    View PCYDO announcements, registration schedules, and official notices.
                   </p>
                 </div>
               </div>
@@ -913,10 +921,10 @@ export const UserPortalRedesignView: React.FC<UserPortalRedesignViewProps> = ({
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <h4 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                    Youth Programs & Incentives
+                    YPOP Participation
                   </h4>
                   <p className="text-[11px] text-muted-foreground leading-snug truncate">
-                    Check YPOP points standing, joined activities, and program qualification.
+                    View YPOP participation records, activity points, and qualification status.
                   </p>
                 </div>
               </div>
