@@ -352,15 +352,15 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
         {!hideHeader && !compactHeader && (
           <div className="bg-gradient-to-r from-card via-blue-50/10 to-slate-50/40 dark:from-card dark:via-blue-950/10 dark:to-slate-900/40 p-4 rounded-2xl border border-border/60 shadow-xs space-y-2">
             <div className="flex items-center gap-1.5 text-xs">
-              <span className="font-semibold text-primary">Public Templates</span>
+              <span className="font-semibold text-primary">PCYDO Documents</span>
               <span className="text-muted-foreground/40">•</span>
-              <span className="text-muted-foreground">Document Explorer</span>
+              <span className="text-muted-foreground">Official Forms and Templates</span>
             </div>
             <h1 className="text-xl font-black tracking-tight text-foreground leading-snug break-words">
-              Official Document Templates
+              Forms &amp; Templates
             </h1>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Browse, inspect, and download official downloadable templates required for Pasig City youth organization registration.
+              Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
         )}
@@ -678,15 +678,15 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
         {!hideHeader && !compactHeader && (
           <div className="bg-gradient-to-r from-card via-blue-50/10 to-slate-50/40 dark:from-card dark:via-blue-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2 sm:space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-primary">Public Templates</span>
+              <span className="text-xs font-semibold text-primary">PCYDO Documents</span>
               <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">Document Explorer</span>
+              <span className="text-xs text-muted-foreground">Official Forms and Templates</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-              Official Document Templates
+              Forms &amp; Templates
             </h1>
             <p className="text-sm text-muted-foreground max-w-[720px]">
-              Browse, inspect, and download official downloadable templates required for Pasig City youth organization registration.
+              Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
         )}

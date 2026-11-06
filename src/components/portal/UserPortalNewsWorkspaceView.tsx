@@ -157,13 +157,13 @@ export const UserPortalNewsWorkspaceView: React.FC<UserPortalNewsWorkspaceViewPr
           <div className="flex items-center gap-1.5 text-xs">
             <span className="font-semibold text-primary">PCYDO Bulletin</span>
             <span className="text-muted-foreground/40">•</span>
-            <span className="text-muted-foreground">Official Announcements</span>
+            <span className="text-muted-foreground">Official News and Announcements</span>
           </div>
           <h1 className="text-xl font-black tracking-tight text-foreground leading-snug break-words">
-            News & Official Releases
+            News Releases
           </h1>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Stay informed with official updates, YORP registration schedules, and youth policy releases from PCYDO.
+            Official announcements and updates on the programs, services, and activities of the Pasig City Youth Development Office (PCYDO).
           </p>
         </div>
 
@@ -335,13 +335,13 @@ export const UserPortalNewsWorkspaceView: React.FC<UserPortalNewsWorkspaceViewPr
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-primary">PCYDO Bulletin</span>
             <span className="text-muted-foreground/30">•</span>
-            <span className="text-xs text-muted-foreground">Official Announcements</span>
+            <span className="text-xs text-muted-foreground">Official News and Announcements</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-            News & Official Releases
+            News Releases
           </h1>
           <p className="text-sm text-muted-foreground max-w-[720px]">
-            Stay informed with official updates, YORP registration schedules, and youth policy releases from PCYDO.
+            Official announcements and updates on the programs, services, and activities of the Pasig City Youth Development Office (PCYDO).
           </p>
         </div>
 

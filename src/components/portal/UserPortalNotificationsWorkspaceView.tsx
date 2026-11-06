@@ -255,9 +255,9 @@ const UserPortalNotificationsWorkspaceViewContent: React.FC<UserPortalNotificati
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-[720px]">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold tracking-wide uppercase text-primary">Notification Center</span>
+              <span className="text-xs font-semibold text-primary">Y-TRACE</span>
               <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
+              <span className="text-xs text-muted-foreground">Notification Center</span>
             </div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
@@ -273,7 +273,7 @@ const UserPortalNotificationsWorkspaceViewContent: React.FC<UserPortalNotificati
               )}
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground font-medium leading-relaxed">
-              Stay updated on important announcements, reviews, approvals, budget updates, and other Y-TRACE activity.
+              Stay informed about important announcements, updates, and other Y-TRACE activity.
             </p>
           </div>
 

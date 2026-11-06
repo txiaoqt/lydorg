@@ -375,9 +375,9 @@ describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
     expect(budgetBtn).toBeInTheDocument();
 
     // Verify tab switching to Organization PPAs and logging action
-    const orgTabBtn = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTabBtn = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTabBtn);
-    expect(screen.getByRole("button", { name: /Log PPA Activity/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Log Activity/i })).toBeInTheDocument();
   });
 
   it("renders semester list with responsive table overflow container when no semester is selected", () => {
@@ -402,7 +402,7 @@ describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
 
     // Verify semester period row is rendered with all mobile priority elements
     expect(screen.getByText("2nd Semester 2026")).toBeInTheDocument();
-    expect(screen.getByText(/Open Period/i)).toBeInTheDocument();
+    expect(screen.getByText(/Open Semester/i)).toBeInTheDocument();
     expect(screen.getByText("Qualified")).toBeInTheDocument();
     expect(screen.getByText(/Required Percentage/i)).toBeInTheDocument();
     expect(screen.getByText(/City-Led:/i)).toBeInTheDocument();
@@ -424,7 +424,7 @@ describe("UserPortalYPOPWorkspaceView Responsive Layout", () => {
     expect(cityRow?.className).toContain("md:table-row");
 
     // Switch to Org-Led tab
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
     // Verify Org-Led table has responsive row layout
