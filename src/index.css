@@ -1316,6 +1316,8 @@
 /* Public layout: page header replaces the map's own, totals sit in separate cards above the map panel. */
 .public-budget-map .pasig-budget-map { overflow: visible; border: 0; background: transparent; }
 .public-budget-map .pasig-budget-map__header { display: none; }
+/* The public page shows its own, longer boundary disclaimer below the map. */
+.public-budget-map .pasig-budget-map__source { display: none; }
 .public-budget-map .pasig-budget-map__summary { gap: 1rem; margin-bottom: 1rem; border-bottom: 0; background: transparent; }
 .public-budget-map .pasig-budget-map__summary > div { border: 1px solid var(--public-border-default); border-radius: 2px; background: #fff; }
 .public-budget-map .pasig-budget-map__summary strong { font-size: 1.25rem; font-weight: 700; }
@@ -1352,3 +1354,10 @@
 .public-document-drawer .text-primary { color: var(--public-text-brand); }
 .public-document-drawer .bg-slate-50\/50 { background-color: var(--public-bg-section); }
 
+
+/* Inner-page heroes share Budget Transparency's height at each breakpoint, so headers line up across pages.
+   min-height (not height) so a longer title or subtitle never gets clipped. */
+.public-page-hero-body { min-height: 242px; }
+@media (min-width: 640px) { .public-page-hero-body { min-height: 264px; } }
+@media (min-width: 768px) { .public-page-hero-body { min-height: 238px; } }
+@media (min-width: 1280px) { .public-page-hero-body { min-height: 213px; } }

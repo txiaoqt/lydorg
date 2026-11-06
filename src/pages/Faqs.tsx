@@ -267,7 +267,7 @@ const Faqs = () => {
 
       {/* Hero */}
       <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-4 pt-4 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
+        <div className="public-page-hero-body mx-auto flex w-full max-w-7xl flex-col justify-center gap-4 pb-4 pt-4 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           <div className="flex flex-col items-center gap-2 text-center sm:items-start sm:text-left sm:gap-2.5">
             <h1 className="font-tnr font-normal leading-[1.1] tracking-[-0.01em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">
               Frequently Asked Questions

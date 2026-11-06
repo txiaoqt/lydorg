@@ -19,7 +19,7 @@ const PublicBudgetTransparency = () => {
 
       {/* Hero */}
       <section className="public-templates-hero-gradient public-hero-pasig-photo px-4 sm:px-6 lg:px-[64px]">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
+        <div className="public-page-hero-body mx-auto flex w-full max-w-7xl flex-col justify-center gap-6 pb-6 pt-6 sm:gap-[48px] sm:pb-[48px] sm:pt-[64px]">
           {/* Title block */}
           <div className="flex flex-col items-center gap-2.5 text-center sm:items-start sm:text-left">
             <h1 className="font-tnr font-normal leading-[1.1] tracking-[-0.01em] text-public-text-neutral-on-neutral text-[28px] sm:text-public-fs-hero">

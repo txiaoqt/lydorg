@@ -14,6 +14,7 @@ const faqs = [
   {
     id: 1,
     question: "What is Y-TRACE?",
+    learnMore: { before: "Visit the ", label: "About page", to: "/about", after: " to learn about Y-TRACE, YORP, and YPOP." },
     answer: "Y-TRACE is a digital system developed for the Pasig City Youth Development Office (PCYDO) to support youth organization programs and services in Pasig City. Through the public website and Organization Portal, youth organizations can access official information and resources, register for the Youth Organization Registration Program (YORP), participate in the Youth Participation Organization Passport (YPOP) program, submit budget requests and liquidation reports, and view official announcements and updates.",
   },
   {
@@ -166,7 +167,7 @@ const Index = () => {
       </section>
 
       {/* Quick Access */}
-      <section className="bg-public-bg-section py-10 sm:py-10 lg:py-16">
+      <section className="bg-white py-10 sm:py-10 lg:py-16">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-7 lg:gap-9 px-4 sm:px-6 lg:px-[64px]">
           {/* Title block */}
           <div className="flex flex-col gap-2.5 sm:gap-3">
@@ -211,7 +212,7 @@ const Index = () => {
       </section>
 
       {/* Overview */}
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+      <section className="bg-public-bg-section px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-10 lg:gap-12 xl:flex-row xl:items-center xl:gap-14">
 
           {/* Text column */}
@@ -269,7 +270,7 @@ const Index = () => {
 
       {/* Latest News */}
       {latestReleases !== null && latestReleases.length > 0 && (
-        <section className="bg-public-bg-section px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+        <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-2.5 sm:gap-[10px]">
 
             {/* Title group */}
@@ -324,16 +325,16 @@ const Index = () => {
       )}
 
       {/* Help Center */}
-      <section className="bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]">
+      <section className={`${latestReleases?.length ? "bg-public-bg-section" : "bg-white"} px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-[96px]`}>
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 sm:gap-10 lg:gap-14 xl:flex-row xl:items-start">
 
           {/* Left column */}
           <div className="flex w-full flex-col items-start xl:w-[38%] xl:shrink-0">
             <span className="font-inter text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-public-text-brand-secondary">
-              Help Center
+              Support
             </span>
-            <h2 className="mt-3 font-editorial font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand text-[28px] sm:text-[34px] lg:text-[36px]">
-              Frequently Asked Questions
+            <h2 className="mt-3 font-tnr font-normal leading-[1.1] tracking-[-0.01em] text-public-text-brand text-[28px] sm:text-[34px] lg:text-[36px]">
+              Before you get started
             </h2>
             <p className="mt-4 max-w-[42ch] font-inter text-sm font-normal leading-[1.65] text-public-text-secondary sm:text-[15px]">
               Find answers to common questions about PCYDO services and the Y-TRACE portal.
@@ -352,7 +353,7 @@ const Index = () => {
 
           {/* Right column — accordion */}
           <div className="w-full flex-1 border-b border-slate-200">
-            {faqs.map(({ id, question, answer }) => {
+            {faqs.map(({ id, question, answer, learnMore }) => {
               const isOpen = openFaq === id;
               return (
                 <div key={id} className="border-t border-slate-200">
@@ -372,9 +373,18 @@ const Index = () => {
                     )}
                   </button>
                   {isOpen && (
-                    <p className="pb-4 font-inter text-[13px] font-normal leading-[1.6] text-public-text-secondary sm:pb-5">
-                      {answer}
-                    </p>
+                    <div className="flex flex-col gap-4 pb-4 font-inter text-[13px] font-normal leading-[1.6] text-public-text-secondary sm:pb-5">
+                      <p>{answer}</p>
+                      {learnMore ? (
+                        <p>
+                          <span className="font-medium text-public-text-brand">Learn more:</span> {learnMore.before}
+                          <Link to={learnMore.to} className="text-public-text-brand-secondary underline underline-offset-[3px] transition-colors hover:text-public-text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2">
+                            {learnMore.label}
+                          </Link>
+                          {learnMore.after}
+                        </p>
+                      ) : null}
+                    </div>
                   )}
                 </div>
               );
@@ -385,12 +395,12 @@ const Index = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="public-hero-gradient px-4 py-10 sm:px-6 sm:py-16 lg:px-[64px] lg:py-[96px]">
+      <section className="public-hero-gradient px-4 py-10 sm:px-6 sm:py-12 lg:px-[64px] lg:py-16">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
 
           {/* Copy */}
           <div className="flex max-w-[54ch] flex-col gap-4">
-            <h2 className="font-editorial font-normal leading-[1.12] tracking-[-0.01em] text-white text-[28px] sm:text-[34px] lg:text-[38px]">
+            <h2 className="font-tnr font-normal leading-[1.12] tracking-[-0.01em] text-white text-[28px] sm:text-[32px] lg:text-[34px]">
               Get Started with Y-TRACE
             </h2>
             <p className="font-inter text-sm font-normal leading-[1.65] text-white/80 sm:text-[15px]">
@@ -399,7 +409,7 @@ const Index = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+          <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-center">
             <Link
               to="/signup"
               className="group inline-flex h-12 items-center justify-center gap-5 rounded-[2px] bg-white px-6 font-inter text-sm font-semibold text-public-text-brand transition-colors hover:bg-white/90 active:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E2F66]"
@@ -410,12 +420,15 @@ const Index = () => {
                 className="h-4 w-4 transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
               />
             </Link>
-            <Link
-              to="/public-templates"
-              className="inline-flex h-11 items-center justify-center rounded-[2px] font-inter text-sm font-medium text-white underline decoration-white/50 underline-offset-[5px] transition-colors hover:decoration-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E2F66]"
-            >
-              Browse Forms &amp; Templates
-            </Link>
+            <p className="text-center font-inter text-[13px] text-white/80">
+              Already registered?{" "}
+              <Link
+                to="/signin"
+                className="rounded-[2px] font-medium text-white underline decoration-white/50 underline-offset-[4px] transition-colors hover:decoration-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E2F66]"
+              >
+                Sign in
+              </Link>
+            </p>
           </div>
 
         </div>

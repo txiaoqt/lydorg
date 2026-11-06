@@ -1,16 +1,6 @@
 import { ArrowUp, Mail, MapPin } from "lucide-react";
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { usePublicContactInfo } from "@/lib/admin-system-settings";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 const linkClass =
   "inline-block rounded-sm py-1 font-inter text-[13px] font-normal leading-[1.5] text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
@@ -45,7 +35,6 @@ const FooterLinkGroup = ({
 
 const Footer = () => {
   const { address, email } = usePublicContactInfo();
-  const [cookiePrefsOpen, setCookiePrefsOpen] = useState(false);
   const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
 
   const handleBackToTop = () => {
@@ -125,9 +114,6 @@ const Footer = () => {
             © 2026 Pasig City Youth Development Office. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <button type="button" onClick={() => setCookiePrefsOpen(true)} className={utilityLinkClass}>
-              Cookie preferences
-            </button>
             <Link to="/site-map" className={utilityLinkClass}>
               Sitemap
             </Link>
@@ -144,35 +130,6 @@ const Footer = () => {
 
       </div>
 
-      <Dialog open={cookiePrefsOpen} onOpenChange={setCookiePrefsOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-inter">Cookie preferences</DialogTitle>
-            <DialogDescription className="font-inter">
-              Y-TRACE uses only the storage needed to run the portal. Nothing here is used for advertising or cross-site tracking.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 font-inter text-sm">
-            <div className="rounded-lg border border-border p-3">
-              <p className="font-semibold text-foreground">Essential storage — always active</p>
-              <p className="mt-1 leading-relaxed text-muted-foreground">
-                Keeps you signed in, protects your session, remembers accepted policies, and caches the installed app for offline use.
-              </p>
-            </div>
-            <p className="leading-relaxed text-muted-foreground">
-              Optional analytics and advertising cookies are not used, so there is nothing to switch on or off.
-            </p>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button asChild variant="outline">
-              <Link to="/privacy">Privacy Policy</Link>
-            </Button>
-            <Button type="button" onClick={() => setCookiePrefsOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </footer>
   );
 };
