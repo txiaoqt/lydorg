@@ -620,7 +620,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
   {
     id: "constitution-bylaws",
     name: "Constitution and By-Laws",
-    description: "Upload the signed constitution and by-laws in PDF format.",
+    description: "The organization’s governing document outlining its constitution and by-laws.",
     templateUrl: "storage://template-files/71b2fc44-1e9a-4ac2-bfb9-46517e36edbf/1782457726429-Constitution-and-By-Laws.pdf",
     sortOrder: 1,
     isRequired: true,
@@ -631,7 +631,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
   {
     id: "yorp-form-b",
     name: "NYC YORP Registration Form (Form B)",
-    description: "Use the current Form B template for the organization registration packet.",
+    description: "The official National Youth Commission (NYC) form required for YORP registration.",
     templateUrl: "storage://template-files/ccc94b3a-1f52-44bf-ac53-8b9934a4ec3b/1782457914472-2026-NYC-YORP-Registration-Form--Form-B-.docx.pdf",
     sortOrder: 2,
     isRequired: true,
@@ -642,7 +642,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
   {
     id: "yorp-officers-adviser",
     name: "YORP Directory of Officers and Adviser",
-    description: "List all officers and the organization adviser.",
+    description: "A document listing the organization’s officers and advisers for the current year.",
     templateUrl: "storage://template-files/0ca00e3b-4878-481b-9879-094e30971f29/1782457877767-YORP-Directory-of-Officers-and-Adviser.docx.pdf",
     sortOrder: 3,
     isRequired: true,
@@ -653,7 +653,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
   {
     id: "yorp-members",
     name: "YORP List of Members in Good Standing",
-    description: "Upload the current membership list in good standing.",
+    description: "A document listing the organization’s members who are in good standing.",
     templateUrl: "storage://template-files/b1654a41-4952-4317-809d-dcb8468f2e5b/1782457784062-2026-YORP-List-of-Members-in-Good-Standing.xlsx",
     sortOrder: 4,
     isRequired: true,
@@ -664,7 +664,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
   {
     id: "pcydo-form-a",
     name: "Pasig City YORP Registration Form (Form A)",
-    description: "Official Pasig City Form A requirement.",
+    description: "The official Pasig City form required for YORP registration.",
     templateUrl: "storage://template-files/3c3266f9-eca2-4bd0-bf66-f9d81783a177/1782457831129-Pasig-City-YORP-Registration-Form--Form-A-.pdf",
     sortOrder: 5,
     isRequired: true,
@@ -675,7 +675,7 @@ export const requiredDocumentTypes: RequiredDocumentType[] = [
   {
     id: "pcydo-data-request",
     name: "PCYDO YORP Data Request Form",
-    description: "Current PCYDO data request form for the organization.",
+    description: "A form for requesting data on organizations registered under the Youth Organization Registration Program (YORP).",
     templateUrl: "storage://template-files/c8cabd2b-b0b8-4cbc-9e1b-f5f4f3b4bb6f/1782457810343-PCYDO-YORP-Data-Request-Form.docx.pdf",
     sortOrder: 6,
     isRequired: true,
@@ -690,7 +690,7 @@ export const otherDocumentTypes: RequiredDocumentType[] = [
   {
     id: "move-guidelines",
     name: "MOVE Guidelines",
-    description: "Official MOVE Guidelines document.",
+    description: "A document outlining the guidelines and requirements for participation in the Mobility Opportunity for Valuable Exchange (MOVE) Program.",
     templateUrl: "storage://template-files/fad7287a-2cd1-4d7a-a770-ff3f37a62ee1/1782360879920--COPY--MOVE-Guidelines-2026.pdf",
     sortOrder: 10,
     isRequired: false,
@@ -701,7 +701,7 @@ export const otherDocumentTypes: RequiredDocumentType[] = [
   {
     id: "move-registration-form",
     name: "MOVE Registration Form",
-    description: "Official MOVE Application Form.",
+    description: "A form for individuals or organizations to register for participation in the Mobility Opportunity for Valuable Exchange (MOVE) Program.",
     templateUrl: "storage://template-files/af3763b1-1e81-4858-92c6-b6635b1ccc20/1782364656443-PCYDO_MOVE-Application-Form.pdf",
     sortOrder: 11,
     isRequired: false,
