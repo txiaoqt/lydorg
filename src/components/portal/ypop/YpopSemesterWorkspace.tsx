@@ -245,21 +245,21 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
               {period.status === "open" ? (
                 <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span>Open Period</span>
+                  <span>Open Semester</span>
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0" />
-                  <span>Closed Period</span>
+                  <span>Closed Semester</span>
                 </div>
               )}
             </div>
 
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              YPOP Validation Workspace
+              YPOP Participation
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
-              Track your organization's qualification score, join City-Led activities, upload post-event attendance proof, and record organization-initiated PPAs.
+              View City-led activities, submit participation proof, record organization-initiated activities, and monitor your organization's qualification progress.
             </p>
           </div>
 
@@ -356,7 +356,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
           )}
         >
           <Award className="h-3.5 w-3.5 shrink-0" />
-          <span>City-Led Activities</span>
+          <span>City-led Activities</span>
           <span
             className={cn(
               "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
@@ -379,7 +379,7 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
           )}
         >
           <FileText className="h-3.5 w-3.5 shrink-0" />
-          <span>Organization PPAs</span>
+          <span>Organization-initiated Activities</span>
           <span
             className={cn(
               "text-[10px] font-bold px-1.5 py-0.5 rounded-full",

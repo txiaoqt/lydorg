@@ -206,7 +206,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
   it("1. Multiple admin-configured semesters render separately in the semester list", () => {
     render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
 
-    expect(screen.getByText("YPOP Semester Period")).toBeInTheDocument();
+    expect(screen.getByText("YPOP Semester")).toBeInTheDocument();
     expect(screen.getByText("2026 First Semester")).toBeInTheDocument();
     expect(screen.getByText("2026 Second Semester")).toBeInTheDocument();
   });
@@ -249,7 +249,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
 
     openSemesterByLabel("2026 First Semester");
 
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
     expect(screen.getByText("Community Food Pantry 2026")).toBeInTheDocument();
@@ -275,7 +275,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
 
     openSemesterByLabel("2026 First Semester");
 
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
     // Organization PPAs table is displayed with approved PPA count
@@ -332,7 +332,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.queryByText(/Project Grant \(PPA\)/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Submit Budget Request/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /City-Led Activities/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Organization PPAs/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Organization-initiated Activities/i })).toBeInTheDocument();
   });
 
   it("13 & 14. Qualified semester proceeds directly to YPOP tabs without budget request card", () => {
@@ -344,7 +344,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.queryByText(/Project Grant \(PPA\)/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Submit Budget Request/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /City-Led Activities/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Organization PPAs/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Organization-initiated Activities/i })).toBeInTheDocument();
   });
 
   it("15. Admin remarks are displayed correctly for revision and rejection states", () => {
@@ -354,11 +354,12 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
 
     expect(screen.getAllByText(/Please attach certified attendance photo with timestamp/i).length).toBeGreaterThan(0);
 
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
-    expect(screen.getByText(/Not eligible as youth PPA activity/i)).toBeInTheDocument();
-    expect(screen.getByText(/Missing proof photos and participant signature sheet/i)).toBeInTheDocument();
+    // Org-initiated remarks moved out of the table; they show when the activity is opened via its action.
+    expect(screen.queryByText(/Not eligible as youth PPA activity/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Missing proof photos and participant signature sheet/i)).not.toBeInTheDocument();
   });
 
   it("16. Back button returns to semester list and clears semester context", () => {
@@ -366,12 +367,12 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
 
     openSemesterByLabel("2026 First Semester");
 
-    expect(screen.getByText("YPOP Validation Workspace")).toBeInTheDocument();
+    expect(screen.getByText("YPOP Participation")).toBeInTheDocument();
 
     const backBtn = screen.getByRole("button", { name: /All Semesters/i });
     fireEvent.click(backBtn);
 
-    expect(screen.getByText("YPOP Semester Period")).toBeInTheDocument();
+    expect(screen.getByText("YPOP Semester")).toBeInTheDocument();
     expect(screen.getByText("2026 First Semester")).toBeInTheDocument();
     expect(screen.getByText("2026 Second Semester")).toBeInTheDocument();
   });
@@ -392,16 +393,16 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
 
     // Verify table structure
     expect(screen.getByRole("table")).toBeInTheDocument();
-    expect(screen.getByText("Semester / Period")).toBeInTheDocument();
-    expect(screen.getByText("Period Status")).toBeInTheDocument();
+    expect(screen.getByText("Semester")).toBeInTheDocument();
+    expect(screen.getByText("Semester Status")).toBeInTheDocument();
     expect(screen.getByText("Qualification Status")).toBeInTheDocument();
-    expect(screen.getByText("Calculated Score")).toBeInTheDocument();
+    expect(screen.getByText("Calculated Points")).toBeInTheDocument();
     expect(screen.getByText("Activities Summary")).toBeInTheDocument();
     expect(screen.getByText("Action")).toBeInTheDocument();
 
     // Verify record counts
     expect(screen.getByText(/Showing/i)).toBeInTheDocument();
-    expect(screen.getByText(/records/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/records/i).length).toBeGreaterThan(0); // footer count + subheading
 
     // Verify rows
     expect(screen.getByText("2026 First Semester")).toBeInTheDocument();
@@ -468,18 +469,19 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
 
     openSemesterByLabel("2026 First Semester");
 
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
     // Verify table structure
     expect(screen.getByRole("table")).toBeInTheDocument();
-    expect(screen.getByText("Activity / PPA")).toBeInTheDocument();
-    expect(screen.getByText("Date & Venue")).toBeInTheDocument();
-    expect(screen.getByText("Documents")).toBeInTheDocument();
-    expect(screen.getByText("Admin Remarks")).toBeInTheDocument();
+    expect(screen.getByText("Activity")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Date" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Venue" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Documents" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Admin Remarks" })).not.toBeInTheDocument();
 
     // Verify action buttons
-    expect(screen.getByRole("button", { name: /Log PPA Activity/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Log Activity/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Resolve Revision/i })).toBeInTheDocument();
   });
 
@@ -518,7 +520,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.getByRole("columnheader", { name: "Category" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Date" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Venue" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Proof Status" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Action" })).toBeInTheDocument();
 
     // Activities inside rows
@@ -551,7 +553,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.getByText("S1 Sports Summit")).toBeInTheDocument();
 
     // Verify search input has established User Portal classes
-    const searchInput = screen.getByPlaceholderText("Search activities or venue...");
+    const searchInput = screen.getByPlaceholderText("Search activities…");
     expect(searchInput).toHaveClass("h-8");
     expect(searchInput).toHaveClass("pl-8");
     expect(searchInput).toHaveClass("rounded-xl");
@@ -616,7 +618,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.getByRole("button", { name: /Category: Partnership/i })).toBeInTheDocument();
     expect(screen.queryByText("S1 Youth Leadership Convention")).toBeNull();
     expect(screen.queryByText("S1 Sports Summit")).toBeNull();
-    expect(screen.getByText("No City-Led activities found")).toBeInTheDocument();
+    expect(screen.getByText("No City-led activities found")).toBeInTheDocument();
 
     // Reset Filters button resets both search and category filter
     const resetBtn = screen.getByRole("button", { name: /Reset Filters/i });
@@ -631,14 +633,14 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     render(<UserPortalYPOPWorkspaceView {...defaultProps} />);
 
     // Period status displays clean indicator text
-    expect(screen.getAllByText("Open Period").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Open Semester").length).toBeGreaterThan(0);
 
     // Calculated score displays bold percentage and required percentage reference
     expect(screen.getAllByText(/Required Percentage: 70%/i).length).toBeGreaterThan(0);
 
     // Activity summary shows clean tabular labels
     expect(screen.getAllByText(/City-Led:/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/PPAs:/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Org-initiated:/i).length).toBeGreaterThan(0);
   });
 
   it("26. Organization-Led PPA drawer renders structured semantic sections", () => {
@@ -646,11 +648,11 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     openSemesterByLabel("2026 First Semester");
 
     // Switch to Org PPAs tab
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
     // Open PPA modal
-    const logBtn = screen.getByRole("button", { name: /Log PPA Activity/i });
+    const logBtn = screen.getByRole("button", { name: /Log Activity/i });
     fireEvent.click(logBtn);
 
     // Form sections are clearly rendered
@@ -727,12 +729,12 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     openSemesterByLabel("2026 First Semester");
 
     // Switch to Org PPAs tab
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
     // Activity name, admin remarks, badge, and Resolve Revision button
     expect(screen.getByText("Tree Planting Initiative")).toBeInTheDocument();
-    expect(screen.getByText(/"Missing proof photos and participant signature sheet."/)).toBeInTheDocument();
+    expect(screen.queryByText(/"Missing proof photos and participant signature sheet."/)).not.toBeInTheDocument();
 
     const resolveBtns = screen.getAllByRole("button", { name: "Resolve Revision" });
     expect(resolveBtns.length).toBeGreaterThan(0);
@@ -793,7 +795,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(submitProofBtn.className).not.toContain("bg-amber-500/10");
 
     // 2. Organization PPAs table Resolve Revision button
-    const orgTab = screen.getByRole("button", { name: /Organization PPAs/i });
+    const orgTab = screen.getByRole("button", { name: /Organization-initiated Activities/i });
     fireEvent.click(orgTab);
 
     const orgResolveBtns = screen.getAllByRole("button", { name: "Resolve Revision" });

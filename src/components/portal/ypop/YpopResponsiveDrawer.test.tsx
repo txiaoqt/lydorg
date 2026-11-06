@@ -380,7 +380,7 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
 
         // 3. Informational Banner
         expect(screen.getByText(/Awaiting Admin Validation/i)).toBeInTheDocument();
-        expect(screen.getByText(/Proof documents have been submitted and are under review/i)).toBeInTheDocument();
+        expect(screen.getByText(/The proof documents have been submitted and are currently under PCYDO review/i)).toBeInTheDocument();
 
         // 4. Remarks textarea is NOT editable when pending verification
         expect(screen.queryByLabelText(/Remarks \(Optional\)/i)).not.toBeInTheDocument();
@@ -566,7 +566,7 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
       // Desktop Sheet contains Close Drawer button
       expect(screen.getByRole("button", { name: /Close Drawer/i })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Log Another Activity/i })).not.toBeInTheDocument();
-      expect(screen.getByText("Organization-Led Activity Details")).toBeInTheDocument();
+      expect(screen.getByText("Record programs, projects, and activities initiated and organized by your organization.")).toBeInTheDocument();
       expect(screen.getAllByText("Tree Planting Drive").length).toBeGreaterThan(0);
       expect(screen.getByText("Rainforest Park")).toBeInTheDocument();
       expect(screen.queryByLabelText(/Activity Title/i)).not.toBeInTheDocument();
@@ -643,7 +643,7 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
       expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Save as Draft/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Submit for Review/i })).toBeInTheDocument();
-      expect(screen.getByText("Edit Organization-Led Activity (PPA)")).toBeInTheDocument();
+      expect(screen.getByText("Edit Organization-initiated Activity")).toBeInTheDocument();
       expect(screen.getByDisplayValue("Youth Health Forum")).toBeInTheDocument();
       expect(screen.getByText(/Click to browse file/i)).toBeInTheDocument();
     });
@@ -669,8 +669,8 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
       expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Save as Draft/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Submit for Review/i })).toBeInTheDocument();
-      expect(screen.getByText("Log Organization-led Activities")).toBeInTheDocument();
-      expect(screen.getByPlaceholderText(/Enter activity title/i)).toBeInTheDocument();
+      expect(screen.getByText("Log Organization-initiated Activities")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/e.g. Community Clean-Up Drive/i)).toBeInTheDocument();
     });
   });
 
@@ -700,10 +700,10 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
         );
 
         // Header context and status are distinct and present
-        expect(screen.getByText("Organization-Led PPA")).toBeInTheDocument();
+        expect(screen.getByText("Organization-initiated")).toBeInTheDocument();
         expect(screen.getByText(/Status: APPROVED/i)).toBeInTheDocument();
-        expect(screen.getByText("Organization-Led Activity Details")).toBeInTheDocument();
-        expect(screen.getByText("Record activities initiated and conducted by the organization.")).toBeInTheDocument();
+        expect(screen.getByText("Record programs, projects, and activities initiated and organized by your organization.")).toBeInTheDocument();
+        expect(screen.getByText("Record programs, projects, and activities initiated and organized by your organization.")).toBeInTheDocument();
 
         // Close button in header is accessible
         expect(screen.getByRole("button", { name: /Close modal/i })).toBeInTheDocument();
@@ -738,9 +738,9 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
         );
 
         // Header
-        expect(screen.getByText("Organization-Led PPA")).toBeInTheDocument();
+        expect(screen.getByText("Organization-initiated")).toBeInTheDocument();
         expect(screen.getByText(/Status: DRAFT/i)).toBeInTheDocument();
-        expect(screen.getByText("Edit Organization-Led Activity (PPA)")).toBeInTheDocument();
+        expect(screen.getByText("Edit Organization-initiated Activity")).toBeInTheDocument();
 
         // Form sections
         expect(screen.getByText("Activity Details")).toBeInTheDocument();
@@ -787,7 +787,7 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
         // Desktop explicitly renders "Close Drawer" (SheetClose)
         expect(screen.getByRole("button", { name: /Close Drawer/i })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /Log Another Activity/i })).not.toBeInTheDocument();
-        expect(screen.getByText("Organization-Led Activity Details")).toBeInTheDocument();
+        expect(screen.getByText("Record programs, projects, and activities initiated and organized by your organization.")).toBeInTheDocument();
         expect(screen.getAllByText("RegistrationCertificate_PasigYouth.pdf").length).toBeGreaterThan(0);
       });
     });

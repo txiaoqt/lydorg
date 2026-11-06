@@ -66,9 +66,9 @@ const getActionLabel = (entry: YPOPEntry | null, period: YPOPPeriod) => {
     if (entry.status === "qualified" || entry.status === "not_qualified") {
       return "View Evaluation Result";
     }
-    return "Open Semester Workspace";
+    return "Open Semester";
   }
-  return period.status === "open" ? "Start / Open Semester" : "View Semester Details";
+  return period.status === "open" ? "Open Semester" : "View Semester Details";
 };
 
 export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
@@ -153,14 +153,12 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
       <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-2 mt-1 sm:mt-0">
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <span className="text-xs font-semibold text-primary">Youth Participation Organization Passport (YPOP)</span>
-          <span className="text-muted-foreground/30">•</span>
-          <span className="text-xs text-muted-foreground">Validation Periods</span>
         </div>
         <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-foreground leading-tight sm:leading-snug">
-          YPOP Semester Period
+          YPOP Semester
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
-          Select an active or historical validation semester below to view City-Led activities, submit attendance proof, log organization-initiated PPAs, and track your qualification progress.
+          Select an active or previous validation semester to access its activities, participation records, and qualification details.
         </p>
       </div>
 
@@ -250,10 +248,10 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
           <table className="w-full text-left border-collapse md:min-w-[850px]">
             <thead className="hidden md:table-header-group">
               <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                <th className="py-3.5 px-5 min-w-[200px] lg:min-w-[220px]">Semester / Period</th>
-                <th className="py-3.5 px-4 min-w-[120px]">Period Status</th>
+                <th className="py-3.5 px-5 min-w-[200px] lg:min-w-[220px]">Semester</th>
+                <th className="py-3.5 px-4 min-w-[120px]">Semester Status</th>
                 <th className="py-3.5 px-4 min-w-[140px]">Qualification Status</th>
-                <th className="py-3.5 px-4 min-w-[130px]">Calculated Score</th>
+                <th className="py-3.5 px-4 min-w-[130px]">Calculated Points</th>
                 <th className="py-3.5 px-4 min-w-[140px]">Activities Summary</th>
                 <th className="py-3.5 px-5 text-right min-w-[150px]">Action</th>
               </tr>
@@ -361,7 +359,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                         {isPeriodOpen ? (
                           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                             <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                            <span>Open Period</span>
+                            <span>Open Semester</span>
                           </div>
                         ) : (
                           <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -408,13 +406,13 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                       <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell flex-col justify-center">
                         <div className="space-y-0.5 sm:space-y-1 text-xs">
                           <div className="flex items-center gap-1.5 sm:gap-2">
-                            <span className="text-muted-foreground text-[11px] sm:text-xs min-w-[56px] sm:min-w-[76px]">City-Led:</span>
+                            <span className="text-muted-foreground text-[11px] sm:text-xs min-w-[56px] sm:min-w-[76px]">City-led:</span>
                             <span className="font-bold text-foreground tabular-nums text-[11px] sm:text-xs">
                               {verifiedCityCount} / {(loadEntriesRemotely ? entry?.cityLedAttendance ?? [] : semesterActivities).length}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 sm:gap-2">
-                            <span className="text-muted-foreground text-[11px] sm:text-xs min-w-[56px] sm:min-w-[76px]">PPAs:</span>
+                            <span className="text-muted-foreground text-[11px] sm:text-xs min-w-[56px] sm:min-w-[76px]">Org-initiated:</span>
                             <span className="font-bold text-foreground tabular-nums text-[11px] sm:text-xs">
                               {approvedPpaCount} approved
                             </span>

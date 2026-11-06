@@ -137,7 +137,7 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
     );
 
     // Enter required details
-    fireEvent.change(screen.getByPlaceholderText(/Enter activity title/i), {
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Community Clean-Up Drive/i), {
       target: { value: "Youth Clean-Up Drive" },
     });
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
@@ -220,7 +220,7 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
       />
     );
 
-    fireEvent.change(screen.getByPlaceholderText(/Enter activity title/i), {
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Community Clean-Up Drive/i), {
       target: { value: "Leadership Seminar" },
     });
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
@@ -483,7 +483,7 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
       />
     );
 
-    expect(screen.getByText("PPA Activity Approved")).toBeInTheDocument();
+    expect(screen.getByText("Activity Approved")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Close Drawer/i })).toBeInTheDocument();
     expect(screen.queryByLabelText(/Activity Title/i)).not.toBeInTheDocument();
   });
@@ -577,7 +577,7 @@ describe("Organization-Led PPA Drawer & File Submission/Persistence Workflow", (
 
       // Mobile dialog rendered
       expect(screen.getByRole("dialog")).toBeInTheDocument();
-      expect(screen.getByText("Organization-Led PPA")).toBeInTheDocument();
+      expect(screen.getByText("Organization-initiated")).toBeInTheDocument();
       expect(screen.getByText("Activity Information")).toBeInTheDocument();
       expect(screen.getAllByText("mobile_doc.pdf").length).toBeGreaterThan(0);
       expect(screen.getAllByRole("button", { name: /Close/i }).length).toBeGreaterThan(0);

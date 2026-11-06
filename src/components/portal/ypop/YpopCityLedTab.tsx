@@ -124,6 +124,12 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
     <div className="space-y-4">
       {/* Table Container in Y-TRACE Design System */}
       <Card className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs">
+        <div className="px-4 pt-4 sm:px-5 sm:pt-5 space-y-0.5">
+          <h2 className="text-sm sm:text-base font-bold text-foreground">City-led Activities</h2>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Programs, projects, and activities organized or facilitated by the Pasig City Youth Development Office (PCYDO), where your organization can participate.
+          </p>
+        </div>
         {/* Standard User Portal Search and Filters Toolbar */}
         <div className="p-3 sm:p-4 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-card">
           {/* Search Bar matching established User Portal pattern */}
@@ -131,7 +137,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search activities or venue..."
+              placeholder="Search activities…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full"
@@ -210,7 +216,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                 <th className="py-3.5 px-4 min-w-[120px]">Category</th>
                 <th className="py-3.5 px-4 min-w-[130px]">Date</th>
                 <th className="py-3.5 px-4 min-w-[130px]">Venue</th>
-                <th className="py-3.5 px-4 min-w-[130px]">Proof Status</th>
+                <th className="py-3.5 px-4 min-w-[130px]">Status</th>
                 <th className="py-3.5 px-5 text-right min-w-[170px]">Action</th>
               </tr>
             </thead>
@@ -219,7 +225,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                 <tr className="block md:table-row">
                   <td colSpan={6} className="block md:table-cell py-12 text-center text-muted-foreground text-xs space-y-2">
                     <Award className="h-8 w-8 text-muted-foreground mx-auto stroke-1" />
-                    <p className="text-sm font-bold text-foreground">No City-Led activities found</p>
+                    <p className="text-sm font-bold text-foreground">No City-led activities found</p>
                     <p className="text-xs max-w-sm mx-auto">
                       {searchQuery || categoryFilter !== "all"
                         ? "Try adjusting your search query or category filter."

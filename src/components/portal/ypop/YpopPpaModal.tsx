@@ -546,7 +546,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     if (isRevisionDeadlineExpired) {
       toast({
         title: "Revision deadline expired",
-        description: "This PPA activity is locked and can no longer be resubmitted.",
+        description: "This activity is locked and can no longer be resubmitted.",
         variant: "destructive",
       });
       return;
@@ -678,14 +678,14 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       }
 
       toast({
-        title: submitForReview ? (isNeedsRevision ? "Revision resubmitted" : "PPA submitted for evaluation") : "Draft saved",
+        title: submitForReview ? (isNeedsRevision ? "Revision resubmitted" : "Activity submitted for review") : "Draft Saved",
         description: submitForReview
-          ? "Your organization PPA is now under evaluation by PCYDO Admin."
-          : "Draft saved successfully.",
+          ? "The activity and supporting documents have been submitted and are currently under PCYDO review."
+          : "Your activity details and supporting documents have been saved as a draft. You can review, replace, or update them before submitting for admin review.",
       });
     } catch (error) {
       toast({
-        title: "Unable to save PPA activity",
+        title: "Unable to save activity",
         description: error instanceof Error ? error.message : "Please check your inputs and try again.",
         variant: "destructive",
       });
@@ -704,8 +704,8 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       setConfirmDeleteOpen(false);
       onOpenChange(false);
       toast({
-        title: "PPA Deleted",
-        description: "The organization PPA submission has been removed.",
+        title: "Activity Deleted",
+        description: "The organization-initiated activity has been removed.",
       });
     } catch (error) {
       toast({
@@ -721,7 +721,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   const headerCategoryAndStatus = (
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
-        Organization-Led PPA
+        Organization-initiated
       </span>
       {currentActivity?.status && (
         <span
@@ -753,7 +753,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               Awaiting Admin Validation
             </p>
             <p className="text-blue-600/90 dark:text-blue-400/90 leading-snug sm:leading-relaxed break-words">
-              PPA activity and supporting documents have been submitted and are under review by the PCYDO Admin team.
+              The activity and supporting documents have been submitted and are currently under PCYDO review.
             </p>
           </div>
         </div>
@@ -764,10 +764,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
           <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-emerald-700 dark:text-emerald-300">
-              PPA Activity Approved
+              Activity Approved
             </p>
             <p className="text-emerald-600/90 dark:text-emerald-400/90 leading-snug sm:leading-relaxed break-words">
-              This project has been validated by PCYDO Admin and unlocked bonus points toward your organization&apos;s YPOP incentive.
+              Your activity and supporting documents have been verified by PCYDO. This project has earned bonus points toward your organization&apos;s YPOP qualification score.
             </p>
           </div>
         </div>
@@ -831,7 +831,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               </div>
             )}
             <p className="text-muted-foreground text-[11px] leading-snug sm:leading-relaxed break-words">
-              This organization PPA submission was marked rejected by the administrator.
+              This organization-initiated activity was marked rejected by the administrator.
             </p>
           </div>
         </div>
@@ -842,10 +842,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
           <FileText className="h-4.5 w-4.5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5 min-w-0 flex-1">
             <p className="font-bold text-slate-700 dark:text-slate-300">
-              Draft PPA Saved
+              Draft Saved
             </p>
             <p className="text-slate-600/90 dark:text-slate-400/90 leading-snug sm:leading-relaxed break-words">
-              Your PPA draft and supporting documents are saved. Click &ldquo;Submit for Review&rdquo; below when ready to submit to the Admin.
+              Your activity details and supporting documents have been saved as a draft. You can review, replace, or update them before submitting for admin review.
             </p>
           </div>
         </div>
@@ -939,7 +939,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               </Label>
               <Input
                 id="ppa-title"
-                placeholder="Enter activity title"
+                placeholder="e.g. Community Clean-Up Drive"
                 value={activityName}
                 onChange={(e) => {
                   setActivityName(e.target.value);
@@ -986,7 +986,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                 </Label>
                 <Input
                   id="ppa-venue"
-                  placeholder="e.g. Barangay Multipurpose Hall"
+                  placeholder="e.g. Barangay Hall, Barangay Bagong Ilog"
                   value={venue}
                   onChange={(e) => {
                     setVenue(e.target.value);
@@ -1019,7 +1019,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               </Label>
               <Textarea
                 id="ppa-report"
-                placeholder="Description / narrative report summary of the activity..."
+                placeholder="Describe the activity, its objectives, key activities, and outcomes."
                 value={narrativeReport}
                 onChange={(e) => {
                   setNarrativeReport(e.target.value);
@@ -1332,16 +1332,14 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               <div className="space-y-1 pt-1">
                 <SheetTitle
                   className="text-xl font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere]"
-                  title={isReadOnly ? (activityName || "Organization-Led Activity Details") : (currentActivity ? "Edit Organization-Led Activity (PPA)" : "Log Organization-led Activities")}
+                  title={isReadOnly ? (activityName || "Organization-initiated Activity") : (currentActivity ? "Edit Organization-initiated Activity" : "Log Organization-initiated Activities")}
                 >
                   {isReadOnly
-                    ? (activityName || "Organization-Led Activity Details")
-                    : (currentActivity ? "Edit Organization-Led Activity (PPA)" : "Log Organization-led Activities")}
+                    ? (activityName || "Organization-initiated Activity")
+                    : (currentActivity ? "Edit Organization-initiated Activity" : "Log Organization-initiated Activities")}
                 </SheetTitle>
                 <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="font-semibold text-foreground/80">Organization-Led Activity Details</span>
-                  <span>•</span>
-                  <span>Record activities initiated and conducted by the organization.</span>
+                  <span>Record programs, projects, and activities initiated and organized by your organization.</span>
                 </SheetDescription>
               </div>
             </div>
@@ -1369,9 +1367,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                         <span>Delete Submission</span>
                       </Button>
                     ) : (
-                      <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                        Organization PPA • Pasig City Youth Development Portal
-                      </p>
+                      <span aria-hidden="true" />
                     )}
                   </div>
                   <SheetClose asChild>
@@ -1477,16 +1473,14 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               <div className="space-y-1 min-w-0">
                 <DialogTitle
                   className="text-base sm:text-lg font-bold text-foreground leading-snug break-words [overflow-wrap:anywhere] line-clamp-2"
-                  title={isReadOnly ? (activityName || "Organization-Led Activity Details") : (currentActivity ? "Edit Organization-Led Activity (PPA)" : "Log Organization-led Activities")}
+                  title={isReadOnly ? (activityName || "Organization-initiated Activity") : (currentActivity ? "Edit Organization-initiated Activity" : "Log Organization-initiated Activities")}
                 >
                   {isReadOnly
-                    ? (activityName || "Organization-Led Activity Details")
-                    : (currentActivity ? "Edit Organization-Led Activity (PPA)" : "Log Organization-led Activities")}
+                    ? (activityName || "Organization-initiated Activity")
+                    : (currentActivity ? "Edit Organization-initiated Activity" : "Log Organization-initiated Activities")}
                 </DialogTitle>
                 <DialogDescription className="ypop-modal-description text-[11px] sm:text-xs text-muted-foreground font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="font-semibold text-foreground/80">Organization-Led Activity Details</span>
-                  <span>•</span>
-                  <span>Record activities initiated and conducted by the organization.</span>
+                  <span>Record programs, projects, and activities initiated and organized by your organization.</span>
                 </DialogDescription>
               </div>
             </div>
@@ -1513,9 +1507,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
                       <span>Delete Submission</span>
                     </Button>
                   ) : (
-                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-3 sm:mr-4">
-                      Organization PPA • Pasig City Youth Development Portal
-                    </p>
+                    <span aria-hidden="true" />
                   )}
                   <Button
                     type="button"
@@ -1593,10 +1585,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         <AlertDialogContent className="max-w-sm rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-bold text-foreground">
-              Submit Organization-Led PPA?
+              Submit Activity for Review?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              You are about to submit this activity for PCYDO review. Once submitted, the record will enter the review process.
+              Documents submitted for review are locked and cannot be modified unless the PCYDO admin requests revisions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
@@ -1623,10 +1615,10 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
         <AlertDialogContent className="max-w-sm rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-bold text-foreground">
-              Delete this PPA submission?
+              Delete {activityName || "this activity"}?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              This will permanently remove this organization-created activity record and its uploaded supporting files. This action cannot be undone.
+              This will permanently remove &ldquo;{activityName || "this activity"}&rdquo; and its uploaded supporting documents. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">

@@ -122,7 +122,7 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
       />
     );
 
-    fireEvent.change(screen.getByPlaceholderText(/Enter activity title/i), {
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Community Clean-Up Drive/i), {
       target: { value: "Youth Leadership Summit" },
     });
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
@@ -212,13 +212,13 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
       />
     );
 
-    fireEvent.change(screen.getByPlaceholderText(/Enter activity title/i), {
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Community Clean-Up Drive/i), {
       target: { value: "Youth Leadership Summit" },
     });
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
       target: { value: "2026-09-12" },
     });
-    fireEvent.change(screen.getByPlaceholderText(/Barangay Multipurpose Hall/i), {
+    fireEvent.change(screen.getByPlaceholderText(/Barangay Hall, Barangay Bagong Ilog/i), {
       target: { value: "Pasig City Hall" },
     });
     fireEvent.change(screen.getByPlaceholderText(/Description \/ narrative report summary/i), {
@@ -385,7 +385,8 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
     );
 
     expect(screen.getByText("Pending Review")).toBeInTheDocument();
-    expect(screen.getByText("1 attachment")).toBeInTheDocument();
+    // Attachment counts moved out of the table into the activity view.
+    expect(screen.queryByText("1 attachment")).not.toBeInTheDocument();
     expect(screen.queryByText("Draft")).not.toBeInTheDocument();
   });
 

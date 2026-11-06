@@ -735,7 +735,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               Participation Verified
             </p>
             <p className="text-emerald-600/90 dark:text-emerald-400/90 leading-snug sm:leading-relaxed break-words">
-              Attendance and supporting proof have been validated by the Admin. This activity contributes {points} points to your City-Led score.
+              Your attendance and supporting documents have been verified by PCYDO. This activity has earned {points} points toward your City-led score.
             </p>
           </div>
         </div>
@@ -813,7 +813,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               Awaiting Admin Validation
             </p>
             <p className="text-blue-600/90 dark:text-blue-400/90 leading-snug sm:leading-relaxed break-words">
-              Proof documents have been submitted and are under review by the PCYDO Admin team.
+              The proof documents have been submitted and are currently under PCYDO review.
             </p>
           </div>
         </div>
@@ -1067,9 +1067,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                 </>
               ) : (
                 <>
-                  <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                    YPOP Activity Proof • Pasig City Youth Development Portal
-                  </p>
+                  <span aria-hidden="true" />
                   <SheetClose asChild>
                     <Button
                       type="button"
@@ -1173,9 +1171,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-3 sm:mr-4">
-                    YPOP Activity Proof • Pasig City Youth Development Portal
-                  </p>
+                  <span aria-hidden="true" />
                   <Button
                     type="button"
                     variant="outline"
@@ -1196,10 +1192,10 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
         <AlertDialogContent className="max-w-sm rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-bold text-foreground">
-              Submit Proof of Attendance?
+              Submit Attendance Proof for Review?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              You are about to submit your attendance proof for PCYDO review. Once submitted, the record will enter the verification process.
+              Documents submitted for review are locked and cannot be modified unless the PCYDO admin requests revisions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">

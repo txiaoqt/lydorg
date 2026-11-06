@@ -648,7 +648,7 @@ describe("YpopValidationComputationPopover Component Tests", () => {
 
     // Green Highlight Total Card
     expect(screen.getByText("City-led score")).toBeDefined();
-    expect(screen.getByText("Organization-led bonus")).toBeDefined();
+    expect(screen.getByText("Organization-initiated bonus")).toBeDefined();
     expect(screen.getByText("Total YPOP Points")).toBeDefined();
     expect(screen.getByTestId("popover-total-score").textContent).toBe("110%");
 

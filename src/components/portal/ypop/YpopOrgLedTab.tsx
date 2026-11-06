@@ -108,7 +108,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         if (!result.rows.length && page > 1 && result.totalPages < page) setPage(Math.max(1, result.totalPages));
       })
       .catch((error) => {
-        if (active) setServerError(error instanceof Error ? error.message : "Unable to load PPA history.");
+        if (active) setServerError(error instanceof Error ? error.message : "Unable to load activity history.");
       })
       .finally(() => { if (active) setServerLoading(false); });
     return () => { active = false; };
@@ -151,7 +151,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         await onEnsureEntry();
       } catch (err) {
         toast({
-          title: "Unable to start PPA",
+          title: "Unable to start activity",
           description: err instanceof Error ? err.message : "Please try again.",
           variant: "destructive",
         });
@@ -183,7 +183,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
       setPendingDeleteActivity(null);
       toast({
         title: "Activity deleted",
-        description: "The organization PPA record has been removed.",
+        description: "The organization-initiated activity has been removed.",
       });
     } catch (error) {
       toast({
@@ -205,14 +205,14 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-bold text-foreground">
-                Organization-Led PPAs
+                Organization-initiated Activities
               </h3>
               <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/50">
                 {approvedCount} of {serverPaginated ? serverTotalCount : entryActivities.length} Approved
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Programs, projects, and activities initiated by your organization for {period.semesterLabel}.
+              Programs, projects, and activities independently planned and organized by your organization.
             </p>
           </div>
 
@@ -220,7 +220,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
             <div className="relative flex-1 sm:flex-initial">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search PPAs..."
+                placeholder="Search activities…"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -235,7 +235,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
               className="h-8.5 px-3.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold shadow-xs gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98]"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Log PPA Activity</span>
+              <span>Log Activity</span>
             </Button>
           </div>
         </div>
@@ -245,23 +245,22 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
           <table className="w-full text-left border-collapse md:min-w-[850px]">
             <thead className="hidden md:table-header-group">
               <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                <th className="py-3.5 px-5 min-w-[200px] lg:min-w-[220px]">Activity / PPA</th>
-                <th className="py-3.5 px-4 min-w-[140px]">Date & Venue</th>
+                <th className="py-3.5 px-5 min-w-[200px] lg:min-w-[220px]">Activity</th>
+                <th className="py-3.5 px-4 min-w-[120px]">Date</th>
+                <th className="py-3.5 px-4 min-w-[140px]">Venue</th>
                 <th className="py-3.5 px-4 min-w-[120px]">Status</th>
-                <th className="py-3.5 px-4 min-w-[120px]">Documents</th>
-                <th className="py-3.5 px-4 min-w-[140px]">Admin Remarks</th>
                 <th className="py-3.5 px-5 text-right min-w-[160px]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 md:table-row-group">
               {filteredActivities.length === 0 ? (
                 <tr className="block md:table-row">
-                  <td colSpan={6} className="block md:table-cell py-12 text-center text-muted-foreground text-xs space-y-3">
+                  <td colSpan={5} className="block md:table-cell py-12 text-center text-muted-foreground text-xs space-y-3">
                     <FileText className="h-8 w-8 text-muted-foreground mx-auto stroke-1" />
                     <p className="text-sm font-bold text-foreground">
                       {(serverPaginated ? serverTotalCount : localEntryActivities.length) === 0
-                        ? "No Organization PPAs Logged"
-                        : "No matching PPAs found"}
+                        ? "No Organization-initiated Activities Logged"
+                        : "No matching activities found"}
                     </p>
                     <p className="text-xs max-w-sm mx-auto">
                       {(serverPaginated ? serverTotalCount : localEntryActivities.length) === 0
@@ -274,14 +273,13 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                         onClick={handleOpenNew}
                         className="h-8.5 px-3.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer gap-1.5 transition-all active:scale-[0.98]"
                       >
-                        <Plus className="h-3.5 w-3.5" /> Log First PPA Activity
+                        <Plus className="h-3.5 w-3.5" /> Log First Activity
                       </Button>
                     )}
                   </td>
                 </tr>
               ) : (
                 filteredActivities.map((act) => {
-                  const files = serverPaginated ? [] : orgActivityFiles.filter((f) => f.orgActivityId === act.id);
                   const isApproved = act.status === "approved";
                   const isNeedsRevision = act.status === "needs_revision";
                   const isRejected = act.status === "rejected";
@@ -314,50 +312,25 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                         </div>
                       </td>
 
-                      {/* Column 2: Date & Venue */}
-                      <td className="col-span-2 sm:col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap order-3">
-                        <div className="space-y-0.5 text-xs text-muted-foreground font-medium">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3 w-3 text-muted-foreground/70 shrink-0" />
-                            <span>{act.activityDate ? formatShortPortalDate(act.activityDate) : "Date not set"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <MapPin className="h-3 w-3 text-muted-foreground/70 shrink-0" />
-                            <span className="truncate max-w-[150px]">{act.venue || "Pasig City"}</span>
-                          </div>
+                      {/* Column 2: Date */}
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap order-3">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                          <Calendar className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+                          <span>{act.activityDate ? formatShortPortalDate(act.activityDate) : "Date not set"}</span>
+                        </div>
+                      </td>
+
+                      {/* Column 3: Venue */}
+                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle order-3">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                          <MapPin className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+                          <span className="truncate max-w-[180px]">{act.venue || "Pasig City"}</span>
                         </div>
                       </td>
 
                       {/* Column 3: Status Badge (Standardized via StatusBadge) */}
                       <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center order-2">
                         <StatusBadge status={act.status} />
-                      </td>
-
-                      {/* Column 4: Documents */}
-                      <td className="col-span-1 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle whitespace-nowrap flex md:table-cell items-center justify-end md:justify-start order-2">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <FileText className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
-                          <span>{serverPaginated ? "View on open" : `${files.length} attachment${files.length === 1 ? "" : "s"}`}</span>
-                        </div>
-                      </td>
-
-                      {/* Column 5: Admin Remarks */}
-                      <td className="col-span-2 md:col-auto md:table-cell p-0 md:py-3.5 md:px-4 align-middle order-4">
-                        {act.adminRemarks ? (
-                          <div
-                            className={`p-2 rounded-lg text-xs leading-relaxed max-w-[240px] ${
-                              isNeedsRevision
-                                ? "bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200"
-                                : isRejected
-                                ? "bg-destructive/10 border border-destructive/20 text-destructive"
-                                : "bg-muted/40 text-muted-foreground"
-                            }`}
-                          >
-                            <p className="line-clamp-2 italic font-medium">"{act.adminRemarks}"</p>
-                          </div>
-                        ) : (
-                          <span className="hidden md:inline text-muted-foreground/40 text-xs">—</span>
-                        )}
                       </td>
 
                       {/* Column 6: Action */}
@@ -393,7 +366,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                               disabled={deletingId === act.id}
                               onClick={() => setPendingDeleteActivity(act)}
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors active:scale-[0.98] shrink-0"
-                              title="Delete PPA"
+                              title="Delete activity"
                             >
                               {deletingId === act.id ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -505,11 +478,11 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
         <AlertDialogContent className="max-w-sm rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-bold text-foreground">
-              Delete this PPA submission?
+              Delete {pendingDeleteActivity?.activityName || "this activity"}?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
               {pendingDeleteActivity
-                ? `This will permanently remove "${pendingDeleteActivity.activityName || "this activity"}" and its uploaded supporting files. This action cannot be undone.`
+                ? `This will permanently remove "${pendingDeleteActivity.activityName || "this activity"}" and its uploaded supporting documents. This action cannot be undone.`
                 : "This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>

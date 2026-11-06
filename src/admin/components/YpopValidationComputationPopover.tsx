@@ -126,7 +126,7 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
         {/* CITY-LED POINTS SECTION */}
         <div className="space-y-1.5" data-testid="city-led-points-summary">
           <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            City-Led Points
+            City-led Points
           </p>
 
           <div className="space-y-1 text-xs">
@@ -170,7 +170,7 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
         <div className="space-y-1.5 pt-1" data-testid="org-led-bonus-summary">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Organization-Led Bonus
+              Organization-initiated Bonus
             </p>
             <span className="text-[11px] text-muted-foreground font-medium">
               {approvedPpaCount} approved {approvedPpaCount === 1 ? "project" : "projects"}
@@ -215,7 +215,7 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
             <span className="font-cascadia font-bold">{liveScore.cityLedPercent}%</span>
           </div>
           <div className="flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
-            <span className="font-medium">Organization-led bonus</span>
+            <span className="font-medium">Organization-initiated bonus</span>
             <span className="font-cascadia font-bold">+{liveScore.orgLedBonus}%</span>
           </div>
           <div className="border-t border-emerald-200/60 dark:border-emerald-800/40 pt-2 flex items-center justify-between">

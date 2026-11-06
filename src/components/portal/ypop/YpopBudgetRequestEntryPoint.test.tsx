@@ -382,8 +382,8 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
     fireEvent.click(helpBtn);
 
     expect(screen.getByText("YPOP POINTS BREAKDOWN")).toBeInTheDocument();
-    expect(screen.getByText("City-Led Points")).toBeInTheDocument();
-    expect(screen.getByText("Organization-Led Bonus")).toBeInTheDocument();
+    expect(screen.getByText("City-led Points")).toBeInTheDocument();
+    expect(screen.getByText("Organization-initiated Bonus")).toBeInTheDocument();
     expect(screen.getByText("Total YPOP Points")).toBeInTheDocument();
   });
 
