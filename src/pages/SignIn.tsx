@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandLogo from "@/components/BrandLogo";
+import BrandLockup from "@/components/BrandLockup";
 import AuthImageSlideshow from "@/components/auth/AuthImageSlideshow";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -208,7 +209,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
             {/* Logo */}
             <div className="mb-7 text-left">
               <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
-                <BrandLogo showText={false} />
+                <BrandLockup />
               </Link>
             </div>
 
@@ -373,7 +374,7 @@ const SignIn = ({ forcedMode }: SignInProps) => {
               to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
               className="inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-transform hover:opacity-95 active:scale-[0.98]"
             >
-              <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+              {pwaFlow ? <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" /> : <BrandLockup />}
             </Link>
           </div>
 

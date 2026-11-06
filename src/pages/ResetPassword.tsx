@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import BrandLogo from "@/components/BrandLogo";
+import BrandLockup from "@/components/BrandLockup";
 import { getPasswordResetUrl } from "@/lib/auth-redirect";
 import {
   clearPasswordRecoveryState,
@@ -404,14 +405,7 @@ const ResetPassword = () => {
             {pwaFlow ? (
               <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
             ) : (
-              // Same lockup as the navbar, in white for the blue photo background.
-              <span className="flex items-center gap-3">
-                <img src="/navbar-mark.svg" alt="Y-TRACE" className="h-11 w-11 rounded-[6px] object-contain" />
-                <span aria-hidden="true" className="flex flex-col font-inter leading-none">
-                  <span className="text-[20px] font-bold tracking-[-0.01em] text-white">Y-TRACE</span>
-                  <span className="mt-[6px] pl-[2px] text-[15px] font-normal uppercase text-white/75">Pasig City</span>
-                </span>
-              </span>
+              <BrandLockup onDark />
             )}
           </Link>
         </div>

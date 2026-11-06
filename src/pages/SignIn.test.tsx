@@ -67,7 +67,8 @@ describe("SignIn Component", () => {
   const setViewportWidth = (width: number) => {
     window.innerWidth = width;
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: width >= ADMIN_DESKTOP_MIN_WIDTH,
+      // Only the width query; a blanket true also matches display-mode: standalone and flips the page into the PWA flow.
+      matches: !query.includes("display-mode") && width >= ADMIN_DESKTOP_MIN_WIDTH,
       media: query,
       onchange: null,
       addListener: vi.fn(),

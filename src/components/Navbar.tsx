@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronRight, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import BrandLockup from "@/components/BrandLockup";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -78,16 +79,7 @@ const Navbar = () => {
     <nav className="fixed left-0 right-0 top-0 z-50 bg-white shadow-public-nav border-b border-slate-100/80">
       <div className="mx-auto flex h-14 sm:h-16 lg:h-20 w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-10 lg:px-20">
         <Link to="/" className="min-w-0 shrink-0 flex items-center gap-3">
-          <img
-            src="/navbar-mark.svg"
-            alt="Y-TRACE"
-            className="h-9 w-9 lg:h-11 lg:w-11 rounded-[6px] object-contain"
-          />
-          {/* Same lockup as the sign-in logo (FullNavbar.svg): Y-TRACE over PASIG CITY. */}
-          <span aria-hidden="true" className="flex flex-col font-inter leading-none">
-            <span className="text-[16.5px] font-bold tracking-[-0.01em] text-public-text-brand lg:text-[20px]">Y-TRACE</span>
-            <span className="mt-[5px] pl-[2px] text-[12.5px] font-normal uppercase text-[#536579] lg:mt-[6px] lg:text-[15px]">Pasig City</span>
-          </span>
+          <BrandLockup />
         </Link>
 
         {/* Desktop right actions — visible at xl and above */}
