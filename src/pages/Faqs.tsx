@@ -455,11 +455,10 @@ const Faqs = () => {
                               )}
                               {faq.learnMore && (
                                 <p className="mt-4">
-                                  <strong className="text-public-text-neutral-default">Learn more: </strong>
-                                  {faq.learnMore.before}
+                                  <span className="font-medium text-public-text-brand">Learn more:</span> {faq.learnMore.before}
                                   <Link
                                     to={faq.learnMore.to}
-                                    className="font-semibold text-public-text-brand underline underline-offset-2 transition-opacity hover:opacity-80"
+                                    className="text-public-text-brand-secondary underline underline-offset-[3px] transition-colors hover:text-public-text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
                                   >
                                     {faq.learnMore.label}
                                   </Link>
