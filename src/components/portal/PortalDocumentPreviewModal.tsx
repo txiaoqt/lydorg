@@ -793,7 +793,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
         {/* SIMPLIFIED FOOTER */}
         <div className="document-preview-footer h-13 sm:h-14 py-2 px-3.5 sm:px-5 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
           <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate mr-2">
-            {footerStatusText || "Y-TRACE Document Compliance"}
+            {footerStatusText}
           </p>
           {footerActions || (
             <Button

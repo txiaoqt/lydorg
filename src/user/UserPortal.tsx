@@ -4795,10 +4795,10 @@ export default function UserPortal({ section }: { section: string }) {
                 <UploadCloud className="h-6 w-6" />
               </div>
               <p className="text-sm font-bold text-foreground">
-                Drag & drop your PDF files
+                Drag and drop your PDF files here,
               </p>
               <p className="mt-1 text-xs text-muted-foreground font-medium">
-                or browse your computer to upload multiple registration documents.
+                or browse your computer to select multiple documents.
               </p>
               <label className="mt-4 inline-flex cursor-pointer">
                 <input
@@ -4816,7 +4816,7 @@ export default function UserPortal({ section }: { section: string }) {
                 </span>
               </label>
               <p className="mt-3 text-[11px] text-muted-foreground/70 font-medium">
-                Accepted format: PDF (.pdf) • Maximum 10MB per file
+                Accepted format: PDF (.pdf) • Maximum file size: 10 MB
               </p>
             </div>
 
@@ -4980,9 +4980,9 @@ export default function UserPortal({ section }: { section: string }) {
                   <div className="h-10 w-10 rounded-xl bg-card border border-border/60 text-muted-foreground flex items-center justify-center mx-auto shadow-2xs">
                     <UploadCloud className="h-5 w-5" />
                   </div>
-                  <p className="text-xs font-bold text-foreground">No files selected yet</p>
+                  <p className="text-xs font-bold text-foreground">No files uploaded yet</p>
                   <p className="text-xs text-muted-foreground">
-                    Drag PDFs here or click Browse Files to begin.
+                    Drag and drop PDF files here or click Browse Files to get started.
                   </p>
                 </div>
               )}
@@ -5033,19 +5033,19 @@ export default function UserPortal({ section }: { section: string }) {
         <DialogContent onEscapeKeyDown={(event) => { if (batchUploadSubmitting) event.preventDefault(); }} onInteractOutside={(event) => { if (batchUploadSubmitting) event.preventDefault(); }}>
           <DialogHeader>
             <DialogTitle>
-              {batchUploadSubmitting ? `Processing ${batchActiveDocuments.length} document${batchActiveDocuments.length === 1 ? "" : "s"}` : batchUploadSubmitMode === "draft" ? "Save selected documents as draft?" : `Submit ${batchSelectedItems.length} documents for admin review?`}
+              {batchUploadSubmitting ? `Processing ${batchActiveDocuments.length} document${batchActiveDocuments.length === 1 ? "" : "s"}` : batchUploadSubmitMode === "draft" ? "Save Selected Documents as Draft?" : `Confirm Submission of ${batchSelectedItems.length} Document${batchSelectedItems.length === 1 ? "" : "s"}?`}
             </DialogTitle>
             <DialogDescription>
               {batchUploadSubmitMode === "draft"
-                ? "The selected files will be saved now and can still be reviewed or replaced later."
-                : "Documents submitted for review cannot be changed while locked unless the admin requests a revision."}
+                ? "The selected files will be saved as a draft. You can review, replace, or update them before submitting for admin review."
+                : "Documents submitted for review are locked and cannot be modified unless the PCYDO admin requests revisions."}
             </DialogDescription>
           </DialogHeader>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <input type="checkbox" checked={batchSlowMode} disabled={batchUploadSubmitting} onChange={(event) => setBatchSlowMode(event.target.checked)} />
-            Optimize for slow/mobile connection
+            Slow Connection Mode
           </label>
-          {(batchSlowMode || batchSlowNotice) && <p className="text-xs text-muted-foreground" role="status">Slow connection mode: documents will upload one at a time for better reliability.</p>}
+          <p className="-mt-2 text-xs text-muted-foreground" role={batchSlowNotice ? "status" : undefined}>Upload documents one at a time to improve reliability on slower or mobile connections.</p>
           <div className="rounded-xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground" aria-live="polite" aria-busy={batchUploadSubmitting}>
             <ul className="max-h-[40dvh] overflow-y-auto space-y-3">
               {(batchUploadSubmitting ? batchActiveDocuments : batchSelectedItems.map((entry) => ({ documentTypeName: entry.documentType.name, file: entry.file }))).map((entry, index) => {

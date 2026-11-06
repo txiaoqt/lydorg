@@ -1019,14 +1019,15 @@ describe("PortalDocumentDrawer Template Mode Responsive Behavior", () => {
     // Verify template document identity and Official Template badge
     expect(screen.getByText("Constitution and By-Laws")).toBeInTheDocument();
     expect(screen.getByText("Official Template")).toBeInTheDocument();
-    expect(screen.getByText("1782457726429-Constitution-and-By-Laws.pdf")).toBeInTheDocument();
+    // The template title already names the file, so the raw file name is not repeated
+    expect(screen.queryByText("1782457726429-Constitution-and-By-Laws.pdf")).not.toBeInTheDocument();
     expect(screen.getByText("PDF Document")).toBeInTheDocument();
     expect(screen.getByText("Reference Guide")).toBeInTheDocument();
 
     // Verify actions and footer
     expect(screen.getByRole("button", { name: /Open in New Tab/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download File/i })).toBeInTheDocument();
-    expect(screen.getByText(/Official Template • Y-TRACE Document Compliance/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Y-TRACE Document Compliance/i)).not.toBeInTheDocument();
   });
 
   it("renders Mobile Dialog ONLY for View Template on mobile viewport (< 1024px)", () => {
@@ -1053,7 +1054,7 @@ describe("PortalDocumentDrawer Template Mode Responsive Behavior", () => {
     expect(screen.getByRole("button", { name: /Open in New Tab/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download File/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Close$/i })).toBeInTheDocument();
-    expect(screen.getByText(/Official Template • Y-TRACE Document Compliance/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Y-TRACE Document Compliance/i)).not.toBeInTheDocument();
   });
 
   it("triggers onOpenInNewTab and onDownloadFile handlers when clicked", () => {
@@ -1312,9 +1313,9 @@ describe("DropdownMenu Layout Stability & Non-Modal Scrollbar Preservation", () 
     fireEvent.keyDown(sortButton, { key: "ArrowDown" });
 
     // Verify sort menu items appear
-    expect(screen.getByText("Default Order")).toBeInTheDocument();
-    expect(screen.getByText("Document Name")).toBeInTheDocument();
-    expect(screen.getByText("Recently Updated")).toBeInTheDocument();
+    for (const label of ["Default", "Name (A–Z)", "Name (Z–A)", "Recently Updated", "Oldest Updated"]) {
+      expect(screen.getByRole("menuitem", { name: label })).toBeInTheDocument();
+    }
 
     // Verify body overflow is NOT locked to prevent layout shifts
     expect(document.body.style.overflow).not.toBe("hidden");

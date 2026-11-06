@@ -12,6 +12,7 @@ import {
   Filter,
   Info,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -71,6 +72,15 @@ export interface UserPortalDocumentWorkspaceViewProps {
   resolveRegistrationDocumentAccess?: (doc: any) => any;
 }
 
+export type RequirementSortOrder = "default" | "name-asc" | "name-desc" | "updated" | "oldest";
+export const REQUIREMENT_SORT_LABELS: Record<RequirementSortOrder, string> = {
+  default: "Default",
+  "name-asc": "Name (A–Z)",
+  "name-desc": "Name (Z–A)",
+  updated: "Recently Updated",
+  oldest: "Oldest Updated",
+};
+
 export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspaceViewProps> = ({
   registrationPrerequisites,
   templateDocuments,
@@ -97,7 +107,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "review" | "revision">("all");
-  const [sortOrder, setSortOrder] = useState<"newest" | "name" | "updated">("newest");
+  const [sortOrder, setSortOrder] = useState<RequirementSortOrder>("default");
   const [endorsementModalOpen, setEndorsementModalOpen] = useState(false);
   const [openingPreviewKey, setOpeningPreviewKey] = useState<string | null>(null);
   const previewOpeningRef = useRef(false);
@@ -248,15 +258,17 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
     .sort((a, b) => {
       const titleA = a.title || a.name || "";
       const titleB = b.title || b.name || "";
-      if (sortOrder === "name") return titleA.localeCompare(titleB);
-      const subA = getSubmissionForDoc(a.id);
-      const subB = getSubmissionForDoc(b.id);
-      if (sortOrder === "updated") {
+      if (sortOrder === "name-asc") return titleA.localeCompare(titleB);
+      if (sortOrder === "name-desc") return titleB.localeCompare(titleA);
+      if (sortOrder === "updated" || sortOrder === "oldest") {
+        const subA = getSubmissionForDoc(a.id);
+        const subB = getSubmissionForDoc(b.id);
         const dateA = new Date(subA?.updatedAt || subA?.uploadedAt || subA?.createdAt || 0).getTime();
         const dateB = new Date(subB?.updatedAt || subB?.uploadedAt || subB?.createdAt || 0).getTime();
-        return dateB - dateA;
+        return sortOrder === "updated" ? dateB - dateA : dateA - dateB;
       }
-      return 0;
+      // Default: official requirement order (Form A, B, ...) as configured by PCYDO.
+      return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
     });
 
   const logsList = submissionLogs || [];
@@ -286,9 +298,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1 max-w-[640px]">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-primary">Document Workspace</span>
-                <span className="text-muted-foreground/30">•</span>
-                <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
+                <span className="text-xs font-semibold text-primary">Youth Organization Registration Program (YORP)</span>
               </div>
               <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
                 Registration Requirements
@@ -307,23 +317,15 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1 max-w-[640px]">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-primary">Document Workspace</span>
-              <span className="text-muted-foreground/30">•</span>
-              <span className="text-xs text-muted-foreground">PCYDO Y-TRACE</span>
+              <span className="text-xs font-semibold text-primary">Youth Organization Registration Program (YORP)</span>
             </div>
             <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">
               Registration Requirements
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-medium pt-0.5">
-              Complete all required compliance documents for organization verification.
+              Submit all required documents for PCYDO review and verification of your organization.
             </p>
             
-            {/* Metadata Chips */}
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-1">
-              <span className="font-semibold text-foreground">{totalRequirements} Requirements</span>
-              <span>•</span>
-              <span>Review Time: 2-3 Business days</span>
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -372,26 +374,26 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
             <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
               <Info className="h-4 w-4 text-primary" /> Submission Guidelines
             </h3>
-            <p className="text-xs text-muted-foreground pt-0.5">Follow requirements for fast approval.</p>
+            <p className="text-xs text-muted-foreground pt-0.5">Follow these requirements to ensure your documents are ready for review.</p>
           </div>
 
           <div className="space-y-2.5 text-xs leading-relaxed text-muted-foreground pt-1">
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <span><strong>Accepted Formats:</strong> PDF files only.</span>
+              <span><strong>Accepted File Format:</strong> PDF only</span>
             </div>
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <span><strong>Max File Size:</strong> 10 MB per document.</span>
+              <span><strong>Maximum File Size:</strong> 10 MB per document</span>
             </div>
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <span><strong>Review Process:</strong> Admin validation takes 2–3 business days.</span>
+              <span><strong>Review Period:</strong> Allow 2–3 business days for administrative review and validation.</span>
             </div>
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <span>
-                <strong>Endorsement Guidelines:</strong>{" "}
+                <strong>Endorsement Guidelines:</strong> Review the official submission guidelines before submitting.{" "}
                 <button
                   type="button"
                   onClick={() => setEndorsementModalOpen(true)}
@@ -414,7 +416,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               {approvedCount} of {totalRequirements} Documents Approved ({completionPercent}%)
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              All required registration documents are reviewed and verified by PCYDO admin.
+              All submitted registration documents undergo review and verification by the PCYDO.
             </p>
           </div>
 
@@ -571,7 +573,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search document requirements..."
+                  placeholder="Search by title, description, or keyword..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8 h-8 text-xs rounded-xl bg-background border-border/80 w-full"
@@ -580,15 +582,17 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
 
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl border-border text-xs font-medium gap-1 shrink-0 cursor-pointer">
+                  <Button type="button" variant="outline" size="sm" aria-label={`Sort: ${REQUIREMENT_SORT_LABELS[sortOrder]}`} className="h-8 rounded-xl border-border text-xs font-medium gap-1 shrink-0 cursor-pointer">
                     <Filter className="h-3.5 w-3.5" />
-                    <span className="hidden xs:inline">Sort:</span> <span className="capitalize">{sortOrder}</span>
+                    <span>{REQUIREMENT_SORT_LABELS[sortOrder]}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44 p-2 rounded-xl bg-card border-border/80 shadow-lg z-50">
-                  <DropdownMenuItem onClick={() => setSortOrder("newest")} className="text-xs font-medium cursor-pointer">Default Order</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortOrder("name")} className="text-xs font-medium cursor-pointer">Document Name</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortOrder("updated")} className="text-xs font-medium cursor-pointer">Recently Updated</DropdownMenuItem>
+                  {(Object.keys(REQUIREMENT_SORT_LABELS) as RequirementSortOrder[]).map((order) => (
+                    <DropdownMenuItem key={order} onClick={() => setSortOrder(order)} className="text-xs font-medium cursor-pointer">
+                      {REQUIREMENT_SORT_LABELS[order]}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -740,7 +744,8 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
                       <span className="truncate">{uploadDateText}</span>
                       <span>•</span>
                       {isApproved ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-400 font-semibold">
+                          <Lock aria-hidden="true" className="h-3 w-3 shrink-0" />
                           Locked from modification
                         </span>
                       ) : isUnderReview ? (
@@ -838,26 +843,26 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
                 <Info className="h-4 w-4 text-primary" /> Submission Guidelines
               </h3>
-              <p className="text-xs text-muted-foreground pt-0.5">Follow requirements for fast approval.</p>
+              <p className="text-xs text-muted-foreground pt-0.5">Follow these requirements to ensure your documents are ready for review.</p>
             </div>
 
             <div className="space-y-3.5 text-xs leading-relaxed text-muted-foreground pt-1">
               <div className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <span><strong>Accepted Formats:</strong> PDF files only.</span>
+                <span><strong>Accepted File Format:</strong> PDF only</span>
               </div>
               <div className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <span><strong>Max File Size:</strong> 10 MB per document.</span>
+                <span><strong>Maximum File Size:</strong> 10 MB per document</span>
               </div>
               <div className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <span><strong>Review Process:</strong> Admin validation takes 2–3 business days.</span>
+                <span><strong>Review Period:</strong> Allow 2–3 business days for administrative review and validation.</span>
               </div>
               <div className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <span>
-                  <strong>Endorsement Guidelines:</strong>{" "}
+                  <strong>Endorsement Guidelines:</strong> Review the official submission guidelines before submitting.{" "}
                   <button
                     type="button"
                     onClick={() => setEndorsementModalOpen(true)}

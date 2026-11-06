@@ -18,7 +18,9 @@ import {
   Check,
   Info,
   Trash2,
+  Lock,
 } from "lucide-react";
+import { REQUIREMENT_SORT_LABELS, type RequirementSortOrder } from "./UserPortalDocumentWorkspaceView";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -178,7 +180,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "review" | "revision">("all");
-  const [sortOrder, setSortOrder] = useState<"newest" | "name" | "updated">("newest");
+  const [sortOrder, setSortOrder] = useState<RequirementSortOrder>("default");
 
   // Hidden File Input Trigger State
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -927,15 +929,17 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
         return true;
       })
       .sort((left, right) => {
-        if (sortOrder === "name") return left.name.localeCompare(right.name);
-        if (sortOrder === "updated") {
+        if (sortOrder === "name-asc") return left.name.localeCompare(right.name);
+        if (sortOrder === "name-desc") return right.name.localeCompare(left.name);
+        if (sortOrder === "updated" || sortOrder === "oldest") {
           const leftFile = getFileForDoc(left);
           const rightFile = getFileForDoc(right);
           const leftDate = new Date(leftFile?.updatedAt || leftFile?.uploadedAt || leftFile?.createdAt || 0).getTime();
           const rightDate = new Date(rightFile?.updatedAt || rightFile?.uploadedAt || rightFile?.createdAt || 0).getTime();
-          return rightDate - leftDate;
+          return sortOrder === "updated" ? rightDate - leftDate : leftDate - rightDate;
         }
-        return 0;
+        // Default: official requirement order as configured by PCYDO.
+        return (left.sortOrder ?? 0) - (right.sortOrder ?? 0);
       });
   }, [requiredDocTypes, filesByDocTypeId, searchQuery, statusFilter, sortOrder]);
 
@@ -1215,7 +1219,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search renewal requirements..."
+                  placeholder="Search by title, description, or keyword..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8 h-8 text-xs rounded-xl bg-background border-border/80 w-full"
@@ -1223,15 +1227,17 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
               </div>
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 cursor-pointer gap-1 rounded-xl border-border text-xs font-medium">
+                  <Button type="button" variant="outline" size="sm" aria-label={`Sort: ${REQUIREMENT_SORT_LABELS[sortOrder]}`} className="h-8 shrink-0 cursor-pointer gap-1 rounded-xl border-border text-xs font-medium">
                     <Filter className="h-3.5 w-3.5" />
-                    <span className="hidden xs:inline">Sort:</span> <span className="capitalize">{sortOrder}</span>
+                    <span>{REQUIREMENT_SORT_LABELS[sortOrder]}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="z-50 w-44 rounded-xl border-border/80 bg-card p-2 shadow-lg">
-                  <DropdownMenuItem onClick={() => setSortOrder("newest")} className="cursor-pointer text-xs font-medium">Default Order</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortOrder("name")} className="cursor-pointer text-xs font-medium">Document Name</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortOrder("updated")} className="cursor-pointer text-xs font-medium">Recently Updated</DropdownMenuItem>
+                  {(Object.keys(REQUIREMENT_SORT_LABELS) as RequirementSortOrder[]).map((order) => (
+                    <DropdownMenuItem key={order} onClick={() => setSortOrder(order)} className="cursor-pointer text-xs font-medium">
+                      {REQUIREMENT_SORT_LABELS[order]}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -1342,7 +1348,7 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                         <span className="truncate">{uploadDateText}</span>
                         <span>•</span>
                         {isApproved ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Locked from modification</span>
+                          <span className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-400 font-semibold"><Lock aria-hidden="true" className="h-3 w-3 shrink-0" />Locked from modification</span>
                         ) : isSubmitted ? (
                           <span className="text-purple-600 dark:text-purple-400 font-semibold">Awaiting Review</span>
                         ) : isRevision ? (
@@ -1707,8 +1713,8 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                       <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-2xs">
                         <UploadCloud className="h-5 w-5" />
                       </div>
-                      <p className="text-xs font-bold text-foreground">No files selected yet</p>
-                      <p className="text-xs text-muted-foreground">Drag PDFs here or click Browse Files to begin.</p>
+                      <p className="text-xs font-bold text-foreground">No files uploaded yet</p>
+                      <p className="text-xs text-muted-foreground">Drag and drop PDF files here or click Browse Files to get started.</p>
                     </div>
                   )}
                 </div>

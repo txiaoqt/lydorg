@@ -292,19 +292,14 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
   };
 
   // Resolved footer status
-  const resolvedFooterStatus =
+  const resolvedFooterStatus: React.ReactNode =
     footerStatusText ||
-    (isTemplate
-      ? "Official Template • Y-TRACE Document Compliance"
-      : isApproved
-      ? "Approved document • Locked from modification"
-      : isDraft
-      ? "Draft Saved • Ready for Submission"
-      : isNeedsRevision
-      ? "Needs Revision • Please review remarks and upload revisions"
-      : isUnderReview
-      ? "Waiting for Admin Review"
-      : "Attached Document • Y-TRACE Compliance");
+    (!isTemplate && isApproved ? (
+      <span className="inline-flex items-center gap-1.5 font-semibold text-blue-700 dark:text-blue-400">
+        <Lock aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+        Locked from modification
+      </span>
+    ) : null);
 
   // Revision / Rejection Notice Component
   const renderRevisionNotice = (isMobile = false) => {
@@ -472,13 +467,6 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
               {isTemplate ? (
                 <>
-                  <span
-                    className="font-medium text-foreground/90 truncate max-w-[200px] sm:max-w-[320px]"
-                    title={rawTemplateFileName}
-                  >
-                    {rawTemplateFileName}
-                  </span>
-                  <span>•</span>
                   <span>PDF Document</span>
                   <span>•</span>
                   <span>Reference Guide</span>
@@ -735,13 +723,6 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
               {renderBadge()}
               {isTemplate ? (
                 <>
-                  <span className="text-muted-foreground/40">•</span>
-                  <span
-                    className="font-medium text-foreground/80 truncate max-w-[170px] sm:max-w-[280px]"
-                    title={rawTemplateFileName}
-                  >
-                    {rawTemplateFileName}
-                  </span>
                   <span className="text-muted-foreground/40">•</span>
                   <span>PDF Document</span>
                   <span className="text-muted-foreground/40 hidden xs:inline">•</span>
