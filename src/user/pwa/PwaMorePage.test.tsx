@@ -16,16 +16,23 @@ describe("PwaMorePage", () => {
     expect(screen.queryByText("Discover verified youth organizations")).not.toBeInTheDocument();
 
     // Verify remaining Resources links still exist
-    expect(screen.getByText("Resources")).toBeInTheDocument();
-    expect(screen.getByText("Templates")).toBeInTheDocument();
+    expect(screen.getByText("Information & Resources")).toBeInTheDocument();
+    expect(screen.getByText("Forms and Templates")).toBeInTheDocument();
     expect(screen.getByText("News Releases")).toBeInTheDocument();
 
     // Verify other groups still exist
     expect(screen.getByText("Account")).toBeInTheDocument();
     expect(screen.getByText("Organization Profile")).toBeInTheDocument();
-    expect(screen.getByText("Programs")).toBeInTheDocument();
-    expect(screen.getByText("YPOP Validation")).toBeInTheDocument();
+    expect(screen.getByText("Participation")).toBeInTheDocument();
+    expect(screen.getByText("YPOP Participation")).toBeInTheDocument();
     expect(screen.getByText("Help & Support")).toBeInTheDocument();
     expect(screen.getByText("About")).toBeInTheDocument();
+  });
+
+  it("shows YORP Renewal only for verified organizations", () => {
+    const { rerender } = render(<MemoryRouter><PwaMorePage onSignOut={async () => {}} /></MemoryRouter>);
+    expect(screen.queryByText("YORP Renewal")).not.toBeInTheDocument();
+    rerender(<MemoryRouter><PwaMorePage onSignOut={async () => {}} isVerified /></MemoryRouter>);
+    expect(screen.getByText("YORP Renewal")).toBeInTheDocument();
   });
 });

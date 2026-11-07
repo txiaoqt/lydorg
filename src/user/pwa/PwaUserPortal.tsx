@@ -150,7 +150,7 @@ export default function PwaUserPortal() {
         <Route path="contact" element={<PwaContactPage />} />
         <Route path="privacy" element={<PwaLegalPage type="privacy" />} />
         <Route path="terms" element={<PwaLegalPage type="terms" />} />
-        <Route path="more" element={<PwaMorePage onSignOut={data.signOut} />} />
+        <Route path="more" element={<PwaMorePage onSignOut={data.signOut} isVerified={data.profile?.profileStatus === "verified"} />} />
         <Route path="*" element={<Navigate to={PWA_ROUTES.home} replace />} />
       </Routes>}
     </PwaAppShell>

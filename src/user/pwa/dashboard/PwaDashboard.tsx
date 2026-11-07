@@ -1,5 +1,5 @@
 import {
-  CalendarDays, ChevronRight, FileText, ReceiptText, Sparkles, UserRound, WalletCards,
+  CalendarDays, ChevronRight, FileText, Medal, ReceiptText, Sparkles, UserRound, WalletCards,
 } from "lucide-react";
 import { statusLabelMap } from "@/lib/lydo-connect-data";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
@@ -138,12 +138,13 @@ export default function PwaDashboard({ data }: { data: PortalData }) {
 
       <section className="pwa-card pwa-dashboard-recommendations">
         <h2 className="pwa-section-title">Support &amp; Resources</h2>
-        <p className="pwa-empty-copy">Official PCYDO communication, templates and updates.</p>
+        <p className="pwa-empty-copy">Official PCYDO communications, announcements, forms and templates, and program information.</p>
         <div className="pwa-action-grid">
           {[
-            { title: "Support & Inquiries", detail: "Direct inquiries to PCYDO administrative staff.", path: PWA_ROUTES.inquiries, icon: UserRound },
-            { title: "Official Templates", detail: "Download official registration forms and compliance documents.", path: PWA_ROUTES.templates, icon: FileText },
-            { title: "News & Official Releases", detail: "PCYDO announcements and official updates.", path: PWA_ROUTES.news, icon: ReceiptText },
+            { title: "Support & Inquiries", detail: "Need assistance with YORP registration, YPOP participation, budget requests, or liquidation reports? Submit an inquiry to the PCYDO.", path: PWA_ROUTES.inquiries, icon: UserRound },
+            { title: "Official Forms & Templates", detail: "Access official registration forms, by-laws, and compliance documents.", path: PWA_ROUTES.templates, icon: FileText },
+            { title: "Official News and Announcements", detail: "View PCYDO announcements, registration schedules, and official notices.", path: PWA_ROUTES.news, icon: ReceiptText },
+            { title: "YPOP Participation", detail: "View YPOP participation records, activity points, and qualification status.", path: PWA_ROUTES.ypop, icon: Medal },
           ].map(({ title, detail, path, icon: Icon }) => <button type="button" key={path} onClick={() => go(path)}><span className="pwa-action-icon"><Icon aria-hidden="true" /></span><span><strong>{title}</strong><small>{detail}</small></span><ChevronRight aria-hidden="true" /></button>)}
         </div>
       </section>

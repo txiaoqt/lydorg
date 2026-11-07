@@ -1,6 +1,6 @@
 import {
   BookOpen, ChevronRight, FileText, HelpCircle, Info, LogOut, Medal, Megaphone,
-  Phone, ScrollText, Settings, ShieldCheck, UserRound,
+  Phone, ReceiptText, ScrollText, Settings, ShieldCheck, UserRound, WalletCards,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,27 +18,45 @@ import { usePwaNavigation } from "./hooks/usePwaNavigation";
 import { PWA_ROUTES } from "./pwaRoutes";
 import { PWA_ENTRY_ROUTE } from "./pwaAuthFlow";
 
-const groups = [
+const buildGroups = (isVerified: boolean) => [
   {
     label: "Account",
     links: [
       { label: "Organization Profile", detail: "Identity, classification and contacts", path: PWA_ROUTES.profile, icon: UserRound },
-      { label: "Registration Renewal", detail: "Renewal eligibility, documents and review status", path: PWA_ROUTES.renewal, icon: ShieldCheck },
-      { label: "Approved Renewals", detail: "Previously approved renewal cycles", path: PWA_ROUTES.renewals, icon: FileText },
       { label: "Settings", detail: "App preferences, storage and accessibility", path: PWA_ROUTES.settings, icon: Settings },
     ],
   },
   {
-    label: "Programs",
+    label: "Compliance",
     links: [
-      { label: "YPOP Validation", detail: "City-Led Activities and Organization PPAs", path: PWA_ROUTES.ypop, icon: Medal },
+      { label: "YORP Registration", detail: "Registration documents and review status", path: PWA_ROUTES.documents, icon: FileText },
+      // Nothing to renew before the organization is verified.
+      ...(isVerified
+        ? [
+            { label: "YORP Renewal", detail: "Renewal eligibility, documents and review status", path: PWA_ROUTES.renewal, icon: ShieldCheck },
+            { label: "Approved Renewals", detail: "Previously approved renewal cycles", path: PWA_ROUTES.renewals, icon: FileText },
+          ]
+        : []),
     ],
   },
   {
-    label: "Resources",
+    label: "Participation",
     links: [
-      { label: "Templates", detail: "View and download official files", path: PWA_ROUTES.templates, icon: FileText },
-      { label: "News Releases", detail: "Official PCYDO updates", path: PWA_ROUTES.news, icon: Megaphone },
+      { label: "YPOP Participation", detail: "City-led and organization-initiated activities", path: PWA_ROUTES.ypop, icon: Medal },
+    ],
+  },
+  {
+    label: "Grants & Incentives",
+    links: [
+      { label: "Budget Request", detail: "Budget requests and release status", path: PWA_ROUTES.budgets, icon: WalletCards },
+      { label: "Liquidation Report", detail: "Liquidation reports and review status", path: PWA_ROUTES.liquidations, icon: ReceiptText },
+    ],
+  },
+  {
+    label: "Information & Resources",
+    links: [
+      { label: "Forms and Templates", detail: "View and download official forms", path: PWA_ROUTES.templates, icon: FileText },
+      { label: "News Releases", detail: "Official PCYDO news and announcements", path: PWA_ROUTES.news, icon: Megaphone },
     ],
   },
   {
@@ -59,7 +77,7 @@ const groups = [
   },
 ];
 
-export function PwaMorePage({ onSignOut }: { onSignOut: () => Promise<void> }) {
+export function PwaMorePage({ onSignOut, isVerified = false }: { onSignOut: () => Promise<void>; isVerified?: boolean }) {
   const { go } = usePwaNavigation();
   const navigate = useNavigate();
   const [signOutConfirmationOpen, setSignOutConfirmationOpen] = useState(false);
@@ -78,7 +96,7 @@ export function PwaMorePage({ onSignOut }: { onSignOut: () => Promise<void> }) {
 
   return (
     <div className="pwa-stack pwa-more-page">
-      {groups.map((group) => (
+      {buildGroups(isVerified).map((group) => (
         <section className="pwa-menu-group" key={group.label}>
           <h2 className="pwa-section-title">{group.label}</h2>
           <div className="pwa-card pwa-menu-card">

@@ -46,7 +46,7 @@ export function PwaRenewalPage({ data, history = false }: { data: ReturnType<typ
   return (
     <div className="pwa-stack pwa-shared-workspace pwa-renewal-page">
       <div className="pwa-filter-chips" aria-label="Renewal views">
-        <button className={!history ? "is-active" : ""} onClick={() => go(PWA_ROUTES.renewal)}>Registration Renewal</button>
+        <button className={!history ? "is-active" : ""} onClick={() => go(PWA_ROUTES.renewal)}>YORP Renewal</button>
         <button className={history ? "is-active" : ""} onClick={() => go(PWA_ROUTES.renewals)}>Approved Renewals</button>
       </div>
       {!history ? <section className="pwa-card pwa-workspace-intro"><h2>{data.renewalState.statusLabel}</h2><p>{data.renewalState.adminRemarks || data.renewalState.renewalBlockedReason || "Review your renewal documents and follow the current administrative decision."}</p>{data.renewalState.expiresAt ? <p>Registration expires: {new Date(data.renewalState.expiresAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}</p> : null}</section> : null}

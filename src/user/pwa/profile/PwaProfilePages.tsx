@@ -21,7 +21,6 @@ import {
   type OrganizationProfile,
   getRepresentativeDisplayName,
   getAdviserDisplayName,
-  getOrganizationAddressDisplay,
   formatPersonName,
   formatAddress,
 } from "@/lib/lydo-connect-data";
@@ -95,6 +94,19 @@ const statusCopy = (status?: OrganizationProfile["profileStatus"]) => {
   if (status === "needs_update") return "The admin requested changes to your organization profile.";
   return "Complete the required profile information and submit it for verification.";
 };
+
+const ypopQualificationLabels: Record<string, string> = {
+  qualified: "Qualified",
+  ypop_under_review: "Under Review",
+  ypop_needs_revision: "Needs Revision",
+  ypop_not_qualified: "Not Qualified",
+  ypop_not_submitted: "Not Yet Submitted",
+  no_active_period: "No Open Semester",
+};
+const urnLabel = (profile: OrganizationProfile | null) =>
+  profile?.isExistingOrganization
+    ? requiredValue(profile.organizationIdentifierNumber)
+    : profile?.urn || "Not yet generated";
 
 function ProfileField({ label, value, link }: { label: string; value: string; link?: string }) {
   return (
@@ -355,7 +367,7 @@ function ProfileOverview({ data }: { data: PortalData }) {
   const profile = getProfileDisplaySource(data);
   return (
     <div className="pwa-stack">
-      <ProfileSection title="Verification Status">
+      <ProfileSection title="Organization Standing">
         <div className="pwa-profile-verification">
           <StatusBadge status={profile?.profileStatus ?? "incomplete"} />
           <p>{statusCopy(profile?.profileStatus)}</p>
@@ -365,38 +377,14 @@ function ProfileOverview({ data }: { data: PortalData }) {
               ? <time>Submitted {formatDateTime(profile.updatedAt)}</time>
               : null}
         </div>
-      </ProfileSection>
-      <ProfileSection title="Organization Snapshot">
         <dl className="pwa-profile-fields">
-          <ProfileField label="Organization Type" value={profile?.isExistingOrganization ? "Existing Organization" : "New Organization"} />
-          <ProfileField label="Location" value={locationLabel(profile)} />
-          <ProfileField label="Classification" value={classificationLabel(profile)} />
-          <ProfileField
-            label="Unique Registration Number (URN)"
-            value={
-              profile?.isExistingOrganization
-                ? requiredValue(profile.organizationIdentifierNumber)
-                : profile?.urn
-                  ? profile.urn
-                  : "URN pending verification"
-            }
-          />
-        </dl>
-      </ProfileSection>
-      <ProfileSection title="Leadership">
-        <dl className="pwa-profile-fields">
-          <ProfileField label="Head of Organization" value={displayValue(getRepresentativeDisplayName(profile))} />
-          <ProfileField label="Adviser" value={displayValue(getAdviserDisplayName(profile))} />
-        </dl>
-      </ProfileSection>
-      <ProfileSection title="Contact Snapshot">
-        <dl className="pwa-profile-fields">
-          <ProfileField label="Organization Email" value={displayValue(profile?.organizationEmail)} />
-          <ProfileField label="Contact Number" value={displayValue(profile?.contactNumber)} />
-          <ProfileField label="Complete Address" value={displayValue(getOrganizationAddressDisplay(profile))} />
+          <ProfileField label="Registration URN" value={urnLabel(profile)} />
+          <ProfileField label="YPOP Qualification" value={ypopQualificationLabels[data.budgetEligibility.reason] ?? "No Open Semester"} />
+          <ProfileField label="Budget Request" value={data.budgetEligibility.eligible ? "Eligible to submit" : "Not yet eligible"} />
         </dl>
       </ProfileSection>
       <ProfileSection title="Centers of Youth Participation">
+        <p className="pwa-profile-empty">Priority development areas that reflect the organization&apos;s areas of youth engagement.</p>
         {profile?.advocacies.length ? (
           <div className="pwa-profile-chips">{profile.advocacies.map((item) => <span key={item}>{item}</span>)}</div>
         ) : <p className="pwa-profile-empty">Missing information. Add at least one Center of Youth Participation in Edit Profile.</p>}
@@ -410,28 +398,16 @@ function ProfileDetails({ data }: { data: PortalData }) {
   const groups = [
     ["Organization Information", [
       ["Organization Name", requiredValue(profile?.organizationName)],
-      ["Organization Type", profile?.isExistingOrganization ? "Existing Organization" : "New Organization"],
-      [
-        "Unique Registration Number (URN)",
-        profile?.isExistingOrganization
-          ? requiredValue(profile.organizationIdentifierNumber)
-          : profile?.urn
-            ? profile.urn
-            : "URN pending verification",
-      ],
-    ]],
-    ["Contact & Location", [
-      ["Organization Email", requiredValue(profile?.organizationEmail)],
-      ["Contact Number", requiredValue(profile?.contactNumber)],
+      ["Major Classification", requiredValue(profile?.majorClassification)],
       ["District", requiredValue(profile?.district)],
       ["Barangay", requiredValue(profile?.barangay)],
       ["Complete Address", displayValue(profile?.address)],
     ]],
-    ["Classification", [
+    ["Organization Classification", [
       ["Major Classification", requiredValue(profile?.majorClassification)],
       ["Sub-classification", profile?.subClassification ? formatSubClassificationLabel(profile.subClassification) : "Missing information"],
     ]],
-    ["Leadership", [
+    ["Leadership & Organization Officials", [
       ["Head of Organization", displayValue(getRepresentativeDisplayName(profile))],
       ["Adviser", displayValue(getAdviserDisplayName(profile))],
     ]],
@@ -443,7 +419,8 @@ function ProfileDetails({ data }: { data: PortalData }) {
           <dl className="pwa-profile-fields">{fields.map(([label, value]) => <ProfileField key={label} label={label} value={value} />)}</dl>
         </ProfileSection>
       ))}
-      <ProfileSection title="Contacts & Socials">
+      <ProfileSection title="Contact Information">
+        <p className="pwa-profile-empty">Official contact details and communication channels designated for the organization.</p>
         <dl className="pwa-profile-fields">
           <ProfileField label="Primary Email" value={requiredValue(profile?.organizationEmail)} />
           {(profile?.additionalEmails || []).map((email, idx) => (
@@ -469,7 +446,7 @@ function ProfileDetails({ data }: { data: PortalData }) {
 }
 
 function CityLedActivityList({ data }: { data: PortalData }) {
-  const recentActivities = data.cityLedParticipations.slice(0, 3);
+  const recentActivities = data.cityLedParticipations.filter((item) => item.status === "verified").slice(0, 3);
   if (!recentActivities.length && data.sectionLoading) {
     return <p className="pwa-profile-empty">Loading joined activities...</p>;
   }
@@ -489,18 +466,41 @@ function CityLedActivityList({ data }: { data: PortalData }) {
         </article>
       ))}
     </div>
-  ) : <p className="pwa-profile-empty">No recent city-led activities.</p>;
+  ) : <p className="pwa-profile-empty">No city-led activities recorded yet.</p>;
+}
+
+function OrgInitiatedActivityList({ data }: { data: PortalData }) {
+  const recentActivities = data.orgInitiatedActivities.filter((item) => item.status === "approved").slice(0, 3);
+  return recentActivities.length ? (
+    <div className="pwa-profile-activity-list">
+      {recentActivities.map((item) => (
+        <article key={item.id}>
+          <div>
+            <strong>{item.activityName}</strong>
+            <time>{formatDateTime(item.activityDate)}</time>
+            {item.venue ? <p>{item.venue}</p> : null}
+          </div>
+          <StatusBadge status={item.status} />
+        </article>
+      ))}
+    </div>
+  ) : <p className="pwa-profile-empty">No organization-initiated activities recorded yet.</p>;
 }
 
 function ProfileActivity({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
   return (
     <div className="pwa-stack">
-      <ProfileSection title="Recent City-Led Activities">
+      <ProfileSection title="Recent City-led Activities">
+        <p className="pwa-profile-empty">Recorded participation in activities organized by the Pasig City Youth Development Office (PCYDO).</p>
         <CityLedActivityList data={data} />
         {data.cityLedParticipations.length > 3 ? (
           <button type="button" className="pwa-profile-section-link" onClick={() => go(PWA_ROUTES.ypop)}>View all activities <ChevronRight aria-hidden="true" /></button>
         ) : null}
+      </ProfileSection>
+      <ProfileSection title="Recent Organization-initiated Activities">
+        <p className="pwa-profile-empty">Recorded participation in programs and activities independently organized by the organization.</p>
+        <OrgInitiatedActivityList data={data} />
       </ProfileSection>
       <ProfileSection title="Recent Activity">
         {data.profileActivities.slice(0, 3).length ? (
@@ -533,7 +533,7 @@ export function PwaProfilePage({ data }: { data: PortalData }) {
       <div className="pwa-profile-tabs" role="tablist" aria-label="Organization profile sections">
         {(["overview", "details", "activity"] as const).map((item) => (
           <button key={item} type="button" role="tab" aria-selected={tab === item} className={tab === item ? "is-active" : ""} onClick={() => setTab(item)}>
-            {item.charAt(0).toUpperCase() + item.slice(1)}
+            {{ overview: "Overview", details: "Organization Information", activity: "YPOP Participation" }[item]}
           </button>
         ))}
       </div>
@@ -983,12 +983,13 @@ export function PwaProfilePublicPreview({ data }: { data: PortalData }) {
         <dl className="pwa-profile-fields">
           {profile?.directoryShowRepresentative ? <ProfileField label="Head of Organization" value={displayValue(getRepresentativeDisplayName(profile))} /> : null}
           {profile?.directoryShowAdviser ? <ProfileField label="Adviser" value={displayValue(getAdviserDisplayName(profile))} /> : null}
-          <ProfileField label="Classification" value={classificationLabel(profile)} />
-          <ProfileField label="Location" value={locationLabel(profile)} />
+          <ProfileField label="Organization Classification" value={classificationLabel(profile)} />
+          <ProfileField label="Barangay & District" value={locationLabel(profile)} />
           <ProfileField label="Facebook Page" value={profile?.facebookPageUrl ? "Open Facebook Page" : "Not provided"} link={profile?.facebookPageUrl || undefined} />
         </dl>
       </ProfileSection>
-      <ProfileSection title="Recent City-Led Activities"><CityLedActivityList data={data} /></ProfileSection>
+      <ProfileSection title="Recent City-led Activities"><CityLedActivityList data={data} /></ProfileSection>
+      <ProfileSection title="Recent Organization-initiated Activities"><OrgInitiatedActivityList data={data} /></ProfileSection>
     </div>
   );
 }

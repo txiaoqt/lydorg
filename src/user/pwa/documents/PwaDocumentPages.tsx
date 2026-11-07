@@ -153,7 +153,7 @@ export function PwaDocumentList({ data }: { data: PortalData }) {
       ? `${data.revisionDocuments.length} need revision`
       : data.missingDocuments
         ? `${data.missingDocuments} files still missing`
-        : "Track required files and review their current status.";
+        : "All submitted registration documents undergo review and verification by the PCYDO.";
 
   return (
     <div className="pwa-stack">
@@ -775,8 +775,8 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
       <section className="pwa-card pwa-workspace-intro">
         <h2>Bulk document workspace</h2>
         <p>Select several files, then assign each one to a unique required document type.</p>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={slowMode} disabled={saving} onChange={(event) => setSlowMode(event.target.checked)} />Optimize for slow/mobile connection</label>
-        {(slowMode || slowNotice) && <p role="status">Slow connection mode: documents will upload one at a time for better reliability.</p>}
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={slowMode} disabled={saving} onChange={(event) => setSlowMode(event.target.checked)} />Slow Connection Mode</label>
+        <p role={slowNotice ? "status" : undefined}>Upload documents one at a time to improve reliability on slower or mobile connections.</p>
       </section>
       {uploadSummary && <section className="pwa-card" aria-live="polite">
         <p>{uploadSummary.succeeded} {uploadSummary.mode === "draft" ? "saved as drafts" : "submitted"}{uploadSummary.failed ? `, ${uploadSummary.failed} failed` : ""}.</p>
@@ -797,8 +797,8 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
         }}
       >
         <UploadCloud aria-hidden="true" />
-        <strong>Select or drop files</strong>
-        <small>PDF files only.</small>
+        <strong>Drag and drop your PDF files here,</strong>
+        <small>or browse your device to select multiple documents. Maximum file size: 10 MB</small>
         <input ref={inputRef} type="file" multiple accept=".pdf,application/pdf" disabled={submissionLocked || saving} onChange={(event) => {
           appendFiles(Array.from(event.target.files ?? []));
           event.currentTarget.value = "";
@@ -860,7 +860,7 @@ export function PwaDocumentManager({ data }: { data: PortalData }) {
       {hasSelectedCorrections ? <p className="pwa-muted-copy">Submit Selected Files replaces the documents needing revision and sends them back for review.</p> : null}
       <Dialog open={confirmation !== null} onOpenChange={(open) => { if (!open) setConfirmation(null); }}>
         <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
-          <DialogHeader><DialogTitle>{confirmation === "draft" ? "Save selected files as drafts?" : "Submit selected files for review?"}</DialogTitle><DialogDescription>{confirmation === "draft" ? "These files will be saved without sending them for admin review." : "PCYDO will review the selected registration documents. Check each assignment before submitting."}</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>{confirmation === "draft" ? "Save Selected Documents as Draft?" : `Confirm Submission of ${pending.length} Document${pending.length === 1 ? "" : "s"}?`}</DialogTitle><DialogDescription>{confirmation === "draft" ? "The selected files will be saved as a draft. You can review, replace, or update them before submitting for admin review." : "Documents submitted for review are locked and cannot be modified unless the PCYDO admin requests revisions."}</DialogDescription></DialogHeader>
           <ul className="space-y-3 text-sm max-h-[40dvh] overflow-auto">{pending.map((item) => <li key={item.id}><strong className="block">{data.requiredTemplates.find((template) => template.id === item.documentTypeId)?.name}</strong><span className="break-all text-muted-foreground">{item.file.name}</span></li>)}</ul>
           <DialogFooter><button className="pwa-secondary-button" onClick={() => setConfirmation(null)}>Cancel</button><button className="pwa-primary-button" disabled={saving} onClick={() => { if (confirmation && !confirmationInFlight.current) { confirmationInFlight.current = true; void submit(confirmation, true).finally(() => { confirmationInFlight.current = false; }); } }}>{confirmation === "draft" ? "Save Drafts" : "Submit for Review"}</button></DialogFooter>
         </DialogContent>

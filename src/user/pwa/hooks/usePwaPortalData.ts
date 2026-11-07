@@ -47,6 +47,15 @@ type PwaBriefing = {
   action: { label: string; path: string } | null;
 };
 
+// Dashboard briefing when a verified organization cannot request a budget yet, keyed by budget eligibility reason.
+const YPOP_BUDGET_BRIEFINGS: Record<string, PwaBriefing> = {
+  ypop_under_review: { title: "Budget request eligibility pending", description: "Your YPOP qualification is under evaluation. Wait for the admin review.", tone: "info", action: { label: "View YPOP Participation", path: PWA_ROUTES.ypop } },
+  ypop_needs_revision: { title: "YPOP revision required for budget eligibility", description: "The admin requested corrections to your YPOP submission. Review the remarks and resubmit to qualify for budget requests.", tone: "warning", action: { label: "Review YPOP Submission", path: PWA_ROUTES.ypop } },
+  ypop_not_qualified: { title: "YPOP qualification not met", description: "Your organization did not qualify in the current YPOP semester. A valid YPOP qualification is required to submit budget requests.", tone: "info", action: { label: "View YPOP Participation", path: PWA_ROUTES.ypop } },
+  ypop_not_submitted: { title: "Complete YPOP participation", description: "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request. Complete the required YPOP participation activities and meet the qualification criteria to proceed.", tone: "info", action: { label: "Open YPOP Participation", path: PWA_ROUTES.ypop } },
+  no_active_period: { title: "Waiting for the next YPOP semester", description: "Your organization is verified. YPOP participation opens when PCYDO starts the next validation semester.", tone: "info", action: { label: "View YPOP Participation", path: PWA_ROUTES.ypop } },
+};
+
 export function usePwaPortalData() {
   const { user, signOut } = useAuth();
   const store = useLydoConnect();
@@ -240,6 +249,9 @@ export function usePwaPortalData() {
     const cityLedParticipations = [...state.ypopEventParticipations]
       .filter((item) => item.organizationId === organizationId)
       .sort((a, b) => (b.joinedAt || b.createdAt).localeCompare(a.joinedAt || a.createdAt));
+    const orgInitiatedActivities = [...state.ypopOrgActivities]
+      .filter((item) => item.organizationId === organizationId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const inquiries = [...state.inquiries]
       .filter((item) => item.organizationId === organizationId || item.submittedBy === user?.id)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -290,7 +302,7 @@ export function usePwaPortalData() {
     } else if (!urnRegistration && revisionDocuments.length) {
       briefing = { title: "Resolve flagged document files", description: "Review the admin remarks and upload corrected registration requirements.", tone: "warning", action: { label: "View Requirements", path: PWA_ROUTES.documents } };
     } else if (!urnRegistration && missingDocuments) {
-      briefing = { title: "Submit your required documents", description: "Upload your registration requirements and submit them for admin review.", tone: "warning", action: { label: "View Requirements", path: PWA_ROUTES.documents } };
+      briefing = { title: "Submit your required documents", description: "Upload the required YORP registration documents to begin the organization's registration review by PCYDO.", tone: "warning", action: { label: "View Requirements", path: PWA_ROUTES.documents } };
     } else if (submission?.status === "under_admin_review" || profile?.profileStatus === "pending_review") {
       briefing = { title: "Wait for document review", description: "PCYDO is reviewing your registration. Monitor the status while you wait.", tone: "info", action: { label: "View Requirements", path: PWA_ROUTES.documents } };
     } else if (revisionLiquidationCount || overdueLiquidationCount) {
@@ -309,9 +321,7 @@ export function usePwaPortalData() {
       const reason = budgetEligibility.reason;
       briefing = budgetWorkflowEligibility.eligible
         ? { title: "Create your next budget request", description: "Your organization is verified and eligible to submit a budget request.", tone: "success", action: { label: "Open Budget", path: PWA_ROUTES.budgets } }
-        : { title: reason === "ypop_under_review" ? "Budget request eligibility pending" : reason === "ypop_needs_revision" ? "YPOP revision required for budget eligibility" : "Budget request unavailable",
-          description: reason === "ypop_under_review" ? "Your YPOP qualification is under evaluation. Wait for the admin review." : reason === "ypop_needs_revision" ? "The admin requested corrections to your YPOP submission. Review the remarks and resubmit to qualify for budget requests." : reason === "ypop_not_qualified" ? "Your organization did not qualify in the current YPOP period." : "Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request.",
-          tone: reason === "ypop_needs_revision" ? "warning" : "info", action: { label: reason === "ypop_needs_revision" ? "Review YPOP Submission" : reason === "ypop_not_submitted" ? "Open YPOP Incentive" : "View YPOP Status", path: PWA_ROUTES.ypop } };
+        : YPOP_BUDGET_BRIEFINGS[reason] ?? YPOP_BUDGET_BRIEFINGS.no_active_period;
     }
 
     const actions: Array<{ title: string; detail: string; path: string; kind: string }> = [];
@@ -320,7 +330,7 @@ export function usePwaPortalData() {
     if (urnRegistration) actions.push({ title: urnReviewLabels[profile!.urnReviewStatus], detail: profile!.urnReviewStatus === "needs_correction" ? "Review feedback and submit the corrected URN." : "Open your registration verification record.", path: profile!.urnReviewStatus === "needs_correction" ? PWA_ROUTES.profileEdit : PWA_ROUTES.documents, kind: "profile" });
     if (profileComplete && profile?.profileStatus === "pending_review") actions.push({ title: "View Verification Status", detail: "Your organization profile is awaiting admin verification.", path: PWA_ROUTES.profile, kind: "profile" });
     if (!profileComplete) actions.push({ title: "Complete Profile", detail: "Finish all required organization information before submitting documents.", path: PWA_ROUTES.profileEdit, kind: "profile" });
-    if (!budgetEligibility.eligible) actions.push({ title: "Open YPOP Incentive", detail: "Complete the active period qualification workflow.", path: PWA_ROUTES.ypop, kind: "budget" });
+    if (!budgetEligibility.eligible) actions.push({ title: "Open YPOP Participation", detail: "Complete the required YPOP participation activities to qualify.", path: PWA_ROUTES.ypop, kind: "budget" });
     if (budgetEligibility.eligible && !budgetRequestCount) actions.push({ title: "Create Budget Request", detail: "Start an eligible activity budget request.", path: PWA_ROUTES.budgetNew, kind: "budget" });
     if (revisionBudgetRequestCount) actions.push({ title: "Revise Budget Request", detail: "Address the latest review feedback.", path: PWA_ROUTES.budgets, kind: "budget" });
     if (draftBudgetRequestCount) actions.push({ title: "Continue Budget Draft", detail: "Finish the current budget request.", path: PWA_ROUTES.budgets, kind: "budget" });
@@ -347,7 +357,7 @@ export function usePwaPortalData() {
       revisionLiquidations, revisionLiquidationCount, overdueLiquidations, overdueLiquidationCount, draftLiquidationCount, daysUntilDeadline,
       profilePercent, renewalCountdown, notifications,
       unreadCount: state.unreadNotificationCount ?? notifications.filter((item) => !item.isRead).length,
-      activities, profileActivities, cityLedParticipations, inquiries, ypopEntries, budgetEligibility,
+      activities, profileActivities, cityLedParticipations, orgInitiatedActivities, inquiries, ypopEntries, budgetEligibility,
       budgetWorkflowEligibility, liquidationWorkflowEligibility, ypopWorkflowEligibility,
       pendingActions, briefing, actions: actions.slice(0, 3),
       news: [...state.newsReleases].filter((item) => item.visibilityStatus === "published").sort((a, b) => b.datePosted.localeCompare(a.datePosted)),

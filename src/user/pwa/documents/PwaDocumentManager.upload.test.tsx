@@ -36,8 +36,8 @@ describe("PWA registration upload feedback and Retry Failed", () => {
     mocks.batch.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
     const { container, rerender } = render(<MemoryRouter><PwaDocumentManager data={data as never} /></MemoryRouter>);
     fireEvent.change(container.querySelector('input[type="file"]')!, { target: { files: [file("Constitution.pdf"), file("Form.pdf")] } });
-    fireEvent.click(screen.getByLabelText("Optimize for slow/mobile connection"));
-    expect(screen.getByText(/documents will upload one at a time/)).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Slow Connection Mode"));
+    expect(screen.getByText(/Upload documents one at a time/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Submit Selected Files" }));
     const confirm = await screen.findByRole("dialog");
     fireEvent.click(within(confirm).getByRole("button", { name: "Submit for Review" }));

@@ -50,8 +50,17 @@ export function PwaEligibilityNotice({ data }: { data: PortalData }) {
     <section className={`pwa-eligibility-notice ${data.budgetEligibility.reason === "ypop_not_qualified" ? "is-rejected" : ""}`}>
       <WalletCards aria-hidden="true" />
       <div>
-        <h2>Budget request unavailable</h2>
-        <p>Complete the requirements below before submitting a budget request.</p>
+        {data.profile?.profileStatus === "verified" && data.budgetEligibility.reason === "ypop_not_submitted" ? (
+          <>
+            <h2>Complete YPOP participation</h2>
+            <p>Your organization is verified, but a valid YPOP qualification is required before you can submit a budget request. Complete the required YPOP participation activities and meet the qualification criteria to proceed.</p>
+          </>
+        ) : (
+          <>
+            <h2>Budget request unavailable</h2>
+            <p>Complete the requirements below before submitting a budget request.</p>
+          </>
+        )}
         <ul className="pwa-requirement-list">
           {requirements.map((item) => <li key={item.label} className={item.met ? "is-complete" : ""}>{item.met ? <Check /> : <Circle />}<span>{item.label}</span></li>)}
         </ul>

@@ -121,12 +121,12 @@ export function getPwaParentRoute(pathname: string) {
 export function getPwaPageTitle(pathname: string) {
   if (pathname === PWA_ROUTES.home) return "Dashboard";
   if (pathname.startsWith(PWA_ROUTES.documentsManage)) return "Manage Documents";
-  if (pathname.startsWith(PWA_ROUTES.documents)) return "Registration Requirements";
+  if (pathname.startsWith(PWA_ROUTES.documents)) return "YORP Registration";
   if (pathname === PWA_ROUTES.budgetNew) return "New Budget Request";
-  if (pathname.startsWith(PWA_ROUTES.budgets)) return "Budget Requests";
+  if (pathname.startsWith(PWA_ROUTES.budgets)) return "Budget Request";
   if (pathname.includes("/manage") && pathname.startsWith(PWA_ROUTES.liquidations)) return "Manage Liquidation";
-  if (pathname.startsWith(PWA_ROUTES.liquidations)) return "Liquidation Reports";
-  if (pathname === PWA_ROUTES.renewal) return "Registration Renewal";
+  if (pathname.startsWith(PWA_ROUTES.liquidations)) return "Liquidation Report";
+  if (pathname === PWA_ROUTES.renewal) return "YORP Renewal";
   if (pathname === PWA_ROUTES.renewals) return "Approved Renewals";
   if (pathname.startsWith(PWA_ROUTES.notifications)) return "Notifications";
   if (pathname.startsWith(PWA_ROUTES.activity)) return "Activity History";
@@ -135,9 +135,9 @@ export function getPwaPageTitle(pathname: string) {
   if (pathname === PWA_ROUTES.organizations) return "Organizations";
   if (pathname.startsWith(`${PWA_ROUTES.organizations}/`)) return "Organization Profile";
   if (pathname.startsWith(PWA_ROUTES.profile)) return "Organization Profile";
-  if (pathname.includes("/ppa/") && pathname.startsWith(PWA_ROUTES.ypop)) return "Log PPA";
-  if (pathname.startsWith(PWA_ROUTES.ypop)) return "YPOP Validation";
-  if (pathname.startsWith(PWA_ROUTES.templates)) return "Templates";
+  if (pathname.includes("/ppa/") && pathname.startsWith(PWA_ROUTES.ypop)) return "Organization-initiated Activity";
+  if (pathname.startsWith(PWA_ROUTES.ypop)) return "YPOP Participation";
+  if (pathname.startsWith(PWA_ROUTES.templates)) return "Forms and Templates";
   if (pathname.startsWith(PWA_ROUTES.news)) return "News Releases";
   if (pathname.startsWith(PWA_ROUTES.transparency)) return "Public Transparency";
   if (pathname.startsWith(PWA_ROUTES.compliance)) return "Compliance Status";

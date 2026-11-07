@@ -66,7 +66,7 @@ export function PwaLiquidationEligibilityNotice({ data }: { data: PortalData }) 
           {data.profile?.profileStatus !== "verified"
             ? "View Registration Status"
             : !data.budgetEligibility.eligible
-              ? "Open YPOP Incentive"
+              ? "Open YPOP Participation"
               : releasedBudget
                 ? "View Released Budget"
                 : "View Budget Requests"}
