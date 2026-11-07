@@ -3806,7 +3806,7 @@ export default function UserPortal({ section }: { section: string }) {
           dashboardTasks.push({
             key: "documents-start",
             title: "Submit your required documents",
-            description: "Upload the required compliance files so the admin can begin reviewing your organization.",
+            description: "Upload the required YORP registration documents to begin the organization's registration review by PCYDO.",
             ctaLabel: "View Requirements",
             onClick: () => navigate(userRouteMap["document-submission"]),
             icon: FileText,
