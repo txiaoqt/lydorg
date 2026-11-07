@@ -58,7 +58,6 @@ import {
 import {
   formatRevisionDeadline,
   getRevisionTimeRemaining,
-  isRevisionExpired,
   isSubmissionRevisionLocked,
 } from "@/lib/revision-deadline";
 import type {
@@ -173,7 +172,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   const isDraft = !currentActivity || currentActivity.status === "draft";
   const isRevisionDeadlineExpired =
     isNeedsRevision &&
-    (isRevisionExpired(currentActivity?.revisionDueAt) || isSubmissionRevisionLocked(currentActivity));
+    (isSubmissionRevisionLocked(currentActivity));
   const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(currentActivity?.revisionDueAt) : "";
   const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(currentActivity?.revisionDueAt) : null;
   const isReadOnly = isUnderReview || isApproved || isRejected || isRevisionDeadlineExpired;

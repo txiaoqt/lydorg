@@ -23,12 +23,12 @@ import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRoutes";
 import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
-import { isRevisionExpired, isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
+import { isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type Filter = "all" | "draft" | "review" | "revision" | "approved";
 
-const canEditBudget = (request: BudgetRequest) => request.status === "draft" || (request.status === "needs_revision" && !isRevisionExpired(request.revisionDueAt) && !isSubmissionRevisionLocked(request));
+const canEditBudget = (request: BudgetRequest) => request.status === "draft" || (request.status === "needs_revision" && !isSubmissionRevisionLocked(request));
 const reviewStatuses = new Set(["submitted", "under_review"]);
 const approvedStatuses = new Set(["awaiting_release", "approved_for_ftf_green", "hard_copy_submitted", "budget_released"]);
 const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });

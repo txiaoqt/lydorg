@@ -53,7 +53,7 @@ import { useConfirmActionDialog } from "@/components/ConfirmActionDialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isRevisionExpired, isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
+import { isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
 import { DOCUMENT_UPLOAD_MAX_BYTES, validateOrganizationDocumentFile } from "@/user/pwa/documents/documentFileValidation";
 import {
   AlertDialog,
@@ -3178,7 +3178,7 @@ export default function UserPortal({ section }: { section: string }) {
     const existing = budgetRequests.find((req) => req.id === budgetRequestId);
     if (!existing) return;
 
-    if (isRevisionExpired(existing.revisionDueAt) || isSubmissionRevisionLocked(existing)) {
+    if (isSubmissionRevisionLocked(existing)) {
       toast({
         title: "Resubmission locked",
         description: "The 5-day resubmission deadline has expired. This request is locked.",

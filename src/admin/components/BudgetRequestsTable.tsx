@@ -65,10 +65,12 @@ export const StatusPill = ({
   status,
   revisionDueAt,
   revisionLockedAt,
+  revisionUnlockedAt,
 }: {
   status: BudgetRequest["status"];
   revisionDueAt?: string | null;
   revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
 }) => {
   if (status === "budget_released" || String(status) === "completed") {
     return (
@@ -99,7 +101,7 @@ export const StatusPill = ({
     );
   }
   if (status === "needs_revision") {
-    const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
+    const isExpired = !revisionUnlockedAt && (isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt));
     if (isExpired) {
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-border bg-danger-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] whitespace-nowrap text-icon-danger-secondary">
@@ -588,6 +590,7 @@ export const BudgetRequestsTable = ({
                       status={request.status}
                       revisionDueAt={request.revisionDueAt}
                       revisionLockedAt={request.revisionLockedAt}
+                      revisionUnlockedAt={request.revisionUnlockedAt}
                     />
                   </div>
 

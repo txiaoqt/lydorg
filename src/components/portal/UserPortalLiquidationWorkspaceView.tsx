@@ -58,7 +58,6 @@ import { OrganizationHistoryPagination } from "@/components/portal/OrganizationH
 import {
   formatRevisionDeadline,
   getRevisionTimeRemaining,
-  isRevisionExpired,
   isSubmissionRevisionLocked,
 } from "@/lib/revision-deadline";
 import { FeatureGate } from "./FeatureGate";
@@ -902,7 +901,7 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
 
                 const isNeedsRevision = selectedReport.status === "needs_revision" || selectedReport.status === "rejected_red";
-                const isRevisionDeadlineExpired = isNeedsRevision && (isRevisionExpired(selectedReport.revisionDueAt) || isSubmissionRevisionLocked(selectedReport));
+                const isRevisionDeadlineExpired = isNeedsRevision && (isSubmissionRevisionLocked(selectedReport));
                 const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(selectedReport.revisionDueAt) : "";
                 const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(selectedReport.revisionDueAt) : null;
                 const isEditable = !isRevisionDeadlineExpired && ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);
@@ -1331,7 +1330,7 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                 const remainingDaysText = getRemainingDaysLabel(selectedReport.deadlineAt);
 
                 const isNeedsRevision = selectedReport.status === "needs_revision" || selectedReport.status === "rejected_red";
-                const isRevisionDeadlineExpired = isNeedsRevision && (isRevisionExpired(selectedReport.revisionDueAt) || isSubmissionRevisionLocked(selectedReport));
+                const isRevisionDeadlineExpired = isNeedsRevision && (isSubmissionRevisionLocked(selectedReport));
                 const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(selectedReport.revisionDueAt) : "";
                 const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(selectedReport.revisionDueAt) : null;
                 const isEditable = !isRevisionDeadlineExpired && ["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"].includes(selectedReport.status);

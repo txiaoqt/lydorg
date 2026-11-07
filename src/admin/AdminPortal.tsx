@@ -1,4 +1,5 @@
 import { OrganizationIdentityReviewPanel } from "@/admin/components/OrganizationIdentityReviewPanel";
+import { RevisionUnlockPanel } from "@/admin/components/RevisionUnlockPanel";
 import { getCurrentAdminReportPeriod, getAdminReportRange, getAdminReportPeriodError, getAdminReportPeriodLabel, adminReportMetadata, withAdminReportPeriod, fromBudgetMonitoringPeriod, type AdminReportPeriod } from "@/lib/admin-report-period";
 import { AdminReportingPeriodSelector } from "@/admin/components/AdminReportingPeriodSelector";
 import { type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -8443,6 +8444,27 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
                   </div>
 
+                  {selectedRegistrationSubmission && selectedRegistrationProfile ? (
+                    <RevisionUnlockPanel
+                      entityType="document_submission"
+                      entityId={selectedRegistrationSubmission.id}
+                      item={selectedRegistrationSubmission}
+                      onUnlocked={() => {
+                        void queryClient.invalidateQueries({ queryKey: ["admin", "registration", selectedRegistrationProfile.id] });
+                        void queryClient.invalidateQueries({ queryKey: ["admin", "registrations"] });
+                        notifyOrganizationUser({
+                          userId: selectedRegistrationProfile.userId,
+                          organizationId: selectedRegistrationProfile.id,
+                          title: "Registration Documents Unlocked",
+                          message: "PCYDO unlocked your registration documents for resubmission. You can now upload your revised files.",
+                          type: "document_review_update",
+                          relatedType: "document_submission",
+                          relatedId: selectedRegistrationSubmission.id,
+                        });
+                      }}
+                    />
+                  ) : null}
+
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
                       <div className="flex items-center gap-2">
@@ -10577,6 +10599,28 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
                   ) : null}
 
+                  <RevisionUnlockPanel
+                    entityType="budget_request"
+                    entityId={selectedBudgetRequest.id}
+                    item={selectedBudgetRequest}
+                    onUnlocked={(result) => {
+                      updateBudgetRequest(selectedBudgetRequest.id, result);
+                      void queryClient.invalidateQueries({ queryKey: ["admin", "budget-detail", selectedBudgetRequest.id] });
+                      void queryClient.invalidateQueries({ queryKey: ["admin", "review", "budgets"] });
+                      if (selectedBudgetOrganization?.userId) {
+                        notifyOrganizationUser({
+                          userId: selectedBudgetOrganization.userId,
+                          organizationId: selectedBudgetOrganization.id,
+                          title: "Budget Request Unlocked",
+                          message: `PCYDO unlocked "${selectedBudgetRequest.activityTitle}" for resubmission. You can now upload your revised proposal.`,
+                          type: "budget_revision",
+                          relatedType: "budget_request",
+                          relatedId: selectedBudgetRequest.id,
+                        });
+                      }
+                    }}
+                  />
+
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     <div className="relative flex items-center justify-between gap-2 border-b border-slate-300 pb-4">
                       <div className="min-w-0 flex-1">
@@ -11889,6 +11933,28 @@ function AdminPortalContent({ section }: { section: string }) {
                       </p>
                     </div>
                   ) : null}
+
+                  <RevisionUnlockPanel
+                    entityType="liquidation_report"
+                    entityId={selectedLiquidationReport.id}
+                    item={selectedLiquidationReport}
+                    onUnlocked={(result) => {
+                      updateLiquidationReport(selectedLiquidationReport.id, result);
+                      void queryClient.invalidateQueries({ queryKey: ["admin", "liquidation-detail", selectedLiquidationReport.id] });
+                      void queryClient.invalidateQueries({ queryKey: ["admin", "review", "liquidations"] });
+                      if (selectedLiquidationOrganization?.userId) {
+                        notifyOrganizationUser({
+                          userId: selectedLiquidationOrganization.userId,
+                          organizationId: selectedLiquidationOrganization.id,
+                          title: "Liquidation Report Unlocked",
+                          message: "PCYDO unlocked your liquidation report for resubmission. You can now upload your revised documents.",
+                          type: "liquidation_revision",
+                          relatedType: "liquidation_report",
+                          relatedId: selectedLiquidationReport.id,
+                        });
+                      }
+                    }}
+                  />
 
                   {selectedLiquidationReport.status === "pending_activity_completion" ? (
                     <div className="rounded-md border border-border-warning-subtle bg-bg-warning-subtle p-4 text-xs text-text-warning-secondary">

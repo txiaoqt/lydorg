@@ -68,7 +68,6 @@ import {
 import {
   formatRevisionDeadline,
   getRevisionTimeRemaining,
-  isRevisionExpired,
   isSubmissionRevisionLocked,
   isAwaitingResubmission,
 } from "@/lib/revision-deadline";
@@ -1702,7 +1701,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                     <PortalWorkflowStatusHelper workflow="budget" status={selectedRequest.status} />
                     {/* Admin Revision Feedback (Needs Revision Callout) */}
                     {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (() => {
-                      const isExpired = selectedRequest.status === "needs_revision" && (isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest));
+                      const isExpired = selectedRequest.status === "needs_revision" && (isSubmissionRevisionLocked(selectedRequest));
                       const deadlineText = selectedRequest.status === "needs_revision" ? formatRevisionDeadline(selectedRequest.revisionDueAt) : "";
                       const remaining = selectedRequest.status === "needs_revision" ? getRevisionTimeRemaining(selectedRequest.revisionDueAt) : null;
 
@@ -1921,7 +1920,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                           <span>Edit Draft</span>
                         </Button>
                       )}
-                      {selectedRequest.status === "needs_revision" && !(isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest)) && (
+                      {selectedRequest.status === "needs_revision" && !(isSubmissionRevisionLocked(selectedRequest)) && (
                         <>
                           <Button
                             type="button"
@@ -2035,7 +2034,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                     <PortalWorkflowStatusHelper workflow="budget" status={selectedRequest.status} />
                     {/* Admin Revision Feedback (Needs Revision Callout) */}
                     {(selectedRequest.status === "needs_revision" || Boolean(selectedRequest.adminRemarks?.trim())) && (() => {
-                      const isExpired = selectedRequest.status === "needs_revision" && (isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest));
+                      const isExpired = selectedRequest.status === "needs_revision" && (isSubmissionRevisionLocked(selectedRequest));
                       const deadlineText = selectedRequest.status === "needs_revision" ? formatRevisionDeadline(selectedRequest.revisionDueAt) : "";
                       const remaining = selectedRequest.status === "needs_revision" ? getRevisionTimeRemaining(selectedRequest.revisionDueAt) : null;
 
@@ -2256,7 +2255,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                           <span>Edit Draft</span>
                         </Button>
                       )}
-                      {selectedRequest.status === "needs_revision" && !(isRevisionExpired(selectedRequest.revisionDueAt) || isSubmissionRevisionLocked(selectedRequest)) && (
+                      {selectedRequest.status === "needs_revision" && !(isSubmissionRevisionLocked(selectedRequest)) && (
                         <>
                           <Button
                             type="button"

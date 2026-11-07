@@ -140,16 +140,18 @@ export const LiquidationStatusLabel = ({
   deadlineAt,
   revisionDueAt,
   revisionLockedAt,
+  revisionUnlockedAt,
 }: {
   status: LiquidationReport["status"];
   deadlineAt?: string | null;
   revisionDueAt?: string | null;
   revisionLockedAt?: string | null;
+  revisionUnlockedAt?: string | null;
 }) => {
   const overdueIndicatorsEnabled = useSystemSetting("workflow.overdue_indicators_enabled");
 
   if (status === "needs_revision") {
-    const isExpired = isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt);
+    const isExpired = !revisionUnlockedAt && (isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt));
     if (isExpired) {
       return (
         <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%] whitespace-nowrap border-status-danger-border bg-danger-subtle text-icon-danger-secondary">
@@ -470,6 +472,7 @@ export const LiquidationReportsTable = ({
                       deadlineAt={report.deadlineAt}
                       revisionDueAt={report.revisionDueAt}
                       revisionLockedAt={report.revisionLockedAt}
+                      revisionUnlockedAt={report.revisionUnlockedAt}
                     />
                   </div>
 

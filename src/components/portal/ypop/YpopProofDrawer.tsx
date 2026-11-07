@@ -64,7 +64,6 @@ import {
 import {
   formatRevisionDeadline,
   getRevisionTimeRemaining,
-  isRevisionExpired,
   isSubmissionRevisionLocked,
 } from "@/lib/revision-deadline";
 import { PortalDrawerDocumentSection } from "@/components/portal/PortalDrawerDocumentSection";
@@ -284,7 +283,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   const isDraft = !currentParticipation || currentParticipation.status === "draft";
   const isRevisionDeadlineExpired =
     isNeedsRevision &&
-    (isRevisionExpired(currentParticipation?.revisionDueAt) || isSubmissionRevisionLocked(currentParticipation));
+    (isSubmissionRevisionLocked(currentParticipation));
   const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(currentParticipation?.revisionDueAt) : "";
   const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(currentParticipation?.revisionDueAt) : null;
   const isEditable = !isVerified && !isRejected && !isPending && (isDraft || (isNeedsRevision && !isRevisionDeadlineExpired));
