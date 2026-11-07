@@ -4737,7 +4737,7 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
 
   const { data: submission, error: submissionError } = await supabase
     .from("document_submissions")
-    .select("id,status")
+    .select("id,status,submission_scope,renewal_id")
     .eq("id", existingRow.submission_id as string)
     .eq("organization_id", organizationProfile.id)
     .single();
@@ -4745,7 +4745,13 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
   if (submission.status === "rejected_red" || (existingRow as any).admin_status === "rejected_red") {
     throw new Error("This document cannot be removed because the organization account is permanently suspended.");
   }
-  if (!["draft", "needs_revision"].includes(submission.status as string)) {
+  // Mirrors guard_submitted_registration_document_edits: registration requirements are reviewed one by one,
+  // so a sibling under review must not lock a draft. Renewal packets keep the submission-level lock.
+  const isRegistrationSubmission = submission.submission_scope === "registration" && !submission.renewal_id;
+  const editableStatuses = isRegistrationSubmission
+    ? ["draft", "needs_revision", "under_admin_review", "submitted", "ready_for_review"]
+    : ["draft", "needs_revision"];
+  if (!editableStatuses.includes(submission.status as string)) {
     throw new Error("Documents cannot be removed while the submission is under admin review.");
   }
   if (existingRow.admin_status !== "draft") {
@@ -4775,19 +4781,14 @@ export const removeOrganizationDocumentFromSupabase = async (fileId: string) => 
 
   const nextStatus: DocumentSubmission["status"] = deriveDocumentSubmissionStatus(remainingStatuses, "draft");
 
-  const submissionUpdatePayload: Record<string, unknown> = {
-    status: nextStatus,
-    user_confirmed: remainingStatuses.length > 0,
-    overall_remarks: remainingStatuses.length ? null : "",
-    updated_at: new Date().toISOString(),
-  };
-  if (!remainingStatuses.length) {
-    submissionUpdatePayload.reviewed_at = null;
-  }
-
+  // Review fields (overall_remarks, reviewed_at) are server controlled; guard_document_parent_mutation rejects org edits to them.
   const { error: submissionUpdateError } = await supabase!
     .from("document_submissions")
-    .update(submissionUpdatePayload)
+    .update({
+      status: nextStatus,
+      user_confirmed: remainingStatuses.length > 0,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", submissionId);
 
   if (submissionUpdateError) throw new Error(submissionUpdateError.message);
