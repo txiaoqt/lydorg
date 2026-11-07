@@ -62,7 +62,7 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
       {packet.candidateLimitReached && <p role="alert" className="text-sm text-destructive">This candidate list reached its limit. Verification remains pending; request a scoped investigation before clearing this registration.</p>}
       {packet.candidates.map(candidate => <label key={candidate.id} className="flex items-start gap-3 rounded-md border border-slate-200 p-3">
         <input type="radio" name={`identity-candidate-${organizationId}`} value={candidate.id} checked={candidateId === candidate.id}
-          disabled={busy || Boolean(packet.canonicalOrganizationId)} onChange={() => { setCandidateId(candidate.id); setConfirmed(false); }} />
+          disabled={busy || clear || Boolean(packet.canonicalOrganizationId)} onChange={() => { setCandidateId(candidate.id); setConfirmed(false); }} />
         <span className="min-w-0 space-y-1 text-sm"><span className="block font-semibold">{candidate.name}</span>
           <span className="block">URN: {candidate.urn || "Not yet assigned"} · {candidate.district} · {candidate.barangay}</span>
           <span className="block">{statusLabelMap[candidate.status] || "Under review"}{candidate.verifiedAt ? ` · Verified ${new Date(candidate.verifiedAt).toLocaleDateString("en-PH")}` : ""}</span>
@@ -72,7 +72,8 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
           {candidate.separateDecision && <span className="block">Reviewed as a different organization for these identity details.</span>}
         </span>
       </label>)}
-      {!packet.canonicalOrganizationId && <div className="space-y-3 border-t border-slate-200 pt-3">
+      {/* A cleared check needs no decision; recording one could only block verification. assess() re-flags on new candidates. */}
+      {!packet.canonicalOrganizationId && !clear && <div className="space-y-3 border-t border-slate-200 pt-3">
         <Label htmlFor={`identity-decision-${organizationId}`}>Identity Decision</Label>
         <select id={`identity-decision-${organizationId}`} className="w-full rounded-md border border-slate-300 bg-admin-surface p-2 text-sm" value={decision}
           disabled={busy} onChange={event => { setDecision(event.target.value as IdentityDecision); setConfirmed(false); }}>

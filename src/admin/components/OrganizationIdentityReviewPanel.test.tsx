@@ -18,6 +18,12 @@ it('loads only the selected registration on demand and requires evidence/explici
  expect(save).toBeDisabled();fireEvent.click(screen.getByRole('checkbox'));fireEvent.click(save);
  await waitFor(()=>expect(mocks.review).toHaveBeenCalledWith('pending','original','confirmed_different','Different official registration confirmed','Official registry ref 123',3));
  expect(await screen.findByText(/Identity check cleared/)).toBeInTheDocument();
+ expect(screen.queryByRole('button',{name:'Record Identity Decision'})).not.toBeInTheDocument();
+});
+it('hides the decision form when the identity check is already cleared',async()=>{
+ mocks.fetch.mockResolvedValue({...packet,outcome:'NO_MATCH',candidates:[]});render(<OrganizationIdentityReviewPanel organizationId="pending"/>);
+ fireEvent.click(screen.getByRole('button',{name:'Check Organization Identity'}));expect(await screen.findByText(/Identity check cleared/)).toBeInTheDocument();
+ expect(screen.queryByLabelText('Identity Decision')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Record Identity Decision'})).not.toBeInTheDocument();
 });
 it('does not display a response from a prior organization or permission scope',async()=>{
  let resolve:(value:unknown)=>void=()=>{};mocks.fetch.mockReturnValue(new Promise(r=>{resolve=r;}));
