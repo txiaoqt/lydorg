@@ -36,7 +36,8 @@ describe("drawer organization report export", () => {
     expect(mocks.ypop).toHaveBeenCalledExactlyOnceWith("org-report", "2026-s1");
     const data = mocks.pdf.mock.calls[0][0];
     expect(data.organizationName).toBe("Pasig Youth Council");
-    expect(JSON.stringify(data)).toContain("Community Garden"); expect(JSON.stringify(data)).toContain("Constitution.pdf");
+    expect(JSON.stringify(data)).toContain("Community Garden");
+    expect(data.requirements).toContainEqual({ requirement: "Constitution and By-Laws", submissionDate: "7 Jan 2026", reviewStatus: "Needs Revision", approvedDate: "—" });
     expect(mocks.save).toHaveBeenCalledWith("YORP_Organization_Report_Pasig_Youth_Council_01-26-103.pdf");
     expect(mocks.resolve).not.toHaveBeenCalled(); expect(network).not.toHaveBeenCalled();
     network.mockRestore();
@@ -56,7 +57,9 @@ describe("drawer organization report export", () => {
     mount(); fireEvent.click(screen.getByRole("button", { name: "Export Report" }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalled());
     expect(mocks.ypop).not.toHaveBeenCalled();
-    expect(JSON.stringify(mocks.pdf.mock.calls[0][0])).toContain("No YPOP participation data is available");
+    const data = mocks.pdf.mock.calls[0][0];
+    expect(data.ypop).toMatchObject({ hasParticipation: false, semester: "No open period" });
+    expect(data.requirements.every((row: { reviewStatus: string }) => row.reviewStatus === "Not submitted")).toBe(true);
   });
   it("reports failed metadata loading instead of exporting an empty section", async () => {
     mocks.documents.mockRejectedValue(new Error("Unauthorized metadata request"));

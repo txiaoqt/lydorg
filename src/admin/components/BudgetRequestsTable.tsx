@@ -519,7 +519,7 @@ export const BudgetRequestsTable = ({
                 aria-label="Select all visible requests on current page"
               />
             </span>
-            <span className="w-[13%]">Reference ID</span>
+            <span className="w-[13%] min-w-[140px]">Reference ID</span>
             <span className="w-[24%]">Project &amp; Organization</span>
             <span className="w-[19%]">Requested / Approved</span>
             <span className="w-[11%]">Submitted</span>
@@ -558,8 +558,8 @@ export const BudgetRequestsTable = ({
                     />
                   </span>
 
-                  <div className="flex w-[13%] items-center">
-                    <ReferenceCodeChip code={buildPublicRecordCode("BR", request, allRequests)} className="w-[109px] rounded" />
+                  <div className="flex w-[13%] min-w-[140px] items-center">
+                    <ReferenceCodeChip code={buildPublicRecordCode("BR", request, allRequests)} className="rounded" />
                   </div>
 
                   <div className="flex w-[24%] min-w-0 flex-col gap-0.5">

@@ -1,4 +1,5 @@
 import { Monitor } from "lucide-react";
+import BrandLockup from "@/components/BrandLockup";
 import { useCurrentViewportWidth, ADMIN_DESKTOP_MIN_WIDTH } from "@/hooks/use-admin-desktop-viewport";
 
 export type AdminDesktopWarningScreenProps = {
@@ -11,12 +12,8 @@ export const AdminDesktopWarningScreen = (_props: AdminDesktopWarningScreenProps
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center bg-admin-page-bg p-4 sm:p-6 font-inter text-text-default">
       {/* Brand Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <img src="/y-trace-logo-blue.png" alt="Y-TRACE" className="h-9 w-9 object-contain" />
-        <div className="min-w-0 text-left leading-none">
-          <p className="font-inter text-base font-semibold text-text-default">Y-TRACE</p>
-          <p className="font-inter text-xs text-slate-500">Admin Portal</p>
-        </div>
+      <div className="mb-6 flex items-center">
+        <BrandLockup />
       </div>
 
       {/* Main Warning Card */}

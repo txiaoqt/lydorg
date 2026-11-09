@@ -2,7 +2,7 @@ import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowSt
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Check, ChevronRight, Circle, FileText, Loader2, Pencil, Plus, Upload, WalletCards,
+  Check, ChevronRight, Circle, Download, FileText, Loader2, Pencil, Plus, Upload, WalletCards,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "@/components/portal/StatusBadge";
@@ -18,6 +18,8 @@ import {
   uploadBudgetRequestFileToSupabase,
 } from "@/lib/lydo-connect-supabase";
 import { PwaBackButton } from "../PwaBackButton";
+import { downloadTemplate } from "../templates/PwaTemplatePages";
+import { isProjectProposalTemplate } from "@/lib/user-workflow-eligibility";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
@@ -349,6 +351,11 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
         <h2 id="budget-file-heading">Detailed budget PDF</h2>
         {existing?.revisionDueAt ? <p className="pwa-form-helper">Revision deadline: {dateLabel(existing.revisionDueAt)}</p> : null}
         {existingFile ? <p className="pwa-form-helper"><FileText /> Current: {existingFile.fileName}</p> : null}
+        {data.templates.filter(isProjectProposalTemplate).map((template) => (
+          <button key={template.id} type="button" className="pwa-text-button" onClick={() => void downloadTemplate(template).catch((error) => toast({ title: "Unable to download template", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" }))}>
+            <Download aria-hidden="true" /> Download template: {template.name}
+          </button>
+        ))}
         <label className="pwa-budget-upload"><input type="file" aria-label={existingFile ? "Replace detailed budget PDF" : "Attach detailed budget PDF"} accept=".pdf,application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><FileText aria-hidden="true" /><span><strong>{file?.name || (existingFile ? "Replace attached PDF" : "Attach budget PDF")}</strong><small>{file ? "Selected · Tap to choose another file" : "Choose a PDF from your device"}</small></span><Upload aria-hidden="true" /></label>
       </section>
       <div className="pwa-sticky-actions">

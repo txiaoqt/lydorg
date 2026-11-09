@@ -91,7 +91,7 @@ type RequiredDocumentTypeRow = {
   is_required: boolean | null;
   is_active: boolean | null;
   scope?: "registration" | "renewal" | "both" | null;
-  template_scope?: "document_submission" | "move" | "other" | null;
+  template_scope?: "document_submission" | "move" | "other" | "project_proposal" | null;
   template_category?: string[] | null;
   template_file_size?: number | null;
   updated_at?: string | null;
@@ -6302,7 +6302,7 @@ export const createTemplateRecordInSupabase = async (params: {
   name: string;
   description: string;
   templateDescription: string;
-  templateScope: "document_submission" | "other";
+  templateScope: "document_submission" | "other" | "project_proposal";
   scope?: "registration" | "renewal" | "both";
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -6342,7 +6342,7 @@ export const updateTemplateRecordInSupabase = async (params: {
   name: string;
   description: string;
   templateDescription: string;
-  templateScope: "document_submission" | "other";
+  templateScope: "document_submission" | "other" | "project_proposal";
   scope?: "registration" | "renewal" | "both";
 }) => {
   if (!supabase) throw new Error("Supabase is not configured.");

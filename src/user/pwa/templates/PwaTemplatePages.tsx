@@ -18,6 +18,8 @@ type TemplateScope = TemplateRecord["templateScope"];
 const scopeLabels: Record<TemplateScope, string> = {
   document_submission: "Required Documents",
   other: "Other Templates",
+  move: "Other Templates",
+  project_proposal: "Project Proposal Templates",
 };
 
 const getTemplateFileName = (template: TemplateRecord) => {
@@ -82,7 +84,7 @@ async function fetchTemplateBlob(template: TemplateRecord) {
   return response.blob();
 }
 
-async function downloadTemplate(template: TemplateRecord) {
+export async function downloadTemplate(template: TemplateRecord) {
   const blob = await fetchTemplateBlob(template);
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");

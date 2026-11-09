@@ -38,7 +38,7 @@ const fileFormatSwatch = (format: string) => {
   return { icon: FileText, iconBg: "bg-public-bg-secondary-100", iconColor: "text-public-text-brand-secondary", radius: "rounded-[14px]" };
 };
 
-export type TemplateWorkflowScope = "registration" | "renewal" | "both" | "downloadable";
+export type TemplateWorkflowScope = "registration" | "renewal" | "both" | "downloadable" | "project_proposal";
 
 export const WORKFLOW_SCOPE_OPTIONS: Array<{
   value: TemplateWorkflowScope;
@@ -64,6 +64,11 @@ export const WORKFLOW_SCOPE_OPTIONS: Array<{
     value: "downloadable",
     label: "Downloadable Template",
     description: "General downloadable resource for reference, not a required submission.",
+  },
+  {
+    value: "project_proposal",
+    label: "Project Proposal Template",
+    description: "Offered in the Detailed Project Proposal section when organizations create a budget request.",
   },
 ];
 

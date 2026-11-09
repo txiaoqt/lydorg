@@ -847,7 +847,17 @@ function generateAdminEmailHtml(params: {
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
                 <tr>
                   <td align="left">
-                    <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/FullNavbar.svg" height="40" alt="${safeSystemName}" style="display: block; height: 40px; width: auto; max-height: 44px; border: 0; outline: none; text-decoration: none;" />
+                    <table role="presentation" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="vertical-align: middle; padding-right: 12px;">
+                          <img src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/ytrace-mark.png" width="44" height="44" alt="" style="display: block; width: 44px; height: 44px; border: 0; outline: none; text-decoration: none;" />
+                        </td>
+                        <td style="vertical-align: middle; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                          <p style="margin: 0; font-size: 20px; line-height: 20px; font-weight: 700; letter-spacing: -0.2px; color: #0e2f66;">${safeSystemName}</p>
+                          <p style="margin: 6px 0 0; padding-left: 1px; font-size: 14px; line-height: 14px; font-weight: 400; text-transform: uppercase; color: #536579;">Pasig City</p>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>

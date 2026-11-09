@@ -348,7 +348,6 @@ export function YorpRegistryPage({ generatedBy }: { generatedBy?: string } = {})
           </div>
         }
       />
-      <p className="text-xs text-text-secondary">Filtered by accreditation start date, falling back to verification or creation date.</p>
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <StatsCard

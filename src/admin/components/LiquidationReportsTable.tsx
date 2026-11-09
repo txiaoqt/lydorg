@@ -410,7 +410,7 @@ export const LiquidationReportsTable = ({
         <div className="min-w-[840px]">
           {/* Column headers */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-            <span className="w-[15%]">Reference ID</span>
+            <span className="w-[15%] min-w-[140px]">Reference ID</span>
             <span className="w-[26%]">Organization &amp; Project</span>
             <span className="w-[16%]">Linked Request</span>
             <span className="w-[14%]">Deadline</span>
@@ -434,8 +434,8 @@ export const LiquidationReportsTable = ({
                   key={report.id}
                   className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
                 >
-                  <div className="flex w-[15%] items-center">
-                    <ReferenceCodeChip code={buildPublicRecordCode("LR", report, allReports)} className="w-[109px] rounded" />
+                  <div className="flex w-[15%] min-w-[140px] items-center">
+                    <ReferenceCodeChip code={buildPublicRecordCode("LR", report, allReports)} className="rounded" />
                   </div>
 
                   <div className="flex w-[26%] min-w-0 flex-col gap-0.5">

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import BrandLogo from "@/components/BrandLogo";
+import BrandLockup from "@/components/BrandLockup";
 import { PolicyContent } from "@/components/PolicyContent";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -505,15 +506,22 @@ const SignUp = () => {
 
   return (
     <div
-      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-0 sm:min-h-screen bg-background text-foreground flex flex-col items-center justify-start sm:justify-center px-4 pt-5 pb-6 sm:py-12 relative overflow-hidden`}
+      className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page min-h-0 sm:min-h-screen bg-background" : "min-h-screen min-h-[100dvh] bg-[#0E2F66]"} text-foreground flex flex-col items-center justify-start sm:justify-center px-4 pt-5 pb-6 sm:py-12 relative overflow-hidden`}
       data-pwa-theme={pwaFlow ? pwaTheme : undefined}
       style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
     >
-      {/* Background blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-180px] right-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute bottom-[-190px] left-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
-      </div>
+      {pwaFlow ? (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-180px] right-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
+          <div className="absolute bottom-[-190px] left-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
+        </div>
+      ) : (
+        // The PCYDO YDC building, washed in Y-TRACE blue so the card stays the focus.
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <img src="/auth/ydc-building.jpg" alt="" className="h-full w-full scale-105 object-cover blur-[2px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0E2F66]/85 via-[#16468A]/82 to-[#1A5CA8]/85" />
+        </div>
+      )}
 
       <div className="relative z-10 w-full max-w-[420px] sm:max-w-[460px] md:max-w-[480px] mx-auto space-y-4 sm:space-y-6">
         {/* Brand Logo — centered above card */}
@@ -522,7 +530,11 @@ const SignUp = () => {
             to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
             className="inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-transform hover:opacity-95 active:scale-[0.98]"
           >
-            <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+            {pwaFlow ? (
+              <BrandLogo showText={false} className="h-12 sm:h-14 w-auto" />
+            ) : (
+              <BrandLockup onDark />
+            )}
           </Link>
         </div>
 
@@ -976,12 +988,12 @@ const SignUp = () => {
         </div>
 
         {/* Below-card links */}
-        <div className="space-y-1.5 text-center text-sm text-muted-foreground pt-0.5">
+        <div className={`space-y-1.5 text-center text-sm pt-0.5 ${pwaFlow ? "text-muted-foreground" : "text-white/80"}`}>
           <p>
             Already have an account?{" "}
             <Link
               to={pwaFlow ? pwaAuthRoute("/signin") : "/signin"}
-              className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors focus-visible:outline-none focus-visible:underline"
+              className={`font-semibold hover:underline transition-colors focus-visible:outline-none focus-visible:underline ${pwaFlow ? "text-primary hover:text-primary/80" : "text-white"}`}
             >
               Sign in
             </Link>
@@ -989,7 +1001,7 @@ const SignUp = () => {
           <p>
             <Link
               to={pwaFlow ? PWA_ENTRY_ROUTE : "/"}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline"
+              className={`text-xs transition-colors inline-block pt-0.5 focus-visible:outline-none focus-visible:underline ${pwaFlow ? "text-muted-foreground hover:text-foreground" : "text-white/75 hover:text-white"}`}
             >
               ← Back to {pwaFlow ? "welcome" : "home"}
             </Link>

@@ -17,17 +17,36 @@ describe("organization dossier", () => {
   });
   it("uses the same open-period summary, breakdown, participation and approved projects as the drawer", () => {
     const data = report();
-    expect(data.sections.find(s => s.title === "7. YPOP Participation")?.rows).toContainEqual(["Qualification", "Qualified"]);
-    expect(data.sections.find(s => s.title.includes("Points Breakdown"))?.rows[0]).toEqual(["Mandatory", "1", "1", "4", "4", "4"]);
+    expect(data.ypop.hasParticipation).toBe(true);
+    if (!data.ypop.hasParticipation) return;
+    expect(data.ypop.qualificationStatus).toBe("Qualified");
+    expect(data.ypop.threshold).toBe("70%");
+    expect(data.ypop.cityLedBreakdown).toEqual([
+      { category: "Mandatory", verified: 1, pointsPerParticipation: 4, pointsEarned: 4 },
+      { category: "Invitational", verified: 0, pointsPerParticipation: 3, pointsEarned: 0 },
+      { category: "Partnership", verified: 0, pointsPerParticipation: 2, pointsEarned: 0 },
+    ]);
     const text = JSON.stringify(data);
     for (const name of ["1st Semester 2026", "Youth Summit", "10 Feb 2026", "Verified", "Community Garden", "10 Mar 2026", "Approved"]) expect(text).toContain(name);
     for (const name of ["Old Activity", "Private Other Org", "Unapproved"]) expect(text).not.toContain(name);
   });
-  it("exports document metadata with actual review status and excludes URLs and drafts", () => {
-    const text = JSON.stringify(report());
-    for (const field of ["Constitution and By-Laws", "Constitution.pdf", "80 KB", "7 Jan 2026", "Needs Revision"]) expect(text).toContain(field);
+  it("lists every official YORP requirement with its actual review status and excludes URLs and drafts", () => {
+    const data = report();
+    expect(data.requirements.map(row => row.requirement)).toEqual([
+      "Pasig City YORP Registration Form (Form A)", "NYC YORP Registration Form (Form B)", "Endorsement Letter",
+      "List of Officers and Advisers", "List of Members in Good Standing", "Constitution and By-Laws",
+    ]);
+    expect(data.requirements.at(-1)).toEqual({ requirement: "Constitution and By-Laws", submissionDate: "7 Jan 2026", reviewStatus: "Needs Revision", approvedDate: "—" });
+    expect(data.requirements[0]).toMatchObject({ reviewStatus: "Not submitted", submissionDate: "—" });
+    const text = JSON.stringify(data);
     expect(text).not.toContain("storage://");
     expect(text).not.toContain("Draft.pdf");
+  });
+  it("shows the review date as the approved date for approved requirements", () => {
+    const approved = { ...reportFiles[0], id: "form-a", documentTypeId: "form-a", documentTypeName: "Pasig City YORP Registration Form (Form A)",
+      adminStatus: "approved_green", uploadedAt: "2026-01-05", reviewedAt: "2026-01-09" } as typeof reportFiles[number];
+    const data = buildOrganizationReport(reportEntry, null, null, null, [approved], []);
+    expect(data.requirements[0]).toEqual({ requirement: "Pasig City YORP Registration Form (Form A)", submissionDate: "5 Jan 2026", reviewStatus: "Approved", approvedDate: "9 Jan 2026" });
   });
   it("uses safe unique organization filenames", () => {
     const data = buildOrganizationReport({ ...reportEntry, org: { ...reportEntry.org, organizationName: '../Youth: Ñ / Council?' } }, null, null, null, [], []);
@@ -36,9 +55,9 @@ describe("organization dossier", () => {
   it("supports an open period without participation, or no open period", () => {
     const empty = { ypopCityActivities: [], ypopEventParticipations: [], ypopOrgActivities: [] };
     const data = buildOrganizationReport(reportEntry, reportPeriod, null, buildRegistryYpopDetail(reportEntry.org, reportPeriod, null, empty, empty), [], []);
-    expect(JSON.stringify(data)).toContain("No YPOP participation data is available");
-    expect(data.sections.at(-1)?.rows).toEqual([]);
-    expect(buildOrganizationReport(reportEntry, null, null, null, [], []).sections[6].rows).toContainEqual(["Period / Semester", "No open period"]);
+    expect(data.ypop).toEqual({ hasParticipation: false, semester: "1st Semester 2026", summary: "No YPOP participation data is available for this semester." });
+    expect(data.requirements.every(row => row.reviewStatus === "Not submitted")).toBe(true);
+    expect(buildOrganizationReport(reportEntry, null, null, null, [], []).ypop).toMatchObject({ hasParticipation: false, semester: "No open period" });
   });
   it("generates a valid multipage official PDF for empty data without document/network access", async () => {
     const network = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("No network"));

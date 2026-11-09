@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify your Y-TRACE account</title>
+
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-wrapper { padding: 16px 8px !important; }
+      .email-container { width: 100% !important; border-radius: 12px !important; }
+      .logo-section { padding: 24px 24px 12px !important; }
+      .logo-mark { width: 40px !important; height: 40px !important; }
+      .logo-title { font-size: 18px !important; line-height: 18px !important; }
+      .logo-subtitle { font-size: 13px !important; line-height: 13px !important; }
+      .content { padding: 16px 24px 30px !important; }
+      .heading { font-size: 24px !important; line-height: 31px !important; }
+      .description { font-size: 14px !important; line-height: 21px !important; }
+      .primary-button a { font-size: 14px !important; padding: 12px 20px !important; }
+      .info-box, .security-box { padding: 14px 16px !important; }
+      .box-title { font-size: 13px !important; line-height: 18px !important; }
+      .box-text { font-size: 12px !important; line-height: 18px !important; }
+      .small-text { font-size: 11px !important; line-height: 17px !important; }
+      .footer { padding: 18px 18px !important; }
+      .footer-title { font-size: 12px !important; line-height: 17px !important; }
+      .footer-text { font-size: 10px !important; line-height: 15px !important; }
+    }
+  </style>
+
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#172033;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
+    class="email-wrapper" style="width:100%;background-color:#f4f7fb;padding:28px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
+        class="email-container" style="width:100%;max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+        <tr>
+          <td class="logo-section" style="padding:28px 32px 14px;">
+            <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+              <tr>
+                <td style="vertical-align:middle;padding-right:12px;">
+                  <img class="logo-mark"
+                    src="https://mqqaykksadotbrghbexz.supabase.co/storage/v1/object/public/brand-logo/ytrace-mark.png"
+                    alt="" width="44" height="44"
+                    style="display:block;width:44px;height:44px;border:0;outline:none;text-decoration:none;">
+                </td>
+                <td style="vertical-align:middle;font-family:Inter,Arial,Helvetica,sans-serif;">
+                  <p class="logo-title" style="margin:0;font-size:20px;line-height:20px;font-weight:700;letter-spacing:-0.2px;color:#0e2f66;">Y-TRACE</p>
+                  <p class="logo-subtitle" style="margin:6px 0 0;padding-left:1px;font-size:14px;line-height:14px;font-weight:400;text-transform:uppercase;color:#536579;">Pasig City</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr><td class="content" style="padding:14px 32px 34px;">
+      <h1 class="heading" style="margin:0 0 8px;text-align:left;font-size:24px;line-height:31px;font-weight:700;color:#111827;">Verify Your Email Address</h1>
+      <p class="description" style="margin:0;max-width:480px;text-align:left;font-size:14px;line-height:21px;color:#475569;">Use the verification code below to confirm your email address and complete your Y-TRACE organization account setup.</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:24px 0 8px;">
+        <tr><td align="center">
+          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <tr><td align="center" style="background:#f1f5f9;border:1px solid #d9e2ec;border-radius:7px;padding:11px 22px;font-size:24px;line-height:30px;font-weight:700;letter-spacing:6px;color:#173f7a;white-space:nowrap;">
+              {{ .Token }}
+            </td></tr>
+          </table>
+          <p class="small-text" style="margin:8px 0 0;font-size:11px;line-height:17px;color:#94a3b8;text-align:center;">
+            This code expires in 5 minutes. For your security, do not share this code with anyone.
+          </p>
+        </td></tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:18px;">
+        <tr><td class="security-box" style="background:#eef6ff;border:1px solid #c9e0fb;border-radius:8px;padding:14px 16px;">
+          <p class="box-title" style="margin:0 0 4px;font-size:13px;line-height:18px;font-weight:700;color:#173f7a;">Didn't request this code?</p>
+          <p class="box-text" style="margin:0;font-size:12px;line-height:18px;color:#475569;">If you did not request this verification code, you can safely ignore this email. No action is required.</p>
+        </td></tr>
+      </table>
+</td></tr>
+        <tr>
+          <td align="center" class="footer" style="background:#174684;padding:20px 24px 17px;">
+            <p class="footer-title" style="margin:0 0 8px;font-size:13px;line-height:18px;font-weight:700;color:#ffffff;">
+              Pasig City Youth Development Office
+            </p>
+            <p class="footer-text" style="margin:0 0 5px;font-size:10px;line-height:15px;color:#dbeafe;">
+              3/F, Temporary Pasig City Hall, Eulogio Amang Rodriguez Ave., Brgy. Rosario, Pasig City
+            </p>
+            <p class="footer-text" style="margin:0 0 5px;font-size:10px;line-height:15px;color:#dbeafe;">
+              <a href="mailto:lydo@pasigcity.gov.ph" style="color:#ffffff !important;text-decoration:none;" color="#ffffff">lydo@pasigcity.gov.ph</a>
+              · <a href="https://ytrace.app" style="color:#ffffff !important;text-decoration:none;" color="#ffffff">ytrace.app</a>
+              · <a href="https://ytrace.app/privacy" style="color:#ffffff !important;text-decoration:none;" color="#ffffff">Privacy Policy</a>
+              · <a href="https://ytrace.app/terms" style="color:#ffffff !important;text-decoration:none;" color="#ffffff">Terms of Service</a>
+              · <a href="https://www.facebook.com/profile.php?id=100064071040238" style="color:#ffffff !important;text-decoration:none;" color="#ffffff">Facebook</a>
+            </p>
+            <p class="footer-text" style="margin:0;font-size:10px;line-height:15px;color:#bfdbfe;">
+              © 2026 Y-TRACE - Pasig City Youth Development Office. All rights reserved.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

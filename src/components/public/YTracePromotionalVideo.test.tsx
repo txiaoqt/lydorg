@@ -43,7 +43,7 @@ describe("Y-TRACE promotional video", () => {
     expect(preview.controls).toBe(false);
     preview.currentTime = 17;
 
-    fireEvent.click(screen.getByRole("button", { name: "Watch Y-TRACE overview" }));
+    fireEvent.click(screen.getByRole("button", { name: "Watch Y-TRACE Overview" }));
     const expanded = screen.getByLabelText("Y-TRACE promotional video") as HTMLVideoElement;
     expect(expanded).not.toBe(preview);
     expect(expanded.currentTime).toBe(0);
@@ -60,7 +60,7 @@ describe("Y-TRACE promotional video", () => {
     expect(preview.currentTime).toBe(17);
     expect(played.at(-1)).toBe(preview);
 
-    fireEvent.click(screen.getByRole("button", { name: "Watch Y-TRACE overview" }));
+    fireEvent.click(screen.getByRole("button", { name: "Watch Y-TRACE Overview" }));
     const reopened = screen.getByLabelText("Y-TRACE promotional video") as HTMLVideoElement;
     expect(reopened).not.toBe(expanded);
     expect(reopened.currentTime).toBe(0);
@@ -90,7 +90,7 @@ describe("Y-TRACE promotional video", () => {
     render(<YTracePromotionalVideo />);
     const preview = showPreview();
     preview.currentTime = 26;
-    fireEvent.click(screen.getByRole("button", { name: "Watch Y-TRACE overview" }));
+    fireEvent.click(screen.getByRole("button", { name: "Watch Y-TRACE Overview" }));
     const expanded = screen.getByLabelText("Y-TRACE promotional video") as HTMLVideoElement;
     fireEvent.error(expanded);
     expect(screen.getByRole("alert")).toHaveTextContent("We couldn’t load the video");
@@ -105,7 +105,7 @@ describe("Y-TRACE promotional video", () => {
     render(<YTracePromotionalVideo />);
     const preview = showPreview();
     preview.currentTime = 21;
-    const opener = screen.getByRole("button", { name: "Expand Y-TRACE overview" });
+    const opener = screen.getByRole("button", { name: "Expand Y-TRACE Overview" });
     fireEvent.click(opener);
     const expanded = screen.getByLabelText("Y-TRACE promotional video") as HTMLVideoElement;
     expect(expanded.currentTime).toBe(0);

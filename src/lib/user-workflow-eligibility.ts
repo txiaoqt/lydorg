@@ -43,6 +43,12 @@ export function isDocumentSubmissionRequirementTemplate(
   return !scope || scope === workflowScope || scope === "both";
 }
 
+/** Admin-uploaded files offered in the budget request's Detailed Project Proposal section. */
+export function isProjectProposalTemplate(template: TemplateRecord): boolean {
+  return (template.templateActive ?? true) && template.isActive !== false &&
+    template.templateScope === "project_proposal" && Boolean(template.templateFileUrl);
+}
+
 export function isRegistrationRequirementTemplate(template: TemplateRecord): boolean {
   return isDocumentSubmissionRequirementTemplate(template, "registration");
 }

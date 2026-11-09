@@ -69,7 +69,7 @@ export const UnverifiedAdminAccessScreen = ({
     <div className="min-h-screen bg-slate-50 dark:bg-admin-page-bg flex flex-col justify-between p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="w-full max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
-        <BrandLogo variant="light" size="sm" />
+        <BrandLogo />
         <span className="font-cascadia text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded">
           Admin Portal Gate
         </span>

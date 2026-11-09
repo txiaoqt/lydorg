@@ -271,7 +271,7 @@ export const YpopSubmissionsTable = ({
                   className="mr-1 h-4 w-4 shrink-0 cursor-pointer rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand" />
               )}
               <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">{row.organizationName}</p>
-              <ReferenceCodeChip code={row.referenceId || "—"} className="w-[120px] rounded" />
+              <ReferenceCodeChip code={row.referenceId || "—"} className="rounded" />
             </div>
 
             <div className="flex shrink-0 items-center gap-4">

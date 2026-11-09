@@ -57,7 +57,7 @@ export const StatusPill = ({ status }: { status: InquiryRecord["status"] }) => {
 export const CategoryChip = ({ category, className }: { category: string; className?: string }) => (
   <span
     className={cn(
-      "inline-flex w-fit items-center rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-1.5 py-1 font-inter text-[10px] font-semibold leading-[140%] text-text-tertiary-800",
+      "inline-flex w-fit items-center rounded border border-border-tertiary-200 bg-public-bg-tertiary-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-text-tertiary-800",
       className,
     )}
   >
@@ -77,11 +77,11 @@ export const ReferenceCodeChip = ({ code, className }: { code: string; className
       type="button"
       onClick={handleCopy}
       className={cn(
-        "flex h-[22px] w-[115px] shrink-0 items-center gap-1.5 rounded-full border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference",
+        "flex h-[22px] w-fit shrink-0 items-center gap-1.5 rounded-full border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference",
         className,
       )}
     >
-      <span className="min-w-0 flex-1 truncate text-left">{code}</span>
+      <span className="whitespace-nowrap text-left">{code}</span>
       <Copy className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
     </button>
   );
@@ -211,7 +211,7 @@ export const InquiriesTable = ({
 
       {/* Column headers */}
       <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-        <span className="w-[12%]">Reference ID</span>
+        <span className="w-[12%] min-w-[140px]">Reference ID</span>
         <span className="w-[15%]">Organization</span>
         <span className="min-w-0 flex-1">Subject &amp; Preview</span>
         <span className="w-[15%]">Received</span>
@@ -238,7 +238,7 @@ export const InquiriesTable = ({
               onClick={() => onSelectInquiry(inquiry)}
               className="group flex cursor-pointer items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
             >
-              <div className="flex w-[12%] items-center">
+              <div className="flex w-[12%] min-w-[140px] items-center">
                 <ReferenceCodeChip code={code} />
               </div>
 

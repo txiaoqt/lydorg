@@ -35,7 +35,7 @@ const BudgetStatChip = ({
     <p className={`break-words font-inter text-[11px] font-semibold uppercase leading-tight tracking-wider ${titleClassName ?? "text-muted-foreground"}`}>
       {title}
     </p>
-    <p className={`font-cascadia text-base font-bold leading-[120%] tracking-tight ${valueClassName ?? "text-foreground"}`}>
+    <p className={`font-inter text-base font-bold leading-[120%] tracking-tight tabular-nums ${valueClassName ?? "text-foreground"}`}>
       {formatCurrency(amount)}
     </p>
   </div>
@@ -78,7 +78,7 @@ export const BudgetMonitoringSummaryCard = ({
           <p className="font-inter text-[13px] font-semibold leading-none text-foreground">
             {BUDGET_MONITORING_LABELS.allocation} &middot; {fiscalYearLabel}
           </p>
-          <p className="font-cascadia text-[13px] font-bold leading-none text-foreground/90">
+          <p className="font-inter text-[13px] font-bold leading-none tabular-nums text-foreground/90">
             {formatCurrency(annualAllocation)}
           </p>
         </div>
@@ -93,6 +93,7 @@ export const BudgetMonitoringSummaryCard = ({
             remainingHeadroom={metrics.remainingHeadroom}
             totalAllocation={annualAllocation}
             formatAmount={formatCurrency}
+            amountClassName="font-inter"
           />
         </div>
       </div>

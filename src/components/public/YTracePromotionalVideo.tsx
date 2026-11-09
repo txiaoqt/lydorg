@@ -91,7 +91,7 @@ export default function YTracePromotionalVideo() {
       <div ref={containerRef} className="w-full">
         <button
           type="button"
-          aria-label="Watch Y-TRACE overview"
+          aria-label="Watch Y-TRACE Overview"
           aria-haspopup="dialog"
           aria-expanded={isExpanded}
           aria-controls={expandedDialogId}
@@ -134,7 +134,7 @@ export default function YTracePromotionalVideo() {
                 Getting started
               </span>
               <span className="truncate font-inter text-sm font-semibold leading-snug text-white sm:text-base">
-                Y-TRACE overview
+                Y-TRACE Overview
               </span>
             </span>
             <span
@@ -149,7 +149,7 @@ export default function YTracePromotionalVideo() {
         <div className="mt-2 flex items-center justify-between gap-3 font-inter">
           <button
             type="button"
-            aria-label="Expand Y-TRACE overview"
+            aria-label="Expand Y-TRACE Overview"
             aria-haspopup="dialog"
             aria-expanded={isExpanded}
             aria-controls={expandedDialogId}
@@ -187,7 +187,7 @@ export default function YTracePromotionalVideo() {
         className="gap-0 overflow-hidden rounded-xl border-0 bg-slate-950 p-0 text-white shadow-xl motion-reduce:animate-none sm:max-h-[90dvh] sm:max-w-6xl sm:rounded-xl sm:p-0"
       >
         <div className="flex items-center justify-between gap-4 px-4 py-2 sm:px-5">
-          <DialogTitle className="font-inter text-base font-semibold text-white">Y-TRACE overview</DialogTitle>
+          <DialogTitle className="font-inter text-base font-semibold text-white">Y-TRACE Overview</DialogTitle>
           <DialogDescription className="sr-only">Discover the Y-TRACE portal and what your organization can do.</DialogDescription>
           <DialogClose asChild>
             <button

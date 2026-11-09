@@ -473,7 +473,7 @@ export const RegistrationsTable = ({
                   <div className="flex w-[14%] flex-col justify-center gap-1">
                     <ReferenceCodeChip code={org.referenceId || "—"} />
                     {org.urn ? (
-                      <span className="font-cascadia text-[11px] font-semibold text-positive-secondary">
+                      <span className="pl-[9px] font-cascadia text-[11px] font-semibold text-positive-secondary">
                         URN: {org.urn}
                       </span>
                     ) : null}

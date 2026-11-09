@@ -138,6 +138,7 @@ import {
 import { useRenewalClock } from "@/hooks/use-renewal-clock";
 import {
   isRegistrationRequirementTemplate,
+  isProjectProposalTemplate,
   resolveBudgetWorkflowEligibility,
   resolveLiquidationWorkflowEligibility,
   resolveRegistrationPrerequisites,
@@ -1331,6 +1332,7 @@ export default function UserPortal({ section }: { section: string }) {
         .sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0)),
     [state.templates],
   );
+  const proposalTemplates = useMemo(() => state.templates.filter(isProjectProposalTemplate), [state.templates]);
   const otherTemplates = useMemo(
     () =>
       [...state.templates]
@@ -4353,6 +4355,8 @@ export default function UserPortal({ section }: { section: string }) {
             organizationId={currentProfile?.id ?? ""}
             organizationDashboardSummary={state.organizationDashboardSummary}
             budgetWorkflowEligibility={budgetWorkflowEligibility}
+            proposalTemplates={proposalTemplates}
+            onDownloadTemplate={(template) => void handleDownloadTemplate(template)}
             budgetRequests={budgetRequests}
             budgetFilesByRequestId={budgetRequestFilesByBudgetId}
             budgetNotesByRequestId={{}}

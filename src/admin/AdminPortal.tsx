@@ -2933,6 +2933,17 @@ function AdminPortalContent({ section }: { section: string }) {
         const totalApproved = budgetMonitoringExportRows.reduce((sum, row) => sum + row.approvedAmount, 0);
         const totalReleased = budgetMonitoringExportRows.reduce((sum, row) => sum + row.releasedAmount, 0);
         const totalRemaining = budgetMonitoringExportRows.reduce((sum, row) => sum + row.remainingAmount, 0);
+        const budgetMonitoringPdfFilters = [
+          `District: ${reportFilterValue(budgetMonitoringFilters.district)}`,
+          `Barangay: ${reportFilterValue(budgetMonitoringFilters.barangay)}`,
+          `Classification: ${reportFilterValue(budgetMonitoringFilters.majorClassification)}`,
+          ...(budgetMonitoringFilters.purposeCategory !== "all" ? [`Purpose: ${reportFilterValue(budgetMonitoringFilters.purposeCategory)}`] : []),
+          ...(budgetMonitoringFilters.budgetStatus !== "all" ? [`Budget Status: ${reportFilterValue(budgetMonitoringFilters.budgetStatus)}`] : []),
+          ...(budgetMonitoringFilters.releaseStatus !== "all" ? [`Release: ${reportFilterValue(budgetMonitoringFilters.releaseStatus)}`] : []),
+          ...(budgetMonitoringFilters.liquidationStatus !== "all" ? [`Liquidation: ${reportFilterValue(budgetMonitoringFilters.liquidationStatus)}`] : []),
+          `Risk Level: ${reportFilterValue(budgetMonitoringRiskFilter)}`,
+          ...(budgetMonitoringSearch.trim() ? [`Search: ${budgetMonitoringSearch.trim()}`] : []),
+        ];
 
         await exportReport(
           format,
@@ -2942,17 +2953,7 @@ function AdminPortalContent({ section }: { section: string }) {
             pdfHeading: buildAdminReportHeading({
               program: "office", title: "Budget Monitoring Report",
               period: fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod), generatedBy: user?.displayName || "Administrator",
-              filters: [
-                `District: ${reportFilterValue(budgetMonitoringFilters.district)}`,
-                `Barangay: ${reportFilterValue(budgetMonitoringFilters.barangay)}`,
-                `Classification: ${reportFilterValue(budgetMonitoringFilters.majorClassification)}`,
-                ...(budgetMonitoringFilters.purposeCategory !== "all" ? [`Purpose: ${reportFilterValue(budgetMonitoringFilters.purposeCategory)}`] : []),
-                ...(budgetMonitoringFilters.budgetStatus !== "all" ? [`Budget Status: ${reportFilterValue(budgetMonitoringFilters.budgetStatus)}`] : []),
-                ...(budgetMonitoringFilters.releaseStatus !== "all" ? [`Release: ${reportFilterValue(budgetMonitoringFilters.releaseStatus)}`] : []),
-                ...(budgetMonitoringFilters.liquidationStatus !== "all" ? [`Liquidation: ${reportFilterValue(budgetMonitoringFilters.liquidationStatus)}`] : []),
-                `Risk Level: ${reportFilterValue(budgetMonitoringRiskFilter)}`,
-                ...(budgetMonitoringSearch.trim() ? [`Search: ${budgetMonitoringSearch.trim()}`] : []),
-              ],
+              filters: budgetMonitoringPdfFilters,
               sortedBy: "Deadline (Soonest first)",
               summaryMetrics: [
                 { label: "Total Monitored Records", value: String(budgetMonitoringExportRows.length) },
@@ -2977,6 +2978,28 @@ function AdminPortalContent({ section }: { section: string }) {
                   ? undefined
                   : buildBudgetMonitoringTotalsRow(budgetMonitoringExportRows),
             xlsxTotalsRow: format === "xlsx" ? buildBudgetMonitoringXlsxTotalsRow(budgetMonitoringExportRows) : undefined,
+            pdfRenderer: async (renderPageConfig) => {
+              const period = fromBudgetMonitoringPeriod(budgetMonitoringFilters.fiscalPeriod);
+              const { generateBudgetMonitoringReportPdf } = await import("@/lib/budget-monitoring-report-pdf");
+              const allocation = monitoringAllYears ? combinedFYAllocation : selectedFYAllocation;
+              return generateBudgetMonitoringReportPdf({
+                heading: buildAdminReportHeading({
+                  program: "office", title: "Budget Monitoring Report", period, generatedBy: user?.displayName || "Administrator",
+                  filters: budgetMonitoringPdfFilters, sortedBy: "Deadline (Soonest first)",
+                }),
+                allocationLabel: monitoringAllYears ? "All Years" : `FY ${selectedFiscalYear}`,
+                allocation: allocation?.totalAmount ?? null,
+                allocationComparisonAvailable: budgetMonitoringFilters.fiscalPeriod.mode === "fiscal_year" || (budgetMonitoringFilters.fiscalPeriod.mode === "all" && monitoringAllocationCoverageComplete),
+                approved: budgetMonitoringApprovedTotal,
+                released: budgetMonitoringReleasedTotal,
+                liquidated: budgetMonitoringLiquidatedTotal,
+                purposeCategories: budgetMonitoringPurposeCategories,
+                organizations: budgetMonitoringOrganizationFundingRows,
+                records: budgetMonitoringExportRows,
+                recordsConfig: budgetMonitoringExportConfig,
+                recordsTotalsRow: buildBudgetMonitoringPdfTotalsRow(budgetMonitoringExportRows),
+              }, renderPageConfig);
+            },
           },
           pageConfig,
         );
@@ -6602,6 +6625,9 @@ function AdminPortalContent({ section }: { section: string }) {
     if (template.templateScope === "other") {
       setTemplateWorkflowScopeDraft("downloadable");
       setTemplateScopeDraft("other");
+    } else if (template.templateScope === "project_proposal") {
+      setTemplateWorkflowScopeDraft("project_proposal");
+      setTemplateScopeDraft("other");
     } else if (template.scope === "registration") {
       setTemplateWorkflowScopeDraft("registration");
       setTemplateScopeDraft("document_submission");
@@ -6673,8 +6699,10 @@ function AdminPortalContent({ section }: { section: string }) {
     let createdTemplateId: string | null = null;
     let createdTemplateDatabaseId: string | null = null;
     try {
-      const templateScope: "document_submission" | "other" =
-        templateWorkflowScopeDraft === "downloadable" ? "other" : "document_submission";
+      const templateScope: "document_submission" | "other" | "project_proposal" =
+        templateWorkflowScopeDraft === "downloadable" ? "other"
+          : templateWorkflowScopeDraft === "project_proposal" ? "project_proposal"
+            : "document_submission";
       const scope: "registration" | "renewal" | "both" =
         templateWorkflowScopeDraft === "registration"
           ? "registration"
@@ -7035,8 +7063,10 @@ function AdminPortalContent({ section }: { section: string }) {
 
     setSavingTemplate(true);
     try {
-      const templateScope: "document_submission" | "other" =
-        templateWorkflowScopeDraft === "downloadable" ? "other" : "document_submission";
+      const templateScope: "document_submission" | "other" | "project_proposal" =
+        templateWorkflowScopeDraft === "downloadable" ? "other"
+          : templateWorkflowScopeDraft === "project_proposal" ? "project_proposal"
+            : "document_submission";
       const scope: "registration" | "renewal" | "both" =
         templateWorkflowScopeDraft === "registration"
           ? "registration"
@@ -10174,7 +10204,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         <p className="truncate font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
                           {selectedBudgetOrganization?.organizationName ?? "Unknown organization"}
                         </p>
-                        <ReferenceCodeChip code={selectedBudgetOrganization?.referenceId || "—"} className="w-[109px] rounded" />
+                        <ReferenceCodeChip code={selectedBudgetOrganization?.referenceId || "—"} className="rounded" />
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between border-b border-slate-300 py-2">
@@ -14005,7 +14035,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
                     {entryOrg?.organizationName ?? "Unknown organization"}
                   </h1>
-                  <ReferenceCodeChip code={entryOrg?.referenceId || "—"} className="w-[120px] rounded" />
+                  <ReferenceCodeChip code={entryOrg?.referenceId || "—"} className="rounded" />
                   {entryOrg?.majorClassification ? <CategoryChip category={entryOrg.majorClassification} /> : null}
                 </div>
                 <div className="relative shrink-0">

@@ -12,6 +12,7 @@ type BudgetExecutionPipelineProps = {
   totalAllocation: number | null;
   formatAmount: (amount: number | null) => string;
   className?: string;
+  amountClassName?: string;
 };
 
 const states = [
@@ -28,6 +29,7 @@ export function BudgetExecutionPipeline({
   totalAllocation,
   formatAmount,
   className,
+  amountClassName = "font-cascadia",
 }: BudgetExecutionPipelineProps) {
   const amounts = { releasedAndLiquidated, pendingDisbursement, remainingHeadroom };
   const widths = getBudgetExecutionSegmentWidths({
@@ -49,7 +51,7 @@ export function BudgetExecutionPipeline({
                 <p className="font-inter text-xs font-medium leading-snug text-slate-700">
                   {BUDGET_MONITORING_LABELS[state]}
                 </p>
-                <p className={cn("break-words font-cascadia text-sm font-bold tabular-nums", remainingHeadroom !== null && state === "remainingHeadroom" && remainingHeadroom < 0 ? "text-rose-700" : colors.value)}>
+                <p className={cn("break-words text-sm font-bold tabular-nums", amountClassName, remainingHeadroom !== null && state === "remainingHeadroom" && remainingHeadroom < 0 ? "text-rose-700" : colors.value)}>
                   {formattedAmount(amounts[state])}
                 </p>
               </div>

@@ -391,7 +391,7 @@ export function PasigBudgetMap({
       </header>
 
       <div className="pasig-budget-map__summary" aria-live="polite">
-        <div><span>Approved budget</span><strong>{loadingData ? "—" : formatPesoAmount(totals.approved)}</strong></div>
+        <div><span>Approved Budget</span><strong>{loadingData ? "—" : formatPesoAmount(totals.approved)}</strong></div>
         <div><span>Released</span><strong>{loadingData ? "—" : formatPesoAmount(totals.released)}</strong></div>
         <div><span>Liquidated</span><strong>{loadingData ? "—" : formatPesoAmount(totals.liquidated)}</strong></div>
         <div><span>Organizations</span><strong>{loadingData ? "—" : totalOrganizations}</strong></div>

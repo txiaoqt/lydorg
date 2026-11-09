@@ -382,7 +382,7 @@ export type RequiredDocumentType = {
   isRequired: boolean;
   isActive: boolean;
   scope?: "registration" | "renewal" | "both";
-  templateScope: "document_submission" | "move" | "other";
+  templateScope: "document_submission" | "move" | "other" | "project_proposal";
   templateCategory?: string[];
   templateCategories?: string[];
 };
@@ -391,6 +391,7 @@ export const templateScopeLabelMap: Record<RequiredDocumentType["templateScope"]
   document_submission: "Document Submissions",
   move: "Other Templates",
   other: "Other Templates",
+  project_proposal: "Project Proposal Templates",
 };
 
 export const createTemplateLocalId = (name: string) =>

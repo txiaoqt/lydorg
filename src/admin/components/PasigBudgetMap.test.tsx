@@ -67,7 +67,7 @@ describe("PasigBudgetMap", () => {
     const cityMapLink = screen.getByRole("link", { name: "View Pasig City boundaries on Google Maps (opens in a new tab)" });
     expect(cityMapLink).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=Pasig%20City%20boundaries%2C%20Philippines");
     expect(cityMapLink).toHaveAttribute("target", "_blank");
-    expect(screen.getByText("Approved budget")).toBeInTheDocument();
+    expect(screen.getByText("Approved Budget")).toBeInTheDocument();
     expect(screen.getAllByText("Liquidated").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Released").length).toBeGreaterThan(0);
     expect(screen.queryByText("Overdue")).not.toBeInTheDocument();

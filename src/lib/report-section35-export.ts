@@ -1,23 +1,18 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import type { jsPDF } from "jspdf";
 import type { YorpQuarterlyReport } from "@/lib/lydo-connect-data";
 import {
-  applyOfficialTemplateBackground,
   downloadBlob,
   formatReportGeneratedAt,
   getExcelColumnLetter,
-  buildPdfHeaderLayout,
-  ensurePdfFonts,
-  PDF_COLORS,
-  renderPdfPageDecoration,
   resolveExcelJsWorkbook,
   type ReportGenerationContext,
 } from "@/lib/report-export";
 import { buildAdminReportHeading } from "./admin-report-heading";
 import {
-  PCYDO_HEADER_ASPECT_RATIO,
-  PCYDO_FOOTER_ASPECT_RATIO,
-} from "@/lib/report-letterhead-assets";
+  bold, boldStyle, centerOfYouthParticipationRank, createOfficialReport, describeReportingPeriod, drawBullets, drawNote,
+  drawNothingFollows, formatCenterOfYouthParticipation,
+  drawOfficialHeading, drawOfficialTable, drawReportingMethodology, drawSectionTitle, drawSignatories, groupRow, newPage,
+} from "./official-report-pdf";
 
 const DEFAULT_HEADER_TITLE = "PASIG CITY YOUTH DEVELOPMENT OFFICE";
 const SUMMARY_REPORT_TITLE = "YORP QUARTERLY SUMMARY REPORT";
@@ -48,15 +43,8 @@ const getDisaggregatedFilename = (year: number, quarter: number, format: "pdf" |
 // 1. PDF EXPORT GENERATORS
 // ==============================================================================
 
-const createBaseReportPdf = () => {
-  const doc = new jsPDF({
-    orientation: "portrait",
-    unit: "pt",
-    format: "a4",
-  });
-  applyOfficialTemplateBackground(doc);
-  return doc;
-};
+const quarterPeriod = (report: YorpQuarterlyReport) =>
+  ({ mode: "quarter" as const, year: report.year, quarter: report.quarter as 1 | 2 | 3 | 4 });
 
 /**
  * Generates the official YORP Quarterly Summary Report PDF.
@@ -65,530 +53,107 @@ export const generateSection35QuarterlySummaryPdf = async (
   report: YorpQuarterlyReport,
   context: ReportGenerationContext = {},
 ): Promise<jsPDF> => {
-  const doc = createBaseReportPdf();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const marginLeft = 42.64; // ~15mm (595.28 - 2*42.64 = 510.00pt content width)
-  const marginRight = 42.64;
-  const contentWidth = pageWidth - marginLeft - marginRight;
-
-  const headerHeight = pageWidth / PCYDO_HEADER_ASPECT_RATIO;
-  const footerHeight = pageWidth / PCYDO_FOOTER_ASPECT_RATIO;
-
-  await ensurePdfFonts(doc);
-  (doc as jsPDF & { __yTraceUseUnicodeFont?: boolean; __yTraceSegoeFontLoaded?: boolean }).__yTraceUseUnicodeFont =
-    Boolean((doc as jsPDF & { __yTraceSegoeFontLoaded?: boolean }).__yTraceSegoeFontLoaded);
-  const layout = await buildPdfHeaderLayout(doc, {
-    config: { title: SUMMARY_REPORT_TITLE, filenamePrefix: "yorp-summary", columns: [],
-      footerText: `Pasig City Youth Development Office - YORP Quarterly Summary Report (Q${report.quarter} ${report.year})` },
-    rows: [],
-    pdfHeading: buildAdminReportHeading({
-      program: "yorp", title: "Quarterly Summary Report", period: { mode: "quarter", year: report.year, quarter: report.quarter as 1 | 2 | 3 | 4 },
-      ...context, contextLines: [`Quarter-End Point-in-Time Date: ${report.quarter_end_date}`, "Timezone: Asia/Manila (PST, UTC+08:00)"],
+  const r = await createOfficialReport();
+  drawOfficialHeading(r, {
+    heading: buildAdminReportHeading({
+      program: "yorp", title: "Quarterly Summary Report", period: quarterPeriod(report), ...context,
+      contextLines: [`Quarter-End Point-in-Time Date: ${report.quarter_end_date}`],
     }),
-  }, marginLeft, marginRight);
-  layout.continuationTop = headerHeight + 14;
+  });
 
-  // Statutory Core Metrics Table
-  const coreMetricsRows = [
-    [
-      "Metric A",
-      "Total Registered and Verified Youth Organizations at Quarter End",
-      "Point-in-time quarter-end population (authoritative accreditation terms)",
-      String(report.metrics.registered_verified_at_quarter_end),
-    ],
-    [
-      "Metric B",
-      "Total Registration Applications Received in Quarter",
-      "Initial registration applications formally submitted in quarter interval",
-      String(report.metrics.applications_received),
-    ],
-    [
-      "Metric C",
-      "Total Registration Applications Approved in Quarter",
-      "Initial registration accreditation approvals (Term 1) within quarter",
-      String(report.metrics.applications_approved),
-    ],
-  ];
-
-  autoTable(doc, {
-    startY: layout.startY,
-    margin: {
-      top: layout.continuationTop,
-      right: marginRight,
-      bottom: 85,
-      left: marginLeft,
-    },
-    head: [["Code", "Statutory Metric Description", "Methodology / Baseline", "Count"]],
-    body: coreMetricsRows,
-    theme: "grid",
-    showHead: "everyPage",
-    styles: {
-      fontSize: 8,
-      cellPadding: { top: 5, right: 6, bottom: 5, left: 6 },
-      lineColor: [...PDF_COLORS.border],
-      lineWidth: 0.5,
-      textColor: [...PDF_COLORS.text],
-      valign: "middle",
-    },
-    headStyles: {
-      fillColor: [...PDF_COLORS.darkBlue],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      halign: "left",
-    },
-    alternateRowStyles: {
-      fillColor: [...PDF_COLORS.zebra],
-    },
+  drawOfficialTable(r, {
+    head: ["Code", "Indicator", "Count"],
+    headStyle: "navy",
     columnStyles: {
-      0: { cellWidth: 55, halign: "center", fontStyle: "bold" },
-      1: { cellWidth: 200, halign: "left" },
-      2: { cellWidth: 195, halign: "left", textColor: [...PDF_COLORS.muted] },
-      3: { cellWidth: 60, halign: "right", fontStyle: "bold" },
+      0: { cellWidth: 60, halign: "center", ...boldStyle(r) },
+      1: { cellWidth: r.width - 120 },
+      2: { cellWidth: 60, halign: "center", ...boldStyle(r) },
     },
+    body: [
+      ["Metric A", "Total Registered and Verified Youth and Youth-Serving Organizations as of Quarter End", String(report.metrics.registered_verified_at_quarter_end)],
+      ["Metric B", "New Registration Applications Received During the Quarter", String(report.metrics.applications_received)],
+      ["Metric C", "New Registration Applications Approved During the Quarter", String(report.metrics.applications_approved)],
+    ],
+    gapAfter: 26,
   });
 
-  let nextY = (doc as any).lastAutoTable.finalY + 16;
+  drawSectionTitle(r, "I. Reporting Scope and Period", 11);
+  drawBullets(r, [
+    { lead: "Organizations Covered.", text: "This report covers youth and youth-serving organizations recorded in the Pasig City Youth Development Office (PCYDO) registry at the city/municipal level. The registry does not currently distinguish organizations by operational coverage, such as barangay-based or city-wide." },
+    { lead: "Reporting Period.", text: "The reporting quarter begins at 12:00 AM on the first day of the quarter and ends immediately before 12:00 AM on the first day of the following quarter, based on Philippine Standard Time (UTC+08:00). Application counts are determined using the applicable submission or approval date." },
+  ]);
+  drawSectionTitle(r, "II. Indicator Definitions and Counting Rules", 11);
+  drawBullets(r, [
+    { lead: "Registered and Verified Organizations.", text: "Refers to the number of organizations with verified registration status as of the end of the reporting quarter." },
+    { lead: "New Registration Applications Received.", text: "Refers to the number of initial registration applications submitted during the reporting quarter. Renewal applications are excluded." },
+    { lead: "New Registration Applications Approved.", text: "Refers to the number of initial registration applications approved during the reporting quarter, regardless of when they were originally submitted." },
+  ]);
 
-  // Methodology Notes & Disclosures Box
-  const disclosures = [
-    "1. Organizational Level Scope: In accordance with the current Pasig City Youth Development Office registry scope, registered youth and youth-serving organizations are reported at the City/Municipal organizational level. Organizational operational scope (e.g., barangay-based vs city-wide) is not currently stored as a separate registry field.",
-    "2. Authoritative Profile Classification: Disaggregated classifications and advocacy themes reflect the organization's authoritative profile record at the time of report generation.",
-    "3. Advocacy Themes Non-Additive: Advocacy theme counts are non-additive; organizations may register across multiple canonical Y-TRACE advocacy areas.",
-    "4. Statutory Half-Open Interval: Quarterly boundaries are strictly evaluated as half-open intervals [start_date 00:00:00, next_quarter_start 00:00:00) in Asia/Manila (UTC+08:00).",
-  ];
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.text);
-  doc.text("STATUTORY REPORTING DISCLOSURES & METHODOLOGY", marginLeft, nextY);
-  nextY += 10;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...PDF_COLORS.muted);
-  disclosures.forEach((disc) => {
-    const lines = doc.splitTextToSize(disc, contentWidth) as string[];
-    doc.text(lines, marginLeft, nextY);
-    nextY += lines.length * 9.5;
-  });
-
-  // Administrative Sign-Off Area
-  nextY += 14;
-  if (nextY > pageHeight - 150) {
-    doc.addPage();
-    nextY = layout.continuationTop + 20;
-  }
-
-  const signBlockWidth = (contentWidth - 40) / 3;
-  const signTitles = [
-    { title: "Prepared By:", role: "YORP Administrative Staff", name: "_____________________________" },
-    { title: "Verified By:", role: "Registry & Compliance Officer", name: "_____________________________" },
-    { title: "Approved By:", role: "PCYDO Officer-in-Charge / Head", name: "_____________________________" },
-  ];
-
-  signTitles.forEach((sign, i) => {
-    const x = marginLeft + i * (signBlockWidth + 20);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...PDF_COLORS.text);
-    doc.text(sign.title, x, nextY);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.text(sign.name, x, nextY + 35);
-    doc.text(sign.role, x, nextY + 46);
-  });
-
-  // Second pass: Decorate every page with header, footer, watermark, page numbers
-  const totalPages = doc.getNumberOfPages();
-  for (let page = 1; page <= totalPages; page++) {
-    doc.setPage(page);
-    renderPdfPageDecoration(doc, layout, page, totalPages);
-  }
-
-  return doc;
+  drawSignatories(r);
+  drawNothingFollows(r);
+  return r.doc;
 };
 
 /**
- * Generates the official Section 35 Disaggregated Report PDF.
+ * Generates the official YORP Disaggregated Report PDF.
  */
 export const generateSection35DisaggregatedPdf = async (
   report: YorpQuarterlyReport,
   context: ReportGenerationContext = {},
 ): Promise<jsPDF> => {
-  const doc = createBaseReportPdf();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const marginLeft = 42.64; // ~15mm (595.28 - 2*42.64 = 510.00pt content width)
-  const marginRight = 42.64;
-  const contentWidth = pageWidth - marginLeft - marginRight;
-
-  const headerHeight = pageWidth / PCYDO_HEADER_ASPECT_RATIO;
-  const footerHeight = pageWidth / PCYDO_FOOTER_ASPECT_RATIO;
-
-  const metricATotal = report.metrics.registered_verified_at_quarter_end;
-  await ensurePdfFonts(doc);
-  (doc as jsPDF & { __yTraceUseUnicodeFont?: boolean; __yTraceSegoeFontLoaded?: boolean }).__yTraceUseUnicodeFont =
-    Boolean((doc as jsPDF & { __yTraceSegoeFontLoaded?: boolean }).__yTraceSegoeFontLoaded);
-  const layout = await buildPdfHeaderLayout(doc, {
-    config: { title: DISAGGREGATED_REPORT_TITLE, filenamePrefix: "yorp-disaggregated", columns: [],
-      footerText: `Pasig City Youth Development Office - YORP Disaggregated Report (Q${report.quarter} ${report.year})` },
-    rows: [],
-    pdfHeading: buildAdminReportHeading({
-      program: "yorp", title: "Disaggregated Report", period: { mode: "quarter", year: report.year, quarter: report.quarter as 1 | 2 | 3 | 4 },
-      ...context,
-      contextLines: [
-        `Authoritative Population Base (Metric A): ${metricATotal} registered and verified organizations at quarter end`,
-        "Timezone: Asia/Manila (PST, UTC+08:00)",
-      ],
+  const r = await createOfficialReport();
+  const metricA = report.metrics.registered_verified_at_quarter_end;
+  drawOfficialHeading(r, {
+    heading: buildAdminReportHeading({
+      program: "yorp", title: "Disaggregated Report", period: quarterPeriod(report), ...context,
+      contextLines: [`Authoritative Population Base (Metric A): ${metricA} registered and verified organizations at quarter end`],
     }),
-  }, marginLeft, marginRight);
-  layout.continuationTop = headerHeight + 14;
-
-  let nextY = layout.startY;
-
-  // Helper for autoTable styling
-  const commonTableConfig = {
-    margin: {
-      top: layout.continuationTop,
-      right: marginRight,
-      bottom: 85,
-      left: marginLeft,
-    },
-    theme: "grid" as const,
-    showHead: "everyPage" as const,
-    styles: {
-      fontSize: 7.5,
-      cellPadding: { top: 3.5, right: 5, bottom: 3.5, left: 5 },
-      lineColor: [...PDF_COLORS.border],
-      lineWidth: 0.5,
-      textColor: [...PDF_COLORS.text],
-      valign: "middle" as const,
-    },
-    headStyles: {
-      fillColor: [...PDF_COLORS.darkBlue],
-      textColor: [255, 255, 255],
-      fontStyle: "bold" as const,
-    },
-    footStyles: {
-      fillColor: [...PDF_COLORS.lightBlue],
-      textColor: [...PDF_COLORS.text],
-      fontStyle: "bold" as const,
-    },
-    alternateRowStyles: {
-      fillColor: [...PDF_COLORS.zebra],
-    },
-  };
-
-  // ============================================================================
-  // PAGE 1: CLASSIFICATIONS & ADVOCACY THEMES
-  // ============================================================================
-
-  // 1. Major Classification Table
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("1. MAJOR CLASSIFICATION", marginLeft, nextY);
-  nextY += 8;
-
-  const majorRows = report.disaggregation.major_classification.map((row) => [
-    row.label,
-    String(row.count),
-    `${Number(row.percentage).toFixed(2)}%`,
-  ]);
-
-  autoTable(doc, {
-    ...commonTableConfig,
-    startY: nextY,
-    head: [["Major Classification", "Organization Count", "Percentage of Metric A"]],
-    body: majorRows,
-    foot: [["Total (Metric A)", String(metricATotal), "100.00%"]],
-    columnStyles: {
-      0: { cellWidth: 270, halign: "left" },
-      1: { cellWidth: 120, halign: "right", fontStyle: "bold" },
-      2: { cellWidth: 120, halign: "right" },
-    },
   });
 
-  nextY = (doc as any).lastAutoTable.finalY + 12;
+  const pct = (value: number) => `${Number(value).toFixed(2)}%`;
+  const third = r.width / 3;
+  const thirds = { 0: { cellWidth: third }, 1: { cellWidth: third }, 2: { cellWidth: third } };
+  const totalRow = () => [bold(r, "Total (Metric A)"), bold(r, metricA), bold(r, "100.00%")];
+  const breakdown = (title: string, firstColumn: string, rows: Array<{ label: string; count: number; percentage: number }>, withTotal = true) =>
+    drawOfficialTable(r, {
+      title, head: [firstColumn, "Organizations", "% of Metric A"], columnStyles: thirds,
+      body: [...rows.map(row => [row.label, String(row.count), pct(row.percentage)]), ...(withTotal ? [totalRow()] : [])],
+    });
 
-  // 2. Sub-Classification Table
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("2. SUB-CLASSIFICATION", marginLeft, nextY);
-  nextY += 8;
+  const d = report.disaggregation;
+  breakdown("1. Major Classification", "Classification", d.major_classification);
+  breakdown("2. Sub-Classification", "Classification", d.sub_classification);
+  breakdown("3. Organizational Level", "Level", d.organizational_level);
+  breakdown("4. Centers of Youth Participation", "Theme", [...d.advocacy_themes]
+    .sort((a, b) => centerOfYouthParticipationRank(a.theme) - centerOfYouthParticipationRank(b.theme))
+    .map(row => ({ label: formatCenterOfYouthParticipation(row.theme), count: row.count, percentage: row.percentage })), false);
+  drawNote(r, "Non-additive: An organization may have multiple advocacy themes, so it may appear under more than one theme. Consequently, the totals across themes may exceed the number of unique participating organizations. Percentages reflect proportion of Metric A.");
+  breakdown("5.1 Geography \u2014District Summary", "District", d.geography.districts.map(row => ({ label: row.district, count: row.count, percentage: row.percentage })));
 
-  const subRows = report.disaggregation.sub_classification.map((row) => [
-    row.label,
-    String(row.count),
-    `${Number(row.percentage).toFixed(2)}%`,
-  ]);
-
-  autoTable(doc, {
-    ...commonTableConfig,
-    startY: nextY,
-    head: [["Sub-Classification", "Organization Count", "Percentage of Metric A"]],
-    body: subRows,
-    foot: [["Total (Metric A)", String(metricATotal), "100.00%"]],
-    columnStyles: {
-      0: { cellWidth: 270, halign: "left" },
-      1: { cellWidth: 120, halign: "right", fontStyle: "bold" },
-      2: { cellWidth: 120, halign: "right" },
-    },
+  const barangayBody = d.geography.districts.flatMap(district => {
+    const rows = d.geography.barangays.filter(row => row.district === district.district);
+    return [
+      groupRow(r, district.district, 4),
+      [bold(r, "No."), bold(r, "Barangay"), bold(r, "Organizations"), bold(r, "% of Metric A")],
+      ...rows.map((row, index) => [String(index + 1), row.barangay, String(row.count), pct(row.percentage)]),
+      ["", bold(r, `${district.district} Subtotal`), bold(r, district.count), bold(r, pct(district.percentage))],
+    ];
+  });
+  drawOfficialTable(r, {
+    title: "5.2 Geography \u2014Barangay Summary", columnCount: 4, body: barangayBody,
+    columnStyles: { 0: { cellWidth: 32, halign: "center" }, 1: { cellWidth: 194 }, 2: { cellWidth: 112 }, 3: { cellWidth: r.width - 338 } },
   });
 
-  nextY = (doc as any).lastAutoTable.finalY + 12;
-
-  // 3. Organizational Level Table
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("3. ORGANIZATIONAL LEVEL", marginLeft, nextY);
-  nextY += 8;
-
-  const orgLevelRows = report.disaggregation.organizational_level.map((row) => [
-    row.label,
-    String(row.count),
-    `${Number(row.percentage).toFixed(2)}%`,
-  ]);
-
-  autoTable(doc, {
-    ...commonTableConfig,
-    startY: nextY,
-    head: [["Organizational Level", "Organization Count", "Percentage of Metric A"]],
-    body: orgLevelRows,
-    foot: [["Total (Metric A)", String(metricATotal), "100.00%"]],
-    columnStyles: {
-      0: { cellWidth: 270, halign: "left" },
-      1: { cellWidth: 120, halign: "right", fontStyle: "bold" },
-      2: { cellWidth: 120, halign: "right" },
-    },
-  });
-
-  nextY = (doc as any).lastAutoTable.finalY + 12;
-
-  // 4. Advocacy Themes Table
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("4. ORGANIZATIONS BY ADVOCACY THEME", marginLeft, nextY);
-  nextY += 7;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.8);
-  doc.setTextColor(...PDF_COLORS.muted);
-  doc.text(
-    "Non-additive: organizations may select multiple advocacy themes. Percentages reflect proportion of Metric A.",
-    marginLeft,
-    nextY,
-  );
-  nextY += 7;
-
-  const advocacyRows = report.disaggregation.advocacy_themes.map((row) => [
-    row.theme,
-    String(row.count),
-    `${Number(row.percentage).toFixed(2)}%`,
-  ]);
-
-  autoTable(doc, {
-    ...commonTableConfig,
-    startY: nextY,
-    head: [["Canonical Y-TRACE Advocacy Theme", "Organizations Selected", "Proportion of Metric A"]],
-    body: advocacyRows,
-    columnStyles: {
-      0: { cellWidth: 270, halign: "left" },
-      1: { cellWidth: 120, halign: "right", fontStyle: "bold" },
-      2: { cellWidth: 120, halign: "right" },
-    },
-  });
-
-  // ============================================================================
-  // PAGE 2: GEOGRAPHIC DISAGGREGATION (DISTRICT & BARANGAY BREAKDOWN)
-  // ============================================================================
-  doc.addPage();
-  nextY = layout.continuationTop + 10;
-
-  // 5. Geography - District Table
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("5. GEOGRAPHY — DISTRICT SUMMARY", marginLeft, nextY);
-  nextY += 8;
-
-  const districtRows = report.disaggregation.geography.districts.map((row) => [
-    row.district,
-    String(row.count),
-    `${Number(row.percentage).toFixed(2)}%`,
-  ]);
-
-  autoTable(doc, {
-    ...commonTableConfig,
-    startY: nextY,
-    head: [["District", "Organization Count", "Percentage of Metric A"]],
-    body: districtRows,
-    foot: [["Total (Metric A)", String(metricATotal), "100.00%"]],
-    columnStyles: {
-      0: { cellWidth: 270, halign: "left" },
-      1: { cellWidth: 120, halign: "right", fontStyle: "bold" },
-      2: { cellWidth: 120, halign: "right" },
-    },
-  });
-
-  nextY = (doc as any).lastAutoTable.finalY + 12;
-
-  // 6. Geography - Barangay Breakdown Table (All 30 canonical barangays fit cleanly on Page 2)
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("6. GEOGRAPHY — BARANGAY BREAKDOWN (ALL 30 CANONICAL BARANGAYS)", marginLeft, nextY);
-  nextY += 8;
-
-  const barangayRows = report.disaggregation.geography.barangays.map((row) => [
-    row.ordinal,
-    row.barangay,
-    row.district,
-    String(row.count),
-    `${Number(row.percentage).toFixed(2)}%`,
-  ]);
-
-  autoTable(doc, {
-    ...commonTableConfig,
-    startY: nextY,
-    styles: {
-      ...commonTableConfig.styles,
-      fontSize: 7.2,
-      cellPadding: { top: 2.8, right: 4, bottom: 2.8, left: 4 },
-    },
-    head: [["No.", "Barangay", "District", "Count", "Percentage"]],
-    body: barangayRows,
-    foot: [["", "Total (Metric A)", "", String(metricATotal), "100.00%"]],
-    columnStyles: {
-      0: { cellWidth: 32, halign: "center" },
-      1: { cellWidth: 198, halign: "left" },
-      2: { cellWidth: 120, halign: "left" },
-      3: { cellWidth: 80, halign: "right", fontStyle: "bold" },
-      4: { cellWidth: 80, halign: "right" },
-    },
-  });
-
-  // ============================================================================
-  // PAGE 3: INTENTIONAL REPORTING NOTES, METHODOLOGY & SIGN-OFF
-  // ============================================================================
-  doc.addPage();
-  nextY = layout.continuationTop + 14;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("REPORTING NOTES & METHODOLOGY", marginLeft, nextY);
-  nextY += 12;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...PDF_COLORS.muted);
-  doc.text(
-    "Official statutory disclosures, scope definitions, and technical aggregation parameters.",
-    marginLeft,
-    nextY,
-  );
-  nextY += 10;
-
-  const methodologyRows = [
-    [
-      "1. Organizational Level Scope",
-      report.metadata.organizational_level_note,
-    ],
-    [
-      "2. Profile Classification Baseline",
-      report.metadata.classification_note,
-    ],
-    [
-      "3. Advocacy Themes Specification",
-      report.metadata.advocacy_note,
-    ],
-    [
-      "4. Point-in-Time Basis & Interval",
-      `Quarterly metrics evaluated strictly for quarter-end date ${report.quarter_end_date} (interval: ${report.quarter_start} to ${report.quarter_end}) in Asia/Manila (PST, UTC+08:00).`,
-    ],
-    [
-      "5. Geographic Administration",
-      "The 30 canonical Pasig City barangays are classified under District I (22 barangays) and District II (8 barangays) in accordance with the official PCYDO geographic directory.",
-    ],
-  ];
-
-  autoTable(doc, {
-    startY: nextY,
-    margin: {
-      top: layout.continuationTop,
-      right: marginRight,
-      bottom: 85,
-      left: marginLeft,
-    },
-    theme: "grid",
-    head: [["Item / Dimension", "Statutory Policy & Methodology Disclosure"]],
-    body: methodologyRows,
-    styles: {
-      fontSize: 7.5,
-      cellPadding: { top: 5, right: 7, bottom: 5, left: 7 },
-      lineColor: [...PDF_COLORS.border],
-      lineWidth: 0.5,
-      textColor: [...PDF_COLORS.text],
-      valign: "top",
-    },
-    headStyles: {
-      fillColor: [...PDF_COLORS.darkBlue],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      halign: "left",
-    },
-    alternateRowStyles: {
-      fillColor: [...PDF_COLORS.zebra],
-    },
-    columnStyles: {
-      0: { cellWidth: 140, fontStyle: "bold" },
-      1: { cellWidth: 370 },
-    },
-  });
-
-  nextY = (doc as any).lastAutoTable.finalY + 28;
-
-  // Administrative Attestation & Sign-Off Area
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PDF_COLORS.darkBlue);
-  doc.text("ADMINISTRATIVE ATTESTATION & SIGN-OFF", marginLeft, nextY);
-  nextY += 18;
-
-  const signBlockWidth = (contentWidth - 40) / 3;
-  const signTitles = [
-    { title: "Prepared By:", role: "YORP Administrative Staff", name: "_____________________________" },
-    { title: "Verified By:", role: "Registry & Compliance Officer", name: "_____________________________" },
-    { title: "Approved By:", role: "PCYDO Officer-in-Charge / Head", name: "_____________________________" },
-  ];
-
-  signTitles.forEach((sign, i) => {
-    const x = marginLeft + i * (signBlockWidth + 20);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...PDF_COLORS.text);
-    doc.text(sign.title, x, nextY);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.text(sign.name, x, nextY + 38);
-    doc.text(sign.role, x, nextY + 49);
-  });
-
-  // Second pass: Decorate every page
-  const totalPages = doc.getNumberOfPages();
-  for (let page = 1; page <= totalPages; page++) {
-    doc.setPage(page);
-    renderPdfPageDecoration(doc, layout, page, totalPages);
-  }
-
-  return doc;
+  newPage(r);
+  drawReportingMethodology(r, describeReportingPeriod({
+    label: `Q${report.quarter} ${report.year}`,
+    startDate: report.quarter_start.slice(0, 10),
+    endDate: report.quarter_end_date,
+    referenceDate: report.quarter_end_date,
+  }));
+  drawSignatories(r);
+  drawNothingFollows(r);
+  return r.doc;
 };
 
 // ==============================================================================

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import BrandLockup from "@/components/BrandLockup";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -235,14 +236,9 @@ export const PortalShell = ({
             )}
           >
             {!sidebarCollapsed ? (
-              <div className="flex min-w-0 items-center gap-3">
-                <img src="/y-trace-logo-blue.png" alt="Y-TRACE" className="h-8 w-8 shrink-0 object-contain" />
-                <div className="min-w-0 leading-none">
-                  <p className="font-inter text-public-fs-subheading-sm font-semibold leading-[140%] text-foreground">
-                    Y-TRACE
-                  </p>
-                  <p className="font-inter text-xs leading-none text-muted-foreground">{title}</p>
-                </div>
+              <div className="flex min-w-0 items-center">
+                <BrandLockup />
+                <span className="sr-only">{title}</span>
               </div>
             ) : null}
             <button
@@ -282,14 +278,9 @@ export const PortalShell = ({
           )}
         >
           <div className="flex h-20 items-center justify-between border-b border-border px-5">
-            <div className="flex min-w-0 items-center gap-3">
-              <img src="/y-trace-logo-blue.png" alt="Y-TRACE" className="h-8 w-8 shrink-0 object-contain" />
-              <div className="min-w-0 leading-none">
-                <p className="font-inter text-public-fs-subheading-sm font-semibold leading-[140%] text-foreground">
-                  Y-TRACE
-                </p>
-                <p className="font-inter text-xs leading-none text-muted-foreground">{title}</p>
-              </div>
+            <div className="flex min-w-0 items-center">
+              <BrandLockup />
+              <span className="sr-only">{title}</span>
             </div>
             <button
               type="button"

@@ -49,6 +49,12 @@ export type YpopParticipationExportRow = {
   totalPoints: number;
   status: YpopQualificationStatus;
   latestActivityDate: string;
+  /** Profile attributes used only to group the official qualification summary. */
+  majorClassification: string;
+  subClassification: string;
+  advocacies: string[];
+  district: string;
+  barangay: string;
 };
 
 export const YPOP_PARTICIPATION_STATUS_LABELS: Record<YpopQualificationStatus, string> = {
@@ -120,6 +126,8 @@ export function buildYpopParticipationRows(sources: YpopParticipationSource[], s
       mandatoryPoints: points.mandatory, invitationalPoints: points.invitational, partnershipPoints: points.partnership,
       cityLedSubtotal: score.cityLedEarned, verifiedOrgLedActivities: approvedCount, orgLedBonus: score.orgLedBonus,
       totalPoints: score.totalScore, status: source.status, latestActivityDate: dates[dates.length - 1] ?? "",
+      majorClassification: organization.majorClassification ?? "", subClassification: organization.subClassification ?? "",
+      advocacies: organization.advocacies ?? [], district, barangay,
     }];
   }).sort((a, b) => b.latestActivityDate.localeCompare(a.latestActivityDate) || a.organizationName.localeCompare(b.organizationName) || a.organizationId.localeCompare(b.organizationId));
 }

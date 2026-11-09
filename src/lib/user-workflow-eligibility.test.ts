@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isMatchingFileForTemplate,
+  isProjectProposalTemplate,
   isRegistrationRequirementTemplate,
   resolveRegistrationPrerequisites,
   resolveYpopWorkflowEligibility,
@@ -430,3 +431,12 @@ describe("shared user workflow eligibility", () => {
   });
 });
 
+describe("isProjectProposalTemplate", () => {
+  it("offers only active project proposal templates that have a file", () => {
+    const proposal = createYorpTemplate("pp", "db-pp", "Project Proposal", { templateScope: "project_proposal" });
+    expect(isProjectProposalTemplate(proposal)).toBe(true);
+    expect(isProjectProposalTemplate({ ...proposal, templateActive: false })).toBe(false);
+    expect(isProjectProposalTemplate({ ...proposal, templateFileUrl: "" })).toBe(false);
+    expect(isProjectProposalTemplate(createYorpTemplate("reg", "db-reg", "Registration Form"))).toBe(false);
+  });
+});

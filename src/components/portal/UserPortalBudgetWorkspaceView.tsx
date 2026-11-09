@@ -28,7 +28,7 @@ import {
   Send,
   FileEdit,
 } from "lucide-react";
-import { formatAdvocacyLabel, getBudgetRequestStatusLabel } from "@/lib/lydo-connect-data";
+import { formatAdvocacyLabel, getBudgetRequestStatusLabel, type TemplateRecord } from "@/lib/lydo-connect-data";
 import { Button } from "@/components/ui/button";
 import { PortalStatusBadge } from "@/components/portal/portal-ui";
 import { Card } from "@/components/ui/card";
@@ -107,6 +107,8 @@ export interface UserPortalBudgetWorkspaceViewProps {
   organizationId?: string;
   organizationDashboardSummary?: any;
   budgetWorkflowEligibility?: any;
+  proposalTemplates?: TemplateRecord[];
+  onDownloadTemplate?: (template: TemplateRecord) => void;
   budgetRequests: Array<any>;
   budgetFilesByRequestId: Map<string, any>;
   budgetNotesByRequestId: Record<string, string>;
@@ -155,6 +157,8 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
   organizationId = "",
   organizationDashboardSummary,
   budgetWorkflowEligibility,
+  proposalTemplates = [],
+  onDownloadTemplate,
   budgetRequests,
   budgetFilesByRequestId,
   budgetNotesByRequestId,
@@ -847,6 +851,17 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                 <p className="text-xs text-muted-foreground mt-1">
                   Upload your orgs detailed project budget proposal for administrative review
                 </p>
+                {proposalTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => onDownloadTemplate?.(template)}
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download template: {template.name}
+                  </button>
+                ))}
               </div>
 
               {/* Hidden Native File Input */}
