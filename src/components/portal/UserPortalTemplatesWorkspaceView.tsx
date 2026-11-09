@@ -360,7 +360,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
               Forms &amp; Templates
             </h1>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
+              Official forms, templates, and reference documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
         )}
@@ -686,7 +686,7 @@ export const UserPortalTemplatesWorkspaceView: React.FC<UserPortalTemplatesWorks
               Forms &amp; Templates
             </h1>
             <p className="text-sm text-muted-foreground max-w-[720px]">
-              Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
+              Official forms, templates, and reference documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
         )}

@@ -17,7 +17,7 @@ const PublicTemplates = () => {
               Forms &amp; Templates
             </h1>
             <p className="font-inter text-base font-normal leading-[1.6] text-white/85">
-              Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
+              Official forms, templates, and reference documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).
             </p>
           </div>
 

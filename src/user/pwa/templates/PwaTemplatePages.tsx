@@ -205,7 +205,7 @@ export function PwaTemplateLibrary({ data }: { data: PortalData }) {
     <div className="pwa-stack pwa-template-library-page">
       <section className="pwa-template-summary">
         <span><FileText aria-hidden="true" /></span>
-        <div><small>PCYDO Documents • Official Forms and Templates</small><h2>Forms &amp; Templates</h2><strong>{data.templates.length} active template{data.templates.length === 1 ? "" : "s"} available</strong><p>Official forms, templates, and supporting documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).</p></div>
+        <div><small>PCYDO Documents • Official Forms and Templates</small><h2>Forms &amp; Templates</h2><strong>{data.templates.length} active template{data.templates.length === 1 ? "" : "s"} available</strong><p>Official forms, templates, and reference documents for programs and services provided by the Pasig City Youth Development Office (PCYDO).</p></div>
       </section>
       <section className="pwa-template-controls">
         <label className="pwa-template-search"><Search aria-hidden="true" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search templates..." /></label>
