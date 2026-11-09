@@ -155,7 +155,7 @@ export function PwaTemplateLibrary({ data }: { data: PortalData }) {
       ].some((value) => value.toLowerCase().includes(query));
     });
   }, [data.templates, scope, search]);
-  const groups = useMemo(() => (["document_submission", "other"] as const)
+  const groups = useMemo(() => (["document_submission", "project_proposal", "other"] as const)
     .map((key) => ({ key, items: filtered.filter((template) => template.templateScope === key) }))
     .filter((group) => group.items.length), [filtered]);
   const downloadableCount = data.templates.filter(hasFile).length;

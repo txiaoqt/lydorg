@@ -351,4 +351,15 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
       expect(submitButton).not.toBeDisabled();
     });
   });
+
+  describe("Project proposal template", () => {
+    it("offers the admin-uploaded template in the Detailed Project Proposal section", () => {
+      const template = { id: "tpl-pp", name: "Project Proposal Template" } as never;
+      const onDownloadTemplate = vi.fn();
+      render(<UserPortalBudgetWorkspaceView {...defaultBaseProps} proposalTemplates={[template]} onDownloadTemplate={onDownloadTemplate} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /Download template: Project Proposal Template/i }));
+      expect(onDownloadTemplate).toHaveBeenCalledWith(template);
+    });
+  });
 });
