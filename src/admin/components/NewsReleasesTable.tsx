@@ -64,7 +64,7 @@ const StatusPill = ({ status }: { status: NewsRelease["visibilityStatus"] }) => 
   }
   if (status === "draft") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
         Draft
       </span>
     );
@@ -189,7 +189,7 @@ const NewsCard = ({
           <p className="font-inter text-[13px] font-semibold leading-[140%] text-slate-500">
             {news.visibilityStatus === "hidden" ? "Hidden" : "Published"}
           </p>
-          <p className="font-cascadia text-[13px] font-normal leading-[140%] text-text-default">
+          <p className="font-inter text-[13px] font-normal leading-[140%] text-text-default">
             {news.visibilityStatus !== "hidden" && isValidDate ? `${format(date, "d MMM yyyy")} · ${format(date, "h:mm a")}` : ""}
           </p>
         </div>
@@ -325,7 +325,7 @@ export const NewsReleasesTable = ({
           />
         </div>
 
-        <div className="flex h-10 shrink-0 items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+        <div className="flex h-10 shrink-0 items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.value;
             return (
@@ -337,7 +337,7 @@ export const NewsReleasesTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",

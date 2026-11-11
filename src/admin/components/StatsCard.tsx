@@ -47,11 +47,11 @@ export const StatsCard = ({ title, value, icon: Icon, trend, trendLabel, descrip
 
       <div className="flex flex-col gap-1.5 px-2">
         <div className="flex items-end justify-start gap-2">
-          <p className="font-cascadia text-[30px] font-bold leading-[120%] tracking-tight text-foreground">
+          <p className="font-inter text-[30px] font-bold leading-[120%] tracking-tight text-foreground">
             {value}
           </p>
           {showTrend ? (
-            <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 font-cascadia text-[10px] font-medium leading-[140%] text-muted-foreground">
+            <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 font-inter text-[10px] font-medium leading-[140%] text-muted-foreground">
               <TrendIcon className="h-2.5 w-2.5 shrink-0 text-muted-foreground" strokeWidth={1.6} />
               {trendLabel}
             </span>

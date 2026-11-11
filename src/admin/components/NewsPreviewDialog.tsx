@@ -31,7 +31,7 @@ export const NewsPreviewDialog = ({ news, onOpenChange }: NewsPreviewDialogProps
                 <DialogTitle className="font-inter text-lg font-semibold leading-none text-text-default">
                   {news.title}
                 </DialogTitle>
-                <p className="flex items-center gap-1 font-cascadia text-xs font-normal leading-[140%] text-slate-500">
+                <p className="flex items-center gap-1 font-inter text-xs font-normal leading-[140%] text-slate-500">
                   <Clock className="h-[13px] w-[13px] shrink-0" strokeWidth={1.3} />
                   Published{" "}
                   {isValidDate ? `${format(date!, "d MMM yyyy")} · ${format(date!, "h:mm a")}` : ""}

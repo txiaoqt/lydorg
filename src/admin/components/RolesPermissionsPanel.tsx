@@ -266,50 +266,50 @@ export const RolesPermissionsPanel = ({
         </div>
       ) : (
         <>
-          <div className="flex gap-2.5">
-            <button
-              type="button"
-              onClick={() => onConfiguringRoleChange("super_admin")}
-              className={cn(
-                "flex flex-1 flex-col gap-2 rounded-md border border-slate-300 px-4 py-6 text-left shadow-sm transition-colors",
-                configuringRoleCode === "super_admin" ? "bg-slate-50" : "bg-admin-surface",
-              )}
-            >
-              <p className="font-inter text-base font-semibold uppercase leading-[140%] text-role-pink-text">Super Admin</p>
-              <p className="text-justify font-inter text-sm font-normal leading-[140%] text-slate-500">
-                Full administrative access, including administrator accounts, roles, permissions, and system-wide controls.
-              </p>
-              <div className="flex items-center justify-between gap-2 border-t border-slate-300 pt-3">
-                <p className="font-inter text-sm font-semibold leading-[140%] text-slate-500">
-                  {superAdminCount} {superAdminCount === 1 ? "administrator" : "administrators"} assigned
-                </p>
-                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-neutral-200 bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
-                  {superAdminPermsLabel} perms
-                </span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onConfiguringRoleChange("admin")}
-              className={cn(
-                "flex flex-1 flex-col gap-2 rounded-md border border-slate-300 px-4 py-6 text-left shadow-sm transition-colors",
-                configuringRoleCode === "admin" ? "bg-slate-50" : "bg-admin-surface",
-              )}
-            >
-              <p className="font-inter text-base font-semibold uppercase leading-[140%] text-role-blue-text">Admin</p>
-              <p className="text-justify font-inter text-sm font-normal leading-[140%] text-slate-500">
-                Access to administrative features, excluding administrator accounts, roles, and permission management.
-              </p>
-              <div className="flex items-center justify-between gap-2 border-t border-slate-300 pt-3">
-                <p className="font-inter text-sm font-semibold leading-[140%] text-slate-500">
-                  {adminCount} {adminCount === 1 ? "administrator" : "administrators"} assigned
-                </p>
-                <span className="inline-flex items-center whitespace-nowrap rounded-full border border-access-pill-border bg-access-pill-bg px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-brand-secondary">
-                  {adminPermsLabel} perms
-                </span>
-              </div>
-            </button>
+          <div className="flex gap-2.5" role="radiogroup" aria-label="Role to configure">
+            {([
+              { code: "super_admin", title: "Super Admin", count: superAdminCount, perms: superAdminPermsLabel,
+                description: "Full administrative access, including administrator accounts, roles, permissions, and system-wide controls." },
+              { code: "admin", title: "Admin", count: adminCount, perms: adminPermsLabel,
+                description: "Access to administrative features, excluding administrator accounts, roles, and permission management." },
+            ] as const).map((role) => {
+              const selected = configuringRoleCode === role.code;
+              return (
+                <button
+                  key={role.code}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => onConfiguringRoleChange(role.code)}
+                  className={cn(
+                    "flex flex-1 flex-col gap-2 rounded-lg border bg-admin-surface px-4 py-5 text-left transition-colors",
+                    selected ? "border-2 border-[#4a90d9] shadow-[0_0_0_3px_rgba(74,144,217,0.15)]" : "border-slate-300 shadow-sm hover:border-slate-400",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-inter text-base font-semibold uppercase leading-[140%] text-public-text-brand">{role.title}</p>
+                    {selected ? (
+                      <span className="inline-flex items-center gap-1.5 font-inter text-xs font-semibold text-public-text-brand">
+                        Selected
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#4a90d9] text-white"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                      </span>
+                    ) : (
+                      <span aria-hidden="true" className="h-5 w-5 rounded-full border border-slate-300" />
+                    )}
+                  </div>
+                  <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">{role.description}</p>
+                  <div className="flex items-center justify-between gap-2 border-t border-slate-200 pt-3">
+                    <p className="font-inter text-sm font-semibold leading-[140%] text-text-default">
+                      {role.count} {role.count === 1 ? "administrator" : "administrators"} assigned
+                    </p>
+                    <span className={cn("inline-flex items-center whitespace-nowrap rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
+                      selected ? "border-public-bg-brand bg-public-bg-brand text-white" : "border-slate-300 bg-admin-surface text-text-default")}>
+                      {role.perms} perms
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">

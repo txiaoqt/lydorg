@@ -226,7 +226,7 @@ const applyExcelDataBorders = (cell: any, isZebra: boolean) => {
 };
 
 /**
- * Generates the official Section 35 Quarterly Summary Report XLSX workbook buffer.
+ * Generates the official YORP Quarterly Summary Report XLSX workbook buffer.
  */
 export const generateSection35QuarterlySummaryXlsx = async (
   report: YorpQuarterlyReport,

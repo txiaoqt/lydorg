@@ -50,10 +50,10 @@ export const NeedsAttentionList = ({ items, onNavigate }: NeedsAttentionListProp
                 <p className="truncate font-inter text-sm font-semibold leading-[120%] text-foreground">
                   {item.orgName}
                 </p>
-                <p className="truncate font-inter text-[13px] font-normal leading-none text-muted-foreground">
+                <p className="truncate font-inter text-[13px] font-normal leading-snug text-muted-foreground">
                   {item.actionText}
                 </p>
-                <p className="font-cascadia text-[10px] font-normal leading-[140%] text-muted-foreground/75">
+                <p className="font-inter text-[10px] font-normal leading-[140%] text-muted-foreground/75">
                   {item.verb} {formatDistanceToNowStrict(new Date(item.timestamp))} ago
                 </p>
               </div>

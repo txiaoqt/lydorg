@@ -245,7 +245,8 @@ describe("Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests", () 
           />
         </MemoryRouter>
       );
-      expect(screen.getByText("Reference / Cycle")).toBeInTheDocument();
+      expect(screen.getByText("Reference ID")).toBeInTheDocument();
+      expect(screen.getByText("Cycle")).toBeInTheDocument();
       expect(screen.getByText("Organization")).toBeInTheDocument();
       expect(screen.getByText("Classification")).toBeInTheDocument();
       expect(screen.getByText("Documents")).toBeInTheDocument();

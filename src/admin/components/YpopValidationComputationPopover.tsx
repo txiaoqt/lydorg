@@ -135,12 +135,12 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
                 <span className="font-semibold text-text-default">
                   {catRow.count}× {catRow.label}
                 </span>
-                <span className="text-muted-foreground font-mono text-[11px]">
+                <span className="text-muted-foreground font-inter text-[11px]">
                   {catRow.count} × {catRow.standardPoints} pts =
                 </span>
                 <span
                   className={cn(
-                    "font-cascadia font-bold min-w-[36px] text-right",
+                    "font-inter font-bold min-w-[36px] text-right",
                     catRow.earnedPoints > 0 ? "text-text-default" : "text-muted-foreground"
                   )}
                 >
@@ -160,7 +160,7 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
                 {liveScore.cityLedEarned} pts ÷ {liveScore.cityLedMax} max pts = {liveScore.cityLedPercent}%
               </p>
             </div>
-            <span className="font-cascadia font-bold text-text-default text-sm">
+            <span className="font-inter font-bold text-text-default text-sm">
               {liveScore.cityLedEarned} pts
             </span>
           </div>
@@ -196,7 +196,7 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
                   </span>
                   <span
                     className={cn(
-                      "font-cascadia font-bold",
+                      "font-inter font-bold",
                       isCurrent ? "text-blue-700 dark:text-blue-400 font-extrabold" : "text-muted-foreground"
                     )}
                   >
@@ -212,16 +212,16 @@ export const YpopValidationComputationPopover: React.FC<YpopValidationComputatio
         <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/30 p-3.5 space-y-2 mt-2">
           <div className="flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
             <span className="font-medium">City-led score</span>
-            <span className="font-cascadia font-bold">{liveScore.cityLedPercent}%</span>
+            <span className="font-inter font-bold">{liveScore.cityLedPercent}%</span>
           </div>
           <div className="flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
             <span className="font-medium">Organization-initiated bonus</span>
-            <span className="font-cascadia font-bold">+{liveScore.orgLedBonus}%</span>
+            <span className="font-inter font-bold">+{liveScore.orgLedBonus}%</span>
           </div>
           <div className="border-t border-emerald-200/60 dark:border-emerald-800/40 pt-2 flex items-center justify-between">
             <span className="font-bold text-text-default text-xs">Total YPOP Points</span>
             <span
-              className="font-cascadia text-xl font-black text-emerald-700 dark:text-emerald-400"
+              className="font-inter text-xl font-black text-emerald-700 dark:text-emerald-400"
               data-testid="popover-total-score"
             >
               {displayScore}%

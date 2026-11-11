@@ -563,15 +563,6 @@ export const NewsReleaseFormDialog = ({
                     facebookPostUrl.trim() && facebookValidation.isValid && "border-emerald-500 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20",
                   )}
                 />
-                {facebookPostUrl.trim() ? (
-                  <div className="pointer-events-none absolute right-2.5 flex items-center">
-                    {facebookValidation.isValid ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-icon-danger-secondary" />
-                    )}
-                  </div>
-                ) : null}
               </div>
 
               {/* Validation feedback */}

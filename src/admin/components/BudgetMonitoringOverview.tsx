@@ -283,9 +283,9 @@ export const BudgetMonitoringOverview = ({
                 </h3>
                 <p className="font-inter text-xs text-red-800">
                   Approved budget requests (
-                  <span className="font-cascadia font-semibold">{formatPesoAmount(approvedBudget)}</span>) exceed
+                  <span className="font-inter font-semibold">{formatPesoAmount(approvedBudget)}</span>) exceed
                   the configured statutory baseline ceiling (
-                  <span className="font-cascadia font-semibold">{formatPesoAmount(totalFYBudget)}</span>) for {periodLabel}.
+                  <span className="font-inter font-semibold">{formatPesoAmount(totalFYBudget)}</span>) for {periodLabel}.
                 </p>
               </div>
             </div>
@@ -321,7 +321,7 @@ export const BudgetMonitoringOverview = ({
                     {isConfigured ? "Baseline" : "Unset"}
                   </span>
                 </div>
-                <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.allocation.value)}>
+                <p className={cn("font-inter text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.allocation.value)}>
                   {isConfigured ? formatPesoAmount(totalFYBudget) : "Not Configured"}
                 </p>
                   <p className="font-inter text-xs text-slate-600">
@@ -333,7 +333,7 @@ export const BudgetMonitoringOverview = ({
                 <span className="font-inter text-[11px] text-slate-500">{BUDGET_MONITORING_LABELS.remainingHeadroom}</span>
                 <span
                   className={cn(
-                    "font-cascadia text-[11px] font-bold",
+                    "font-inter text-[11px] font-bold",
                     !isConfigured
                       ? "text-slate-400"
                       : isDeficit
@@ -361,7 +361,7 @@ export const BudgetMonitoringOverview = ({
                     Committed
                   </span>
                 </div>
-                <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.committed.value)}>
+                <p className={cn("font-inter text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.committed.value)}>
                   {formatPesoAmount(approvedBudget)}
                 </p>
                 <p className="font-inter text-xs text-blue-800">Approved and committed by administrators</p>
@@ -369,7 +369,7 @@ export const BudgetMonitoringOverview = ({
 
               <div className="mt-4 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5">
                 <span className="font-inter text-[11px] text-blue-700">{BUDGET_MONITORING_LABELS.pendingDisbursement}</span>
-                <span className={cn("font-cascadia text-[11px] font-bold", BUDGET_MONITORING_COLORS.pendingDisbursement.value)}>
+                <span className={cn("font-inter text-[11px] font-bold", BUDGET_MONITORING_COLORS.pendingDisbursement.value)}>
                   {formatPesoAmount(pendingDisbursement)}
                 </span>
               </div>
@@ -386,7 +386,7 @@ export const BudgetMonitoringOverview = ({
                     Released Budget
                   </span>
                 </div>
-                <p className={cn("font-cascadia text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.released.value)}>
+                <p className={cn("font-inter text-lg font-bold leading-tight", BUDGET_MONITORING_COLORS.released.value)}>
                   {formatPesoAmount(releasedBudget)}
                 </p>
                 <p className="font-inter text-xs text-slate-500">Disbursed to youth organizations</p>
@@ -405,7 +405,7 @@ export const BudgetMonitoringOverview = ({
                     Audited
                   </span>
                 </div>
-                <p className="font-cascadia text-lg font-bold leading-tight text-emerald-700">
+                <p className="font-inter text-lg font-bold leading-tight text-emerald-700">
                   {formatPesoAmount(liquidatedBudget)}
                 </p>
                 <p className="font-inter text-xs text-emerald-800">Released funds cleared through liquidation review</p>
@@ -438,7 +438,7 @@ export const BudgetMonitoringOverview = ({
                 </span>
               ) : percentAvailable !== null ? (
                 <p className="font-inter text-xs font-semibold text-slate-600">
-                  <span className="font-cascadia font-bold text-slate-700">{percentAvailable}%</span> of FY Budget Allocation remains uncommitted
+                  <span className="font-inter font-bold text-slate-700">{percentAvailable}%</span> of FY Budget Allocation remains uncommitted
                 </p>
               ) : (
                 <span className="font-inter text-xs text-amber-800">{isConfigured ? "Headroom requires a full fiscal period with complete allocation coverage" : "Configure the FY Budget Allocation to calculate headroom"}</span>
@@ -525,7 +525,7 @@ export const BudgetMonitoringOverview = ({
 
                   {/* Coherent Center Label: Denominator matches slices! */}
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <p className="font-cascadia text-xl font-bold leading-tight text-public-text-brand">
+                    <p className="font-inter text-xl font-bold leading-tight text-public-text-brand">
                       {formatCompactPeso(donutTotal)}
                     </p>
                     <p className="mt-0.5 font-inter text-[11px] font-medium text-slate-500">
@@ -542,7 +542,7 @@ export const BudgetMonitoringOverview = ({
                       <li key={slice.name} className="flex min-w-0 items-start gap-2 text-xs text-text-default">
                         <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} aria-hidden="true" />
                         <span className="min-w-0 flex-1 leading-snug">{slice.name}</span>
-                        <span className="shrink-0 font-cascadia text-[11px] text-slate-500">{slice.pctDisplay}</span>
+                        <span className="shrink-0 font-inter text-[11px] text-slate-500">{slice.pctDisplay}</span>
                       </li>
                     ))}
                   </ul>
@@ -590,13 +590,13 @@ export const BudgetMonitoringOverview = ({
                                   </span>
                                 </div>
                               </td>
-                              <td className="px-3 py-2.5 text-right font-cascadia font-semibold text-text-default">
+                              <td className="px-3 py-2.5 text-right font-inter font-semibold text-text-default">
                                 {formatPesoAmount(item.approvedAmount)}
                               </td>
-                              <td className="px-3 py-2.5 text-right font-cascadia text-slate-600 dark:text-slate-400">
+                              <td className="px-3 py-2.5 text-right font-inter text-slate-600 dark:text-slate-400">
                                 {formatPesoAmount(item.releasedAmount)}
                               </td>
-                              <td className="px-3 py-2.5 text-right font-cascadia font-bold text-public-text-brand">
+                              <td className="px-3 py-2.5 text-right font-inter font-bold text-public-text-brand">
                                 {pct}%
                               </td>
                             </tr>

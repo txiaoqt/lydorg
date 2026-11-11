@@ -109,7 +109,7 @@ function SectionSelectAllCheckbox({
   }, [indeterminate]);
 
   return (
-    <label className="inline-flex items-center gap-1.5 font-inter text-xs font-semibold text-public-bg-brand hover:text-bg-brand-hover dark:text-sky-400 dark:hover:text-sky-300 cursor-pointer select-none">
+    <label className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-inter text-xs font-semibold text-public-bg-brand hover:text-bg-brand-hover dark:text-sky-400 dark:hover:text-sky-300 cursor-pointer select-none">
       <input
         ref={inputRef}
         type="checkbox"
@@ -510,10 +510,8 @@ export function YorpRegistryExportDialog({
                   >
                     <div
                       className={cn(
-                        "flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-md transition-colors",
-                        isSelected
-                          ? "bg-public-bg-brand text-white shadow-2xs"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700",
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 transition-colors group-hover:bg-slate-200 dark:bg-slate-800 dark:group-hover:bg-slate-700",
+                        isSelected ? "text-public-bg-brand" : "text-slate-600 dark:text-slate-300",
                       )}
                     >
                       <Icon className="h-4 w-4" strokeWidth={2} />

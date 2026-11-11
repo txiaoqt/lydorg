@@ -35,7 +35,7 @@ const PAGE_SIZE = 10;
 const StatusPill = ({ status }: { status: YPOPPeriodStatus }) => {
   if (status === "open") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border-success-subtle bg-bg-success-subtle px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-positive-secondary">
         Open
       </span>
     );
@@ -48,7 +48,7 @@ const StatusPill = ({ status }: { status: YPOPPeriodStatus }) => {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border-closed-subtle bg-neutral-100 px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-public-text-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-bg-info-secondary bg-bg-info-tertiary px-2 py-1 font-inter text-xs font-semibold leading-[140%] text-icon-info-secondary">
       Draft
     </span>
   );
@@ -94,7 +94,7 @@ export const YpopPeriodsTable = ({
           />
         </div>
 
-        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.value;
             return (
@@ -106,7 +106,7 @@ export const YpopPeriodsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",

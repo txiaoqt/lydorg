@@ -259,7 +259,7 @@ export const CityActivityAnnouncementDialog: React.FC<CityActivityAnnouncementDi
                       key={rec.organization_id || rec.organization_email || index}
                       className="flex items-center gap-2 px-3.5 py-2.5 text-xs transition-colors hover:bg-slate-50/80 min-w-0"
                     >
-                      <span className="font-cascadia text-[11px] text-slate-400 w-4 shrink-0 text-right select-none">
+                      <span className="font-inter text-[11px] text-slate-400 w-4 shrink-0 text-right select-none">
                         {index + 1}.
                       </span>
                       <div className="min-w-0 flex-1 flex flex-wrap sm:flex-nowrap items-baseline gap-x-2 gap-y-0.5">
@@ -271,7 +271,7 @@ export const CityActivityAnnouncementDialog: React.FC<CityActivityAnnouncementDi
                         </span>
                         <span className="text-slate-300 select-none shrink-0 hidden sm:inline">—</span>
                         <span
-                          className="text-text-muted font-normal text-[11.5px] truncate max-w-full font-mono text-slate-500"
+                          className="text-text-muted font-normal text-[11.5px] truncate max-w-full font-inter text-slate-500"
                           title={rec.organization_email}
                         >
                           {rec.organization_email}

@@ -60,7 +60,7 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
               <DialogTitle className="font-inter text-lg font-semibold leading-none text-text-default">
                 {template.name}
               </DialogTitle>
-              <p className="font-cascadia text-[13px] font-normal leading-none text-slate-500">
+              <p className="font-inter text-[13px] font-normal leading-none text-slate-500">
                 {fileFormat} · {formatFileSize(template.templateFileSize)} · Updated {updatedDate}
               </p>
             </div>

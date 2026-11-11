@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CategoryChip, ReferenceCodeChip } from "@/admin/components/InquiriesTable";
+import { UrnChip } from "@/admin/components/OrganizationDetailsPanel";
 import {
   pasigDistrictBarangays,
   pasigDistrictOptions,
@@ -26,6 +27,8 @@ export type AdminRenewalQueueEntry = {
   cycleNumber: number;
   organizationName: string;
   referenceIdentifier: string;
+  /** Current URN; renewal approval issues a new one with the new accreditation year. */
+  urn?: string | null;
   district: string;
   barangay: string;
   majorClassification: string;
@@ -152,7 +155,7 @@ export const RenewalsTable = ({
     <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
       {/* Header: status tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-300 p-4">
-        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.value;
             return (
@@ -164,7 +167,7 @@ export const RenewalsTable = ({
                   goFirstPage();
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -327,9 +330,10 @@ export const RenewalsTable = ({
             <span className="w-6 shrink-0">
               <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
             </span>
-            <span className="w-[14%]">Reference / Cycle</span>
-            <span className="w-[20%]">Organization</span>
-            <span className="w-[16%]">Classification</span>
+            <span className="w-[14%]">Reference ID</span>
+            <span className="w-[7%]">Cycle</span>
+            <span className="w-[18%]">Organization</span>
+            <span className="w-[13%]">Classification</span>
             <span className="w-[13%]">Documents</span>
             <span className="w-[10%]">Submitted</span>
             <span className="w-[12%]">Status</span>
@@ -356,14 +360,18 @@ export const RenewalsTable = ({
                     <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
                   </span>
 
-                  <div className="flex w-[14%] flex-col gap-0.5">
+                  <div className="flex w-[14%] flex-col justify-center gap-1">
                     <ReferenceCodeChip code={item.referenceIdentifier || "—"} />
-                    <span className="font-inter text-[11px] font-medium text-slate-500">
+                    {item.urn ? <UrnChip urn={item.urn} /> : null}
+                  </div>
+
+                  <div className="flex w-[7%] items-center">
+                    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 font-inter text-xs font-semibold text-slate-600">
                       Cycle {item.cycleNumber}
                     </span>
                   </div>
 
-                  <div className="flex w-[20%] min-w-0 flex-col gap-0.5">
+                  <div className="flex w-[18%] min-w-0 flex-col gap-0.5">
                     <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
                       {item.organizationName}
                     </p>
@@ -372,7 +380,7 @@ export const RenewalsTable = ({
                     </p>
                   </div>
 
-                  <div className="flex w-[16%] flex-col gap-0.5">
+                  <div className="flex w-[13%] flex-col gap-0.5">
                     {item.majorClassification ? (
                       <CategoryChip category={item.majorClassification} />
                     ) : (

@@ -58,7 +58,7 @@ type LiquidationReportsTableProps = {
 
 const STATUS_TABS: { value: LiquidationReportsStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
-  { value: "ongoing_activity", label: "Ongoing Activity" },
+  { value: "ongoing_activity", label: "Pending Activity Completion" },
   { value: "pending_review", label: "Pending Review" },
   { value: "hardcopy_submitted", label: "Hardcopy Submitted" },
   { value: "liquidated", label: "Liquidated" },
@@ -238,7 +238,7 @@ export const LiquidationReportsTable = ({
     <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
       {/* Header: status tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-300 p-4">
-        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.value;
             return (
@@ -250,7 +250,7 @@ export const LiquidationReportsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -452,9 +452,9 @@ export const LiquidationReportsTable = ({
                       <button
                         type="button"
                         onClick={() => onOpenLinkedRequest(linkedBudget.id)}
-                        className="flex h-[22px] w-[109px] shrink-0 items-center gap-1.5 rounded border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference transition-colors hover:bg-slate-100"
+                        className="flex h-[22px] w-fit shrink-0 items-center gap-1.5 rounded border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference transition-colors hover:bg-slate-100"
                       >
-                        <span className="min-w-0 flex-1 truncate text-left">{buildPublicRecordCode("BR", linkedBudget, allBudgetRequests)}</span>
+                        <span className="whitespace-nowrap text-left">{buildPublicRecordCode("BR", linkedBudget, allBudgetRequests)}</span>
                         <ExternalLink className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
                       </button>
                     ) : (

@@ -199,7 +199,7 @@ export const YpopSubmissionsTable = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.value;
             return (
@@ -211,7 +211,7 @@ export const YpopSubmissionsTable = ({
                   setPage(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                   active ? "bg-public-bg-brand text-public-text-neutral-on-neutral" : "text-text-default hover:bg-slate-50",
                 )}
               >

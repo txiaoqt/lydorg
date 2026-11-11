@@ -249,7 +249,7 @@ export const AdministratorFormDialog = ({
                   <button type="button" className={cn(FIELD_CLASS, "justify-between")}>
                     <span
                       className={cn(
-                        "min-w-0 truncate whitespace-nowrap text-[11px]",
+                        "min-w-0 truncate whitespace-nowrap",
                         selectedUnit ? "text-text-default" : "text-text-disabled",
                       )}
                     >

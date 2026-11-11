@@ -119,7 +119,7 @@ describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
 
     // Verify Section 35 Quarterly Reports dialog opens
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/Section 35 YORP Quarterly Reports/i)).toBeInTheDocument();
+    expect(screen.getByText(/^YORP Quarterly Reports$/i)).toBeInTheDocument();
     expect(screen.getByText(/Quarterly Summary/i)).toBeInTheDocument();
     expect(screen.getByText(/Disaggregated Report/i)).toBeInTheDocument();
   });

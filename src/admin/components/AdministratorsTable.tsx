@@ -306,7 +306,7 @@ export const AdministratorsTable = ({
               </div>
 
               <div className="flex w-[12%] items-center">
-                <p className="font-cascadia text-[12px] font-semibold leading-[140%] text-slate-500">
+                <p className="font-inter text-[12px] font-semibold leading-[140%] text-slate-500">
                   {isValidLastActive ? `${formatDistanceToNowStrict(lastActiveDate)} ago` : "—"}
                 </p>
               </div>

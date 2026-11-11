@@ -331,7 +331,7 @@ describe("Registration Review Detail Review Summary Visibility", () => {
     expect(await screen.findByText("Back to Registrations Queue")).toBeInTheDocument();
     expect(screen.getByText("Pasig Youth Council Verified")).toBeInTheDocument();
     expect(screen.getByText("Verified")).toBeInTheDocument();
-    expect(screen.getByText("URN: URN-2026-0001")).toBeInTheDocument();
+    expect(screen.getByText("URN URN-2026-0001")).toBeInTheDocument();
     // Registration details (including document counts) load only after the
     // review is opened, so wait for the scoped detail query to settle.
     expect(await screen.findByText(/1\/1 Documents Submitted/i)).toBeInTheDocument();

@@ -520,7 +520,7 @@ export const TemplateFormDialog = ({
                       <p className="truncate font-inter text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
                         {displayFileName}
                       </p>
-                      <p className="truncate font-cascadia text-[11px] font-normal leading-[140%] text-segmented-control-inactive-text">
+                      <p className="truncate font-inter text-[11px] font-normal leading-[140%] text-segmented-control-inactive-text">
                         {formatFileSize(displayFileSize)} · Auto-detected: {detectedFormat}
                       </p>
                     </div>

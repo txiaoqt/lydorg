@@ -60,7 +60,7 @@ export const RecentActivityLogCard = ({ items, actorName, actorRole, onViewFullL
                   <p className="truncate font-inter text-sm font-semibold leading-snug text-foreground">
                     {item.activity}
                   </p>
-                  <p className="shrink-0 font-cascadia text-[10px] font-medium leading-none text-muted-foreground">
+                  <p className="shrink-0 font-inter text-[10px] font-medium leading-none text-muted-foreground">
                     {dayLabel} &middot; {timeLabel}
                   </p>
                 </div>

@@ -79,7 +79,7 @@ export const InquiryDetailDrawer = ({
                 <div className="flex items-center gap-1.5 font-inter text-xs leading-[140%] text-slate-500">
                   <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={1.6} />
                   <span>Received</span>
-                  <span className="font-cascadia text-xs text-slate-600">
+                  <span className="font-inter text-xs text-slate-600">
                     {isValidDate ? `${format(date!, "d MMM yyyy")} · ${format(date!, "h:mm a")}` : ""}
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export const InquiryDetailDrawer = ({
                       <button
                         type="button"
                         onClick={handleCopyEmail}
-                        className="flex h-[24px] w-fit shrink-0 items-center gap-1 rounded-[4px] border border-slate-300 bg-admin-surface px-2 py-0.5 font-cascadia text-[10px] font-semibold leading-none text-slate-600 transition-colors hover:bg-slate-100 active:scale-95 cursor-pointer"
+                        className="flex h-[24px] w-fit shrink-0 items-center gap-1 rounded-[4px] border border-slate-300 bg-admin-surface px-2 py-0.5 font-inter text-[10px] font-semibold leading-none text-slate-600 transition-colors hover:bg-slate-100 active:scale-95 cursor-pointer"
                       >
                         {copied ? (
                           <>

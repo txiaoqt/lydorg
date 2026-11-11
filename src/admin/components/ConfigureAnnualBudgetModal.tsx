@@ -124,7 +124,7 @@ export const ConfigureAnnualBudgetModal = ({
 
           <div className="space-y-1.5">
             <label className="font-inter text-xs font-semibold text-text-default">Fiscal Year</label>
-            <div className="flex h-10 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 font-cascadia text-sm font-bold text-text-default">
+            <div className="flex h-10 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 font-inter text-sm font-bold text-text-default">
               FY {fiscalYear}
             </div>
           </div>
@@ -142,10 +142,10 @@ export const ConfigureAnnualBudgetModal = ({
               placeholder="e.g. 50000000"
               value={amountStr}
               onChange={(e) => setAmountStr(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface px-3.5 py-2 font-cascadia text-sm font-semibold text-text-default outline-none transition-colors focus:border-public-bg-brand"
+              className="flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-admin-surface px-3.5 py-2 font-inter text-sm font-semibold text-text-default outline-none transition-colors focus:border-public-bg-brand"
             />
             {amountStr.trim() !== "" && !Number.isNaN(parsedAmount) ? (
-              <p className="font-cascadia text-xs font-semibold text-public-text-brand">
+              <p className="font-inter text-xs font-semibold text-public-text-brand">
                 Preview: {formatCurrencyPreview(parsedAmount)}
               </p>
             ) : (

@@ -111,19 +111,19 @@ export const OrganizationFundingTable = ({
             </div>
 
             <div className="flex w-[16%] items-center">
-              <p className="font-cascadia text-sm font-semibold leading-[140%] text-text-default">
+              <p className="font-inter text-sm font-semibold leading-[140%] text-text-default">
                 {formatFundingCurrency(row.totalRequested)}
               </p>
             </div>
 
             <div className="flex w-[16%] items-center">
-              <p className="font-cascadia text-sm font-semibold leading-[140%] text-text-default">
+              <p className="font-inter text-sm font-semibold leading-[140%] text-text-default">
                 {formatFundingCurrency(row.totalReleased)}
               </p>
             </div>
 
             <div className="flex w-[16%] items-center">
-              <p className="font-cascadia text-sm font-semibold leading-[140%] text-text-default">
+              <p className="font-inter text-sm font-semibold leading-[140%] text-text-default">
                 {formatFundingCurrency(row.totalLiquidated)}
               </p>
             </div>

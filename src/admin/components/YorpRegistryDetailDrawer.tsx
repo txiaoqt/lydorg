@@ -252,7 +252,7 @@ const AccreditationStatusCard = ({ entry, now }: { entry: YorpRegistryEntry; now
             <div key={unit.label} className="flex flex-col items-center gap-0.5">
               <p
                 className={cn(
-                  "font-cascadia text-xl font-semibold leading-none",
+                  "font-inter text-xl font-semibold leading-none",
                   isActive ? "text-text-positive-strong" : "text-text-warning-secondary",
                 )}
               >
@@ -626,7 +626,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                               {org.advocacies.length ? (
                                 org.advocacies.map((advocacy) => <AdvocacyPill key={advocacy} label={advocacy} />)
                               ) : (
-                                <span className="font-cascadia text-sm font-semibold text-text-default">—</span>
+                                <span className="font-inter text-sm font-semibold text-text-default">—</span>
                               )}
                             </div>
                           </div>
@@ -877,7 +877,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                         <div className="grid grid-cols-2 gap-3">
                           <div
                             className={cn(
-                              "flex flex-col gap-3 rounded-md border p-3",
+                              "flex flex-col justify-center gap-3 rounded-md border p-3",
                               ypopData.isQualified
                                 ? "border-border-success-subtle bg-bg-success-subtle"
                                 : "border-status-danger-border bg-danger-subtle",
@@ -907,10 +907,10 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                             </p>
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-2">
-                                <p className="font-cascadia text-2xl font-semibold leading-none text-text-default">
+                                <p className="font-inter text-2xl font-semibold leading-none text-text-default">
                                   {ypopData.percent}%
                                 </p>
-                                <span className="inline-flex w-fit shrink-0 items-center rounded-full border-[0.6px] border-slate-300 bg-admin-surface px-1.5 py-1 font-cascadia text-[9px] font-normal leading-[140%] text-text-neutral-tertiary">
+                                <span className="inline-flex w-fit shrink-0 items-center rounded-full border-[0.6px] border-slate-300 bg-admin-surface px-1.5 py-1 font-inter text-[9px] font-normal leading-[140%] text-text-neutral-tertiary">
                                   Min. {YPOP_SCORE_THRESHOLD}% Required
                                 </span>
                               </div>
@@ -925,13 +925,14 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
                                   style={{ width: `${Math.min(ypopData.percent, 100)}%` }}
                                 />
                                 <div
-                                  className="absolute top-0 h-full w-px bg-slate-500"
+                                  aria-hidden="true"
+                                  className="absolute -top-1 h-4 w-0.5 -translate-x-1/2 rounded-full bg-text-default ring-2 ring-white"
                                   style={{ left: `${YPOP_SCORE_THRESHOLD}%` }}
                                 />
                               </div>
-                              <div className="relative h-3 w-full">
+                              <div className="relative mt-1 h-3 w-full">
                                 <p
-                                  className="absolute top-0 -translate-x-1/2 whitespace-nowrap font-cascadia text-[9px] font-normal leading-none text-slate-500"
+                                  className="absolute top-0 -translate-x-1/2 whitespace-nowrap font-inter text-[10px] font-semibold leading-none text-text-default"
                                   style={{ left: `${YPOP_SCORE_THRESHOLD}%` }}
                                 >
                                   {YPOP_SCORE_THRESHOLD}% min

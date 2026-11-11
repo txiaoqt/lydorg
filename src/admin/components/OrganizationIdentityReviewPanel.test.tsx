@@ -8,39 +8,43 @@ const packet={outcome:'POSSIBLE_MATCH',version:3,canonicalOrganizationId:null,ca
  candidates:[{id:'original',name:'Existing Organization',urn:'17-26-010',barangay:'Palatiw',district:'District I',status:'verified',verifiedAt:null,
  hasRetainedHistory:true,separateDecision:false,signals:{normalizedName:true,sameBarangay:true,sameDistrict:true,exactUrn:false}}]};
 beforeEach(()=>{vi.resetAllMocks();mocks.user={id:'reviewer',roleCode:'admin',permissionCodes:['registrations_management']};mocks.fetch.mockResolvedValue(packet);mocks.review.mockResolvedValue({...packet,outcome:'VERIFIED_SEPARATE'});});
-it('loads only the selected registration on demand and requires evidence/explicit confirmation',async()=>{
- render(<OrganizationIdentityReviewPanel organizationId="pending"/>);expect(mocks.fetch).not.toHaveBeenCalled();
- fireEvent.click(screen.getByRole('button',{name:'Check Organization Identity'}));await screen.findByText('Existing Organization');expect(mocks.fetch).toHaveBeenCalledWith('pending');
+it('checks the selected registration on open and requires evidence plus explicit confirmation',async()=>{
+ render(<OrganizationIdentityReviewPanel organizationId="pending"/>);
+ expect(await screen.findByText('Possible match found')).toBeInTheDocument();expect(mocks.fetch).toHaveBeenCalledWith('pending');
+ fireEvent.click(screen.getByRole('button',{name:/Check Organization Identity/}));await screen.findByText('Existing Organization');
  const save=screen.getByRole('button',{name:'Record Identity Decision'});expect(save).toBeDisabled();
- fireEvent.click(screen.getByRole('radio'));fireEvent.change(screen.getByLabelText('Identity Decision'),{target:{value:'confirmed_different'}});
- fireEvent.change(screen.getByLabelText('Reason / Remarks'),{target:{value:'Different official registration confirmed'}});
- fireEvent.change(screen.getByLabelText('Official Evidence Reference'),{target:{value:'Official registry ref 123'}});
+ fireEvent.click(screen.getByLabelText(/Clear identity/));
+ fireEvent.change(screen.getByLabelText(/Reason \/ Remarks/),{target:{value:'Different official registration confirmed'}});
+ fireEvent.change(screen.getByLabelText(/Official Evidence Reference/),{target:{value:'Official registry ref 123'}});
  expect(save).toBeDisabled();fireEvent.click(screen.getByRole('checkbox'));fireEvent.click(save);
  await waitFor(()=>expect(mocks.review).toHaveBeenCalledWith('pending','original','confirmed_different','Different official registration confirmed','Official registry ref 123',3));
  expect(await screen.findByText(/Identity check cleared/)).toBeInTheDocument();
  expect(screen.queryByRole('button',{name:'Record Identity Decision'})).not.toBeInTheDocument();
 });
-it('hides the decision form when the identity check is already cleared',async()=>{
+it('shows Not required and no decision form when no other organization matches',async()=>{
  mocks.fetch.mockResolvedValue({...packet,outcome:'NO_MATCH',candidates:[]});render(<OrganizationIdentityReviewPanel organizationId="pending"/>);
- fireEvent.click(screen.getByRole('button',{name:'Check Organization Identity'}));expect(await screen.findByText(/Identity check cleared/)).toBeInTheDocument();
- expect(screen.queryByLabelText('Identity Decision')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Record Identity Decision'})).not.toBeInTheDocument();
+ expect(await screen.findByText('Not required')).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:/Check Organization Identity/})).toBeDisabled();
+ expect(screen.queryByText('Identity Decision')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Record Identity Decision'})).not.toBeInTheDocument();
 });
 it('does not display a response from a prior organization or permission scope',async()=>{
  let resolve:(value:unknown)=>void=()=>{};mocks.fetch.mockReturnValue(new Promise(r=>{resolve=r;}));
- const {rerender}=render(<OrganizationIdentityReviewPanel organizationId="pending"/>);fireEvent.click(screen.getByRole('button',{name:'Check Organization Identity'}));
- rerender(<OrganizationIdentityReviewPanel organizationId="other"/>);await act(async()=>{resolve(packet);});expect(screen.queryByText('Existing Organization')).not.toBeInTheDocument();
- mocks.fetch.mockResolvedValue(packet);fireEvent.click(screen.getByRole('button',{name:'Check Organization Identity'}));await screen.findByText('Existing Organization');
- mocks.user={id:'viewer',roleCode:'viewer',permissionCodes:[]};rerender(<OrganizationIdentityReviewPanel organizationId="other"/>);expect(screen.queryByText('Existing Organization')).not.toBeInTheDocument();
+ const {rerender}=render(<OrganizationIdentityReviewPanel organizationId="pending"/>);
+ mocks.fetch.mockResolvedValue({...packet,candidates:[]});
+ rerender(<OrganizationIdentityReviewPanel organizationId="other"/>);await act(async()=>{resolve(packet);});
+ fireEvent.click(await screen.findByRole('button',{name:/Check Organization Identity/}));expect(screen.queryByText('Existing Organization')).not.toBeInTheDocument();
+ mocks.fetch.mockResolvedValue(packet);mocks.user={id:'viewer',roleCode:'viewer',permissionCodes:[]};rerender(<OrganizationIdentityReviewPanel organizationId="other"/>);
+ expect(screen.queryByText('Existing Organization')).not.toBeInTheDocument();
 });
 it('same-organization confirmation shows continuity guidance without a transfer/merge action',async()=>{
  mocks.fetch.mockResolvedValue({...packet,outcome:'CONFIRMED_EXISTING',canonicalOrganizationId:'original',relatedRegistrations:[{id:'pending',name:'Related application',urn:null,status:'pending_review'}]});
- render(<OrganizationIdentityReviewPanel organizationId="pending"/>);fireEvent.click(screen.getByRole('button',{name:'Check Organization Identity'}));
+ render(<OrganizationIdentityReviewPanel organizationId="pending"/>);
  expect(await screen.findByText(/Original records and obligations remain/)).toBeInTheDocument();expect(screen.queryByRole('button',{name:'Record Identity Decision'})).not.toBeInTheDocument();
  expect(screen.getByText('Registration ID: pending')).toBeInTheDocument();
 });
 it('displays overflow warning and server review errors',async()=>{
  mocks.fetch.mockResolvedValue({...packet,candidateLimitReached:true});render(<OrganizationIdentityReviewPanel organizationId="pending"/>);
- fireEvent.click(screen.getByRole('button',{name:'Check Organization Identity'}));expect(await screen.findByRole('alert')).toHaveTextContent('candidate list reached its limit');
- mocks.fetch.mockRejectedValue(new Error('An authorized registration reviewer is required.'));fireEvent.click(screen.getByRole('button',{name:'Reload Identity Review'}));
+ fireEvent.click(await screen.findByRole('button',{name:/Check Organization Identity/}));expect(await screen.findByRole('alert')).toHaveTextContent('candidate list reached its limit');
+ mocks.fetch.mockRejectedValue(new Error('An authorized registration reviewer is required.'));fireEvent.click(screen.getByRole('button',{name:'Re-run Check'}));
  expect(await screen.findByText('An authorized registration reviewer is required.')).toBeInTheDocument();
 });

@@ -92,19 +92,19 @@ export const OrganizationBudgetDrawer = ({ detail, onOpenChange, onReviewRequest
                 <div className="grid grid-cols-3 gap-2.5">
                   <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-slate-50 p-4">
                     <p className="font-body text-[11px] font-semibold uppercase leading-[140%] text-slate-500">Requested</p>
-                    <p className="font-cascadia text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                    <p className="font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
                       {formatPeso(detail.totalRequested)}
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-slate-50 p-4">
                     <p className="font-body text-[11px] font-semibold uppercase leading-[140%] text-slate-500">Released</p>
-                    <p className="font-cascadia text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                    <p className="font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
                       {formatPeso(detail.totalReleased)}
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-slate-50 p-4">
                     <p className="font-body text-[11px] font-semibold uppercase leading-[140%] text-slate-500">Liquidated</p>
-                    <p className="font-cascadia text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
+                    <p className="font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
                       {formatPeso(detail.totalLiquidated)}
                     </p>
                   </div>

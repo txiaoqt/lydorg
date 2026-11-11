@@ -204,14 +204,14 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
                   <div className="flex flex-1 flex-col gap-1.5">
                     <label className="font-inter text-xs font-normal text-slate-500">Amount</label>
                     <div className="flex h-10 items-center gap-1 rounded-md border border-slate-300 bg-admin-surface px-3">
-                      <span className="font-cascadia text-sm text-slate-500">₱</span>
+                      <span className="font-inter text-sm text-slate-500">₱</span>
                       <input
                         type="number"
                         min={0}
                         value={source.amount}
                         onChange={(event) => handleSourceChange(index, { amount: event.target.value })}
                         placeholder="0.00"
-                        className="w-full border-0 bg-transparent p-0 font-cascadia text-sm text-text-default outline-none placeholder:text-text-disabled"
+                        className="w-full border-0 bg-transparent p-0 font-inter text-sm text-text-default outline-none placeholder:text-text-disabled"
                       />
                     </div>
                   </div>
@@ -250,7 +250,7 @@ export const PublicBudgetSnapshotConfigPage = ({ onBack }: { onBack: () => void 
 
             <div className="flex items-center justify-between border-t border-slate-300 pt-4">
               <p className="font-inter text-sm font-normal text-slate-500">FY Budget Allocation</p>
-              <p className="font-cascadia text-lg font-bold text-text-default">{formatPeso(totalFyBudget)}</p>
+              <p className="font-inter text-lg font-bold text-text-default">{formatPeso(totalFyBudget)}</p>
             </div>
           </div>
 

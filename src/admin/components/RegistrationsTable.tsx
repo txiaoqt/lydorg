@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CategoryChip, ReferenceCodeChip } from "@/admin/components/InquiriesTable";
+import { UrnChip } from "@/admin/components/OrganizationDetailsPanel";
 import {
   pasigDistrictBarangays,
   pasigDistrictOptions,
@@ -240,7 +241,7 @@ export const RegistrationsTable = ({
     <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface shadow-sm">
       {/* Header: status tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-300 p-4">
-        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+        <div className="flex h-10 flex-wrap items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.value;
             return (
@@ -253,7 +254,7 @@ export const RegistrationsTable = ({
                 serverPagination?.onPageChange(0);
                 }}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -472,11 +473,7 @@ export const RegistrationsTable = ({
 
                   <div className="flex w-[14%] flex-col justify-center gap-1">
                     <ReferenceCodeChip code={org.referenceId || "—"} />
-                    {org.urn ? (
-                      <span className="pl-[9px] font-cascadia text-[11px] font-semibold text-positive-secondary">
-                        URN: {org.urn}
-                      </span>
-                    ) : null}
+                    {org.urn ? <UrnChip urn={org.urn} /> : null}
                   </div>
 
                   <div className="flex w-[20%] min-w-0 flex-col gap-0.5">

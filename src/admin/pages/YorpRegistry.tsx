@@ -426,7 +426,7 @@ export function YorpRegistryPage({ generatedBy }: { generatedBy?: string } = {})
                 <AlertDialogTitle>
                   Permanently delete {deleteTarget.organizationName || "this organization"}?
                 </AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogDescription className="text-justify">
                   This will permanently delete the organization account and all
                   organization-owned records and uploaded files. This action cannot be undone.
                 </AlertDialogDescription>

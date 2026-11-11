@@ -154,7 +154,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
           />
         </div>
 
-        <div className="flex h-10 shrink-0 items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1.5">
+        <div className="flex h-10 shrink-0 items-center gap-1 rounded-md border border-slate-300 bg-admin-surface p-1">
           {STATUS_TABS.map((tab) => {
             const active = statusFilter === tab.value;
             return (
@@ -163,7 +163,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                 type="button"
                 onClick={() => onStatusFilterChange(tab.value)}
                 className={cn(
-                  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                  "inline-flex items-center justify-center whitespace-nowrap h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                   active
                     ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                     : "text-text-default hover:bg-slate-50",
@@ -268,7 +268,7 @@ const getSafeTemplateCategories = (template: TemplateRecord): string[] => {
                           {template.description || template.templateDescription}
                         </p>
                         {template.templateFileName ? (
-                          <p className="truncate font-cascadia text-[10px] font-normal leading-[100%] text-slate-500">
+                          <p className="truncate font-inter text-[10px] font-normal leading-snug text-slate-500">
                             {template.templateFileName}
                           </p>
                         ) : null}

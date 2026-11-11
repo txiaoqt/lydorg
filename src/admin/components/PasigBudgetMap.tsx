@@ -471,7 +471,7 @@ export function PasigBudgetMap({
         </section>
       ) : null}
 
-      <footer className="pasig-budget-map__source">Barangay shapes: <a href="https://services7.arcgis.com/poQdgvLD6DHnbpsT/ArcGIS/rest/services/Philippine_Administrative_Boundaries/FeatureServer/3" target="_blank" rel="noreferrer">public Philippine administrative boundary layer</a>. The red line traces the combined barangay boundary for visualization; confirm with Pasig City GIS for official boundary decisions.</footer>
+      <footer className="pasig-budget-map__source">Barangay boundaries are based on a <a href="https://services7.arcgis.com/poQdgvLD6DHnbpsT/ArcGIS/rest/services/Philippine_Administrative_Boundaries/FeatureServer/3" target="_blank" rel="noreferrer">publicly available Philippine administrative boundary dataset</a>. The red outline is provided for visualization purposes only and should not be used as an official boundary reference. For official boundary information, consult Pasig City's authorized GIS records.</footer>
     </section>
   );
 }

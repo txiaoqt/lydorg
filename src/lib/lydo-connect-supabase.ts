@@ -8429,7 +8429,7 @@ export const revokeOrganizationAccreditationInSupabase = async (params: {
 };
 
 /**
- * Fetches the authoritative Section 35 YORP Quarterly Report from the database RPC.
+ * Fetches the authoritative YORP Quarterly Report from the database RPC.
  */
 export const fetchYorpQuarterlyReportInSupabase = async (
   year: number,

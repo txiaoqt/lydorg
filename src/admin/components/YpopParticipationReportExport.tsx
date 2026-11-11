@@ -37,7 +37,7 @@ export function YpopParticipationReportExport({ periodId, semesterLabel, classif
     <button type="button" onClick={() => { setQualification(status); setOpen(true); }}
       className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-public-bg-brand sm:w-fit sm:shrink-0 sm:whitespace-nowrap">
       <Download className="h-4 w-4 shrink-0" strokeWidth={1.6} aria-hidden="true" />
-      {pointsReport ? "Export Points and Qualification Report" : "Export Participation Report"}
+      {pointsReport ? "Export Qualification Report" : "Export Participation Report"}
     </button>
     <AdminExportDialog open={open} onOpenChange={setOpen} reportTitle={reportTitle}
       description={`Export ${semesterLabel}. ${pointsReport ? "Category and activity dates" : "Activity dates"} select rows; points and qualification reflect the complete semester.`}

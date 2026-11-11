@@ -1,4 +1,6 @@
 import { OrganizationIdentityReviewPanel } from "@/admin/components/OrganizationIdentityReviewPanel";
+import { OrganizationDetailsPanel, UrnChip } from "@/admin/components/OrganizationDetailsPanel";
+import { RecordInformationPanel } from "@/admin/components/RecordInformationPanel";
 import { RevisionUnlockPanel } from "@/admin/components/RevisionUnlockPanel";
 import { getCurrentAdminReportPeriod, getAdminReportRange, getAdminReportPeriodError, getAdminReportPeriodLabel, adminReportMetadata, withAdminReportPeriod, fromBudgetMonitoringPeriod, type AdminReportPeriod } from "@/lib/admin-report-period";
 import { AdminReportingPeriodSelector } from "@/admin/components/AdminReportingPeriodSelector";
@@ -268,73 +270,6 @@ import {
 } from "@/lib/lydo-connect-supabase";
 import { validateUrn } from "@/lib/urn-registration";
 import type { AdminRoleRecord, AdministratorRecord, OrganizationRenewalRecord, OrganizationAccreditationRecord, OrganizationRenewalStatus, SubmissionFile, OrganizationProfile, LiquidationReport } from "@/lib/lydo-connect-data";
-
-const RegistrationInfoBox = ({ label, title, description }: { label: string; title: string; description?: string }) => (
-  <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-    <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
-    <div className="flex flex-col gap-0.5">
-      <p className="truncate font-inter text-sm font-semibold leading-none text-text-default">{title}</p>
-      {description ? <p className="truncate font-inter text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
-    </div>
-  </div>
-);
-
-const RegistrationContactBox = ({
-  icon: Icon,
-  label,
-  title,
-  description,
-  href,
-  showCopy,
-}: {
-  icon: LucideIcon;
-  label: string;
-  title: string;
-  description?: string;
-  href?: string;
-  showCopy?: boolean;
-}) => {
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(title);
-    toast({ title: "Copied", description: `${title} copied to clipboard.` });
-  };
-
-  return (
-    <div className="flex items-center gap-3 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-brand-secondary-100 p-2">
-        <Icon className="h-5 w-5 text-border-brand-secondary" strokeWidth={2} />
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">{label}</p>
-        <div className="flex min-w-0 items-center gap-1.5">
-          {href ? (
-            <a
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="truncate font-inter text-sm font-semibold leading-none text-text-default underline-offset-4 hover:underline"
-            >
-              {title}
-            </a>
-          ) : (
-            <p className="truncate font-inter text-sm font-semibold leading-none text-text-default">{title}</p>
-          )}
-          {showCopy ? (
-            <button
-              type="button"
-              onClick={handleCopy}
-              aria-label={`Copy ${label.toLowerCase()}`}
-              className="shrink-0 text-slate-400 transition-colors hover:text-slate-600"
-            >
-              <Copy className="h-3.5 w-3.5" strokeWidth={1.6} />
-            </button>
-          ) : null}
-        </div>
-        {description ? <p className="truncate font-inter text-xs font-normal leading-[140%] text-slate-500">{description}</p> : null}
-      </div>
-    </div>
-  );
-};
 
 const DocumentQueueStatusPill = ({ status, isAwaiting }: { status: SubmissionFile["adminStatus"]; isAwaiting?: boolean }) => {
   if (status === "approved_green") {
@@ -927,7 +862,6 @@ function AdminPortalContent({ section }: { section: string }) {
   const [documentReviewRemarksByFileId, setDocumentReviewRemarksByFileId] = useState<Record<string, string>>({});
   const [selectedRegistrationReviewFileIds, setSelectedRegistrationReviewFileIds] = useState<string[]>([]);
   const [activeRegistrationReviewFileId, setActiveRegistrationReviewFileId] = useState<string | null>(null);
-  const [registrationInfoCollapsed, setRegistrationInfoCollapsed] = useState(true);
   const [registrationBulkDecision, setRegistrationBulkDecision] = useState<RegistrationReviewDecision>("approve");
   const [registrationBulkRemark, setRegistrationBulkRemark] = useState("");
   const [registrationActivityVisibleCount, setRegistrationActivityVisibleCount] = useState(4);
@@ -942,7 +876,6 @@ function AdminPortalContent({ section }: { section: string }) {
   const [registrationReviewSubmitting, setRegistrationReviewSubmitting] = useState(false);
   const [selectedRenewalReviewFileIds, setSelectedRenewalReviewFileIds] = useState<string[]>([]);
   const [activeRenewalReviewFileId, setActiveRenewalReviewFileId] = useState<string | null>(null);
-  const [renewalInfoCollapsed, setRenewalInfoCollapsed] = useState(true);
   const [renewalBulkDecision, setRenewalBulkDecision] = useState<RegistrationReviewDecision>("approve");
   const [renewalBulkRemark, setRenewalBulkRemark] = useState("");
   const [renewalActivityVisibleCount, setRenewalActivityVisibleCount] = useState(4);
@@ -964,7 +897,6 @@ function AdminPortalContent({ section }: { section: string }) {
   const [isBudgetDecisionDirty, setIsBudgetDecisionDirty] = useState(false);
   const [isBudgetRemarkDirty, setIsBudgetRemarkDirty] = useState(false);
   const lastInitializedBudgetIdRef = useRef<string | null>(null);
-  const [budgetInfoCollapsed, setBudgetInfoCollapsed] = useState(true);
   const [budgetActivityVisibleCount, setBudgetActivityVisibleCount] = useState(4);
   const [isBudgetActivityPopoverOpen, setIsBudgetActivityPopoverOpen] = useState(false);
   const budgetActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -985,7 +917,6 @@ function AdminPortalContent({ section }: { section: string }) {
   const [isBudgetDecisionConfirmOpen, setIsBudgetDecisionConfirmOpen] = useState(false);
   const [budgetReviewSubmitting, setBudgetReviewSubmitting] = useState(false);
   const [budgetLifecycleSubmitting, setBudgetLifecycleSubmitting] = useState(false);
-  const [liquidationInfoCollapsed, setLiquidationInfoCollapsed] = useState(true);
   const [liquidationActivityVisibleCount, setLiquidationActivityVisibleCount] = useState(4);
   const [isLiquidationActivityPopoverOpen, setIsLiquidationActivityPopoverOpen] = useState(false);
   const liquidationActivityTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -1774,7 +1705,8 @@ function AdminPortalContent({ section }: { section: string }) {
       organizationId: renewal.organizationId,
       cycleNumber: renewal.cycleNumber,
       organizationName: organization.organizationName || "Unknown Organization",
-      referenceIdentifier: organization.referenceId || organization.urn || "—",
+      referenceIdentifier: organization.referenceId || "—",
+      urn: organization.urn || organization.organizationIdentifierNumber || null,
       district: organization.district || "—",
       barangay: organization.barangay || "—",
       majorClassification: organization.majorClassification || "—",
@@ -3494,7 +3426,6 @@ function AdminPortalContent({ section }: { section: string }) {
     // Newly opened budget request: initialize review panel once
     if (selectedBudgetRequest) {
       lastInitializedBudgetIdRef.current = selectedBudgetRequestId;
-      setBudgetInfoCollapsed(true);
       setBudgetActivityVisibleCount(4);
       setIsBudgetActivityPopoverOpen(false);
       setSelectedBudgetReviewFileIds([]);
@@ -3565,7 +3496,6 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [isBudgetActivityPopoverOpen]);
 
   useEffect(() => {
-    setLiquidationInfoCollapsed(true);
     setLiquidationActivityVisibleCount(4);
     setIsLiquidationActivityPopoverOpen(false);
     setSelectedLiquidationReviewFileIds([]);
@@ -7855,9 +7785,6 @@ function AdminPortalContent({ section }: { section: string }) {
           orderedSubmittedFiles.find((entry) => entry.file.id === activeRegistrationReviewFileId) ??
           orderedSubmittedFiles[0] ??
           null;
-        const activeReviewIndex = activeReviewEntry
-          ? filteredQueueEntries.findIndex((entry) => entry.file.id === activeReviewEntry.file.id)
-          : -1;
         const selectedBulkFiles = orderedSubmittedFiles.filter((entry) => selectedRegistrationReviewFileIds.includes(entry.file.id));
         const hasUnrevisedSelectedFiles = selectedBulkFiles.some((entry) =>
           isAwaitingResubmission({
@@ -7988,7 +7915,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         {groupedActivityEntries.length ? (
                           groupedActivityEntries.map((group) => (
                             <div key={group.label} className="space-y-2">
-                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                              <p className="font-inter text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
                                 {group.label}
                               </p>
                               <div className="space-y-0">
@@ -8094,7 +8021,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div className="flex flex-wrap items-center gap-2.5">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
+                      "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
                       isRegistrationDocumentsComplete
                         ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
                         : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
@@ -8121,170 +8048,31 @@ function AdminPortalContent({ section }: { section: string }) {
 
               <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
 
-              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
-                <div
-                  className={cn(
-                    "flex flex-wrap items-center justify-between gap-3 p-4",
-                    !registrationInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
-                  )}
-                >
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
-                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
-                    </div>
-                    <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
-                      {selectedOrg.organizationName}
-                    </h1>
-                    <ReferenceCodeChip code={selectedOrg.referenceId || "—"} />
-                    {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
-                      <span className="inline-flex items-center gap-1 rounded border border-border-success-subtle bg-bg-success-subtle px-2 py-0.5 font-cascadia text-xs font-semibold text-positive-secondary">
-                        URN: {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
-                      </span>
-                    ) : null}
-                    {selectedOrg.majorClassification ? <CategoryChip category={selectedOrg.majorClassification} /> : null}
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setRegistrationInfoCollapsed((current) => !current)}
-                      className="font-inter text-[11px] font-semibold leading-none text-slate-500"
-                    >
-                      {registrationInfoCollapsed ? "Expand Details" : "Collapse Details"}
-                    </button>
-                    <button
-                      type="button"
-                      aria-expanded={!registrationInfoCollapsed}
-                      onClick={() => setRegistrationInfoCollapsed((current) => !current)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
-                    >
-                      <ChevronDown
-                        className={cn("h-4 w-4 text-text-default transition-transform", !registrationInfoCollapsed && "rotate-180")}
-                        strokeWidth={1.6}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                {!registrationInfoCollapsed ? (
-                  <div className="space-y-3 p-4">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <RegistrationInfoBox label="ORGANIZATION" title={selectedOrg.organizationName} />
-                      <RegistrationInfoBox
-                        label="CLASSIFICATION"
-                        title={selectedOrg.majorClassification || "N/A"}
-                        description={selectedOrg.subClassification || undefined}
-                      />
-                      <RegistrationInfoBox
-                        label="LOCATION"
-                        title={selectedOrg.district || "N/A"}
-                        description={selectedOrg.barangay || undefined}
-                      />
-                      <RegistrationInfoBox
-                        label="REGISTRATION DATE"
-                        title={isRegistrationCreatedDateValid ? format(registrationCreatedDate, "d MMM yyyy") : "N/A"}
-                        description={selectedOrg.isExistingOrganization ? "Existing Organization" : "New Organization"}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <RegistrationContactBox
-                        icon={UserRound}
-                        label="HEAD OF ORGANIZATION"
-                        title={getRepresentativeDisplayName(selectedOrg, "N/A")}
-                        description={`Adviser: ${getAdviserDisplayName(selectedOrg, "N/A")}`}
-                      />
-                      <RegistrationContactBox
-                        icon={Mail}
-                        label="EMAIL"
-                        title={selectedOrg.organizationEmail}
-                        description={
-                          selectedOrg.additionalEmails && selectedOrg.additionalEmails.length > 0
-                            ? `+${selectedOrg.additionalEmails.length} more (${selectedOrg.additionalEmails.join(", ")})`
-                            : "Verified Portal Account"
-                        }
-                        showCopy
-                      />
-                      <RegistrationContactBox
-                        icon={Phone}
-                        label="CONTACT"
-                        title={selectedOrg.contactNumber || "N/A"}
-                        description={
-                          selectedOrg.additionalContactNumbers && selectedOrg.additionalContactNumbers.length > 0
-                            ? `+${selectedOrg.additionalContactNumbers.length} more (${selectedOrg.additionalContactNumbers.join(", ")})`
-                            : undefined
-                        }
-                      />
-                      <RegistrationContactBox
-                        icon={Globe}
-                        label="FACEBOOK"
-                        title={selectedOrg.facebookPageUrl ? selectedOrg.facebookPageUrl.replace(/^https?:\/\/(www\.)?/i, "") : "N/A"}
-                        href={selectedOrg.facebookPageUrl || undefined}
-                      />
-                    </div>
-                    <div className="rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                      <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Office Address</p>
-                      <p className="mt-2 font-inter text-sm font-medium leading-[140%] text-text-default">
-                        {selectedOrg.address || "No address provided"}
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <OrganizationDetailsPanel
+                key={selectedOrg.id}
+                organization={selectedOrg}
+                date={selectedOrg.createdAt}
+                defaultCollapsed
+              />
 
               {!isAutoVerified ? reviewSummaryCard : null}
 
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-snug text-text-default">
                       {activeReviewEntry?.documentType.name ?? "No document selected"}
                     </p>
                     <div className="flex shrink-0 items-center gap-2">
-                      {filteredQueueEntries.length ? (
-                        <div className="flex shrink-0 items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            disabled={activeReviewIndex <= 0}
-                            onClick={() =>
-                              setActiveRegistrationReviewFileId(
-                                filteredQueueEntries[Math.max(0, activeReviewIndex - 1)]?.file.id ?? null,
-                              )
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
-                            Previous
-                          </button>
-                          <div className="flex items-center gap-1">
-                            {filteredQueueEntries.slice(0, 5).map((entry, index) => (
-                              <button
-                                key={entry.file.id}
-                                type="button"
-                                onClick={() => setActiveRegistrationReviewFileId(entry.file.id)}
-                                className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
-                                  activeReviewEntry?.file.id === entry.file.id
-                                    ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                                    : "text-text-default hover:bg-slate-50",
-                                )}
-                              >
-                                {index + 1}
-                              </button>
-                            ))}
-                          </div>
-                          <button
-                            type="button"
-                            disabled={activeReviewIndex < 0 || activeReviewIndex >= filteredQueueEntries.length - 1}
-                            onClick={() =>
-                              setActiveRegistrationReviewFileId(
-                                filteredQueueEntries[Math.min(filteredQueueEntries.length - 1, activeReviewIndex + 1)]?.file.id ?? null,
-                              )
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            Next
-                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
-                          </button>
-                        </div>
+                      {activeReviewEntry ? (
+                        <DocumentQueueStatusPill
+                          status={activeReviewEntry.file.adminStatus}
+                          isAwaiting={isAwaitingResubmission({
+                            adminStatus: activeReviewEntry.file.adminStatus,
+                            revisionRequestedAt: activeReviewEntry.file.revisionRequestedAt,
+                            uploadedAt: activeReviewEntry.file.uploadedAt,
+                          })}
+                        />
                       ) : null}
                       <button
                         type="button"
@@ -8451,7 +8239,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     })}
                                   />
                                 </div>
-                                <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
+                                <p className="truncate font-inter text-xs font-normal leading-snug text-slate-500">
                                   {file.fileName}
                                 </p>
                                 <div className="flex items-center gap-2 pt-1">
@@ -8576,7 +8364,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           {selectedOrg.urn || selectedOrg.organizationIdentifierNumber ? (
                             <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
                               <span className="font-inter text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
-                              <span className="font-cascadia text-base font-bold text-positive-secondary">
+                              <span className="font-inter text-base font-bold text-positive-secondary">
                                 {selectedOrg.urn || selectedOrg.organizationIdentifierNumber}
                               </span>
                             </div>
@@ -8903,9 +8691,6 @@ function AdminPortalContent({ section }: { section: string }) {
           orderedSubmittedFiles.find((entry) => entry.file.id === activeRenewalReviewFileId) ??
           orderedSubmittedFiles[0] ??
           null;
-        const activeReviewIndex = activeReviewEntry
-          ? filteredQueueEntries.findIndex((entry) => entry.file.id === activeReviewEntry.file.id)
-          : -1;
         const selectedBulkFiles = orderedSubmittedFiles.filter((entry) =>
           selectedRenewalReviewFileIds.includes(entry.file.id),
         );
@@ -8937,8 +8722,6 @@ function AdminPortalContent({ section }: { section: string }) {
             selectedRenewalRecord.status === "approved" && Boolean(renewalCertificateUrn);
           const renewalVerifiedAt =
             selectedRenewalRecord.reviewedAt || renewalIssuedAccreditation?.approvedAt || null;
-          const renewalCreatedDate = new Date(selectedRenewalRecord.submittedAt || selectedRenewalRecord.createdAt);
-          const isRenewalCreatedDateValid = !Number.isNaN(renewalCreatedDate.getTime());
 
           const getActivityDayLabel = (iso: string) => {
             const date = new Date(iso);
@@ -9041,7 +8824,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         {groupedActivityEntries.length ? (
                           groupedActivityEntries.map((group) => (
                             <div key={group.label} className="space-y-2">
-                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                              <p className="font-inter text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
                                 {group.label}
                               </p>
                               <div className="space-y-0">
@@ -9097,10 +8880,10 @@ function AdminPortalContent({ section }: { section: string }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5 pt-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
                   <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Approved</p>
-                  <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{approvedDocumentCount}</p>
+                  <p className="mt-2 font-inter text-xl font-bold leading-none text-text-default">{approvedDocumentCount} / {renewalTemplates.length}</p>
                 </div>
                 <div className="flex flex-col items-center rounded-md border border-[#f3f7fb] bg-bg-panel-subtle p-4 text-center">
                   <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">
@@ -9133,7 +8916,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <div className="flex flex-wrap items-center gap-2.5">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
+                      "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%]",
                       isRenewalDocumentsComplete
                         ? "border-border-success-subtle bg-bg-success-subtle text-positive-secondary"
                         : "border-border-warning-subtle bg-amber-50 text-text-warning-secondary",
@@ -9145,120 +8928,15 @@ function AdminPortalContent({ section }: { section: string }) {
                 </div>
               </div>
 
-              {/* Organization details card (collapsible) */}
-              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
-                <div
-                  className={cn(
-                    "flex flex-wrap items-center justify-between gap-3 p-4",
-                    !renewalInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
-                  )}
-                >
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
-                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
-                    </div>
-                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
-                      {selectedOrg.organizationName}
-                    </p>
-                    <ReferenceCodeChip
-                      code={selectedOrg.referenceId || selectedOrg.urn || "—"}
-                      ariaLabel="Organization Reference Code"
-                    />
-                    <CategoryChip
-                      category={selectedOrg.majorClassification}
-                      ariaLabel="Major Classification"
-                    />
-                    <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 font-inter text-xs font-medium text-slate-700">
-                      Cycle {selectedRenewalRecord.cycleNumber}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setRenewalInfoCollapsed((prev) => !prev)}
-                    className="flex items-center gap-1 font-inter text-xs font-medium text-slate-600 hover:text-text-default"
-                  >
-                    <span>{renewalInfoCollapsed ? "Show details" : "Hide details"}</span>
-                    <ChevronDown
-                      className={cn("h-4 w-4 transition-transform duration-200", !renewalInfoCollapsed && "rotate-180")}
-                    />
-                  </button>
-                </div>
-
-                {!renewalInfoCollapsed ? (
-                  <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Organization</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.organizationName}</p>
-                    </div>
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Major Classification</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.majorClassification || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">District & Barangay</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">
-                        {selectedOrg.district || "—"} &bull; {selectedOrg.barangay || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Submitted Date</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">
-                        {isRenewalCreatedDateValid ? format(renewalCreatedDate, "d MMM yyyy, h:mm a") : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Head of Organization</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">
-                        {[selectedOrg.repFirstName, selectedOrg.repLastName].filter(Boolean).join(" ") || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Email Address</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.organizationEmail || "—"}</p>
-                      {selectedOrg.additionalEmails && selectedOrg.additionalEmails.length > 0 ? (
-                        <div className="mt-1 space-y-0.5">
-                          {selectedOrg.additionalEmails.map((email: string, idx: number) => (
-                            <p key={`admin-org-email-${idx}`} className="font-inter text-xs text-slate-500">
-                              <span className="font-medium text-slate-400">Alt:</span> {email}
-                            </p>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Contact Number</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">{selectedOrg.contactNumber || "—"}</p>
-                      {selectedOrg.additionalContactNumbers && selectedOrg.additionalContactNumbers.length > 0 ? (
-                        <div className="mt-1 space-y-0.5">
-                          {selectedOrg.additionalContactNumbers.map((phone: string, idx: number) => (
-                            <p key={`admin-org-phone-${idx}`} className="font-inter text-xs text-slate-500">
-                              <span className="font-medium text-slate-400">Alt:</span> {phone}
-                            </p>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div>
-                      <p className="font-inter text-xs font-semibold uppercase leading-none text-slate-500">Facebook Page</p>
-                      <p className="mt-1 font-inter text-sm text-text-default">
-                        {selectedOrg.facebookPage ? (
-                          <a
-                            href={selectedOrg.facebookPage}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-public-bg-brand hover:underline"
-                          >
-                            {selectedOrg.facebookPage}
-                          </a>
-                        ) : (
-                          "—"
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <OrganizationDetailsPanel
+                key={selectedRenewalRecord.id}
+                organization={selectedOrg}
+                dateLabel="Renewal Submitted"
+                date={selectedRenewalRecord.submittedAt || selectedRenewalRecord.createdAt}
+                dateDescription={`Cycle ${selectedRenewalRecord.cycleNumber} renewal`}
+                defaultCollapsed
+                chips={<span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 font-inter text-xs font-semibold text-slate-600">Cycle {selectedRenewalRecord.cycleNumber}</span>}
+              />
 
               {/* Review summary cards */}
               {reviewSummaryCard}
@@ -9268,44 +8946,19 @@ function AdminPortalContent({ section }: { section: string }) {
                 {/* Left Column: Document Viewer */}
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 p-4">
-                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-snug text-text-default">
                       {activeReviewEntry ? activeReviewEntry.documentType.name : "Select a document"}
                     </p>
                     <div className="flex items-center gap-2">
-                      {filteredQueueEntries.length > 1 ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            aria-label="Previous document"
-                            disabled={activeReviewIndex <= 0}
-                            onClick={() => {
-                              if (activeReviewIndex > 0) {
-                                const prev = filteredQueueEntries[activeReviewIndex - 1];
-                                if (prev) setActiveRenewalReviewFileId(prev.file.id);
-                              }
-                            }}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
-                          >
-                            <ChevronLeft className="h-4 w-4 text-text-default" strokeWidth={1.6} />
-                          </button>
-                          <span className="px-1 font-inter text-xs text-slate-500">
-                            {activeReviewIndex >= 0 ? activeReviewIndex + 1 : 0} of {filteredQueueEntries.length}
-                          </span>
-                          <button
-                            type="button"
-                            aria-label="Next document"
-                            disabled={activeReviewIndex >= filteredQueueEntries.length - 1}
-                            onClick={() => {
-                              if (activeReviewIndex < filteredQueueEntries.length - 1) {
-                                const next = filteredQueueEntries[activeReviewIndex + 1];
-                                if (next) setActiveRenewalReviewFileId(next.file.id);
-                              }
-                            }}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50 disabled:opacity-40"
-                          >
-                            <ChevronRight className="h-4 w-4 text-text-default" strokeWidth={1.6} />
-                          </button>
-                        </div>
+                      {activeReviewEntry ? (
+                        <DocumentQueueStatusPill
+                          status={activeReviewEntry.file.adminStatus}
+                          isAwaiting={isAwaitingResubmission({
+                            adminStatus: activeReviewEntry.file.adminStatus,
+                            revisionRequestedAt: activeReviewEntry.file.revisionRequestedAt,
+                            uploadedAt: activeReviewEntry.file.uploadedAt,
+                          })}
+                        />
                       ) : null}
                       <button
                         type="button"
@@ -9453,7 +9106,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     })}
                                   />
                                 </div>
-                                <p className="truncate font-cascadia text-xs font-normal leading-none text-slate-500">
+                                <p className="truncate font-inter text-xs font-normal leading-snug text-slate-500">
                                   {file.fileName}
                                 </p>
                                 <div className="flex items-center gap-2 pt-1">
@@ -9492,7 +9145,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         {renewalCertificateUrn ? (
                           <div className="mt-1 flex flex-col items-center rounded border border-border-success-subtle bg-admin-surface px-4 py-2 shadow-xs">
                             <span className="font-inter text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official URN</span>
-                            <span className="font-cascadia text-base font-bold text-positive-secondary">
+                            <span className="font-inter text-base font-bold text-positive-secondary">
                               {renewalCertificateUrn}
                             </span>
                           </div>
@@ -9867,7 +9520,6 @@ function AdminPortalContent({ section }: { section: string }) {
             return groups;
           }, []);
 
-          const activeBudgetReviewIndex = selectedBudgetRequestFiles.findIndex((file) => file.id === selectedBudgetRequestFile?.id);
           const selectedBudgetReviewFiles = selectedBudgetRequestFiles.filter(
             (file) => selectedBudgetReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
           );
@@ -10108,177 +9760,55 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                     <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                   </div>
-                  <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                  <h1 className="font-inter text-lg font-semibold leading-snug text-text-default">
                     {selectedBudgetRequest.activityTitle}
                   </h1>
-                  <ReferenceCodeChip
-                    code={buildPublicRecordCode("BR", selectedBudgetRequest, state.budgetRequests)}
-                    className="w-[109px] rounded"
-                  />
+                  {selectedBudgetOrganization?.urn ? <UrnChip urn={selectedBudgetOrganization.urn} /> : null}
                   {selectedBudgetOrganization?.majorClassification ? (
                     <CategoryChip category={selectedBudgetOrganization.majorClassification} />
                   ) : null}
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
-                <div
-                  className={cn(
-                    "flex flex-wrap items-center justify-between gap-3 p-4",
-                    !budgetInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
-                  )}
-                >
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <p className="font-inter text-lg font-semibold leading-none text-text-default">Budget Request Information</p>
-                    <ReferenceCodeChip
-                      code={buildPublicRecordCode("BR", selectedBudgetRequest, state.budgetRequests)}
-                      className="w-[109px] rounded"
-                    />
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setBudgetInfoCollapsed((current) => !current)}
-                      className="font-inter text-[11px] font-semibold leading-none text-slate-500"
-                    >
-                      {budgetInfoCollapsed ? "Expand Details" : "Collapse Details"}
-                    </button>
-                    <button
-                      type="button"
-                      aria-expanded={!budgetInfoCollapsed}
-                      onClick={() => setBudgetInfoCollapsed((current) => !current)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
-                    >
-                      <ChevronDown
-                        className={cn("h-4 w-4 text-text-default transition-transform", !budgetInfoCollapsed && "rotate-180")}
-                        strokeWidth={1.6}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                {!budgetInfoCollapsed ? (
-                  <div className="grid grid-cols-1 gap-2.5 p-4 lg:grid-cols-3">
-                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
-                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Project Name</p>
-                        <p className="truncate font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
-                          {selectedBudgetRequest.activityTitle}
-                        </p>
-                      </div>
-                      {selectedBudgetRequest.activityDescription ? (
-                        <div className="flex flex-col gap-1 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Purpose Description</p>
-                          <p className="font-inter text-[13px] font-normal leading-[140%] text-text-default whitespace-pre-wrap">
-                            {selectedBudgetRequest.activityDescription}
-                          </p>
-                        </div>
-                      ) : null}
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                            {formatAdvocacyLabel(selectedBudgetRequest.purposeCategory) || "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                            {isProposedDateValid ? format(proposedDate, "d MMM yyyy") : "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                            {selectedBudgetRequest.venue || "—"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Submitted By</p>
-                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Organization Name</p>
-                        <p className="truncate font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
-                          {selectedBudgetOrganization?.organizationName ?? "Unknown organization"}
-                        </p>
-                        <ReferenceCodeChip code={selectedBudgetOrganization?.referenceId || "—"} className="rounded" />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Head of Organization</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                            {selectedBudgetOrganization ? getRepresentativeDisplayName(selectedBudgetOrganization, "—") : "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Contact</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default text-right">
-                            {selectedBudgetOrganization?.contactNumber || "—"}
-                            {selectedBudgetOrganization?.additionalContactNumbers && selectedBudgetOrganization.additionalContactNumbers.length > 0
-                              ? ` (+${selectedBudgetOrganization.additionalContactNumbers.length})`
-                              : ""}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Email</span>
-                          <span className="truncate font-inter text-[13px] font-semibold leading-none text-text-default text-right">
-                            {selectedBudgetOrganization?.organizationEmail || "—"}
-                            {selectedBudgetOrganization?.additionalEmails && selectedBudgetOrganization.additionalEmails.length > 0
-                              ? ` (+${selectedBudgetOrganization.additionalEmails.length})`
-                              : ""}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
-                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Total Requested</p>
-                        <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-border-info-tertiary">
-                          {`₱${Math.round(selectedBudgetRequest.requestedAmount).toLocaleString()}`}
-                        </p>
-                      </div>
-                      {selectedBudgetRequest.approvedAmount ? (
-                        <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Approved Amount</p>
-                          <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-positive-secondary">
-                            {`₱${Math.round(selectedBudgetRequest.approvedAmount).toLocaleString()}`}
-                          </p>
-                        </div>
-                      ) : null}
-                      {selectedBudgetRequest.releasedAmount ? (
-                        <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                          <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Released Amount</p>
-                          <p className="font-cascadia text-2xl font-bold leading-[120%] tracking-[-0.02em] text-role-blue-text">
-                            {`₱${Math.round(selectedBudgetRequest.releasedAmount).toLocaleString()}`}
-                          </p>
-                        </div>
-                      ) : null}
-                      <div className="flex items-center justify-between py-2">
-                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Liquidation</span>
-                        {linkedLiquidation && linkedLiquidationCode ? (
-                          <button
-                            type="button"
-                            onClick={() => openLiquidationDetails(linkedLiquidation)}
-                            aria-label={`Open linked liquidation report ${linkedLiquidationCode}`}
-                            title="Open linked liquidation report"
-                            className="inline-flex h-[22px] w-[109px] shrink-0 items-center gap-1.5 rounded border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          >
-                            <span className="min-w-0 flex-1 truncate text-left">{linkedLiquidationCode}</span>
-                            <ArrowUpRight aria-hidden="true" className="h-2.5 w-2.5 shrink-0" strokeWidth={1.8} />
-                          </button>
-                        ) : (
-                          <span className="font-inter text-[13px] font-semibold leading-none text-slate-400">Not yet submitted</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <RecordInformationPanel
+                key={selectedBudgetRequest.id}
+                title="Budget Request Information"
+                code={buildPublicRecordCode("BR", selectedBudgetRequest, state.budgetRequests)}
+                organization={selectedBudgetOrganization}
+                projectName={selectedBudgetRequest.activityTitle}
+                purposeDescription={selectedBudgetRequest.activityDescription}
+                activityRows={[
+                  ["Purpose and category", formatAdvocacyLabel(selectedBudgetRequest.purposeCategory) || "—"],
+                  ["Proposed date", isProposedDateValid ? format(proposedDate, "d MMM yyyy") : "—"],
+                  ["Proposed venue", selectedBudgetRequest.venue || "—"],
+                ]}
+                financial={[
+                  { icon: FileText, label: "Total requested", value: `₱${Math.round(selectedBudgetRequest.requestedAmount).toLocaleString()}` },
+                  { icon: CheckCircle2, label: "Approved amount", value: selectedBudgetRequest.approvedAmount ? `₱${Math.round(selectedBudgetRequest.approvedAmount).toLocaleString()}` : "—" },
+                  { icon: Send, label: "Released amount", value: selectedBudgetRequest.releasedAmount ? `₱${Math.round(selectedBudgetRequest.releasedAmount).toLocaleString()}` : "—" },
+                  {
+                    icon: ClipboardList,
+                    label: "Linked liquidation",
+                    pending: !(linkedLiquidation && linkedLiquidationCode),
+                    value: linkedLiquidation && linkedLiquidationCode ? (
+                      <button
+                        type="button"
+                        onClick={() => openLiquidationDetails(linkedLiquidation)}
+                        aria-label={`Open linked liquidation report ${linkedLiquidationCode}`}
+                        title="Open linked liquidation report"
+                        className="inline-flex h-[26px] w-fit shrink-0 items-center gap-1.5 rounded-full border border-border-reference-chip bg-bg-reference-chip px-2.5 font-cascadia text-xs font-semibold tracking-normal text-text-reference transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <span className="whitespace-nowrap">{linkedLiquidationCode}</span>
+                        <ArrowUpRight aria-hidden="true" className="h-3 w-3 shrink-0" strokeWidth={1.8} />
+                      </button>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 font-inter text-xs font-semibold tracking-normal text-amber-800">
+                        <Clock className="h-3 w-3" strokeWidth={2} />Not yet submitted
+                      </span>
+                    ),
+                  },
+                ]}
+              />
 
               <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
@@ -10314,7 +9844,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           {groupedBudgetActivityEntries.length ? (
                             groupedBudgetActivityEntries.map((group) => (
                               <div key={group.label} className="space-y-2">
-                                <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                <p className="font-inter text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
                                   {group.label}
                                 </p>
                                 <div className="space-y-0">
@@ -10383,54 +9913,22 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-snug text-text-default">
                       {selectedBudgetRequestFile?.fileName ?? "No document selected"}
                     </p>
                     <div className="flex shrink-0 items-center gap-2">
-                      {selectedBudgetRequestFiles.length ? (
-                        <div className="flex shrink-0 items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            disabled={activeBudgetReviewIndex <= 0}
-                            onClick={() =>
-                              setSelectedBudgetFileId(selectedBudgetRequestFiles[Math.max(0, activeBudgetReviewIndex - 1)]?.id ?? null)
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
-                            Previous
-                          </button>
-                          <div className="flex items-center gap-1">
-                            {selectedBudgetRequestFiles.slice(0, 5).map((file, index) => (
-                              <button
-                                key={file.id}
-                                type="button"
-                                onClick={() => setSelectedBudgetFileId(file.id)}
-                                className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
-                                  selectedBudgetRequestFile?.id === file.id
-                                    ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                                    : "text-text-default hover:bg-slate-50",
-                                )}
-                              >
-                                {index + 1}
-                              </button>
-                            ))}
-                          </div>
-                          <button
-                            type="button"
-                            disabled={activeBudgetReviewIndex < 0 || activeBudgetReviewIndex >= selectedBudgetRequestFiles.length - 1}
-                            onClick={() =>
-                              setSelectedBudgetFileId(
-                                selectedBudgetRequestFiles[Math.min(selectedBudgetRequestFiles.length - 1, activeBudgetReviewIndex + 1)]?.id ?? null,
-                              )
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            Next
-                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
-                          </button>
-                        </div>
+                      {selectedBudgetRequestFile ? (
+                        <DocumentQueueStatusPill
+                          status={selectedBudgetRequestFile.adminStatus}
+                          isAwaiting={
+                            (selectedBudgetRequestFile.adminStatus === "needs_revision" || selectedBudgetRequest?.status === "needs_revision") &&
+                            isAwaitingResubmission({
+                              adminStatus: selectedBudgetRequestFile.adminStatus,
+                              revisionRequestedAt: selectedBudgetRequest?.revisionRequestedAt,
+                              uploadedAt: selectedBudgetRequestFile.uploadedAt,
+                            })
+                          }
+                        />
                       ) : null}
                       <button
                         type="button"
@@ -10753,7 +10251,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 )}
                                 <div className="flex items-center justify-between">
                                   <span className="font-inter text-[12px] font-semibold uppercase text-slate-500">Requested Amount</span>
-                                  <span className="font-mono text-[13px] font-bold text-text-default">
+                                  <span className="font-inter text-[13px] font-bold text-text-default">
                                     {`₱${(selectedBudgetRequest.requestedAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                   </span>
                                 </div>
@@ -10774,7 +10272,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     }}
                                     onWheel={(event) => event.currentTarget.blur()}
                                     placeholder="0.00"
-                                    className="h-8 border-slate-300 font-mono text-[13px]"
+                                    className="h-8 border-slate-300 font-inter text-[13px]"
                                   />
                                   {(() => {
                                     const parsedApproved = Number(budgetApprovedAmountDraft);
@@ -10843,7 +10341,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             <p className="font-semibold">Revision Requested</p>
                             <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected documents or information from the organization.</p>
                             {selectedBudgetRequest.adminRemarks ? (
-                              <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
+                              <p className="mt-1 font-inter text-[11px] text-amber-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
                             ) : null}
                           </div>
                         </div>
@@ -10926,10 +10424,10 @@ function AdminPortalContent({ section }: { section: string }) {
 
                       {/* Budget Released stage - Final Terminal State */}
                       {(selectedBudgetRequest.status === "budget_released" || String(selectedBudgetRequest.status) === "completed") && (
-                        <div className="rounded-md border border-border-mandatory-subtle bg-bg-mandatory-subtle p-4 space-y-2">
+                        <div className="rounded-md border border-border-success-subtle bg-bg-success-subtle p-4 space-y-2">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-5 w-5 text-text-mandatory" />
-                            <p className="font-semibold text-sm text-text-mandatory">Budget Released</p>
+                            <CheckCircle2 className="h-5 w-5 text-positive-secondary" />
+                            <p className="font-semibold text-sm text-positive-secondary">Budget Released</p>
                           </div>
                           <p className="font-inter text-xs leading-[140%] text-slate-600">
                             This budget request has reached its final lifecycle stage. Liquidation processing is now available.
@@ -10943,7 +10441,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           <p className="font-semibold text-sm">Request Rejected</p>
                           <p className="mt-1 text-slate-600">This budget request was rejected. No further actions are available.</p>
                           {selectedBudgetRequest.adminRemarks ? (
-                            <p className="mt-1.5 font-mono text-[11px] text-rose-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
+                            <p className="mt-1.5 font-inter text-[11px] text-rose-900">Remarks: {selectedBudgetRequest.adminRemarks}</p>
                           ) : null}
                         </div>
                       )}
@@ -11030,21 +10528,20 @@ function AdminPortalContent({ section }: { section: string }) {
                   <AdminReportingPeriodSelector compact value={budgetReportPeriod} years={reportYears} onChange={period => { setBudgetReviewPage(0); setBudgetReportPeriod(period); }} />
 
                   <Button
+                    type="button"
                     variant="outline"
-                    size="sm"
                     onClick={() => {
                       setActiveReportExport("budget-requests");
                     }}
                     disabled={filteredAdminBudgetRequests.length === 0}
-                    className="flex h-10 items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                    className="h-10 gap-2 border-slate-300 bg-admin-surface px-4 text-text-default hover:bg-slate-50"
                   >
-                    <Download className="h-4 w-4 text-slate-500" />
-                    <span>Export</span>
+                    <Download className="h-4 w-4" />
+                    Export
                   </Button>
                 </div>
               }
             />
-            <p className="text-xs text-text-secondary">Filtered by activity date, falling back to request creation date.</p>
 
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               <StatsCard
@@ -11149,7 +10646,6 @@ function AdminPortalContent({ section }: { section: string }) {
             return groups;
           }, []);
 
-          const activeLiquidationReviewIndex = liquidationFiles.findIndex((file) => file.id === selectedLiquidationReportFile?.id);
           const selectedLiquidationReviewFiles = liquidationFiles.filter(
             (file) => selectedLiquidationReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
           );
@@ -11491,130 +10987,57 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                     <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                   </div>
-                  <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                  <h1 className="font-inter text-lg font-semibold leading-snug text-text-default">
                     {linkedBudgetRequest?.activityTitle ?? "Liquidation Report"}
                   </h1>
-                  <ReferenceCodeChip
-                    code={buildPublicRecordCode("LR", selectedLiquidationReport, visibleLiquidationReports)}
-                    className="w-[109px] rounded"
-                  />
+                  {selectedLiquidationOrganization?.urn ? <UrnChip urn={selectedLiquidationOrganization.urn} /> : null}
+                  {selectedLiquidationOrganization?.majorClassification ? (
+                    <CategoryChip category={selectedLiquidationOrganization.majorClassification} />
+                  ) : null}
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
-                <div
-                  className={cn(
-                    "flex flex-wrap items-center justify-between gap-3 p-4",
-                    !liquidationInfoCollapsed && "border-b border-slate-300 bg-bg-panel-subtle",
-                  )}
-                >
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <p className="font-inter text-lg font-semibold leading-none text-text-default">Liquidation Report Information</p>
-                    <ReferenceCodeChip
-                      code={buildPublicRecordCode("LR", selectedLiquidationReport, visibleLiquidationReports)}
-                      className="w-[109px] rounded"
-                    />
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setLiquidationInfoCollapsed((current) => !current)}
-                      className="font-inter text-[11px] font-semibold leading-none text-slate-500"
-                    >
-                      {liquidationInfoCollapsed ? "Expand Details" : "Collapse Details"}
-                    </button>
-                    <button
-                      type="button"
-                      aria-expanded={!liquidationInfoCollapsed}
-                      onClick={() => setLiquidationInfoCollapsed((current) => !current)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-admin-surface transition-colors hover:bg-slate-50"
-                    >
-                      <ChevronDown
-                        className={cn("h-4 w-4 text-text-default transition-transform", !liquidationInfoCollapsed && "rotate-180")}
-                        strokeWidth={1.6}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                {!liquidationInfoCollapsed ? (
-                  <div className="grid grid-cols-1 gap-2.5 p-4 lg:grid-cols-2">
-                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Activity Details</p>
-                      <div className="flex flex-col gap-2 rounded-md border border-[#f3f7fb] bg-bg-panel-subtle px-4 py-3">
-                        <p className="font-body text-[11px] font-normal capitalize leading-[140%] text-slate-500">Project Name</p>
-                        <p className="truncate font-inter text-base font-bold leading-[120%] tracking-[-0.02em] text-text-default">
-                          {linkedBudgetRequest?.activityTitle ?? "—"}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Purpose & Category</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                            {formatAdvocacyLabel(linkedBudgetRequest?.purposeCategory) || "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Date</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                            {isProposedDateValid && proposedDate ? format(proposedDate, "d MMM yyyy") : "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Proposed Venue</span>
-                          <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                            {linkedBudgetRequest?.venue || "—"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface px-4 py-3">
-                      <p className="text-justify font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Financial Details</p>
-                      <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Released Budget</span>
-                        <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                          {formatPesoAmount(releasedBudgetAmount)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Total Liquidated</span>
-                        <span
-                          className={cn(
-                            "font-inter text-[13px] font-semibold leading-none",
-                            totalLiquidatedAmount > 0 ? "text-bg-success-default" : "text-text-default",
-                          )}
-                        >
-                          {formatPesoAmount(totalLiquidatedAmount)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between border-b border-slate-300 py-2">
-                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Unliquidated Variance</span>
-                        <span className="font-inter text-[13px] font-semibold leading-none text-text-default">
-                          {formatPesoAmount(unliquidatedVariance)} ({unliquidatedVariance === 0 ? "Balanced" : "Outstanding"})
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <span className="font-inter text-[13px] font-semibold capitalize leading-none text-slate-500">Linked Request</span>
-                        {linkedBudgetRequest ? (
-                          <button
-                            type="button"
-                            onClick={() => openBudgetRequestDetails(linkedBudgetRequest.id)}
-                            className="flex h-[22px] w-[109px] shrink-0 items-center gap-1.5 rounded border border-border-reference-chip bg-bg-reference-chip px-2 py-1.5 font-cascadia text-[10px] font-semibold leading-[140%] text-text-reference transition-colors hover:bg-slate-100"
-                          >
-                            <span className="min-w-0 flex-1 truncate text-left">
-                              {buildPublicRecordCode("BR", linkedBudgetRequest, state.budgetRequests)}
-                            </span>
-                            <ExternalLink className="h-2.5 w-2.5 shrink-0" strokeWidth={1.6} />
-                          </button>
-                        ) : (
-                          <span className="font-inter text-[13px] font-semibold leading-none text-slate-400">—</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <RecordInformationPanel
+                key={selectedLiquidationReport.id}
+                title="Liquidation Report Information"
+                code={buildPublicRecordCode("LR", selectedLiquidationReport, visibleLiquidationReports)}
+                organization={selectedLiquidationOrganization}
+                projectName={linkedBudgetRequest?.activityTitle ?? "—"}
+                purposeDescription={linkedBudgetRequest?.activityDescription}
+                activityRows={[
+                  ["Purpose and category", formatAdvocacyLabel(linkedBudgetRequest?.purposeCategory) || "—"],
+                  ["Proposed date", isProposedDateValid && proposedDate ? format(proposedDate, "d MMM yyyy") : "—"],
+                  ["Proposed venue", linkedBudgetRequest?.venue || "—"],
+                ]}
+                financial={[
+                  { icon: Send, label: "Released budget", value: formatPesoAmount(releasedBudgetAmount) },
+                  { icon: CheckCircle2, label: "Total liquidated", value: formatPesoAmount(totalLiquidatedAmount) },
+                  {
+                    icon: Wallet,
+                    label: "Unliquidated variance",
+                    value: (
+                      <span className="flex flex-col">
+                        {formatPesoAmount(unliquidatedVariance)}
+                        <span className="font-inter text-xs font-semibold tracking-normal text-slate-500">{unliquidatedVariance === 0 ? "Balanced" : "Outstanding"}</span>
+                      </span>
+                    ),
+                  },
+                  {
+                    icon: FileText,
+                    label: "Linked request",
+                    value: linkedBudgetRequest ? (
+                      <button
+                        type="button"
+                        onClick={() => openBudgetRequestDetails(linkedBudgetRequest.id)}
+                        className="inline-flex h-[26px] w-fit shrink-0 items-center gap-1.5 rounded-full border border-border-reference-chip bg-bg-reference-chip px-2.5 font-cascadia text-xs font-semibold tracking-normal text-text-reference transition-colors hover:bg-slate-100"
+                      >
+                        <span className="whitespace-nowrap">{buildPublicRecordCode("BR", linkedBudgetRequest, state.budgetRequests)}</span>
+                        <ExternalLink className="h-3 w-3 shrink-0" strokeWidth={1.6} />
+                      </button>
+                    ) : "—",
+                  },
+                ]}
+              />
 
               <div className="rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3 border-b border-slate-300 pb-4">
@@ -11650,7 +11073,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           {groupedLiquidationActivityEntries.length ? (
                             groupedLiquidationActivityEntries.map((group) => (
                               <div key={group.label} className="space-y-2">
-                                <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                                <p className="font-inter text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
                                   {group.label}
                                 </p>
                                 <div className="space-y-0">
@@ -11719,54 +11142,12 @@ function AdminPortalContent({ section }: { section: string }) {
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_376px]">
                 <div className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                    <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                    <p className="truncate font-inter text-lg font-semibold leading-snug text-text-default">
                       {selectedLiquidationReportFile?.fileName ?? "No document selected"}
                     </p>
                     <div className="flex shrink-0 items-center gap-2">
-                      {liquidationFiles.length ? (
-                        <div className="flex shrink-0 items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            disabled={activeLiquidationReviewIndex <= 0}
-                            onClick={() =>
-                              setSelectedLiquidationFileId(liquidationFiles[Math.max(0, activeLiquidationReviewIndex - 1)]?.id ?? null)
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
-                            Previous
-                          </button>
-                          <div className="flex items-center gap-1">
-                            {liquidationFiles.slice(0, 5).map((file, index) => (
-                              <button
-                                key={file.id}
-                                type="button"
-                                onClick={() => setSelectedLiquidationFileId(file.id)}
-                                className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
-                                  selectedLiquidationReportFile?.id === file.id
-                                    ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                                    : "text-text-default hover:bg-slate-50",
-                                )}
-                              >
-                                {index + 1}
-                              </button>
-                            ))}
-                          </div>
-                          <button
-                            type="button"
-                            disabled={activeLiquidationReviewIndex < 0 || activeLiquidationReviewIndex >= liquidationFiles.length - 1}
-                            onClick={() =>
-                              setSelectedLiquidationFileId(
-                                liquidationFiles[Math.min(liquidationFiles.length - 1, activeLiquidationReviewIndex + 1)]?.id ?? null,
-                              )
-                            }
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                          >
-                            Next
-                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
-                          </button>
-                        </div>
+                      {selectedLiquidationReportFile ? (
+                        <DocumentQueueStatusPill status={selectedLiquidationReportFile.adminStatus} />
                       ) : null}
                       <button
                         type="button"
@@ -12070,7 +11451,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 <p className="font-semibold">Revision Requested</p>
                                 <p className="mt-0.5 text-[11px] text-slate-600">Awaiting corrected liquidation proofs or receipts from organization.</p>
                                 {selectedLiquidationReport.remarks ? (
-                                  <p className="mt-1 font-mono text-[11px] text-amber-900">Remarks: {selectedLiquidationReport.remarks}</p>
+                                  <p className="mt-1 font-inter text-[11px] text-amber-900">Remarks: {selectedLiquidationReport.remarks}</p>
                                 ) : null}
                               </div>
                             </div>
@@ -12118,7 +11499,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             <p className="font-semibold text-sm">Report Rejected</p>
                             <p className="text-xs leading-[140%] text-slate-600">This liquidation report was rejected.</p>
                             {selectedLiquidationReport.remarks ? (
-                              <p className="font-mono text-[11px] text-red-900">Remarks: {selectedLiquidationReport.remarks}</p>
+                              <p className="font-inter text-[11px] text-red-900">Remarks: {selectedLiquidationReport.remarks}</p>
                             ) : null}
                           </div>
                         )}
@@ -12208,7 +11589,6 @@ function AdminPortalContent({ section }: { section: string }) {
                 </div>
                 }
               />
-              <p className="text-xs text-text-secondary">Filtered by report creation date. Deadlines may fall in a different year or quarter.</p>
 
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <StatsCard
@@ -12615,13 +11995,13 @@ function AdminPortalContent({ section }: { section: string }) {
                                           </span>
                                         </div>
                                         <div className="flex w-[15%] items-center">
-                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.releasedAmount)}</p>
+                                          <p className="font-inter text-sm font-semibold text-text-default">{formatPesoAmount(entry.releasedAmount)}</p>
                                         </div>
                                         <div className="flex w-[15%] items-center">
-                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(entry.liquidatedAmount)}</p>
+                                          <p className="font-inter text-sm font-semibold text-text-default">{formatPesoAmount(entry.liquidatedAmount)}</p>
                                         </div>
                                         <div className="flex w-[15%] items-center">
-                                          <p className="font-cascadia text-sm font-semibold text-text-default">{formatPesoAmount(remaining)}</p>
+                                          <p className="font-inter text-sm font-semibold text-text-default">{formatPesoAmount(remaining)}</p>
                                         </div>
                                         <div className="flex w-[23%] items-center gap-2">
                                           <div className="h-2 w-full max-w-[140px] overflow-hidden rounded-full bg-bg-progress-track">
@@ -13192,7 +12572,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     Are you sure you want to {pendingToggleActiveAdministrator?.isActive ? "suspend" : "reactivate"} administrator{" "}
                   </span>
                   <span className="font-semibold text-text-default">{pendingToggleActiveAdministrator?.displayName ?? ""}</span>
-                  <span className="text-text-default underline"> ({pendingToggleActiveAdministrator?.email ?? ""})</span>
+                  <span className="text-text-default"> ({pendingToggleActiveAdministrator?.email ?? ""})</span>
                   <span className="text-slate-500">?</span>
                 </>
               }
@@ -13222,7 +12602,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 <>
                   <span className="text-slate-500">Are you sure you want to delete administrator </span>
                   <span className="font-semibold text-text-default">{pendingDeleteAdministrator?.displayName ?? ""}</span>
-                  <span className="text-text-default underline"> ({pendingDeleteAdministrator?.email ?? ""})</span>
+                  <span className="text-text-default"> ({pendingDeleteAdministrator?.email ?? ""})</span>
                   <span className="text-slate-500">?</span>
                 </>
               }
@@ -13461,7 +12841,6 @@ function AdminPortalContent({ section }: { section: string }) {
                 </div>
               }
             />
-            <p className="text-xs text-text-secondary">Filtered by the date the action was recorded.</p>
             <ActivityLogsTable
               logs={adminListResult?.rows.filter((row): row is ActivityLog => "action" in row) ?? []}
               searchValue={activitySearch}
@@ -13663,7 +13042,6 @@ function AdminPortalContent({ section }: { section: string }) {
 
           const activeGroupFiles = activeGroup ? activeGroup.files : [];
           const activeReviewFile = activeGroupFiles.find((f) => f.id === activeEntryReviewFileId) ?? activeGroupFiles[0] ?? null;
-          const activeReviewFileIndex = activeReviewFile ? activeGroupFiles.findIndex((f) => f.id === activeReviewFile.id) : -1;
 
           const selectedBulkGroups = activeReviewGroups.filter((g) => selectedEntryReviewGroupIds.includes(g.id));
           const hasUnrevisedSelectedGroups = selectedBulkGroups.some((g) => g.isAwaiting);
@@ -14032,10 +13410,11 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-public-bg-brand">
                     <Building2 className="h-5 w-5 text-white" strokeWidth={1.33} />
                   </div>
-                  <h1 className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                  <h1 className="truncate font-inter text-lg font-semibold leading-snug text-text-default">
                     {entryOrg?.organizationName ?? "Unknown organization"}
                   </h1>
-                  <ReferenceCodeChip code={entryOrg?.referenceId || "—"} className="rounded" />
+                  <ReferenceCodeChip code={entryOrg?.referenceId || "—"} />
+                  {entryOrg?.urn ? <UrnChip urn={entryOrg.urn} /> : null}
                   {entryOrg?.majorClassification ? <CategoryChip category={entryOrg.majorClassification} /> : null}
                 </div>
                 <div className="relative shrink-0">
@@ -14066,7 +13445,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         {groupedYpopActivityEntries.length ? (
                           groupedYpopActivityEntries.map((group) => (
                             <div key={group.label} className="space-y-2">
-                              <p className="font-cascadia text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
+                              <p className="font-inter text-[13px] font-semibold uppercase leading-[140%] text-[#b3b3b3]">
                                 {group.label}
                               </p>
                               <div className="space-y-0">
@@ -14142,7 +13521,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex w-full max-w-[497px] flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <span className="font-inter text-lg font-semibold leading-none text-text-default">Qualification Progress</span>
-                      <span className="font-cascadia text-lg font-bold leading-none text-text-default">{displayScore}%</span>
+                      <span className="font-inter text-lg font-bold leading-none text-text-default">{displayScore}%</span>
                     </div>
                     <div className="relative h-2 w-full overflow-hidden rounded-full bg-bg-progress-track">
                       <div className="h-full rounded-l-full bg-bg-success-default transition-all" style={{ width: `${progressBarWidth}%` }} />
@@ -14257,7 +13636,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Total</p>
                                 {activeOrgActivity.totalAttendees != null ? (
                                   <>
-                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                    <p className="mt-1 font-inter text-xl font-bold text-text-default">
                                       {activeOrgActivity.totalAttendees.toLocaleString()}
                                     </p>
                                     <p className="font-inter text-[11px] text-slate-500">attendees</p>
@@ -14272,7 +13651,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Girls</p>
                                 {activeOrgActivity.girlsAttendees != null ? (
                                   <>
-                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                    <p className="mt-1 font-inter text-xl font-bold text-text-default">
                                       {activeOrgActivity.girlsAttendees.toLocaleString()}
                                     </p>
                                     <p className="font-inter text-[11px] text-slate-500">attendees</p>
@@ -14287,7 +13666,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 <p className="font-inter text-[11px] font-semibold uppercase text-slate-500">Boys</p>
                                 {activeOrgActivity.boysAttendees != null ? (
                                   <>
-                                    <p className="mt-1 font-cascadia text-xl font-bold text-text-default">
+                                    <p className="mt-1 font-inter text-xl font-bold text-text-default">
                                       {activeOrgActivity.boysAttendees.toLocaleString()}
                                     </p>
                                     <p className="font-inter text-[11px] text-slate-500">attendees</p>
@@ -14303,57 +13682,11 @@ function AdminPortalContent({ section }: { section: string }) {
 
                       <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface shadow-sm min-h-[520px] lg:min-h-0">
                         <div className="flex items-center justify-between gap-3 border-b border-slate-300 p-4">
-                          <p className="truncate font-inter text-lg font-semibold leading-none text-text-default">
+                          <p className="truncate font-inter text-lg font-semibold leading-snug text-text-default">
                             {activeReviewFile?.fileName ?? "No document selected"}
                           </p>
                           <div className="flex shrink-0 items-center gap-2">
-                            {activeGroupFiles.length > 1 ? (
-                              <div className="flex shrink-0 items-center justify-between gap-2">
-                                <button
-                                  type="button"
-                                  disabled={activeReviewFileIndex <= 0}
-                                  onClick={() =>
-                                    setActiveEntryReviewFileId(
-                                      activeGroupFiles[Math.max(0, activeReviewFileIndex - 1)]?.id ?? null,
-                                    )
-                                  }
-                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                                >
-                                  <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.6} />
-                                  Previous
-                                </button>
-                                <div className="flex items-center gap-1">
-                                  {activeGroupFiles.slice(0, 5).map((file, index) => (
-                                    <button
-                                      key={file.id}
-                                      type="button"
-                                      onClick={() => setActiveEntryReviewFileId(file.id)}
-                                      className={cn(
-                                        "flex h-7 w-7 items-center justify-center rounded-md font-inter text-[13px]",
-                                        activeReviewFile?.id === file.id
-                                          ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
-                                          : "text-text-default hover:bg-slate-50",
-                                      )}
-                                    >
-                                      {index + 1}
-                                    </button>
-                                  ))}
-                                </div>
-                                <button
-                                  type="button"
-                                  disabled={activeReviewFileIndex < 0 || activeReviewFileIndex >= activeGroupFiles.length - 1}
-                                  onClick={() =>
-                                    setActiveEntryReviewFileId(
-                                      activeGroupFiles[Math.min(activeGroupFiles.length - 1, activeReviewFileIndex + 1)]?.id ?? null,
-                                    )
-                                  }
-                                  className="flex items-center gap-1 rounded-md px-1.5 py-1 font-inter text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-text-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                                >
-                                  Next
-                                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} />
-                                </button>
-                              </div>
-                            ) : null}
+                            {activeGroup ? <YpopDocumentStatusPill status={activeGroup.status} isAwaiting={activeGroup.isAwaiting} /> : null}
                             <button
                               type="button"
                               aria-label="Download documents"
@@ -14428,7 +13761,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         setActiveEntryReviewFileId(null);
                       }}
                       className={cn(
-                        "flex-1 rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                        "flex-1 h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                         entryReviewTab === "city_led"
                           ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                           : "bg-slate-50 text-text-default",
@@ -14445,7 +13778,7 @@ function AdminPortalContent({ section }: { section: string }) {
                         setActiveEntryReviewFileId(null);
                       }}
                       className={cn(
-                        "flex-1 rounded-md px-3 py-2 font-inter text-sm font-semibold leading-none transition-colors",
+                        "flex-1 h-[30px] rounded-md px-3 font-inter text-sm font-semibold leading-none transition-colors",
                         entryReviewTab === "org_led"
                           ? "bg-public-bg-brand text-public-text-neutral-on-neutral"
                           : "bg-slate-50 text-text-default",
@@ -14598,7 +13931,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                     }}
                                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
                                   >
-                                    <p className="truncate font-inter text-sm font-semibold leading-none text-text-default hover:underline">{group.title}</p>
+                                    <p className="truncate font-inter text-sm font-semibold leading-snug text-text-default hover:underline">{group.title}</p>
                                     {group.categoryLabel ? (
                                       <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-inter text-[10px] font-semibold uppercase leading-[140%]", group.categoryPillClass)}>
                                         {group.categoryLabel}
@@ -14662,7 +13995,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                         >
                                           <div className="min-w-0 flex-1 space-y-1">
                                             <div className="flex items-start justify-between gap-2">
-                                              <p className="truncate font-cascadia text-xs font-semibold leading-none text-text-default">{file.fileName}</p>
+                                              <p className="truncate font-inter text-xs font-semibold leading-snug text-text-default">{file.fileName}</p>
                                               <YpopDocumentStatusPill status={group.status} isAwaiting={group.isAwaiting} />
                                             </div>
                                             <p className="font-inter text-xs font-normal leading-none text-[#b3b3b3]">
@@ -14951,22 +14284,21 @@ function AdminPortalContent({ section }: { section: string }) {
                 Back to Semesters
               </button>
 
+              <AdminPageHeader
+                title={`${period.semesterLabel} Submissions`}
+                description="Review YPOP grant eligibility submissions."
+                wrapActions
+                action={
+                  <YpopParticipationReportExport key={`${period.id}-qualification`} reportKind="points-qualification" periodId={period.id} semesterLabel={period.semesterLabel}
+                    classification={ypopSubmissionClassificationFilter} status={ypopSubmissionFilter} search={ypopSubmissionSearch}
+                    generatedBy={user?.displayName || "Administrator"} />
+                }
+              />
+
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                 <StatsCard title="PENDING EVALUATION" value={pendingEvaluationCount} icon={Clock} description="Submissions awaiting validation." />
                 <StatsCard title="QUALIFIED" value={qualifiedCount} icon={CheckCircle} description="Organizations qualified for YPOP." />
                 <StatsCard title="NOT QUALIFIED" value={notQualifiedCount} icon={XCircle} description="Organizations not qualified for YPOP." />
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-inter text-base font-semibold text-text-default">{period.semesterLabel} Submissions</h2>
-                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                  <YpopParticipationReportExport key={`${period.id}-participation`} periodId={period.id} semesterLabel={period.semesterLabel}
-                    classification={ypopSubmissionClassificationFilter} status={ypopSubmissionFilter} search={ypopSubmissionSearch}
-                    generatedBy={user?.displayName || "Administrator"} />
-                  <YpopParticipationReportExport key={`${period.id}-qualification`} reportKind="points-qualification" periodId={period.id} semesterLabel={period.semesterLabel}
-                    classification={ypopSubmissionClassificationFilter} status={ypopSubmissionFilter} search={ypopSubmissionSearch}
-                    generatedBy={user?.displayName || "Administrator"} />
-                </div>
               </div>
 
               {adminYpopSubmissionsQuery.isError ? (
@@ -16552,7 +15884,7 @@ function AdminPortalContent({ section }: { section: string }) {
                     ? "Delete Suspended Registration?"
                     : "Permanently delete this registration?"}
                 </AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogDescription className="text-justify">
                   {registrationDeleteTarget.profileStatus === "suspended_inactive"
                     ? "This will permanently remove the suspended registration and its associated registration data. The organization will no longer be able to continue this registration. After deletion, the organization may start a new registration from the beginning. This action cannot be undone."
                     : "This will permanently delete the organization account, registration records, submitted documents, uploaded files, and other organization-owned records associated with this account. This action cannot be undone."}

@@ -19,7 +19,8 @@ export const AdminBreadcrumb = ({ groups, activeId }: AdminBreadcrumbProps) => {
         </>
       ) : null}
       <span className="font-inter text-sm font-medium leading-none text-foreground">
-        {activeItem?.label ?? activeId}
+        {/* Pages outside the nav (e.g. notifications) fall back to their route id, so title-case it. */}
+        {activeItem?.label ?? activeId.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}
       </span>
     </div>
   );
