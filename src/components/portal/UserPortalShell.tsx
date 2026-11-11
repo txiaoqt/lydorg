@@ -59,8 +59,9 @@ export const PortalFooter = () => {
   return (
     // Mirrors the header bar (white, full width, hairline border) so the page is framed top and bottom.
     <footer className="mt-4 border-t border-border/60 bg-card">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="max-w-[1440px] mx-auto px-5 sm:px-6 pt-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:py-6">
+        {/* Phones: one centered column; sm+: office left, email right. */}
+        <div className="flex flex-col items-center gap-3.5 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <div className="min-w-0">
             <p className="text-sm font-bold text-foreground">{officeName}</p>
             <p className="text-xs text-muted-foreground leading-relaxed">{address}</p>
@@ -75,10 +76,10 @@ export const PortalFooter = () => {
             {email}
           </a>
         </div>
-        <div className="mt-5 flex flex-col gap-2 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5 flex flex-col-reverse items-center gap-3 border-t border-border/60 pt-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} {officeName}. All rights reserved.</p>
           {/* Plain links: these open the public site pages, outside the portal. */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <a href="/faqs" className={footerLinkClass}>FAQs</a>
             <a href="/contacts" className={footerLinkClass}>Contact Us</a>
             <a href="/privacy" className={footerLinkClass}>Privacy Policy</a>
@@ -197,14 +198,14 @@ export const UserPortalShell = ({
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 dark:bg-background/80 backdrop-blur-2xl transition-colors">
         <div className="max-w-[1440px] mx-auto flex h-15 sm:h-16 items-center justify-between gap-3 px-4 sm:px-6">
           {/* Left — Logo & Mobile Trigger */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <Sheet>
               <SheetTrigger asChild>
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="lg:hidden shrink-0 h-9 w-9 rounded-xl border-border"
+                  className="lg:hidden shrink-0 h-8 w-8 rounded-full border-border"
                   aria-label="Open navigation menu"
                 >
                   <Menu className="h-4 w-4" />
