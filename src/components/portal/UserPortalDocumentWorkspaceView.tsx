@@ -52,6 +52,9 @@ export interface UserPortalDocumentWorkspaceViewProps {
   submissionLogs?: Array<any>;
   isDocumentSubmissionLocked?: boolean;
   isDocumentSubmissionApproved?: boolean;
+  /** Set once the registration is approved or rejected: the page turns read-only and lists the submitted files. */
+  finalSubmissionStatus?: "approved" | "rejected" | null;
+  finalSubmissionFiles?: Array<any>;
   downloadingAllTemplates?: boolean;
   handleDownloadAllTemplates?: () => Promise<void>;
   downloadAllTemplates?: () => void;
@@ -89,6 +92,8 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
   documentSubmissions,
   templatesById = {},
   submissionLogs,
+  finalSubmissionStatus = null,
+  finalSubmissionFiles = [],
   downloadingAllTemplates,
   handleDownloadAllTemplates,
   downloadAllTemplates,
@@ -330,6 +335,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto shrink-0 pt-1 sm:pt-0">
+            {finalSubmissionStatus ? null : (
             <Button
               type="button"
               onClick={() => {
@@ -341,6 +347,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
               <FileUp className="h-3.5 w-3.5" />
               Upload Multiple Documents
             </Button>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -408,6 +415,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
         </Card>
       </div>
 
+      {finalSubmissionStatus ? null : (<>
       {/* 2. Progress Summary Card */}
       <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-3 sm:space-y-3.5 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -503,10 +511,90 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
           </div>
         </section>
       ) : null}
+      </>)}
 
       {/* Main Grid: 8-Column Left Workspace & 4-Column Right Sidebar */}
       <div className="grid grid-cols-12 gap-6 items-start">
-        {/* Left Column (8 Columns Desktop): Filter Toolbar & Document Cards */}
+        {finalSubmissionStatus ? (
+          <div className="col-span-12 lg:col-span-8 space-y-4" aria-label="Submitted registration documents">
+            {/* Same shell as the Progress Summary Card */}
+            <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-1 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">
+                    {finalSubmissionStatus === "approved" ? "Registration Approved" : "Registration Not Approved"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {finalSubmissionStatus === "approved"
+                      ? "PCYDO has approved your registration documents. Submit updated documents through Renewal when your accreditation is due."
+                      : "PCYDO has closed review of this registration. Contact PCYDO for next steps."}
+                  </p>
+                </div>
+                <span className={cn("flex items-center gap-1.5 text-xs font-semibold shrink-0",
+                  finalSubmissionStatus === "approved" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
+                  {finalSubmissionStatus === "approved" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <Lock className="h-4 w-4 shrink-0" />}
+                  {finalSubmissionFiles.length} {finalSubmissionFiles.length === 1 ? "Document" : "Documents"} Submitted
+                </span>
+              </div>
+            </Card>
+
+            {/* Same markup as the requirement cards below, read-only */}
+            {finalSubmissionFiles.map((file: any) => {
+              const title = file.documentTypeName || file.fileName;
+              const approved = isApprovedStatus(file.adminStatus);
+              const uploadedRaw = file.uploadedAt || file.createdAt;
+              const opening = openingPreviewKey === `final:${file.id}`;
+              return (
+                <Card key={file.id} className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-3 shadow-xs">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <FileText className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="space-y-0.5 min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                        <h3 className="text-sm font-bold text-foreground leading-snug">{title}</h3>
+                        <StatusBadge
+                          status={approved ? "approved" : "rejected"}
+                          label={approved ? "Approved" : "Rejected"}
+                          className="text-[10px] font-bold px-2.5 py-0.5 shrink-0 self-start sm:self-auto"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{file.fileName}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-border/40 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="font-semibold text-foreground bg-accent/60 px-2 py-0.5 rounded-md border border-border/40 text-[11px] shrink-0">
+                        {getDocumentPrimaryFileTypeLabel ? getDocumentPrimaryFileTypeLabel(file) : "PDF"}
+                      </span>
+                      {uploadedRaw ? <><span>•</span><span className="truncate">Uploaded {formatDateTimeLabel ? formatDateTimeLabel(uploadedRaw) : new Date(uploadedRaw).toLocaleDateString()}</span></> : null}
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-400 font-semibold">
+                        <Lock aria-hidden="true" className="h-3 w-3 shrink-0" />
+                        Locked from modification
+                      </span>
+                    </div>
+                    {/* The attached-file drawer, as on the requirement cards: openPreview is the template viewer. */}
+                    {openAttachedDocumentEditor && file.fileUrl ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={Boolean(openingPreviewKey)}
+                        aria-busy={opening}
+                        onClick={() => void handleOpenDocument(`final:${file.id}`, () => openAttachedDocumentEditor(file, title))}
+                        className="h-8 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 cursor-pointer justify-center shadow-2xs transition-colors"
+                      >
+                        {opening && <Loader2 aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin motion-reduce:animate-none" />}
+                        <span>{opening ? "Opening…" : "View Attached →"}</span>
+                      </Button>
+                    ) : null}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+        /* Left Column (8 Columns Desktop): Filter Toolbar & Document Cards */
         <div className="col-span-12 lg:col-span-8 space-y-4">
           {/* Smart Filter Toolbar + Sort */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-card border border-border/60 p-2 sm:p-2.5 px-3 rounded-2xl shadow-xs">
@@ -834,6 +922,7 @@ export const UserPortalDocumentWorkspaceView: React.FC<UserPortalDocumentWorkspa
             }))}
           </div>
         </div>
+        )}
 
         {/* Right Column (4 Columns Desktop): Sidebar Cards (Desktop Only: hidden lg:block) */}
         <div className="col-span-12 lg:col-span-4 space-y-5 hidden lg:block">

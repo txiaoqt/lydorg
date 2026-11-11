@@ -1416,6 +1416,13 @@ export default function UserPortal({ section }: { section: string }) {
   const docFiles = state.documentSubmissionFiles.filter(
     (file) => file.submissionId === submissionId && validDocumentTypeIds.has(file.documentTypeId),
   );
+  // The database locks an approved or rejected submission's documents, so the page must not offer uploads.
+  // Its files are listed as submitted, since they may use document types from before a template rebuild.
+  const finalSubmissionStatus =
+    isApprovedDocumentSubmission(submission) ? "approved" : submission?.status === "rejected_red" ? "rejected" : null;
+  const finalSubmissionFiles = finalSubmissionStatus
+    ? state.documentSubmissionFiles.filter((file) => file.submissionId === submissionId)
+    : [];
 
   const isUnderReviewSubmissionFile = (file?: SubmissionFile | null) => {
     if (!file) return false;
@@ -1592,7 +1599,7 @@ export default function UserPortal({ section }: { section: string }) {
     getOrganizationProfileCompletionTarget(profileDraft),
   );
   const profileComplete = isOrganizationProfileComplete(profile);
-  const isDocumentSubmissionLocked = !profileComplete || (templateDocuments.length > 0 && uploadableTemplateDocuments.length === 0);
+  const isDocumentSubmissionLocked = !profileComplete || Boolean(finalSubmissionStatus) || (templateDocuments.length > 0 && uploadableTemplateDocuments.length === 0);
   const renewalCountdown = useMemo(
     () => getOrganizationRenewalCountdown(currentProfile),
     [currentProfile],
@@ -4226,6 +4233,8 @@ export default function UserPortal({ section }: { section: string }) {
             submissionLogs={submissionLogs}
             isDocumentSubmissionLocked={isDocumentSubmissionLocked}
             isDocumentSubmissionApproved={isDocumentSubmissionApproved}
+            finalSubmissionStatus={finalSubmissionStatus}
+            finalSubmissionFiles={finalSubmissionFiles}
             downloadingAllTemplates={downloadingAllTemplates}
             handleDownloadAllTemplates={handleDownloadAllTemplates}
             openBatchUploadWorkspace={openBatchUploadWorkspace}

@@ -195,21 +195,28 @@ const SignIn = ({ forcedMode }: SignInProps) => {
         }
       >
         <div
-          className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page" : ""} min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden`}
+          className={`${pwaFlow ? "ytrace-pwa-app pwa-public-auth-page bg-background" : "bg-[#0E2F66]"} min-h-screen text-foreground flex items-center justify-center px-4 py-8 relative overflow-hidden`}
           data-pwa-theme={pwaFlow ? pwaTheme : undefined}
           style={pwaFlow ? getPwaThemeStyle(pwaTheme) : undefined}
         >
-          {/* Background blobs */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-[-180px] left-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
-            <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
-          </div>
+          {pwaFlow ? (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-[-180px] left-[-140px] h-[360px] w-[360px] rounded-full bg-primary/15 blur-3xl" />
+              <div className="absolute bottom-[-190px] right-[-150px] h-[400px] w-[400px] rounded-full bg-primary/15 blur-3xl" />
+            </div>
+          ) : (
+            // Same backdrop as Sign Up: the PCYDO YDC building washed in Y-TRACE blue.
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+              <img src="/auth/ydc-building.jpg" alt="" className="h-full w-full scale-105 object-cover blur-[2px]" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#0E2F66]/85 via-[#16468A]/82 to-[#1A5CA8]/85" />
+            </div>
+          )}
 
           <div className="w-full max-w-md relative z-10">
             {/* Logo */}
             <div className="mb-7 text-left">
               <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="inline-flex items-center gap-3 max-w-full">
-                <BrandLockup />
+                <BrandLockup onDark={!pwaFlow} />
               </Link>
             </div>
 
@@ -331,9 +338,9 @@ const SignIn = ({ forcedMode }: SignInProps) => {
 
             {/* Below-card links — only rendered on combined deployment surface */}
             {IS_COMBINED_SURFACE && (
-              <div className="mt-5 space-y-2.5 text-center text-sm text-muted-foreground">
+              <div className={`mt-5 space-y-2.5 text-center text-sm ${pwaFlow ? "text-muted-foreground" : "text-white/75"}`}>
                 <p>
-                  <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className="hover:text-foreground transition-colors">
+                  <Link to={pwaFlow ? PWA_ENTRY_ROUTE : "/"} className={`${pwaFlow ? "hover:text-foreground" : "hover:text-white"} transition-colors`}>
                     ← Back to {pwaFlow ? "welcome" : "home"}
                   </Link>
                 </p>

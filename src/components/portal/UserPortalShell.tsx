@@ -13,8 +13,10 @@ import {
   Clock,
   Layers,
   ShieldCheck,
-  FileText
+  FileText,
+  Mail
 } from "lucide-react";
+import { usePublicContactInfo } from "@/lib/admin-system-settings";
 import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +49,49 @@ import {
 import { cn } from "@/lib/utils";
 import type { PortalNavGroup } from "./PortalShell";
 import { UserFeatureIcon } from "./UserFeatureIcon";
+
+const footerLinkClass =
+  "rounded-sm text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+/** Organization portal footer: office contact details and the public help and legal pages. */
+export const PortalFooter = () => {
+  const { officeName, address, email } = usePublicContactInfo();
+  return (
+    // Mirrors the header bar (white, full width, hairline border, same lockup) so the page is framed top and bottom.
+    <footer className="mt-4 border-t border-border/60 bg-card">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <BrandLogo showText={false} className="min-w-0 shrink-0" />
+            <div className="min-w-0 border-l border-border/60 pl-4">
+              <p className="text-sm font-bold text-foreground">{officeName}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{address}</p>
+            </div>
+          </div>
+          <a
+            href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-8 w-fit shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-background px-3 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Mail aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+            {email}
+          </a>
+        </div>
+        <div className="mt-5 flex flex-col gap-2 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} {officeName}. All rights reserved.</p>
+          {/* Plain links: these open the public site pages, outside the portal. */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <a href="/faqs" className={footerLinkClass}>FAQs</a>
+            <a href="/contacts" className={footerLinkClass}>Contact Us</a>
+            <a href="/privacy" className={footerLinkClass}>Privacy Policy</a>
+            <a href="/terms" className={footerLinkClass}>Terms of Service</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
 
 type NotificationItem = {
   id: string;
@@ -150,7 +195,7 @@ export const UserPortalShell = ({
   }, [activeId]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <div className="flex min-h-screen flex-col bg-background text-foreground font-sans">
       {/* Sticky Integrated Glassmorphic Navbar (Height ~60px, max-w-[1440px]) */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 dark:bg-background/80 backdrop-blur-2xl transition-colors">
         <div className="max-w-[1440px] mx-auto flex h-15 sm:h-16 items-center justify-between gap-3 px-4 sm:px-6">
@@ -515,7 +560,7 @@ export const UserPortalShell = ({
       </header>
 
       {/* Main Content Area */}
-      <main className={cn("container mx-auto px-4 sm:px-6", hidePageBanner ? "pt-3 pb-8" : "py-3 sm:py-6")}>
+      <main className={cn("container mx-auto flex-1 px-4 sm:px-6", hidePageBanner ? "pt-3 pb-8" : "py-3 sm:py-6")}>
         {!hidePageBanner ? (
           <section className="mb-4 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 sm:mb-6 sm:px-5 sm:py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -536,6 +581,8 @@ export const UserPortalShell = ({
           {children}
         </div>
       </main>
+
+      <PortalFooter />
 
       {/* Sign Out Confirmation Dialog */}
       <AlertDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen}>
