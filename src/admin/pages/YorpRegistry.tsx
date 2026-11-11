@@ -332,7 +332,7 @@ export function YorpRegistryPage({ generatedBy }: { generatedBy?: string } = {})
               variant="outline"
                   onClick={() => setExportDialogOpen(true)}
                   disabled={exportRows.length === 0}
-              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
+              className="flex h-10 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
             >
               <Download className="h-4 w-4 shrink-0 text-text-default" strokeWidth={1.6} />
               Export
@@ -340,7 +340,7 @@ export function YorpRegistryPage({ generatedBy }: { generatedBy?: string } = {})
             <Button
               onClick={() => setReportDialogOpen(true)}
               style={{ color: "#fff" }}
-              className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-public-bg-brand text-white px-4 py-3 font-inter text-public-fs-body-sm transition-colors hover:bg-public-bg-brand-hover"
+              className="flex h-10 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-public-bg-brand text-white px-4 font-inter text-public-fs-body-sm transition-colors hover:bg-public-bg-brand-hover"
             >
               <BarChart3 className="h-4 w-4 shrink-0 text-white" strokeWidth={1.6} />
               Reports

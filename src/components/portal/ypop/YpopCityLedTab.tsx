@@ -217,7 +217,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                 <th className="py-3.5 px-4 min-w-[130px]">Date</th>
                 <th className="py-3.5 px-4 min-w-[130px]">Venue</th>
                 <th className="py-3.5 px-4 min-w-[130px]">Status</th>
-                <th className="py-3.5 px-5 text-right min-w-[170px]">Action</th>
+                <th className="py-3.5 px-5 text-center min-w-[170px]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 md:table-row-group">
@@ -341,7 +341,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                       </td>
 
                       {/* Column 6: Action */}
-                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap order-6">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-center align-middle whitespace-nowrap order-6">
                         <Button
                           type="button"
                           variant={isNeedsRevision || (participation && hasSavedProof) ? "outline" : "default"}

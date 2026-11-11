@@ -19,7 +19,7 @@ window.ResizeObserver =
     disconnect: vi.fn(),
   }));
 
-describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
+describe("YorpRegistry Page Header Actions & Period Filtering", () => {
   beforeEach(() => {
     writeAdminSession({
       id: "admin-demo",
@@ -35,7 +35,7 @@ describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
     writeAdminSession(null);
   });
 
-  it("renders the Semester dropdown with default 'All Semesters' inline with Export and Reports", () => {
+  it("renders the Year and Period selector inline with Export and Reports, defaulting to the current quarter", () => {
     render(
       <MemoryRouter>
         <LydoConnectProvider>
@@ -44,19 +44,12 @@ describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
       </MemoryRouter>,
     );
 
-    // Verify page header is rendered
     expect(screen.getByText("YORP Registry")).toBeInTheDocument();
-
-    // Verify semester selector button is present with 'All Semesters'
-    const semesterSelector = screen.getByRole("button", { name: /select semester/i });
-    expect(semesterSelector).toBeInTheDocument();
-    expect(semesterSelector).toHaveTextContent("All Semesters");
-
-    // Open semester dropdown
-    fireEvent.click(semesterSelector);
-
-    // Verify dynamic options include "All Semesters"
-    expect(screen.getAllByText("All Semesters").length).toBeGreaterThanOrEqual(1);
+    const now = new Date();
+    expect(screen.getByLabelText("Year")).toHaveValue(String(now.getFullYear()));
+    expect(screen.getByLabelText("Period")).toHaveValue(`q${Math.floor(now.getMonth() / 3) + 1}`);
+    expect(screen.getByRole("button", { name: /^export$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /reports/i })).toBeInTheDocument();
   });
 
   it("keeps Export disabled when the current filtered result has no rows", () => {
@@ -79,7 +72,7 @@ describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("allows opening semester dropdown and renders semester options", async () => {
+  it("lets the admin widen the registry to all years", () => {
     render(
       <MemoryRouter>
         <LydoConnectProvider>
@@ -88,16 +81,10 @@ describe("YorpRegistry Page Header Actions & Semester Filtering", () => {
       </MemoryRouter>,
     );
 
-    const semesterSelector = screen.getByRole("button", { name: /select semester/i });
-    expect(semesterSelector).toBeInTheDocument();
-    expect(semesterSelector).toHaveTextContent("All Semesters");
-
-    // Radix dropdown opens on pointer down / click
-    fireEvent.pointerDown(semesterSelector, { pointerType: "mouse" });
-    fireEvent.click(semesterSelector);
-
-    // Verify 'All Semesters' option is present
-    expect(screen.getAllByText("All Semesters").length).toBeGreaterThanOrEqual(1);
+    const year = screen.getByLabelText("Year");
+    expect(screen.getByRole("option", { name: "All Year" })).toBeInTheDocument();
+    fireEvent.change(year, { target: { value: "all" } });
+    expect(year).toHaveValue("all");
   });
 
   it("renders the Reports button in the page header and opens the Section 35 Quarterly Reports dialog", async () => {

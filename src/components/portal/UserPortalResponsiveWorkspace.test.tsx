@@ -1533,8 +1533,8 @@ describe("UserPortalLiquidationWorkspaceView Mobile Preview Modal Polish", () =>
       const buttonGrid = openTabBtn.parentElement;
       expect(buttonGrid?.className).toContain("grid-cols-2");
 
-      // 5. Quiet Footer verification
-      expect(screen.getByText(/Liquidation Report • Pasig City Youth Development Portal/i)).toBeInTheDocument();
+      // 5. Footer carries only the Close action
+      expect(screen.queryByText(/Liquidation Report • Pasig City Youth Development Portal/i)).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
     });
   });
@@ -1632,8 +1632,8 @@ describe("UserPortalBudgetWorkspaceView Mobile Preview Modal Polish", () => {
       const buttonGrid = openTabBtn.parentElement;
       expect(buttonGrid?.className).toContain("grid-cols-2");
 
-      // 5. Quiet Footer verification
-      expect(screen.getByText(/Budget Request • Pasig City Youth Development Portal/i)).toBeInTheDocument();
+      // 5. Footer carries only the Close action
+      expect(screen.queryByText(/Budget Request • Pasig City Youth Development Portal/i)).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
     });
   });

@@ -32,7 +32,7 @@ export function YpopParticipationReportExport({ periodId, semesterLabel, classif
   const pointsReport = reportKind === "points-qualification";
   const reportTitle = pointsReport ? "YPOP Points and Qualification Report" : "YPOP Participation Report";
   const currentYear = getCurrentAdminReportPeriod().year;
-  const selectClass = "h-10 w-full rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-sm text-text-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-public-bg-brand disabled:opacity-50";
+  const selectClass = "h-10 w-full rounded-md border border-slate-300 bg-admin-surface pl-3 font-inter text-sm text-text-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-public-bg-brand disabled:opacity-50";
   return <>
     <button type="button" onClick={() => { setQualification(status); setOpen(true); }}
       className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-public-bg-brand sm:w-fit sm:shrink-0 sm:whitespace-nowrap">

@@ -57,16 +57,13 @@ const footerLinkClass =
 export const PortalFooter = () => {
   const { officeName, address, email } = usePublicContactInfo();
   return (
-    // Mirrors the header bar (white, full width, hairline border, same lockup) so the page is framed top and bottom.
+    // Mirrors the header bar (white, full width, hairline border) so the page is framed top and bottom.
     <footer className="mt-4 border-t border-border/60 bg-card">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-4">
-            <BrandLogo showText={false} className="min-w-0 shrink-0" />
-            <div className="min-w-0 border-l border-border/60 pl-4">
-              <p className="text-sm font-bold text-foreground">{officeName}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{address}</p>
-            </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-foreground">{officeName}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{address}</p>
           </div>
           <a
             href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`}

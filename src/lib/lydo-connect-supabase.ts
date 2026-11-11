@@ -2509,6 +2509,28 @@ export const loadOrganizationProfileActivityState = async (
   };
 };
 
+/**
+ * Recent verified city-led participations and approved organization-initiated activities for the profile tab.
+ * Read directly instead of through the store, which drops YPOP rows whose semester data is not loaded.
+ */
+export const loadOrganizationRecentYpopActivities = async (organizationId: string) => {
+  if (!supabase || !organizationId) return { cityLed: [] as YPOPEventParticipation[], orgInitiated: [] as YPOPOrgActivity[] };
+  const [cityLed, orgInitiated] = await Promise.all([
+    supabase.from("ypop_event_participations").select(YPOP_EVENT_PARTICIPATION_COLUMNS)
+      .eq("organization_id", organizationId).eq("status", "verified")
+      .order("activity_date", { ascending: false }).order("id", { ascending: false }).limit(4),
+    supabase.from("ypop_org_activities").select(YPOP_ORG_ACTIVITY_COLUMNS)
+      .eq("organization_id", organizationId).eq("status", "approved")
+      .order("activity_date", { ascending: false }).order("id", { ascending: false }).limit(4),
+  ]);
+  if (cityLed.error) throw toQueryError(cityLed.error);
+  if (orgInitiated.error) throw toQueryError(orgInitiated.error);
+  return {
+    cityLed: ((cityLed.data as YpopEventParticipationRow[] | null) ?? []).map(mapYpopEventParticipation),
+    orgInitiated: ((orgInitiated.data as YpopOrgActivityRow[] | null) ?? []).map(mapYpopOrgActivity),
+  };
+};
+
 export const loadOrganizationComplianceState = async (
   organizationId: string,
 ): Promise<Partial<LydoSeedState>> => {

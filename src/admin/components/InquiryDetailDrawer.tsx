@@ -201,7 +201,7 @@ export const InquiryDetailDrawer = ({
                 </button>
               ) : <div />}
               {inquiry && normalizeInquiryStatus(inquiry.status) === "pending_review" ? (
-                <ReplyEmailButton onClick={onReplyEmail} className="h-10 px-4 text-xs sm:text-sm font-semibold" />
+                <ReplyEmailButton onClick={onReplyEmail} className="h-10 px-4 text-[14px] font-semibold" />
               ) : null}
             </div>
           </div>

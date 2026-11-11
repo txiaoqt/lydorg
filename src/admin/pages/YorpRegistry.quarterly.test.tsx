@@ -45,7 +45,7 @@ describe("raw YORP quarterly exports", () => {
     expect(options.rows).toHaveLength(1);
     expect(JSON.stringify(options.rows)).toContain("Match included");
     expect(options.config.title).toContain("Q1 2026");
-    expect(options.config.filenamePrefix).toBe("yorp-registry-2026-q1");
+    expect(options.config.filenamePrefix).toBe("YORP_Registry_2026_Q1");
     expect(options.filterSummaryLines).toEqual(expect.arrayContaining(["Reporting Period: Q1 2026", "District: District I", "Barangay: Bagong Ilog"]));
     expect(options.pdfHeading).toMatchObject({
       programTitle: "Youth Organization Registration Program", title: "Registry Report — Q1 2026", generatedBy: "Example Administrator",

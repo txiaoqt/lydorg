@@ -181,6 +181,36 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/lydo-connect-supabase")>();
   return {
     ...actual,
+    // The admin YPOP flow loads periods, submissions and the entry review through these session RPCs.
+    fetchAdminYpopValidationPeriods: vi.fn().mockImplementation(() =>
+      Promise.resolve([{ period: testPeriod, submissionCount: 2, activityCount: 1 }]),
+    ),
+    fetchAdminYpopPeriodSubmissionPage: vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        rows: [testEntry1, testEntry2].map((entry) => {
+          const org = [testOrg1, testOrg2].find((item) => item.id === entry.organizationId)!;
+          return {
+            id: entry.id, organizationId: org.id, organizationName: org.organizationName,
+            referenceId: org.referenceId ?? "", majorClassification: org.majorClassification,
+            status: "pending_evaluation", entry,
+          };
+        }),
+        totalCount: 2, page: 0, pageSize: 20,
+        summary: { pending_evaluation: 2, qualified: 0, not_qualified: 0 },
+      }),
+    ),
+    fetchAdminYpopEntryReviewDetail: vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        ypopEntries: [testEntry1, testEntry2],
+        organizationProfiles: [testOrg1, testOrg2],
+        ypopPeriods: [testPeriod],
+        ypopCityActivities: [testCityActivity],
+        ypopEventParticipations: [testParticipation1],
+        ypopOrgActivities: [testOrgActivity1],
+        activityLogs: mockActivityLogs,
+      }),
+    ),
+    fetchAdminYpopReviewFiles: vi.fn().mockResolvedValue([]),
     loadAdminYpopState: vi.fn().mockImplementation(() =>
       Promise.resolve({
         ypopPeriods: [testPeriod],

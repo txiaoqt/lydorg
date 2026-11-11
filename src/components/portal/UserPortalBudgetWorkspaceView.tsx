@@ -1692,9 +1692,6 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                         <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md">
                           {recordCode}
                         </span>
-                        <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-0.5 rounded-full border border-emerald-500/20 tabular-nums">
-                          {formatCurrency(selectedRequest.requestedAmount || 0)}
-                        </span>
                       </div>
                     </div>
 
@@ -1704,10 +1701,9 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                       </SheetTitle>
                       <div className="flex items-center gap-2 pt-0.5">
                         <PortalStatusBadge status={selectedRequest.status} label={getBudgetRequestStatusLabel(String(selectedRequest.status))} />
+                        {selectedRequest.purposeCategory ? <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{formatAdvocacyLabel(selectedRequest.purposeCategory)}</span> : null}
                       </div>
-                      <SheetDescription className="text-xs text-muted-foreground font-medium pt-0.5">
-                        {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
-                      </SheetDescription>
+                      <SheetDescription className="sr-only">Activity details, documents, and review status.</SheetDescription>
                     </div>
                   </div>
 
@@ -1905,10 +1901,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                   </div>
 
                   {/* PINNED FOOTER */}
-                  <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-4">
-                      Budget Request • Pasig City Youth Development Portal
-                    </p>
+                  <div className="h-16 py-3 px-6 sm:px-8 border-t border-border/70 bg-card flex items-center justify-end shrink-0">
                     <div className="flex items-center gap-2.5">
                       <SheetClose asChild>
                         <Button
@@ -2013,9 +2006,6 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                         <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md shrink-0">
                           {recordCode}
                         </span>
-                        <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 tabular-nums truncate">
-                          {formatCurrency(selectedRequest.requestedAmount || 0)}
-                        </span>
                       </div>
 
                       <button
@@ -2036,10 +2026,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                       {/* Row 3: Status Badge + Supporting Metadata */}
                       <div className="flex items-center flex-wrap gap-2 pt-0.5">
                         <PortalStatusBadge status={selectedRequest.status} label={getBudgetRequestStatusLabel(String(selectedRequest.status))} />
-                        <span className="text-muted-foreground/40 hidden xs:inline">•</span>
-                        <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate max-w-[220px] sm:max-w-xs">
-                          {selectedRequest.purposeCategory || "General Purpose"} • {selectedRequest.venue || "Pasig City"}
-                        </p>
+                        {selectedRequest.purposeCategory ? <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{formatAdvocacyLabel(selectedRequest.purposeCategory)}</span> : null}
                       </div>
                     </div>
                   </div>
@@ -2241,10 +2228,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                   </div>
 
                   {/* PINNED FOOTER */}
-                  <div className="h-16 py-3 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-between shrink-0">
-                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mr-3 sm:mr-4">
-                      Budget Request • Pasig City Youth Development Portal
-                    </p>
+                  <div className="h-16 py-3 px-4 sm:px-6 border-t border-border/70 bg-card flex items-center justify-end shrink-0">
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"

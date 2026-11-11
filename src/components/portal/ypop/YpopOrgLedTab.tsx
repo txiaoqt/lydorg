@@ -249,7 +249,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                 <th className="py-3.5 px-4 min-w-[120px]">Date</th>
                 <th className="py-3.5 px-4 min-w-[140px]">Venue</th>
                 <th className="py-3.5 px-4 min-w-[120px]">Status</th>
-                <th className="py-3.5 px-5 text-right min-w-[160px]">Action</th>
+                <th className="py-3.5 px-5 text-center min-w-[160px]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 md:table-row-group">
@@ -334,7 +334,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                       </td>
 
                       {/* Column 6: Action */}
-                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap order-5">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-center align-middle whitespace-nowrap order-5">
                         {isNeedsRevision && (
                           <Button
                             type="button"

@@ -101,7 +101,7 @@ export const ReplyEmailButton = ({
       onClick();
     }}
     className={cn(
-      "flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md bg-public-bg-brand px-2.5 py-1.5 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover",
+      "flex h-8 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md bg-public-bg-brand px-2.5 font-inter text-[14px] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover",
       className,
     )}
   >
@@ -215,7 +215,7 @@ export const InquiriesTable = ({
         <span className="w-[15%]">Organization</span>
         <span className="min-w-0 flex-1">Subject &amp; Preview</span>
         <span className="w-[15%]">Received</span>
-        <span className="w-[10%]">Status</span>
+        <span className="w-[14%]">Status</span>
         <span className="w-[185px] shrink-0 text-right pr-6">Actions</span>
       </div>
 
@@ -266,7 +266,7 @@ export const InquiriesTable = ({
                 </p>
               </div>
 
-              <div className="flex w-[10%] items-center">
+              <div className="flex w-[14%] items-center">
                 <StatusPill status={inquiry.status} />
               </div>
 

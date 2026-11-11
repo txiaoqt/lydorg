@@ -219,6 +219,7 @@ import {
 } from "@/lib/lydo-connect-data";
 import {
   loadOrganizationPortalSectionState,
+  loadOrganizationRecentYpopActivities,
   loadOrganizationActivityPage,
   loadOrganizationDocumentSubmissionState,
   loadOrganizationBudgetSubmissionState,
@@ -1547,6 +1548,13 @@ export default function UserPortal({ section }: { section: string }) {
         .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
     [currentProfile?.id, state.ypopOrgActivities],
   );
+  const recentYpopActivitiesQuery = useQuery({
+    queryKey: ["user", user?.id, currentProfile?.id, "recent-ypop-activities"],
+    queryFn: () => loadOrganizationRecentYpopActivities(currentProfile!.id),
+    enabled: Boolean(supabase && user?.id && currentProfile?.id && section === "organization-profile"),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
   const ypopOrgActivityFilesByActivityId = useMemo(() => {
     const map = new Map<string, YPOPOrgActivityFile[]>();
     state.ypopOrgActivityFiles.forEach((file) => {
@@ -4185,8 +4193,8 @@ export default function UserPortal({ section }: { section: string }) {
             setProfilePreviewOpen={setProfilePreviewOpen}
             advocacyOptions={advocacyOptions}
             subClassificationOptions={subClassificationOptions}
-            joinedYpopEvents={ypopEventParticipations}
-            orgInitiatedActivities={ypopOrgActivities}
+            joinedYpopEvents={recentYpopActivitiesQuery.data?.cityLed ?? ypopEventParticipations}
+            orgInitiatedActivities={recentYpopActivitiesQuery.data?.orgInitiated ?? ypopOrgActivities}
             budgetEligibility={budgetEligibility}
             activityLogs={profileActivityLogEntries}
             onViewAllActivities={() => setProfileActivityModalOpen(true)}

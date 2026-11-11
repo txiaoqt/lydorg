@@ -37,6 +37,8 @@ describe("YORP registry accreditation dates", () => {
       accreditationExpiresAt: "2026-11-04T00:00:00Z",
     })];
     renderRegistry();
+    // The registry is scoped to the current quarter; widen it to every year to reach the 2023 term.
+    fireEvent.change(screen.getByLabelText("Year"), { target: { value: "all" } });
     expect(screen.getByText("5 Oct 2023")).toBeInTheDocument();
     expect(screen.getByText("4 Nov 2026")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Expiring Soon" }));

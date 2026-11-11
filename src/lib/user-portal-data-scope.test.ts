@@ -24,6 +24,7 @@ import {
   loadOrganizationNotificationsState,
   loadOrganizationNotificationPage,
   loadOrganizationPortalSectionState,
+  loadOrganizationRecentYpopActivities,
   loadOrganizationYpopSemesterData,
 } from "./lydo-connect-supabase";
 import { queryClient } from "./query-client";
@@ -74,6 +75,19 @@ describe("organization portal data scopes", () => {
     expect(projection).toContain("organization_name");
     expect(projection).not.toBe("*");
     expect(projection).not.toMatch(/seed_(?:batch|source_year|source_record_number)|is_seeded_sample_data/);
+  });
+
+  it("reads the profile's recent YPOP activities without depending on loaded semester data", async () => {
+    tableData.set("ypop_event_participations", [{ id: "p1", organization_id: "org-1", activity_id: "a1", activity_name: "Youth Summit", activity_date: "2026-10-01", venue: "City Hall", status: "verified", created_at: "2026-10-01", updated_at: "2026-10-01" }]);
+    const result = await loadOrganizationRecentYpopActivities("org-1");
+
+    expect(result.cityLed.map((item) => item.activityName)).toEqual(["Youth Summit"]);
+    expect(result.orgInitiated).toEqual([]);
+    const [participations] = queryFor("ypop_event_participations");
+    const [orgActivities] = queryFor("ypop_org_activities");
+    expect(participations.calls).toContainEqual(["eq", "organization_id", "org-1"]);
+    expect(participations.calls).toContainEqual(["eq", "status", "verified"]);
+    expect(orgActivities.calls).toContainEqual(["eq", "status", "approved"]);
   });
 
   it("shares public template metadata in cache and does not read file contents", async () => {
