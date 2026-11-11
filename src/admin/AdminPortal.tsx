@@ -8049,7 +8049,7 @@ function AdminPortalContent({ section }: { section: string }) {
               <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
 
               <OrganizationDetailsPanel
-                key={selectedOrg.id}
+                key={`details-${selectedOrg.id}`}
                 organization={selectedOrg}
                 date={selectedOrg.createdAt}
                 defaultCollapsed
