@@ -44,6 +44,9 @@ const GROUP_ICONS: Record<string, LucideIcon> = {
 const countAssigned = (administrators: AdministratorRecord[], roleCode: string) =>
   administrators.filter((administrator) => administrator.roleCode === roleCode).length;
 
+// Super Admin passes every permission check in code (hasAdminNavPermission), whatever its stored list says.
+const ALL_PERMISSION_CODES = ADMIN_PERMISSION_GROUPS.flatMap((group) => group.items.map((item) => item.code));
+
 const arraysEqualAsSets = (a: string[], b: string[]) => a.length === b.length && a.every((code) => b.includes(code));
 
 const PermissionStatusBadge = ({ granted }: { granted: boolean }) => (
@@ -73,17 +76,15 @@ const PermissionGrid = ({ permissionCodes, readOnly, disabled, onToggle, onDesel
       const groupCodes = group.items.map((item) => item.code);
 
       return (
-        <div key={group.code} className="flex flex-col gap-2 rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-300 pb-2 pt-1.5">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-neutral-100 p-2">
-                <GroupIcon className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.6} />
-              </div>
-              <p className="font-inter text-sm font-semibold leading-none text-public-text-neutral-default">{group.label}</p>
+        <div key={group.code} className="flex flex-col overflow-hidden rounded-md border border-slate-300 bg-admin-surface">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <GroupIcon className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.6} />
+              <p className="font-inter text-[13px] font-semibold leading-none text-public-text-neutral-default">{group.label}</p>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="inline-flex items-center rounded border-[0.6px] border-slate-300 bg-admin-surface px-1.5 py-1 font-cascadia text-[8px] font-semibold leading-[140%] text-slate-500">
-                {grantedCount}/{group.items.length}
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center rounded-full border border-slate-300 bg-admin-surface px-2 py-0.5 font-inter text-xs font-semibold leading-[140%] text-slate-600">
+                {grantedCount} of {group.items.length}
               </span>
               {readOnly ? null : (
                 <button
@@ -98,25 +99,29 @@ const PermissionGrid = ({ permissionCodes, readOnly, disabled, onToggle, onDesel
             </div>
           </div>
 
-          <div className="flex flex-col rounded-md border border-slate-300 bg-gray-50">
-            {group.items.map((item, index) => {
+          <div className="flex flex-col divide-y divide-slate-200">
+            {group.items.map((item) => {
               const checked = permissionCodes.includes(item.code);
               return (
-                <div
-                  key={item.code}
-                  className={cn("flex items-start gap-3 p-4", index < group.items.length - 1 && "border-b border-slate-300")}
-                >
-                  <Checkbox
-                    checked={checked}
-                    disabled={readOnly || disabled}
-                    onCheckedChange={() => onToggle(item.code, checked)}
-                    className="mt-0.5 border-slate-300 data-[state=checked]:border-public-bg-brand data-[state=checked]:bg-public-bg-brand data-[state=checked]:text-public-text-neutral-on-neutral"
-                  />
+                <div key={item.code} className="flex items-start gap-3 px-4 py-3">
+                  {readOnly ? (
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-public-bg-brand" aria-label="Granted">
+                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                    </span>
+                  ) : (
+                    <Checkbox
+                      aria-label={item.label}
+                      checked={checked}
+                      disabled={disabled}
+                      onCheckedChange={() => onToggle(item.code, checked)}
+                      className="mt-0.5 border-slate-400 data-[state=checked]:border-public-bg-brand data-[state=checked]:bg-public-bg-brand data-[state=checked]:text-public-text-neutral-on-neutral"
+                    />
+                  )}
                   <div className="flex flex-col gap-0.5">
                     <p className="font-inter text-[13px] font-semibold leading-[140%] text-public-text-neutral-default">
                       {item.label}
                     </p>
-                    <p className="font-inter text-[11px] font-normal leading-[140%] text-segmented-control-inactive-text">
+                    <p className="font-inter text-xs font-normal leading-[140%] text-slate-500">
                       {item.description}
                     </p>
                   </div>
@@ -145,7 +150,6 @@ export const RolesPermissionsPanel = ({
   const superAdminCount = countAssigned(administrators, "super_admin");
   const adminCount = countAssigned(administrators, "admin");
 
-  const superAdminRole = roles.find((role) => role.code === "super_admin") ?? null;
   const adminRole = roles.find((role) => role.code === "admin") ?? null;
 
   const [draftAdminPermissionCodes, setDraftAdminPermissionCodes] = useState<string[]>(adminRole?.permissionCodes ?? []);
@@ -158,7 +162,7 @@ export const RolesPermissionsPanel = ({
 
   const isDirty = !arraysEqualAsSets(draftAdminPermissionCodes, adminRole?.permissionCodes ?? []);
 
-  const superAdminPermsLabel = `${superAdminRole?.permissionCodes.length ?? ADMIN_PERMISSION_TOTAL_COUNT}/${ADMIN_PERMISSION_TOTAL_COUNT}`;
+  const superAdminPermsLabel = `${ADMIN_PERMISSION_TOTAL_COUNT}/${ADMIN_PERMISSION_TOTAL_COUNT}`;
   const adminPermsLabel = `${adminRole?.permissionCodes.length ?? 0}/${ADMIN_PERMISSION_TOTAL_COUNT}`;
 
   const toggleDraftPermission = (code: string, currentlyChecked: boolean) => {
@@ -242,7 +246,7 @@ export const RolesPermissionsPanel = ({
                   {group.label}
                 </div>
                 {group.items.map((item) => {
-                  const superAdminGranted = superAdminRole?.permissionCodes.includes(item.code) ?? false;
+                  const superAdminGranted = true;
                   const adminGranted = adminRole?.permissionCodes.includes(item.code) ?? false;
                   return (
                     <div key={item.code} className="flex items-center gap-2 border-b border-slate-300 p-4 last:border-b-0">
@@ -375,11 +379,11 @@ export const RolesPermissionsPanel = ({
                   <div className="flex items-start gap-2.5">
                     <Lock className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" strokeWidth={2} />
                     <div className="flex flex-col gap-0.5 text-left">
-                      <p className="text-justify font-inter text-[13px] font-semibold leading-[120%] text-text-default">
-                        Super Admin — Full Access
+                      <p className="font-inter text-[13px] font-semibold leading-[120%] text-text-default">
+                        Permission List
                       </p>
-                      <p className="text-justify font-inter text-[13px] font-normal leading-[120%] text-slate-500">
-                        All available permissions are granted to this role and cannot be modified.
+                      <p className="font-inter text-[13px] font-normal leading-[120%] text-slate-500">
+                        All {ADMIN_PERMISSION_TOTAL_COUNT} permissions are granted to this role.
                       </p>
                     </div>
                   </div>
@@ -395,7 +399,7 @@ export const RolesPermissionsPanel = ({
 
                 {superAdminFullListExpanded ? (
                   <PermissionGrid
-                    permissionCodes={superAdminRole?.permissionCodes ?? []}
+                    permissionCodes={ALL_PERMISSION_CODES}
                     readOnly
                     disabled={false}
                     onToggle={() => undefined}

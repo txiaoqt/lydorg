@@ -46,7 +46,7 @@ export const BudgetMonitoringFilterPopover = ({ filters, onChangeFilters, onRese
     setDraft(current => ({ ...current, [key]: value, ...(key === "district" ? { barangay: "all" } : {}) }));
   };
 
-  const selectClass = "h-9 w-full min-w-0 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-text-default focus:border-public-bg-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand/30 dark:border-slate-700 dark:bg-admin-surface";
+  const selectClass = "h-9 w-full min-w-0 rounded-md border border-slate-300 bg-white pl-2.5 text-xs text-text-default focus:border-public-bg-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand/30 dark:border-slate-700 dark:bg-admin-surface";
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -74,7 +74,7 @@ export const BudgetMonitoringFilterPopover = ({ filters, onChangeFilters, onRese
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="flex max-h-[calc(100dvh-24px)] w-[min(460px,calc(100vw-24px))] flex-col overflow-hidden rounded-lg border-slate-300 bg-white p-0 text-text-default shadow-xl dark:border-slate-700 dark:bg-admin-surface"
+        className="admin-select-chevron flex max-h-[calc(100dvh-24px)] w-[min(460px,calc(100vw-24px))] flex-col overflow-hidden rounded-lg border-slate-300 bg-white p-0 text-text-default shadow-xl dark:border-slate-700 dark:bg-admin-surface"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-700 dark:bg-admin-background/60">
           <div className="flex min-w-0 items-center gap-2">

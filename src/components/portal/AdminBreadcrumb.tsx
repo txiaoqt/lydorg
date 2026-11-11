@@ -11,7 +11,7 @@ export const AdminBreadcrumb = ({ groups, activeId }: AdminBreadcrumbProps) => {
   const activeItem = activeGroup?.items.find((item) => item.id === activeId);
 
   return (
-    <div className="sticky top-20 z-20 flex h-10 items-center gap-2.5 border-b border-border bg-admin-surface/80 backdrop-blur-xs px-4">
+    <div className="sticky top-20 z-20 flex h-10 items-center gap-2.5 border-b border-border bg-admin-surface px-4">
       {activeGroup ? (
         <>
           <span className="font-inter text-sm font-normal leading-none text-muted-foreground">{activeGroup.label}</span>
