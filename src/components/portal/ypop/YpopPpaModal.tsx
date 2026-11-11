@@ -679,7 +679,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
       toast({
         title: submitForReview ? (isNeedsRevision ? "Revision resubmitted" : "Activity submitted for review") : "Draft Saved",
         description: submitForReview
-          ? "The activity and supporting documents have been submitted and are currently under PCYDO review."
+          ? "The PPA activity and supporting documents have been submitted and are currently under PCYDO review."
           : "Your activity details and supporting documents have been saved as a draft. You can review, replace, or update them before submitting for admin review.",
       });
     } catch (error) {
@@ -752,7 +752,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               Awaiting Admin Validation
             </p>
             <p className="text-blue-600/90 dark:text-blue-400/90 leading-snug sm:leading-relaxed break-words">
-              The activity and supporting documents have been submitted and are currently under PCYDO review.
+              The PPA activity and supporting documents have been submitted and are currently under PCYDO review.
             </p>
           </div>
         </div>
@@ -766,7 +766,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               Activity Approved
             </p>
             <p className="text-emerald-600/90 dark:text-emerald-400/90 leading-snug sm:leading-relaxed break-words">
-              Your activity and supporting documents have been verified by PCYDO. This project has earned bonus points toward your organization&apos;s YPOP qualification score.
+              Your PPA activity and supporting documents have been verified by PCYDO. This project has earned bonus points toward your organization&apos;s YPOP qualification score.
             </p>
           </div>
         </div>

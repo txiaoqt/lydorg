@@ -125,7 +125,7 @@ export function PwaYpopPage({ data }: { data: PortalData }) {
     <div className="pwa-stack pwa-ypop-landing">
       <section className="pwa-page-intro">
         <span><Medal aria-hidden="true" /></span>
-        <div><h2>YPOP Incentive</h2><p>Join activities, manage proof, log PPAs, and submit semester participation for validation.</p></div>
+        <div><h2>YPOP Incentive</h2><p>Join activities, manage proof, log organization-initiated activities, and submit semester participation for validation.</p></div>
       </section>
       {!data.ypopWorkflowEligibility.canEditParticipation ? (
         <section className="pwa-eligibility-notice"><Medal aria-hidden="true" /><div><h2>Organization verification required</h2><p>YPOP participation becomes editable after the organization profile is verified.</p></div></section>
@@ -151,7 +151,7 @@ export function PwaYpopPage({ data }: { data: PortalData }) {
               <div className="pwa-progress"><span style={{ width: `${Math.min(100, storedScore)}%` }} /></div>
               <dl className="pwa-ypop-semester-counts">
                 <div><dt>City-led activities</dt><dd>{verifiedCityCount} / {cityActivityCount} verified</dd></div>
-                <div><dt>Approved PPAs</dt><dd>{approvedPpas}</dd></div>
+                <div><dt>Approved Activities</dt><dd>{approvedPpas}</dd></div>
                 <div><dt>Validation status</dt><dd>{entry ? actionLabel(entry) : "Not started"}</dd></div>
               </dl>
               {finalized ? (

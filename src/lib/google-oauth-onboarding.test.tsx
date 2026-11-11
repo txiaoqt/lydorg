@@ -519,7 +519,7 @@ describe("Google OAuth Onboarding & Auth Callback Flow", () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByText("5. Leadership & Headquarters")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("5. Leadership & Organization Officials")).toBeInTheDocument());
     expect(document.getElementById("org-district")).toBeNull();
     expect(document.getElementById("org-barangay")).toBeNull();
     expect(document.getElementById("address-barangay")).toBeInTheDocument();

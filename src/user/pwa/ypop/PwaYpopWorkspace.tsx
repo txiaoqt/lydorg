@@ -464,7 +464,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
           <span><small>City-led points</small><strong>{score.cityLedEarned} / {score.cityLedMax}</strong></span>
           <span><small>City percentage</small><strong>{score.cityLedPercent}%</strong></span>
           <span><small>Organization bonus</small><strong>+{score.orgLedBonus}%</strong></span>
-          <span><small>Approved PPAs</small><strong>{approvedPpas}</strong></span>
+          <span><small>Approved Activities</small><strong>{approvedPpas}</strong></span>
           <span><small>Joined activities</small><strong>{participations.length}</strong></span>
         </div>
         {entry?.adminRemarks && !finalized ? <div className="pwa-admin-note"><strong>Admin remarks</strong><p>{entry.adminRemarks}</p></div> : null}
@@ -536,7 +536,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
       </section>
 
       <section className="pwa-card pwa-ypop-workspace-section pwa-ypop-main-section">
-        <div className="pwa-section-heading"><h2>Organization-Led Activities / PPA Submissions</h2>{ppaUnlocked ? <Button size="sm" variant="outline" onClick={async () => {
+        <div className="pwa-section-heading"><h2>Organization-initiated Activities</h2>{ppaUnlocked ? <Button size="sm" variant="outline" onClick={async () => {
   if (entry) {
     go(pwaYpopPpaNewRoute(entry.id));
   } else {
@@ -601,7 +601,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
         </div>
         {entry && orgActivityTotalCount > 3 ? (
           <Button className="pwa-ypop-view-all-ppas" variant="outline" onClick={() => go(pwaYpopPpaListRoute(entry.id))}>
-            View All Submitted PPAs
+            View All Submitted Activities
             <ChevronRight aria-hidden="true" />
           </Button>
         ) : null}
@@ -627,11 +627,11 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
         <section className="pwa-card pwa-ypop-workspace-section pwa-ypop-side-section">
           <h2>Qualification and Scoring</h2>
           <dl className="pwa-ypop-scoring-list">
-            <div><dt>City-Led Score</dt><dd>{score.cityLedPercent}%</dd></div>
-            <div><dt>Organization Bonus</dt><dd>+{score.orgLedBonus}%</dd></div>
+            <div><dt>City-led Score</dt><dd>{score.cityLedPercent}%</dd></div>
+            <div><dt>Organization-initiated Bonus</dt><dd>+{score.orgLedBonus}%</dd></div>
             <div><dt>Current Score</dt><dd>{score.totalScore}%</dd></div>
             <div><dt>Qualification Threshold</dt><dd>{entry?.pointsRequired ?? 70}%</dd></div>
-            <div><dt>Approved PPA Count</dt><dd>{approvedPpas}</dd></div>
+            <div><dt>Approved Activities</dt><dd>{approvedPpas}</dd></div>
           </dl>
         </section>
       )}
@@ -659,7 +659,7 @@ export function PwaYpopWorkspace({ data }: { data: PortalData }) {
           <LockKeyhole aria-hidden="true" />
           <div>
             <strong>{finalized ? "Submission finalized" : period?.status === "closed" ? "Period closed" : "Submission under review"}</strong>
-            <p>{entry.status === "qualified" ? "City-led validation is complete. You may now manage PPA submissions in the Organization-Led Activities section." : finalized ? "This submission was finalized and can no longer be edited." : period?.status === "closed" ? "This period is closed and the submission can no longer be edited." : "This submission is being reviewed and can no longer be edited."}</p>
+            <p>{entry.status === "qualified" ? "City-led validation is complete. You may now manage PPA submissions in the Organization-initiated Activities section." : finalized ? "This submission was finalized and can no longer be edited." : period?.status === "closed" ? "This period is closed and the submission can no longer be edited." : "This submission is being reviewed and can no longer be edited."}</p>
           </div>
         </section>
       ) : null}
@@ -1005,7 +1005,7 @@ export function PwaYpopPpaEditor({ data }: { data: PortalData }) {
         data.store.updateYPOPOrgActivity(saved.id, saved);
       }
       await invalidateOrganizationYpopQueries(organizationId, entry.semester, entry.id);
-      toast({ title: submit ? "PPA submitted" : "PPA draft saved", description: submit ? "The activity is now pending admin approval." : "You can continue this draft later." });
+      toast({ title: submit ? "PPA submitted" : "PPA draft saved", description: submit ? "The PPA activity and supporting documents have been submitted and are currently under PCYDO review." : "You can continue this draft later." });
       go(pwaYpopEntryRoute(entry.id), { replace: true });
     } catch (error) {
       toast({ title: "Unable to save PPA", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });

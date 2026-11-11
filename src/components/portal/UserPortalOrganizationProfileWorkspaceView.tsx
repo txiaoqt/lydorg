@@ -468,11 +468,11 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
           </div>
 
-          {/* Section 5: Leadership & Headquarters */}
+          {/* Section 5: Leadership & Organization Officials */}
           <div className="space-y-4 pt-3 border-t border-border/40">
             <div className="border-b border-border/60 pb-1.5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Globe className="h-3.5 w-3.5" /> 5. Leadership & Headquarters
+                <Globe className="h-3.5 w-3.5" /> 5. Leadership & Organization Officials
               </h3>
               <p className="text-[11px] text-muted-foreground">Manage organization leadership and the structured headquarters address.</p>
             </div>

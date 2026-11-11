@@ -784,7 +784,7 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
     { id: "basic", label: "Basic Information" },
     { id: "location", label: "Location & Classification" },
     { id: "advocacy", label: "Centers of Youth Participation" },
-    { id: "contact", label: "5. Leadership & Headquarters" },
+    { id: "contact", label: "5. Leadership & Organization Officials" },
   ] as const;
   return (
     <div className="pwa-stack pwa-profile-editor">

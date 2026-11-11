@@ -1140,12 +1140,12 @@ const GoogleOnboarding = () => {
             </CardContent>
           </Card>
 
-          {/* Section 5: Leadership & Headquarters */}
+          {/* Section 5: Leadership & Organization Officials */}
           <Card className="rounded-2xl border border-border/80 bg-card shadow-xs">
             <CardHeader className="p-5 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <User className="h-4 w-4 text-primary" />
-                <span>5. Leadership & Headquarters</span>
+                <span>5. Leadership & Organization Officials</span>
               </CardTitle>
               <CardDescription className="text-xs">
                 Authorized youth leaders and physical headquarters location in Pasig City.
