@@ -2943,7 +2943,7 @@ export default function UserPortal({ section }: { section: string }) {
     setBudgetFileDraft(null);
   };
 
-  const saveBudgetRequest = async (status: BudgetRequest["status"] = budgetForm.status) => {
+  const saveBudgetRequest = async (status: BudgetRequest["status"] = budgetForm.status, hasExistingFile = false) => {
     if (!user || !currentProfile) {
       toast({
         title: "Complete your organization profile first",
@@ -3094,7 +3094,7 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     const existingBudgetFile = budgetRequestFilesByBudgetId.get(nextBudgetRequest.id);
-    if (!budgetFileDraft && !existingBudgetFile) {
+    if (!budgetFileDraft && !existingBudgetFile && !hasExistingFile) {
       toast({
         title: "Attach the required document",
         description: "Please upload the detailed project proposal before saving the request.",
@@ -4415,9 +4415,9 @@ export default function UserPortal({ section }: { section: string }) {
                 budgetFileInputRef.current.value = "";
               }
             }}
-            handleCreateOrUpdateBudgetRequest={async (e, isDraft) => {
+            handleCreateOrUpdateBudgetRequest={async (e, isDraft, hasExistingFile) => {
               e.preventDefault();
-              await saveBudgetRequest(isDraft ? "draft" : "submitted");
+              await saveBudgetRequest(isDraft ? "draft" : "submitted", hasExistingFile);
             }}
             onReplaceBudgetFile={handleReplaceBudgetFile}
             onResubmitBudgetRequest={handleResubmitBudgetRequest}

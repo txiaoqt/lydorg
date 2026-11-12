@@ -156,7 +156,7 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
         fireEvent.click(submitButton);
       });
 
-      expect(handleSubmitMock).toHaveBeenCalledWith(expect.anything(), false);
+      expect(handleSubmitMock).toHaveBeenCalledWith(expect.anything(), false, false);
       expect(submitButton).toHaveTextContent("Submit Proposal →");
       expect(submitButton).not.toBeDisabled();
     });
@@ -298,7 +298,7 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
       expect(cancelButton).toBeDisabled();
 
       // Verify draft called with isDraft = true
-      expect(handleDraftMock).toHaveBeenCalledWith(expect.anything(), true);
+      expect(handleDraftMock).toHaveBeenCalledWith(expect.anything(), true, false);
 
       // Attempting to submit proposal while saving draft is blocked
       await act(async () => {

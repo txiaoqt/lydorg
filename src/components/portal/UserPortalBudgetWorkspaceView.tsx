@@ -148,7 +148,8 @@ export interface UserPortalBudgetWorkspaceViewProps {
   newRemarks?: string;
   setNewRemarks?: (val: string) => void;
   organizationAdvocacies?: string[];
-  handleCreateOrUpdateBudgetRequest: (event: React.FormEvent, isDraft?: boolean) => Promise<void>;
+  /** hasExistingFile: this view already has the saved proposal file, which the portal state may not have loaded. */
+  handleCreateOrUpdateBudgetRequest: (event: React.FormEvent, isDraft?: boolean, hasExistingFile?: boolean) => Promise<void>;
   onReplaceBudgetFile?: (budgetRequestId: string, file: File) => Promise<void>;
   onResubmitBudgetRequest?: (budgetRequestId: string) => Promise<void>;
 }
@@ -348,7 +349,8 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
   const [isSubmittingProposal, setIsSubmittingProposal] = useState<boolean>(false);
   const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
 
-  const isSubmitting = isSubmittingProposal || Boolean(submittingBudgetId);
+  // The portal sets submittingBudgetId while saving drafts too; only the Save Draft button should spin then.
+  const isSubmitting = isSubmittingProposal || (Boolean(submittingBudgetId) && !isSavingDraft);
 
   const handleSubmitProposal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -356,7 +358,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
 
     setIsSubmittingProposal(true);
     try {
-      await handleCreateOrUpdateBudgetRequest(e, false);
+      await handleCreateOrUpdateBudgetRequest(e, false, Boolean(existingBudgetFile));
     } catch (err) {
       console.error("Budget request proposal submission failed:", err);
     } finally {
@@ -370,7 +372,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
 
     setIsSavingDraft(true);
     try {
-      await handleCreateOrUpdateBudgetRequest(e as any, true);
+      await handleCreateOrUpdateBudgetRequest(e as any, true, Boolean(existingBudgetFile));
     } catch (err) {
       console.error("Budget request draft save failed:", err);
     } finally {
@@ -1075,7 +1077,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                       <Loader2 className="h-4 w-4 animate-spin shrink-0 text-primary-foreground" />
                       <span>Submitting Proposal...</span>
                     </span>
-                  ) : editingBudgetRequest ? (
+                  ) : editingBudgetRequest && editingBudgetRequest.status !== "draft" ? (
                     "Update Proposal"
                   ) : (
                     "Submit Proposal →"

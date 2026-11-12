@@ -521,9 +521,9 @@ export const BudgetRequestsTable = ({
             </span>
             <span className="w-[13%] min-w-[140px]">Reference ID</span>
             <span className="w-[24%]">Project &amp; Organization</span>
-            <span className="w-[19%]">Requested / Approved</span>
+            <span className="w-[15%]">Requested / Approved</span>
             <span className="w-[11%]">Submitted</span>
-            <span className="w-[14%]">Status</span>
+            <span className="w-[18%] min-w-[184px] shrink-0">Status</span>
             <span className="w-[90px] shrink-0">Actions</span>
           </div>
 
@@ -571,7 +571,7 @@ export const BudgetRequestsTable = ({
                     </p>
                   </div>
 
-                  <div className="flex w-[19%] items-center">
+                  <div className="flex w-[15%] items-center">
                     <AmountCell
                       requestedAmount={request.requestedAmount}
                       approvedAmount={request.approvedAmount}
@@ -585,7 +585,7 @@ export const BudgetRequestsTable = ({
                     </p>
                   </div>
 
-                  <div className="flex w-[14%] items-center">
+                  <div className="flex w-[18%] min-w-[184px] shrink-0 items-center">
                     <StatusPill
                       status={request.status}
                       revisionDueAt={request.revisionDueAt}
