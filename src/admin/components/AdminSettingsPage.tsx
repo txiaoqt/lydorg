@@ -211,7 +211,7 @@ export const AdminSettingsPage: React.FC = () => {
   // Unauthorized Access Guard
   if (!isLoading && !canViewSettings) {
     return (
-      <div className="space-y-4 max-w-4xl">
+      <div className="space-y-4">
         <AdminPageHeader
           title="System Settings"
           description="Administrative configuration controls and system-wide defaults."
@@ -232,7 +232,7 @@ export const AdminSettingsPage: React.FC = () => {
   // Error Loading State
   if (!isLoading && error && Object.keys(settings).length === 0) {
     return (
-      <div className="space-y-4 max-w-4xl">
+      <div className="space-y-4">
         <AdminPageHeader
           title="System Settings"
           description="Administrative configuration controls and system-wide defaults."
@@ -255,7 +255,7 @@ export const AdminSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 pb-20 max-w-[1080px]">
+    <div className="space-y-4 pb-20">
       {/* Page Header */}
       <AdminPageHeader
         title="System Settings"
@@ -329,7 +329,7 @@ export const AdminSettingsPage: React.FC = () => {
           </aside>
 
           {/* Right Settings Content Surface (820px Content Max-Width) */}
-          <main className="flex-1 min-w-0 max-w-[820px] w-full">
+          <main className="flex-1 min-w-0 w-full">
             <div className="rounded-xl border border-border bg-card p-5 sm:p-6 shadow-2xs">
               {/* Category Surface Header */}
               <div className="flex items-center justify-between gap-4 pb-3.5 mb-5 border-b border-border">
