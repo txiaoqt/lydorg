@@ -347,10 +347,11 @@ describe("User Portal Template Category Consistency & Synchronization", () => {
     render(<UserPortalTemplatesWorkspaceView {...defaultProps} />);
 
     // Verify category section headers are rendered (matching Admin model)
-    expect(screen.getAllByText(/YORP \(\d+\)/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Data Form \(\d+\)/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/MOVE \(\d+\)/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/YPOP \(\d+\)/i).length).toBeGreaterThan(0);
+    // Sections use the official program names, e.g. "YOUTH ORGANIZATION REGISTRATION PROGRAM (YORP) (3)".
+    expect(screen.getAllByText(/\(YORP\) \(\d+\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/DATA REQUEST FORMS \(\d+\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\(MOVE\) \(\d+\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\(YPOP\) \(\d+\)/).length).toBeGreaterThan(0);
 
     // Verify misleading hardcoded legacy section titles are completely absent
     expect(screen.queryByText(/Required Registration Templates/i)).not.toBeInTheDocument();
@@ -366,14 +367,14 @@ describe("User Portal Template Category Consistency & Synchronization", () => {
 
     // Verify PCYDO YORP Data Request Form is rendered under Data Form
     const dataFormSection = Array.from(desktopLayout!.querySelectorAll("h3")).find(
-      (el) => el.textContent?.includes("Data Form")
+      (el) => el.textContent?.includes("DATA REQUEST FORMS")
     )?.closest(".rounded-2xl");
     expect(dataFormSection).toBeDefined();
     expect(dataFormSection?.textContent).toContain("PCYDO YORP Data Request Form");
 
     // Verify it is NOT present in the YORP section
     const yorpSection = Array.from(desktopLayout!.querySelectorAll("h3")).find(
-      (el) => el.textContent?.includes("YORP")
+      (el) => el.textContent?.includes("(YORP)")
     )?.closest(".rounded-2xl");
     expect(yorpSection).toBeDefined();
     expect(yorpSection?.textContent).not.toContain("PCYDO YORP Data Request Form");
@@ -412,12 +413,12 @@ describe("User Portal Template Category Consistency & Synchronization", () => {
     expect(desktopLayout).toBeInTheDocument();
 
     const yorpSection = Array.from(desktopLayout!.querySelectorAll("h3")).find(
-      (el) => el.textContent?.includes("YORP")
+      (el) => el.textContent?.includes("(YORP)")
     )?.closest(".rounded-2xl");
     expect(yorpSection?.textContent).toContain("Shared Guidelines & Survey");
 
     const dataFormSection = Array.from(desktopLayout!.querySelectorAll("h3")).find(
-      (el) => el.textContent?.includes("Data Form")
+      (el) => el.textContent?.includes("DATA REQUEST FORMS")
     )?.closest(".rounded-2xl");
     expect(dataFormSection?.textContent).toContain("Shared Guidelines & Survey");
   });

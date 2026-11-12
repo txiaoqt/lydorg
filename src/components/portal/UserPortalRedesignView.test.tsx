@@ -150,7 +150,7 @@ describe("UserPortalRedesignView Redesign Iteration 2 Hierarchy & Functionality"
     render(<UserPortalRedesignView {...defaultProps} />);
 
     expect(screen.getByText("Profile")).toBeInTheDocument();
-    expect(screen.getByText("Documents")).toBeInTheDocument();
+    expect(screen.getByText("Registration Requirements")).toBeInTheDocument();
     expect(screen.getByText("Budget")).toBeInTheDocument();
     expect(screen.getByText("Liquidation")).toBeInTheDocument();
 

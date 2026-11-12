@@ -476,7 +476,7 @@ describe("Phase 3A & Phase 3B User Portal Renewal State Integration Tests", () =
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Accreditation Renewal Workspace")).toBeInTheDocument();
+    expect(screen.getByText("Renewal Workspace")).toBeInTheDocument();
     expect(screen.getByText(/Y-TRACE Cycle 2/i)).toBeInTheDocument();
   });
 
@@ -604,7 +604,7 @@ describe("Phase 3A & Phase 3B User Portal Renewal State Integration Tests", () =
 
     // Overview metric cards remain intact
     expect(screen.getByText("Profile")).toBeInTheDocument();
-    expect(screen.getByText("Documents")).toBeInTheDocument();
+    expect(screen.getByText("Registration Requirements")).toBeInTheDocument();
     expect(screen.getByText("Budget")).toBeInTheDocument();
     expect(screen.getByText("Liquidation")).toBeInTheDocument();
 
@@ -613,6 +613,6 @@ describe("Phase 3A & Phase 3B User Portal Renewal State Integration Tests", () =
     expect(screen.getByText("Budget Allocation")).toBeInTheDocument();
 
     // Resources shortcuts remain intact
-    expect(screen.getByText("Official Templates")).toBeInTheDocument();
+    expect(screen.getByText("Official Forms & Templates")).toBeInTheDocument();
   });
 });

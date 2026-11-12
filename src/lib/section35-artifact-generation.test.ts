@@ -22,6 +22,18 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 const scratchDir = fs.mkdtempSync(path.join(os.tmpdir(), "ytrace-section35-artifacts-"));
 afterAll(() => fs.rmSync(scratchDir, { recursive: true, force: true }));
 
+/** Text of each PDF page; the letterhead fonts are embedded, so raw PDF bytes cannot be searched. */
+const extractPdfPageText = async (doc: { output: (type: "arraybuffer") => ArrayBuffer }) => {
+  const task = getDocument({ data: new Uint8Array(doc.output("arraybuffer")), disableFontFace: true, verbosity: 0 });
+  const pdf = await task.promise;
+  const pages = await Promise.all(Array.from({ length: pdf.numPages }, async (_, index) => {
+    const content = await (await pdf.getPage(index + 1)).getTextContent();
+    return content.items.filter((item) => "str" in item).map((item) => (item as { str: string }).str).join(" ");
+  }));
+  await task.destroy();
+  return pages;
+};
+
 const sampleLiveQ3Report: YorpQuarterlyReport = {
   year: 2026,
   quarter: 3,
@@ -251,14 +263,14 @@ describe("Section 35 Artifact Generation & Verification", () => {
       expect(doc.getNumberOfPages()).toBe(1);
 
       // 3. Approval Rate table must NOT be present in output
-      const rawPdfString = doc.output();
-      expect(rawPdfString).not.toContain("Approval Rate (Quarter Applications)");
-      expect(rawPdfString).not.toContain("166.67%");
+      const [pageText] = await extractPdfPageText(doc);
+      expect(pageText).not.toContain("Approval Rate (Quarter Applications)");
+      expect(pageText).not.toContain("166.67%");
 
       // 4. Core statutory metrics must be present
-      expect(rawPdfString).toContain("Metric A");
-      expect(rawPdfString).toContain("Metric B");
-      expect(rawPdfString).toContain("Metric C");
+      expect(pageText).toContain("Metric A");
+      expect(pageText).toContain("Metric B");
+      expect(pageText).toContain("Metric C");
 
       // 5. Watermark is embedded via the authentic raster template background, NOT as a separate jsPDF vector text operator
       // Old vector watermark used doc.text("PCYDO YORP") which emitted literal "PCYDO YORP" into text objects
@@ -277,26 +289,12 @@ describe("Section 35 Artifact Generation & Verification", () => {
         expect(doc.internal.pageSize.getHeight()).toBeCloseTo(841.89, 1);
       }
 
-      const pdfLoadingTask = getDocument({
-        data: new Uint8Array(doc.output("arraybuffer")),
-        disableFontFace: true,
-        verbosity: 0,
-      });
-      const parsedPdf = await pdfLoadingTask.promise;
-      const extractedPages = await Promise.all(
-        Array.from({ length: totalPages }, async (_, index) => {
-          const page = await parsedPdf.getPage(index + 1);
-          const content = await page.getTextContent();
-          return content.items
-            .filter((item) => "str" in item)
-            .map((item) => item.str)
-            .join(" ");
-        }),
-      );
-      const extractedText = extractedPages.join(" ");
-      expect(extractedText).toContain(`Page 1 of ${totalPages}`);
-      expect(extractedText).toContain(`Page 2 of ${totalPages}`);
-      await pdfLoadingTask.destroy();
+      // The official letterhead has no page numbers: every page carries content and the report closes with "nothing follows".
+      const pages = await extractPdfPageText(doc);
+      expect(pages).toHaveLength(totalPages);
+      expect(pages[0]).toContain("Disaggregated Report");
+      pages.forEach((text) => expect(text.trim().length).toBeGreaterThan(0));
+      expect(pages[totalPages - 1]).toContain("nothing follows");
     });
 
     it("ensures Section 35 Quarterly Summary XLSX does NOT contain the misleading 166.67% approval rate", async () => {

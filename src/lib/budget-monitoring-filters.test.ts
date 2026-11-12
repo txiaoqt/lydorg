@@ -17,6 +17,10 @@ import {
   getBudgetRequestFiscalYear,
 } from "./budget-monitoring-filters";
 
+// The page defaults to the current quarter; these fixtures span FY 2026, so most cases use the full year.
+const FY2026_FILTERS = { ...DEFAULT_BUDGET_MONITORING_FILTERS, fiscalPeriod: { mode: "fiscal_year" as const, fiscalYear: 2026 } };
+
+
 describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   const mockOrganizations: OrganizationProfile[] = [
     {
@@ -191,10 +195,21 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
 
   const refNow = new Date("2026-07-01T12:00:00Z");
 
-  it("1. Default view: filters to Current Fiscal Year (FY 2026)", () => {
+  it("0. Default view: the current quarter of the current year", () => {
+    const now = new Date();
+    const quarter = Math.floor(now.getMonth() / 3);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    expect(DEFAULT_BUDGET_MONITORING_FILTERS.fiscalPeriod).toMatchObject({
+      mode: "custom",
+      fiscalYear: now.getFullYear(),
+      startDate: `${now.getFullYear()}-${pad(quarter * 3 + 1)}-01`,
+    });
+  });
+
+  it("1. Fiscal year view: filters to FY 2026", () => {
     const filtered = filterBudgetRequests(
       mockRequests,
-      DEFAULT_BUDGET_MONITORING_FILTERS,
+      FY2026_FILTERS,
       orgMap,
       liquidationMap,
     );
@@ -207,7 +222,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   it("2. Time Period: Previous Fiscal Year filters to FY 2025 records", () => {
     const filtered = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, fiscalPeriod: { mode: "fiscal_year", fiscalYear: 2025 } },
+      { ...FY2026_FILTERS, fiscalPeriod: { mode: "fiscal_year", fiscalYear: 2025 } },
       orgMap,
       liquidationMap,
     );
@@ -220,7 +235,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   it("3. Fiscal year selection scopes results to the selected year", () => {
     const filtered = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, fiscalPeriod: { mode: "fiscal_year", fiscalYear: 2025 } },
+      { ...FY2026_FILTERS, fiscalPeriod: { mode: "fiscal_year", fiscalYear: 2025 } },
       orgMap,
       liquidationMap,
     );
@@ -232,7 +247,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     const filtered = filterBudgetRequests(
       mockRequests,
       {
-        ...DEFAULT_BUDGET_MONITORING_FILTERS,
+        ...FY2026_FILTERS,
         fiscalPeriod: { mode: "custom", fiscalYear: 2026, startDate: "2026-03-01", endDate: "2026-04-15" },
       },
       orgMap,
@@ -261,7 +276,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     const filtered = filterBudgetRequests(
       mockRequests,
       {
-        ...DEFAULT_BUDGET_MONITORING_FILTERS,
+        ...FY2026_FILTERS,
         purposeCategory: "Environment & Climate Action",
       },
       orgMap,
@@ -282,7 +297,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     // Awaiting Release
     const awaiting = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, budgetStatus: "awaiting_release" },
+      { ...FY2026_FILTERS, budgetStatus: "awaiting_release" },
       orgMap,
       liquidationMap,
     );
@@ -293,7 +308,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     // Budget Released
     const released = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, budgetStatus: "budget_released" },
+      { ...FY2026_FILTERS, budgetStatus: "budget_released" },
       orgMap,
       liquidationMap,
     );
@@ -306,7 +321,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     const filteredYO = filterBudgetRequests(
       mockRequests,
       {
-        ...DEFAULT_BUDGET_MONITORING_FILTERS,
+        ...FY2026_FILTERS,
         majorClassification: "Youth Organization (YO)",
       },
       orgMap,
@@ -324,7 +339,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     const filteredDistrict1 = filterBudgetRequests(
       mockRequests,
       {
-        ...DEFAULT_BUDGET_MONITORING_FILTERS,
+        ...FY2026_FILTERS,
         district: "District 1",
       },
       orgMap,
@@ -339,7 +354,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     const filteredBarangay = filterBudgetRequests(
       mockRequests,
       {
-        ...DEFAULT_BUDGET_MONITORING_FILTERS,
+        ...FY2026_FILTERS,
         district: "District 1",
         barangay: "Kapitolyo",
       },
@@ -354,7 +369,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     // Not Released
     const notReleased = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, releaseStatus: "not_released" },
+      { ...FY2026_FILTERS, releaseStatus: "not_released" },
       orgMap,
       liquidationMap,
     );
@@ -364,7 +379,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     // Partial historical values remain in the data but have no separate filter.
     const fullyReleasedOnly = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, releaseStatus: "fully_released" },
+      { ...FY2026_FILTERS, releaseStatus: "fully_released" },
       orgMap,
       liquidationMap,
     );
@@ -373,7 +388,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
     // Fully Released
     const fullyReleased = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, releaseStatus: "fully_released" },
+      { ...FY2026_FILTERS, releaseStatus: "fully_released" },
       orgMap,
       liquidationMap,
     );
@@ -384,7 +399,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   it("10. Liquidation Status filter: Fully Liquidated vs Not Liquidated", () => {
     const fullyLiquidated = filterBudgetRequests(
       mockRequests,
-      { ...DEFAULT_BUDGET_MONITORING_FILTERS, liquidationStatus: "fully_liquidated" },
+      { ...FY2026_FILTERS, liquidationStatus: "fully_liquidated" },
       orgMap,
       liquidationMap,
     );
@@ -395,7 +410,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   it("11. Sorting options: Amount Highest to Lowest and Lowest to Highest", () => {
     const fy2026Requests = filterBudgetRequests(
       mockRequests,
-      DEFAULT_BUDGET_MONITORING_FILTERS,
+      FY2026_FILTERS,
       orgMap,
       liquidationMap,
     );
@@ -418,7 +433,7 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   it("12. Organization funding table synchronization", () => {
     const fy2026Requests = filterBudgetRequests(
       mockRequests,
-      DEFAULT_BUDGET_MONITORING_FILTERS,
+      FY2026_FILTERS,
       orgMap,
       liquidationMap,
     );
@@ -445,11 +460,11 @@ describe("Budget Monitoring Filtering and Sorting Engine Test Suite", () => {
   });
 
   it("13. Active filter counter accurately counts non-default filters", () => {
-    expect(getActiveFilterCount(DEFAULT_BUDGET_MONITORING_FILTERS)).toBe(0);
-    expect(getActiveFilterCount({ ...DEFAULT_BUDGET_MONITORING_FILTERS, fiscalPeriod: { mode: "custom", fiscalYear: 2026, startDate: "2026-01-01", endDate: "2026-02-01" } })).toBe(0);
+    expect(getActiveFilterCount(FY2026_FILTERS)).toBe(0);
+    expect(getActiveFilterCount({ ...FY2026_FILTERS, fiscalPeriod: { mode: "custom", fiscalYear: 2026, startDate: "2026-01-01", endDate: "2026-02-01" } })).toBe(0);
 
     const withTwoFilters = {
-      ...DEFAULT_BUDGET_MONITORING_FILTERS,
+      ...FY2026_FILTERS,
       purposeCategory: "Environment & Climate Action",
       district: "District 1",
     };

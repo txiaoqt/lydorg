@@ -438,9 +438,11 @@ describe("Admin System Settings - UI Component", () => {
   });
 });
 
-describe("Admin System Settings - Complete Authoritative Inventory (66 Settings)", () => {
-  it("contains exactly 66 registered system setting definitions", () => {
-    expect(ADMIN_SYSTEM_SETTING_DEFINITIONS.length).toBe(66);
+describe("Admin System Settings - Complete Authoritative Inventory (65 Settings)", () => {
+  it("contains exactly 65 registered system setting definitions", () => {
+    expect(ADMIN_SYSTEM_SETTING_DEFINITIONS.length).toBe(65);
+    // The official contact number was retired from settings and the public Contacts page.
+    expect(ADMIN_SYSTEM_SETTING_DEFINITIONS.find((d) => d.key === "general.contact_number")).toBeUndefined();
   });
 
   it("verifies all categories have expected counts", () => {
@@ -449,7 +451,7 @@ describe("Admin System Settings - Complete Authoritative Inventory (66 Settings)
       return acc;
     }, {} as Record<string, number>);
 
-    expect(counts.general).toBe(8);
+    expect(counts.general).toBe(7);
     expect(counts.notifications).toBe(20);
     expect(counts.workflow).toBe(8);
     expect(counts.programs).toBe(3);

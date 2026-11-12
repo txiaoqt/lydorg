@@ -57,6 +57,14 @@ vi.mock("@/lib/lydo-connect-supabase", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/lydo-connect-supabase")>();
   return {
     ...actual,
+    // The admin YPOP flow loads semesters and their submission pages through these session RPCs.
+    fetchAdminYpopValidationPeriods: vi.fn().mockImplementation(() =>
+      Promise.resolve([{ period: testPeriod, submissionCount: 0, activityCount: 0 }]),
+    ),
+    fetchAdminYpopPeriodSubmissionPage: vi.fn().mockResolvedValue({
+      rows: [], totalCount: 0, page: 0, pageSize: 20,
+      summary: { pending_evaluation: 0, qualified: 0, not_qualified: 0 },
+    }),
     loadAdminPortalSectionState: vi.fn().mockResolvedValue({ organizationProfiles: [] }),
     loadAdminYpopState: vi.fn().mockResolvedValue({
       ypopPeriods: [testPeriod],

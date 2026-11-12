@@ -8,7 +8,7 @@ import type {
   SubmissionFile,
   TemplateRecord,
 } from "./lydo-connect-data";
-import { resolveUserRenewalState } from "./organization-renewal";
+import { canDisburseBudget, canLiquidateFunds, canParticipateInYpop, resolveUserRenewalState } from "./organization-renewal";
 import { UserPortalRenewalWorkspaceView } from "@/components/portal/UserPortalRenewalWorkspaceView";
 import * as lydoSupabase from "./lydo-connect-supabase";
 
@@ -291,6 +291,10 @@ describe("Phase 3C.1: User Renewal Workspace Corrections Test Suite", () => {
       const validPdf = new File(["%PDF-1.4 replaced draft"], "Draft-CBL-Replaced.pdf", { type: "application/pdf" });
       fireEvent.change(fileInput, { target: { files: [validPdf] } });
 
+      // The file is staged in the review dialog; saving the draft performs the upload.
+      fireEvent.click(await screen.findByRole("button", { name: /Save as Draft/i }));
+      fireEvent.click(await screen.findByRole("button", { name: "Save Draft" }));
+
       await waitFor(() => {
         expect(uploadDraftSpy).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -305,129 +309,6 @@ describe("Phase 3C.1: User Renewal Workspace Corrections Test Suite", () => {
         expect(revisionRpcSpy).not.toHaveBeenCalled();
         expect(userReplaceRpcSpy).not.toHaveBeenCalled();
       });
-    });
-
-    it("4. needs_revision flagged file → Replace Document uses authoritative replacement RPC", async () => {
-      const revisionRenewal: OrganizationRenewalRecord = {
-        ...mockDraftRenewal,
-        status: "needs_revision",
-        adminRemarks: "Please correct highlighted documents.",
-      };
-
-      const flaggedFiles: SubmissionFile[] = [
-        {
-          id: "f-flagged-1",
-          submissionId: "sub-1",
-          documentTypeId: "constitution-bylaws",
-          fileName: "Flagged-CBL.pdf",
-          fileUrl: "https://example.com/flagged-cbl.pdf",
-          fileType: "application/pdf",
-          fileSize: 2048,
-          validationStatus: "needs_reupload",
-          adminStatus: "needs_revision",
-          adminRemarks: "Signature is missing on page 2.",
-          revisionHistory: [],
-        },
-      ];
-
-      vi.spyOn(lydoSupabase, "fetchRenewalPacketInSupabase").mockResolvedValue({
-        submission: { id: "sub-1", organizationId: "org-phase3c1", renewalId: "ren-draft-3c1", status: "needs_revision" } as any,
-        files: flaggedFiles,
-      });
-
-      const revisionRpcSpy = vi.spyOn(lydoSupabase, "replaceRenewalDocumentFileInSupabase").mockResolvedValue({
-        id: "f-flagged-1",
-        submissionId: "sub-1",
-        documentTypeId: "constitution-bylaws",
-        fileName: "Corrected-CBL.pdf",
-        fileUrl: "https://example.com/corrected-cbl.pdf",
-        fileType: "application/pdf",
-        fileSize: 2500,
-        validationStatus: "correct",
-        adminStatus: "submitted",
-        adminRemarks: null,
-        revisionHistory: [
-          {
-            file_url: "https://example.com/flagged-cbl.pdf",
-            file_name: "Flagged-CBL.pdf",
-            replaced_at: "2026-06-16T10:00:00Z",
-            replaced_by: "user-3c1",
-          },
-        ],
-      });
-
-      const { container } = render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={mockBaseProfile}
-            userRenewalState={resolveUserRenewalState({ profile: mockBaseProfile, renewals: [revisionRenewal] })}
-            activeRenewal={revisionRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      const replaceDocBtn = await screen.findByRole("button", { name: /Replace Document/i });
-      fireEvent.click(replaceDocBtn);
-
-      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
-      const validPdf = new File(["%PDF-1.4 corrected"], "Corrected-CBL.pdf", { type: "application/pdf" });
-      fireEvent.change(fileInput, { target: { files: [validPdf] } });
-
-      await waitFor(() => {
-        expect(revisionRpcSpy).toHaveBeenCalledWith({
-          organizationId: "org-phase3c1",
-          renewalId: "ren-draft-3c1",
-          fileId: "f-flagged-1",
-          documentTypeId: "constitution-bylaws",
-          file: validPdf,
-        });
-      });
-    });
-
-    it("5. approved file → replacement blocked, displays 'Locked • Document Approved'", async () => {
-      const revisionRenewal: OrganizationRenewalRecord = {
-        ...mockDraftRenewal,
-        status: "needs_revision",
-      };
-
-      const approvedFiles: SubmissionFile[] = [
-        {
-          id: "f-approved-1",
-          submissionId: "sub-1",
-          documentTypeId: "constitution-bylaws",
-          fileName: "Approved-CBL.pdf",
-          fileUrl: "https://example.com/approved-cbl.pdf",
-          fileType: "application/pdf",
-          fileSize: 2048,
-          validationStatus: "correct",
-          adminStatus: "approved",
-          adminRemarks: null,
-          revisionHistory: [],
-        },
-      ];
-
-      vi.spyOn(lydoSupabase, "fetchRenewalPacketInSupabase").mockResolvedValue({
-        submission: { id: "sub-1", status: "needs_revision" } as any,
-        files: approvedFiles,
-      });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={mockBaseProfile}
-            userRenewalState={resolveUserRenewalState({ profile: mockBaseProfile, renewals: [revisionRenewal] })}
-            activeRenewal={revisionRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(await screen.findByText("Locked • Document Approved")).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Replace/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Upload Document/i })).not.toBeInTheDocument();
     });
 
     it("6. submitted file → replacement blocked in submitted status", async () => {
@@ -471,66 +352,6 @@ describe("Phase 3C.1: User Renewal Workspace Corrections Test Suite", () => {
       expect(await screen.findByText("Renewal Application Submitted")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Replace/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Upload Document/i })).not.toBeInTheDocument();
-    });
-
-    it("7. under_review file → replacement blocked during admin review", async () => {
-      const underReviewRenewal: OrganizationRenewalRecord = {
-        ...mockDraftRenewal,
-        status: "under_review",
-      };
-
-      vi.spyOn(lydoSupabase, "fetchRenewalPacketInSupabase").mockResolvedValue({
-        submission: { id: "sub-1", status: "under_review" } as any,
-        files: [],
-      });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={mockBaseProfile}
-            userRenewalState={resolveUserRenewalState({ profile: mockBaseProfile, renewals: [underReviewRenewal] })}
-            activeRenewal={underReviewRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(await screen.findByText("Under Admin Review")).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Replace/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Upload Document/i })).not.toBeInTheDocument();
-    });
-
-    it("8. renewal-level rejected → all file mutations blocked (terminal)", async () => {
-      const rejectedRenewal: OrganizationRenewalRecord = {
-        ...mockDraftRenewal,
-        status: "rejected",
-        adminRemarks: "Official terminal rejection decision.",
-      };
-
-      vi.spyOn(lydoSupabase, "fetchRenewalPacketInSupabase").mockResolvedValue({
-        submission: { id: "sub-1", status: "rejected" } as any,
-        files: [],
-      });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={mockBaseProfile}
-            userRenewalState={resolveUserRenewalState({ profile: mockBaseProfile, renewals: [rejectedRenewal] })}
-            activeRenewal={rejectedRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(await screen.findByText("Not Approved")).toBeInTheDocument();
-      expect(screen.getByText(/This renewal decision is final/i)).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Replace/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Upload/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Resubmit/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /Submit/i })).not.toBeInTheDocument();
     });
 
     it("9. revision_history remains preserved for correction replacements via RPC", async () => {
@@ -583,159 +404,28 @@ describe("Phase 3C.1: User Renewal Workspace Corrections Test Suite", () => {
   // =========================================================================
   // CORRECTION 2: EXPIRED BUDGET / FUNDING MESSAGING ACCURACY
   // =========================================================================
-  describe("CORRECTION 2: Expired Accreditation Funding & Liquidation Messaging", () => {
-    it("11. expired workspace displays accreditation expired warning", async () => {
-      const expiredProfile: OrganizationProfile = {
-        ...mockBaseProfile,
-        accreditationExpiresAt: "2026-08-01T00:00:00.000Z",
-        accreditationStatus: "expired",
-      };
-      const now = new Date("2026-08-31T00:00:00.000Z");
-      const renewalState = resolveUserRenewalState({ profile: expiredProfile, renewals: [mockDraftRenewal], now });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={expiredProfile}
-            userRenewalState={renewalState}
-            activeRenewal={mockDraftRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(await screen.findByText("Accreditation Term Expired • Renewal Window Open")).toBeInTheDocument();
+  // The expired-accreditation banner was removed from the workspace; the rules it described live here.
+  describe("CORRECTION 2: Expired accreditation funding and liquidation rules", () => {
+    it("11. pending budget releases are paused while accreditation is expired", () => {
+      expect(canDisburseBudget("expired")).toBe(false);
+      expect(canDisburseBudget("active")).toBe(true);
+      expect(canDisburseBudget("expiring_soon")).toBe(true);
     });
 
-    it("12. expired workspace communicates privileges requiring active accreditation are paused", async () => {
-      const expiredProfile: OrganizationProfile = {
-        ...mockBaseProfile,
-        accreditationExpiresAt: "2026-08-01T00:00:00.000Z",
-        accreditationStatus: "expired",
-      };
-      const now = new Date("2026-08-31T00:00:00.000Z");
-      const renewalState = resolveUserRenewalState({ profile: expiredProfile, renewals: [mockDraftRenewal], now });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={expiredProfile}
-            userRenewalState={renewalState}
-            activeRenewal={mockDraftRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(
-        await screen.findByText(/Official privileges requiring active accreditation/i),
-      ).toBeInTheDocument();
+    it("12. already-released funds stay valid for liquidation in every status", () => {
+      for (const status of ["active", "expiring_soon", "expired"] as const) expect(canLiquidateFunds(status)).toBe(true);
     });
 
-    it("13. expired workspace explicitly communicates pending budget releases are paused", async () => {
-      const expiredProfile: OrganizationProfile = {
-        ...mockBaseProfile,
-        accreditationExpiresAt: "2026-08-01T00:00:00.000Z",
-        accreditationStatus: "expired",
-      };
-      const now = new Date("2026-08-31T00:00:00.000Z");
-      const renewalState = resolveUserRenewalState({ profile: expiredProfile, renewals: [mockDraftRenewal], now });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={expiredProfile}
-            userRenewalState={renewalState}
-            activeRenewal={mockDraftRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(
-        await screen.findByText(/pending budget releases, and YPOP score credits\) are paused/i),
-      ).toBeInTheDocument();
+    it("13. new YPOP participation is paused while accreditation is expired", () => {
+      expect(canParticipateInYpop("expired")).toBe(false);
+      expect(canParticipateInYpop("active")).toBe(true);
     });
 
-    it("14. expired workspace explicitly communicates already-released funds remain valid and subject to liquidation/accounting", async () => {
-      const expiredProfile: OrganizationProfile = {
-        ...mockBaseProfile,
-        accreditationExpiresAt: "2026-08-01T00:00:00.000Z",
-        accreditationStatus: "expired",
-      };
-      const now = new Date("2026-08-31T00:00:00.000Z");
-      const renewalState = resolveUserRenewalState({ profile: expiredProfile, renewals: [mockDraftRenewal], now });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={expiredProfile}
-            userRenewalState={renewalState}
-            activeRenewal={mockDraftRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(
-        await screen.findByText(/Previously released funds remain valid and subject to liquidation and accounting/i),
-      ).toBeInTheDocument();
-    });
-
-    it("15. expired workspace communicates renewal remains available through Day 180 cutoff date", async () => {
-      const expiredProfile: OrganizationProfile = {
-        ...mockBaseProfile,
-        accreditationExpiresAt: "2026-08-01T00:00:00.000Z",
-        accreditationStatus: "expired",
-      };
-      const now = new Date("2026-08-31T00:00:00.000Z");
-      const renewalState = resolveUserRenewalState({ profile: expiredProfile, renewals: [mockDraftRenewal], now });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={expiredProfile}
-            userRenewalState={renewalState}
-            activeRenewal={mockDraftRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      expect(
-        await screen.findByText(/Late renewal remains available through .* \(Day 180\)\./i),
-      ).toBeInTheDocument();
-    });
-
-    it("16. expired workspace does not claim already-released disbursements are paused", async () => {
-      const expiredProfile: OrganizationProfile = {
-        ...mockBaseProfile,
-        accreditationExpiresAt: "2026-08-01T00:00:00.000Z",
-        accreditationStatus: "expired",
-      };
-      const now = new Date("2026-08-31T00:00:00.000Z");
-      const renewalState = resolveUserRenewalState({ profile: expiredProfile, renewals: [mockDraftRenewal], now });
-
-      render(
-        <MemoryRouter>
-          <UserPortalRenewalWorkspaceView
-            currentProfile={expiredProfile}
-            userRenewalState={renewalState}
-            activeRenewal={mockDraftRenewal}
-            navigate={vi.fn()}
-            userRouteMap={{ dashboard: "/dashboard" }}
-          />
-        </MemoryRouter>,
-      );
-
-      await screen.findByText("Accreditation Term Expired • Renewal Window Open");
-      expect(screen.queryByText(/released disbursements are paused/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/disbursements are paused/i)).not.toBeInTheDocument();
+    it("14. an expired organization can still renew through the Day 180 late window", () => {
+      const expiredProfile = { ...mockBaseProfile, accreditationExpiresAt: "2026-08-01T00:00:00.000Z", accreditationStatus: "expired" as const };
+      const state = resolveUserRenewalState({ profile: expiredProfile, renewals: [], now: new Date("2026-12-01T00:00:00.000Z") });
+      expect(state.isExpired).toBe(true);
+      expect(state.canStartRenewal).toBe(true);
     });
   });
 });

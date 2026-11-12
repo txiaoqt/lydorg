@@ -14,9 +14,9 @@ describe("Review Decision Help & Status Label UI Tests", () => {
     expect(badge.className).toContain("shrink-0");
   });
 
-  it("LiquidationStatusLabel renders 'Approved — Onsite Required' with whitespace-nowrap", () => {
+  it("LiquidationStatusLabel renders 'Onsite Required' with whitespace-nowrap", () => {
     render(<LiquidationStatusLabel status="approved_for_ftf_green" />);
-    const badge = screen.getByText("Approved — Onsite Required");
+    const badge = screen.getByText("Onsite Required");
     expect(badge).toBeInTheDocument();
     expect(badge.className).toContain("whitespace-nowrap");
   });

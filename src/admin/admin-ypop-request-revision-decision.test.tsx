@@ -34,6 +34,9 @@ vi.mock("@/lib/supabase", () => {
     supabase: {
       rpc: rpcMock,
       from: fromMock,
+      // Realtime subscriptions are inert in tests.
+      channel: vi.fn(() => { const channel: any = { on: () => channel, subscribe: () => channel }; return channel; }),
+      removeChannel: vi.fn().mockResolvedValue("ok"),
       auth: {
         onAuthStateChange: vi.fn().mockReturnValue({
           data: { subscription: { unsubscribe: vi.fn() } },

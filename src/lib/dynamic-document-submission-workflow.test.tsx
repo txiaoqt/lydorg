@@ -566,14 +566,15 @@ describe("Dynamic Document Submission & Admin Template Workflow (19 Requirements
   // 15. Existing renewal workflow still works and returns renewal required document types
   it("15. Existing renewal workflow still works and returns renewal required document types", async () => {
     const renewalTemplates = await fetchRenewalRequiredDocumentTypesInSupabase();
-    expect(renewalTemplates.length).toBeGreaterThanOrEqual(6);
+    // Five renewal requirements; the PCYDO data request form is registration-only.
+    expect(renewalTemplates.length).toBe(5);
+    expect(renewalTemplates.map((t) => t.id)).not.toContain("pcydo-data-request");
     const renewalIds = renewalTemplates.map((t) => t.id);
     expect(renewalIds).toContain("constitution-bylaws");
     expect(renewalIds).toContain("yorp-form-b");
     expect(renewalIds).toContain("yorp-officers-adviser");
     expect(renewalIds).toContain("yorp-members");
     expect(renewalIds).toContain("pcydo-form-a");
-    expect(renewalIds).toContain("pcydo-data-request");
   });
 
   // 16. Existing requiredness behavior remains intact

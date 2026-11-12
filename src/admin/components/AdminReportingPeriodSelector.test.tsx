@@ -73,7 +73,8 @@ describe("report period export controls", () => {
     expect(change).toHaveBeenLastCalledWith({ ...filters, fiscalPeriod: { mode: "custom", fiscalYear: 2026, startDate: "2026-02-10", endDate: "2026-02-15" } });
     fireEvent.click(screen.getByRole("button", { name: "Select fiscal period" }));
     fireEvent.change(screen.getByLabelText("Year"), { target: { value: "2025" } });
-    fireEvent.change(screen.getByLabelText("Period"), { target: { value: "year" } });
+    // The compact picker has no separate "All Year" option: All Periods with a chosen year means that whole year.
+    fireEvent.change(screen.getByLabelText("Period"), { target: { value: "all" } });
     fireEvent.click(screen.getByRole("button", { name: "Apply period" }));
     expect(change).toHaveBeenLastCalledWith({ ...filters, fiscalPeriod: { mode: "fiscal_year", fiscalYear: 2025 } });
   });

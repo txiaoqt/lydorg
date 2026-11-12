@@ -57,6 +57,14 @@ describe("Admin Registration Review Foreign-Key Integrity Suite (Tests A-H)", ()
       sessionToken: MOCK_SESSION_TOKEN,
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
     });
+    // Reviewed rows are hydrated with their document type names from document_type_identities.
+    vi.spyOn(supabase, "from").mockImplementation(() => {
+      const builder: any = {
+        select: () => builder,
+        in: async (_column: string, ids: string[]) => ({ data: ids.map((id) => ({ id, name: `Document ${id}` })), error: null }),
+      };
+      return builder;
+    });
   });
 
   // ---------------------------------------------------------------------------

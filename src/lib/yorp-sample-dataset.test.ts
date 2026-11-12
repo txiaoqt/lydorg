@@ -69,33 +69,31 @@ describe("YORP Sample Dataset Verification", () => {
   it("maintains realistic budget distribution without marking all liquidated", () => {
     let awaitingCount = 0;
     let releasedCount = 0;
-    let completedCount = 0;
-
+    let liquidatedCount = 0;
     let totalBudgetAmount = 0;
 
     YORP_SAMPLE_DATASET_CATALOG.forEach((record) => {
       expect(record.budget_fiscal_year).toBe(record.source_year);
-      expect(record.budget_amount).toBe(50000);
+      // Seeded amounts vary per record (₱29,000–₱73,000) so reports have realistic spread.
+      expect(record.budget_amount).toBeGreaterThanOrEqual(29000);
+      expect(record.budget_amount).toBeLessThanOrEqual(73000);
       totalBudgetAmount += record.budget_amount;
 
-      if (record.budget_status === "awaiting_release") awaitingCount++;
-      if (record.budget_status === "budget_released") releasedCount++;
-      if (record.budget_status === "completed") {
-        completedCount++;
-        expect(record.is_liquidated).toBe(true);
-      } else {
+      if (record.budget_status === "awaiting_release") {
+        awaitingCount++;
         expect(record.is_liquidated).toBe(false);
       }
+      if (record.budget_status === "budget_released") releasedCount++;
+      if (record.is_liquidated) liquidatedCount++;
     });
 
-    // Realistic mixed dataset checks matching actual PCYDO YPOP source data
     expect(awaitingCount).toBe(28);
-    expect(releasedCount).toBe(28);
-    expect(completedCount).toBe(28);
-
-    // CRITICAL: Total synthetic budget amount is 84 * 50,000 = ₱4,200,000
-    expect(totalBudgetAmount).toBe(4200000);
-    expect(awaitingCount + releasedCount + completedCount).toBe(84);
+    expect(releasedCount).toBe(56);
+    // Only part of the released budgets are liquidated.
+    expect(liquidatedCount).toBe(28);
+    expect(awaitingCount + releasedCount).toBe(84);
+    expect(new Set(YORP_SAMPLE_DATASET_CATALOG.map((record) => record.budget_amount)).size).toBeGreaterThan(1);
+    expect(totalBudgetAmount).toBe(4254000);
   });
 
   it("populates structured names and addresses for all records", () => {

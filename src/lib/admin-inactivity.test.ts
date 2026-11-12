@@ -13,6 +13,7 @@ import {
   isSessionExpiredDueToInactivity,
   clearAdminSessionStorage,
   readAdminSession,
+  updateAdminSessionExpiry,
   writeAdminSession,
   type SeededAdminUser,
 } from "./admin-auth";
@@ -112,13 +113,18 @@ describe("Admin Session Inactivity Timeout Mechanics", () => {
     recordAdminActivity();
     expect(readAdminLastActivity()).toBe(laterTime);
 
+    // Activity alone no longer moves the expiry; the server-issued expiry is stored instead.
     const session = readAdminSession();
-    expect(session).not.toBeNull();
-    const expectedExpiry = new Date(laterTime + 30 * 60 * 1000).toISOString();
-    expect(session?.expiresAt).toBe(expectedExpiry);
+    expect(session?.expiresAt).toBe(mockAdminUser.expiresAt);
+    const serverExpiry = new Date(laterTime + 30 * 60 * 1000).toISOString();
+    updateAdminSessionExpiry(mockAdminUser.sessionToken, serverExpiry);
+    expect(readAdminSession()?.expiresAt).toBe(serverExpiry);
+    // A different session's token cannot change this session's expiry.
+    updateAdminSessionExpiry("other-token", new Date(laterTime + 99 * 60 * 1000).toISOString());
+    expect(readAdminSession()?.expiresAt).toBe(serverExpiry);
   });
 
-  it("detects continuous inactivity and expires session when timeout threshold is exceeded", () => {
+  it("detects continuous inactivity and expires session when timeout threshold is exceeded", async () => {
     const baseTime = 1700000000000;
     vi.useFakeTimers();
     vi.setSystemTime(baseTime);
@@ -156,6 +162,8 @@ describe("Admin Session Inactivity Timeout Mechanics", () => {
     // readAdminSession should now drop the session and clear storage
     const expiredSession = readAdminSession();
     expect(expiredSession).toBeNull();
+    // Storage is cleared in a microtask right after the session is refused.
+    await Promise.resolve();
     expect(localStorage.getItem(ADMIN_SESSION_STORAGE_KEY)).toBeNull();
     expect(localStorage.getItem(ADMIN_LAST_ACTIVITY_STORAGE_KEY)).toBeNull();
   });

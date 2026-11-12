@@ -324,10 +324,13 @@ describe("Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests", () 
       expect(screen.getByText("5/6 Incomplete")).toBeInTheDocument();
     });
 
-    it("13. RenewalStatusPill displays correct status color", () => {
-      const { container } = render(<RenewalStatusPill status="submitted" />);
-      expect(screen.getByText("Submitted")).toBeInTheDocument();
+    it("13. RenewalStatusPill shows Pending Review until approval, then Verified", () => {
+      const { container, rerender } = render(<RenewalStatusPill status="submitted" />);
+      expect(screen.getByText("Pending Review")).toBeInTheDocument();
       expect(container.firstChild).toHaveClass("bg-bg-info-tertiary");
+      rerender(<RenewalStatusPill status="approved" />);
+      expect(screen.getByText("Verified")).toBeInTheDocument();
+      expect(container.firstChild).toHaveClass("bg-bg-success-subtle");
     });
 
     it("14. 'Review' action button present per row", () => {
@@ -401,9 +404,8 @@ describe("Phase 3D: Dedicated Admin Renewals Page & Review Workspace Tests", () 
           />
         </MemoryRouter>
       );
-      const submittedTab = screen.getByRole("button", { name: "Submitted" });
-      fireEvent.click(submittedTab);
-      expect(onStatusChange).toHaveBeenCalledWith("submitted");
+      fireEvent.click(screen.getByRole("button", { name: "Pending Review" }));
+      expect(onStatusChange).toHaveBeenCalledWith("pending_review");
     });
 
     it("17. Empty state displays helpful message", () => {

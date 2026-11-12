@@ -176,6 +176,9 @@ describe("YorpSampleDataSeedingPanel", () => {
     fireEvent.click(previewButton);
 
     expect(screen.getByText(/Authoritative PCYDO YORP Sample Records/i)).toBeInTheDocument();
+    // The preview opens on the current year; the 2024 records appear once All Years is chosen.
+    expect(screen.queryByText("SANTA CRUZ VOLLEYBALL CLUB")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByDisplayValue(/^CY \d{4}/), { target: { value: "all" } });
     expect(screen.getByText("SANTA CRUZ VOLLEYBALL CLUB")).toBeInTheDocument();
 
     const hideButton = screen.getByRole("button", { name: /Hide Preview/i });

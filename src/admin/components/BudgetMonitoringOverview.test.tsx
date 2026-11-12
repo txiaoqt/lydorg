@@ -377,7 +377,7 @@ describe("BudgetMonitoringOverview UI/UX Category Color Synchronization & Donut 
 
   it("Page controls keep the fiscal period separate from panel filters", () => {
     render(<BudgetMonitoringPageControls filters={DEFAULT_BUDGET_MONITORING_FILTERS} availableFiscalYears={[2026, 2025, 2024]} filterOptions={{ availableCategories: [], availableClassifications: [], availableDistricts: [], availableBarangays: [] }} onChangeFilters={vi.fn()} onResetFilters={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /Select fiscal period/i })).toHaveTextContent(/FY/);
+    expect(screen.getByRole("button", { name: /Select fiscal period/i })).toHaveTextContent(/^Q[1-4] \d{4}$/); // defaults to the current quarter
     expect(screen.getByRole("button", { name: /Open Budget Filters/i })).toHaveTextContent("Filters");
     fireEvent.click(screen.getByRole("button", { name: /Open Budget Filters/i }));
     expect(screen.queryByText("Time Period")).toBeNull();

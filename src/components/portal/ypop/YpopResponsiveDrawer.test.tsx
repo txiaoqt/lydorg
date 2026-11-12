@@ -590,8 +590,9 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
         />
       );
 
-      // Mobile/Tablet Dialog contains Close Drawer
-      expect(screen.getByRole("button", { name: /Close Drawer/i })).toBeInTheDocument();
+      // Mobile/Tablet Dialog contains Close, NOT Close Drawer
+      expect(screen.getAllByRole("button", { name: /^Close$/i }).length).toBeGreaterThan(0);
+      expect(screen.queryByRole("button", { name: /Close Drawer/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Log Another Activity/i })).not.toBeInTheDocument();
     });
 
@@ -613,7 +614,8 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
         />
       );
 
-      expect(screen.getByRole("button", { name: /Close Drawer/i })).toBeInTheDocument();
+      expect(screen.getAllByRole("button", { name: /^Close$/i }).length).toBeGreaterThan(0);
+      expect(screen.queryByRole("button", { name: /Close Drawer/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Log Another Activity/i })).not.toBeInTheDocument();
     });
   });
@@ -715,7 +717,8 @@ describe("YPOP Responsive Drawer/Modal Standardization", () => {
         expect(screen.getByText("Document Preview")).toBeInTheDocument();
 
         // Pinned footer buttons
-        expect(screen.getByRole("button", { name: /Close Drawer/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /^Close$/i }).length).toBeGreaterThan(0);
+        expect(screen.queryByRole("button", { name: /Close Drawer/i })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /Log Another Activity/i })).not.toBeInTheDocument();
       });
 

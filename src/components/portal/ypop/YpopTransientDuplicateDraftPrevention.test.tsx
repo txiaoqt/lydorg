@@ -72,6 +72,9 @@ const mockDraftActivity: YPOPOrgActivity = {
   activityDate: "2026-09-12",
   venue: "Pasig City Hall",
   narrativeReport: "Detailed narrative report for youth summit.",
+  totalAttendees: 50,
+  girlsAttendees: 28,
+  boysAttendees: 22,
   status: "draft",
   adminRemarks: "",
   submittedAt: "",
@@ -122,7 +125,7 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
       />
     );
 
-    fireEvent.change(screen.getByPlaceholderText(/e.g. Community Clean-Up Drive/i), {
+    fireEvent.change(screen.getByLabelText(/Activity Title/i), {
       target: { value: "Youth Leadership Summit" },
     });
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
@@ -212,18 +215,22 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
       />
     );
 
-    fireEvent.change(screen.getByPlaceholderText(/e.g. Community Clean-Up Drive/i), {
+    fireEvent.change(screen.getByLabelText(/Activity Title/i), {
       target: { value: "Youth Leadership Summit" },
     });
     fireEvent.change(screen.getByLabelText(/Date Conducted/i), {
       target: { value: "2026-09-12" },
     });
-    fireEvent.change(screen.getByPlaceholderText(/Barangay Hall, Barangay Bagong Ilog/i), {
+    fireEvent.change(screen.getByLabelText(/Venue \/ Location/i), {
       target: { value: "Pasig City Hall" },
     });
-    fireEvent.change(screen.getByPlaceholderText(/Description \/ narrative report summary/i), {
+    fireEvent.change(screen.getByLabelText(/^Description/i), {
       target: { value: "Detailed narrative report for youth summit." },
     });
+    // Attendance counts are required before submitting.
+    fireEvent.change(screen.getByLabelText(/Total Attendees/i), { target: { value: "50" } });
+    fireEvent.change(screen.getByLabelText(/^Girls/i), { target: { value: "28" } });
+    fireEvent.change(screen.getByLabelText(/^Boys/i), { target: { value: "22" } });
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const testFile = new File(["dummy content"], "report.pdf", { type: "application/pdf" });
@@ -412,7 +419,8 @@ describe("Transient Duplicate Draft PPA Row Prevention Suite", () => {
       result.current.mergeRemoteState({
         ypopPeriods: [mockPeriod],
         ypopEntries: [mockEntry],
-        organizationProfiles: [{ id: "org-1" } as any],
+        // The store ignores profiles without an id and userId, so the stub carries both.
+        organizationProfiles: [{ id: "org-1", userId: "user-1" } as any],
         ypopOrgActivities: [submittedActivity],
       });
     });

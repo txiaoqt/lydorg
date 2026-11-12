@@ -22,6 +22,9 @@ import type {
 vi.mock("@/lib/supabase", () => ({
   supabase: {
     rpc: vi.fn().mockResolvedValue({ data: { unreadCount: 0, notifications: [] }, error: null }),
+    // Realtime subscriptions are inert in tests.
+    channel: vi.fn(() => { const channel: any = { on: () => channel, subscribe: () => channel }; return channel; }),
+    removeChannel: vi.fn().mockResolvedValue("ok"),
     auth: { onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }), getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }) },
   },
   isSupabaseConfigured: () => true,

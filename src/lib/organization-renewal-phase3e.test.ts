@@ -91,13 +91,12 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
     ...overrides,
   });
 
-  const SIX_REQUIRED_DOC_TYPES: { id: string; name: string }[] = [
+  const RENEWAL_REQUIRED_DOC_TYPES: { id: string; name: string }[] = [
     { id: "constitution-bylaws", name: "Constitution and By-Laws" },
     { id: "yorp-form-b", name: "NYC YORP Registration Form (Form B)" },
     { id: "yorp-officers-adviser", name: "YORP Directory of Officers and Adviser" },
     { id: "yorp-members", name: "YORP List of Members in Good Standing" },
     { id: "pcydo-form-a", name: "Pasig City YORP Registration Form (Form A)" },
-    { id: "pcydo-data-request", name: "PCYDO YORP Data Request Form" },
   ];
 
   // =========================================================================
@@ -171,13 +170,14 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
   // 2. REQUIRED DOCUMENTS & DRAFT UPLOADS (Items 4-5)
   // =========================================================================
   describe("2. Required Documents & Draft Uploads (Items 4-5)", () => {
-    it("4. Exactly 6 renewal documents are required in the renewal packet", async () => {
+    it("4. Exactly 5 renewal documents are required; the data request form is registration-only", async () => {
       const allTemplates = await lydoSupabase.fetchRenewalRequiredDocumentTypesInSupabase();
-      const templates = allTemplates.filter((t) => SIX_REQUIRED_DOC_TYPES.some((req) => req.id === t.id));
-      expect(templates.length).toBe(6);
+      const templates = allTemplates.filter((t) => RENEWAL_REQUIRED_DOC_TYPES.some((req) => req.id === t.id));
+      expect(templates.length).toBe(5);
+      expect(allTemplates.map((t) => t.id)).not.toContain("pcydo-data-request");
 
       const templateIds = templates.map((t) => t.id);
-      SIX_REQUIRED_DOC_TYPES.forEach((reqDoc) => {
+      RENEWAL_REQUIRED_DOC_TYPES.forEach((reqDoc) => {
         expect(templateIds).toContain(reqDoc.id);
       });
     });
@@ -189,7 +189,6 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
       // 3. yorp-officers-adviser (referred to in prompt shorthand / Phase 3C mock as directory-members)
       // 4. yorp-members          (referred to in prompt shorthand / Phase 3C mock as members-good-standing)
       // 5. pcydo-form-a
-      // 6. pcydo-data-request
       const allTemplates = await lydoSupabase.fetchRenewalRequiredDocumentTypesInSupabase();
       const templates = allTemplates.filter((t) =>
         [
@@ -198,10 +197,9 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
           "yorp-officers-adviser",
           "yorp-members",
           "pcydo-form-a",
-          "pcydo-data-request",
         ].includes(t.id)
       );
-      expect(templates).toHaveLength(6);
+      expect(templates).toHaveLength(5);
 
       const canonicalIds = templates.map((t) => t.id);
       expect(canonicalIds).toEqual(
@@ -211,7 +209,6 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
           "yorp-officers-adviser",
           "yorp-members",
           "pcydo-form-a",
-          "pcydo-data-request",
         ]),
       );
 
@@ -221,7 +218,6 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
       expect(names).toContain("YORP Directory of Officers and Adviser");
       expect(names).toContain("YORP List of Members in Good Standing");
       expect(names).toContain("Pasig City YORP Registration Form (Form A)");
-      expect(names).toContain("PCYDO YORP Data Request Form");
     });
 
     it("5. User uploads/replaces draft documents in normal draft flow", async () => {
@@ -260,8 +256,8 @@ describe("Phase 3E: End-to-End Renewal Workflow Hardening & Regression Suite", (
   // =========================================================================
   describe("3. Submission & State Transition: draft → submitted (Items 6-7)", () => {
     it("6. Incomplete submission missing required files is rejected", () => {
-      const uploadedDocTypeIds = ["constitution-bylaws", "yorp-form-b"]; // only 2 of 6
-      const isComplete = SIX_REQUIRED_DOC_TYPES.every((req) => uploadedDocTypeIds.includes(req.id));
+      const uploadedDocTypeIds = ["constitution-bylaws", "yorp-form-b"]; // only 2 of 5
+      const isComplete = RENEWAL_REQUIRED_DOC_TYPES.every((req) => uploadedDocTypeIds.includes(req.id));
       expect(isComplete).toBe(false);
     });
 

@@ -10,6 +10,9 @@ import type { BudgetRequest, BudgetRequestFile, LiquidationReport, LiquidationRe
 vi.mock("@/lib/supabase", () => ({
   supabase: {
     rpc: vi.fn().mockResolvedValue({ data: { unreadCount: 0, notifications: [] }, error: null }),
+    // Realtime subscriptions are inert in tests.
+    channel: vi.fn(() => { const channel: any = { on: () => channel, subscribe: () => channel }; return channel; }),
+    removeChannel: vi.fn().mockResolvedValue("ok"),
     auth: { onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }), getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }) },
   },
   isSupabaseConfigured: () => true,
@@ -330,14 +333,14 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       expect(screen.queryByRole("button", { name: /reject budget/i })).toBeNull();
     });
 
-    it("TEST 3: approved_for_ftf_green shows Onsite Required, post-approval lifecycle dropdown and confirm button", async () => {
+    it("TEST 3: awaiting_release shows the approval banner and a single Budget Released action", async () => {
       const budgetReq: BudgetRequest = {
         id: "br-test-3",
         organizationId: "org-1",
         activityTitle: "Youth Leadership Seminar",
         activityDate: "2026-09-20",
         requestedAmount: 50000,
-        status: "approved_for_ftf_green",
+        status: "awaiting_release",
         createdAt: "2026-09-01T00:00:00.000Z",
         updatedAt: "2026-09-01T00:00:00.000Z",
       };
@@ -356,14 +359,13 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       expect(screen.queryByText("Confirm Document Decision")).toBeNull();
       expect(screen.queryByRole("button", { name: /mark hardcopy submitted/i })).toBeNull();
 
-      // Next action & Onsite Required label MUST appear
-      expect(screen.getAllByText("Onsite Required").length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText("Approved for Face-to-Face Submission")).toBeDefined();
-      expect(screen.getByText("Lifecycle Stage")).toBeDefined();
-      expect(screen.getByRole("button", { name: /confirm decision/i })).toBeDefined();
+      // The retired lifecycle dropdown is replaced by one release action.
+      expect(screen.getByText("Approved — Awaiting Release")).toBeDefined();
+      expect(screen.getByRole("button", { name: /^Budget Released$/ })).toBeDefined();
+      expect(screen.queryByText("Lifecycle Stage")).toBeNull();
     });
 
-    it("TEST 4: hard_copy_submitted shows Hardcopy Submitted, lifecycle dropdown and confirm button", async () => {
+    it("TEST 4: legacy hard_copy_submitted records read as Awaiting Release without the retired controls", async () => {
       const budgetReq: BudgetRequest = {
         id: "br-test-4",
         organizationId: "org-1",
@@ -387,10 +389,9 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       expect(screen.queryByRole("button", { name: /mark hardcopy submitted/i })).toBeNull();
       expect(screen.queryByRole("button", { name: /release cash/i })).toBeNull();
 
-      // Hardcopy Submitted and Lifecycle Stage controls MUST appear
-      expect(screen.getAllByText("Hardcopy Submitted").length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText("Lifecycle Stage")).toBeDefined();
-      expect(screen.getByRole("button", { name: /confirm decision/i })).toBeDefined();
+      expect(screen.getAllByText("Awaiting Release").length).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByText("Lifecycle Stage")).toBeNull();
+      expect(screen.queryByRole("button", { name: /confirm decision/i })).toBeNull();
     });
 
     it("TEST 5: budget_released renders clean terminal banner with no dropdowns or confirm buttons", async () => {
@@ -447,8 +448,8 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
 
       await renderAdminPortal("budget-utilization");
 
-      // Terminal state only
-      expect(screen.getByText("Request Completed")).toBeDefined();
+      // Legacy completed records share the Budget Released terminal state.
+      expect(screen.getByText("This budget request has reached its final lifecycle stage. Liquidation processing is now available.")).toBeDefined();
       expect(screen.queryByText("Lifecycle Stage")).toBeNull();
       expect(screen.queryByRole("button", { name: /confirm decision/i })).toBeNull();
       expect(screen.queryByRole("button", { name: /mark completed/i })).toBeNull();
@@ -609,7 +610,7 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       ).toBeDefined();
     });
 
-    it("TEST 11: draft renders informational state and Review Decision header is omitted when 0 files", async () => {
+    it("TEST 11: an unsubmitted (draft) liquidation report is not offered for admin review", async () => {
       const budgetReq: BudgetRequest = {
         id: "br-liq-11",
         organizationId: "org-1",
@@ -635,10 +636,27 @@ describe("AdminPortal Budget & Liquidation Review Decision / Lifecycle UI", { ti
       currentLiquidationReports = [liqReport];
       currentLiquidationFiles = [];
 
-      await renderAdminPortal("liquidation-monitoring");
+      const statePayload = JSON.stringify({
+        budgetRequests: currentBudgetRequests,
+        budgetRequestFiles: currentBudgetFiles,
+        liquidationReports: currentLiquidationReports,
+        liquidationReportFiles: currentLiquidationFiles,
+        organizationProfiles: [mockOrg],
+      });
+      window.localStorage.setItem("lydo-connect-state-v1:admin:admin-1", statePayload);
+      window.localStorage.setItem("lydo-connect-state-v1:admin:admin-1:demo-token", statePayload);
+      render(
+        <MemoryRouter initialEntries={["/admin/liquidation-monitoring"]}>
+          <LydoConnectProvider>
+            <AdminPortal section="liquidation-monitoring" />
+          </LydoConnectProvider>
+        </MemoryRouter>,
+      );
 
+      // Drafts stay with the organization until submitted; admins only see submitted reports.
+      await screen.findAllByText(/Liquidation Reports/i);
+      expect(screen.queryByRole("button", { name: /^review$/i })).toBeNull();
       expect(screen.queryByText("Review Decision")).toBeNull();
-      expect(screen.getByText("Liquidation Not Yet Submitted")).toBeDefined();
     });
 
     it("TEST 12: submitted renders unified Review Decision panel with Confirm Document Decision", async () => {

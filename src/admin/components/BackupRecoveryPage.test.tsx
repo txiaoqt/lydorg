@@ -38,7 +38,7 @@ describe("Backup & Recovery page", () => {
   it("adds both permissions to Administration and updates the derived total", () => {
     const items = ADMIN_PERMISSION_GROUPS.find(group => group.code === "administration")!.items;
     expect(items.map(item => item.code)).toEqual(expect.arrayContaining(["backup_recovery_view", "backup_recovery_manage"]));
-    expect(ADMIN_PERMISSION_TOTAL_COUNT).toBe(15);
+    expect(ADMIN_PERMISSION_TOTAL_COUNT).toBe(16); // includes renewals_manage
   });
   it("manage admin opens the existing confirmation pattern; cancel never dispatches", async () => {
     mocks.user = { ...mocks.user, roleCode: "admin", permissionCodes: ["backup_recovery_view", "backup_recovery_manage"] }; mount();

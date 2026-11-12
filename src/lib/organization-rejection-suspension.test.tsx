@@ -37,7 +37,14 @@ vi.mock("./supabase", () => {
       auth: {
         getSession: vi.fn(),
       },
-      from: vi.fn(),
+      // Reviewed rows are hydrated with document type names from document_type_identities.
+      from: vi.fn(() => {
+        const builder: any = {
+          select: () => builder,
+          in: async (_column: string, ids: string[]) => ({ data: ids.map((id) => ({ id, name: `Document ${id}` })), error: null }),
+        };
+        return builder;
+      }),
       rpc: vi.fn(),
       storage: {
         from: vi.fn(() => ({

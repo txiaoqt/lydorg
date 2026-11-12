@@ -251,7 +251,8 @@ describe("Admin Filter & Layout Stability Across All 5 Pages", () => {
     );
 
     expect(screen.getByText("Youth Leadership Summit")).toBeInTheDocument();
-    expect(screen.getAllByText("Hardcopy Submitted").length).toBeGreaterThanOrEqual(1);
+    // Legacy onsite/hardcopy budget stages now read as Awaiting Release.
+    expect(screen.getAllByText("Awaiting Release").length).toBeGreaterThanOrEqual(1);
   });
 
   it("RegistrationsTable renders rows with status label without runtime error", () => {
