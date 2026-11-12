@@ -421,7 +421,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                       </td>
 
                       {/* Column 6: Action (Clear hierarchy: primary for active, outline for evaluated/closed) */}
-                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:py-3.5 md:px-5 md:text-right align-middle whitespace-nowrap">
                         <Button
                           type="button"
                           variant={isNeedsAttention ? "default" : "outline"}

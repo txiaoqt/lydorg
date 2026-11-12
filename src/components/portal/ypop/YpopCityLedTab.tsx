@@ -341,7 +341,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                       </td>
 
                       {/* Column 6: Action */}
-                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:pt-0 md:py-3.5 md:px-5 md:text-center align-middle whitespace-nowrap order-6">
+                      <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:py-3.5 md:px-5 md:text-center align-middle whitespace-nowrap order-6">
                         <Button
                           type="button"
                           variant={isNeedsRevision || (participation && hasSavedProof) ? "outline" : "default"}
