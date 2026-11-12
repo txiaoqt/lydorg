@@ -5,7 +5,8 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import type { TemplateRecord } from "@/lib/lydo-connect-data";
+import { formatPublicTemplateCategorySectionLabel, orderTemplateCategories, type TemplateRecord } from "@/lib/lydo-connect-data";
+import { extractTemplateCategoryLabels } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { requestPwaDocumentPreview } from "@/lib/pwa-document-preview";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
@@ -13,14 +14,10 @@ import { PwaBackButton } from "../PwaBackButton";
 import { PWA_ROUTES } from "../pwaRoutes";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
-type TemplateScope = TemplateRecord["templateScope"];
 
-const scopeLabels: Record<TemplateScope, string> = {
-  document_submission: "Required Documents",
-  other: "Other Templates",
-  move: "Other Templates",
-  project_proposal: "Project Proposal Templates",
-};
+// Same category grouping and labels as the website's Forms & Templates page.
+const categoryKey = (value: string) => value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+const templateCategoryKeys = (template: TemplateRecord) => (extractTemplateCategoryLabels(template) as string[]).map(categoryKey);
 
 const getTemplateFileName = (template: TemplateRecord) => {
   if (template.templateFileName.trim()) return template.templateFileName.trim();
@@ -137,27 +134,27 @@ function TemplateRow({ template, onPreview, onDownload, downloading }: {
 
 export function PwaTemplateLibrary({ data }: { data: PortalData }) {
   const [search, setSearch] = useState("");
-  const [scope, setScope] = useState<"all" | TemplateScope>("all");
+  const [category, setCategory] = useState("all");
   const [downloadingId, setDownloadingId] = useState("");
   const [downloadingAll, setDownloadingAll] = useState(false);
-  const scopes = useMemo(() => Array.from(new Set(data.templates.map((template) => template.templateScope))), [data.templates]);
+  const categories = useMemo(() => orderTemplateCategories(data.templates.flatMap((template) => extractTemplateCategoryLabels(template) as string[])), [data.templates]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return data.templates.filter((template) => {
-      if (scope !== "all" && template.templateScope !== scope) return false;
+      if (category !== "all" && !templateCategoryKeys(template).includes(categoryKey(category))) return false;
       if (!query) return true;
       return [
         template.name,
         template.description,
         template.templateDescription,
         template.templateFileName,
-        scopeLabels[template.templateScope],
+        ...(extractTemplateCategoryLabels(template) as string[]).map(formatPublicTemplateCategorySectionLabel),
       ].some((value) => value.toLowerCase().includes(query));
     });
-  }, [data.templates, scope, search]);
-  const groups = useMemo(() => (["document_submission", "project_proposal", "other"] as const)
-    .map((key) => ({ key, items: filtered.filter((template) => template.templateScope === key) }))
-    .filter((group) => group.items.length), [filtered]);
+  }, [data.templates, category, search]);
+  const groups = useMemo(() => (category === "all" ? categories : [category])
+    .map((key) => ({ key, items: filtered.filter((template) => templateCategoryKeys(template).includes(categoryKey(key))) }))
+    .filter((group) => group.items.length), [categories, category, filtered]);
   const downloadableCount = data.templates.filter(hasFile).length;
 
   const handleDownload = async (template: TemplateRecord) => {
@@ -210,10 +207,10 @@ export function PwaTemplateLibrary({ data }: { data: PortalData }) {
       <section className="pwa-template-controls">
         <label className="pwa-template-search"><Search aria-hidden="true" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search templates..." /></label>
         <div>
-          {scopes.length > 1 ? (
-            <select aria-label="Template category" value={scope} onChange={(event) => setScope(event.target.value as "all" | TemplateScope)}>
+          {categories.length > 1 ? (
+            <select aria-label="Template category" value={category} onChange={(event) => setCategory(event.target.value)}>
               <option value="all">All Categories</option>
-              {scopes.map((item) => <option key={item} value={item}>{scopeLabels[item]}</option>)}
+              {categories.map((item) => <option key={item} value={item}>{formatPublicTemplateCategorySectionLabel(item)}</option>)}
             </select>
           ) : <span />}
           <Button variant="outline" disabled={downloadingAll || !downloadableCount} onClick={() => void handleDownloadAll()}><Download aria-hidden="true" />{downloadingAll ? "Preparing..." : "Download All"}</Button>
@@ -223,7 +220,7 @@ export function PwaTemplateLibrary({ data }: { data: PortalData }) {
         <section className="pwa-template-library">
           {groups.map((group) => (
             <div key={group.key} className="pwa-template-group">
-              {groups.length > 1 ? <h2>{scopeLabels[group.key]}</h2> : null}
+              {groups.length > 1 ? <h2>{formatPublicTemplateCategorySectionLabel(group.key)} ({group.items.length})</h2> : null}
               <div>{group.items.map((template) => (
                 <TemplateRow
                   key={template.id}

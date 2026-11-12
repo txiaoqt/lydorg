@@ -111,7 +111,8 @@ export async function uploadRegistrationObject(params: {
       // Resume within this upload/retry lifecycle without persisting URLs across accounts.
       storeFingerprintForResuming: false,
       removeFingerprintOnSuccess: true,
-      headers: { authorization: `Bearer ${session.access_token}` },
+      // No static `headers.authorization`: XHR setRequestHeader appends, so setting it here and in
+      // onBeforeRequest sent "Bearer a, Bearer b" and Storage rejected it as an invalid JWS.
       metadata: { bucketName: bucket, objectName: objectPath, contentType: file.type || "application/pdf", cacheControl: "3600" },
       onBeforeRequest: async (request) => {
         const { data: { session: current }, error } = await client.auth.getSession();

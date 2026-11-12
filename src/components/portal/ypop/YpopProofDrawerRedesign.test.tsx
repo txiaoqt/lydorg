@@ -911,7 +911,7 @@ describe("YpopProofDrawer - Liquidation-Aligned Redesign & Multi-File UX", () =>
       setViewportWidth(1280);
       const onFileCreated = vi.fn();
       const createdFile1 = makeFile("f-new-1", "part-canon-draft", "attendance.pdf");
-      const createdFile2 = makeFile("f-new-2", "part-canon-draft", "event_photo.png");
+      const createdFile2 = makeFile("f-new-2", "part-canon-draft", "narrative_report.docx");
 
       let uploadCallCount = 0;
       vi.spyOn(lydoSupabase, "uploadYpopEventFileToSupabase").mockImplementation(async (params) => {
@@ -942,13 +942,13 @@ describe("YpopProofDrawer - Liquidation-Aligned Redesign & Multi-File UX", () =>
       expect(fileInput).toHaveAttribute("multiple");
 
       const file1 = new File(["dummy 1"], "attendance.pdf", { type: "application/pdf" });
-      const file2 = new File(["dummy 2"], "event_photo.png", { type: "image/png" });
+      const file2 = new File(["dummy 2"], "narrative_report.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 
       fireEvent.change(fileInput, { target: { files: [file1, file2] } });
 
       // Staged locally: files appear in UI with Ready to Upload and NO immediate Supabase upload
       expect(screen.getAllByText("attendance.pdf").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("event_photo.png").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("narrative_report.docx").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Ready to Upload").length).toBe(2);
       expect(lydoSupabase.uploadYpopEventFileToSupabase).not.toHaveBeenCalled();
 

@@ -51,7 +51,7 @@ describe("registration upload transport", () => {
     expect(upload).not.toHaveBeenCalled();
     expect(tus.options?.chunkSize).toBe(TUS_CHUNK_BYTES);
     expect(tus.options?.retryDelays).toEqual(UPLOAD_RETRY_DELAYS);
-    expect(tus.options?.headers).toEqual({ authorization: "Bearer organization-token" });
+    expect(tus.options?.headers?.authorization).toBeUndefined(); // set once, in onBeforeRequest
     expect(tus.options?.metadata?.objectName).toBe(params().objectPath);
     expect(tus.options?.storeFingerprintForResuming).toBe(false);
     const setHeader = vi.fn();

@@ -81,6 +81,8 @@ export interface YpopProofDrawerProps {
   onSubmissionStateChange?: (activityId: string, submitting: boolean) => void;
   onFileCreated: (file: YPOPEventFile) => void;
   onFileDeleted: (fileId: string) => void;
+  /** Closed semesters no longer accept proof; the database enforces this too. */
+  semesterClosed?: boolean;
 }
 
 const useIsDesktop = () => {
@@ -117,6 +119,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
   onSubmissionStateChange,
   onFileCreated,
   onFileDeleted,
+  semesterClosed = false,
 }) => {
   const [currentParticipation, setCurrentParticipation] = useState<YPOPEventParticipation | null>(participation);
   const [loadedEventFiles, setLoadedEventFiles] = useState<YPOPEventFile[] | null>(null);
@@ -286,7 +289,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     (isSubmissionRevisionLocked(currentParticipation));
   const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(currentParticipation?.revisionDueAt) : "";
   const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(currentParticipation?.revisionDueAt) : null;
-  const isEditable = !isVerified && !isRejected && !isPending && (isDraft || (isNeedsRevision && !isRevisionDeadlineExpired));
+  const isEditable = !semesterClosed && !isVerified && !isRejected && !isPending && (isDraft || (isNeedsRevision && !isRevisionDeadlineExpired));
 
   const activeFile = files.find((f) => f.id === selectedFileId) || files[0] || null;
 
@@ -346,11 +349,22 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
 
-    const invalidFiles = selectedFiles.filter((f) => f.size > 25 * 1024 * 1024);
+    const wrongType = selectedFiles.filter((f) => !/\.(pdf|docx|xlsx)$/i.test(f.name));
+    if (wrongType.length > 0) {
+      toast({
+        title: "Unsupported file type",
+        description: "Only PDF, DOCX, and XLSX documents can be attached.",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const invalidFiles = selectedFiles.filter((f) => f.size > 10 * 1024 * 1024);
     if (invalidFiles.length > 0) {
       toast({
         title: "File too large",
-        description: "One or more files exceed the 25MB size limit.",
+        description: "One or more files exceed the 10 MB size limit.",
         variant: "destructive",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -568,6 +582,15 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
       toast({
         title: "Proof documents required",
         description: "Please attach at least one proof file (attendance sheet, photos, certificates) before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (semesterClosed) {
+      toast({
+        title: "Semester closed",
+        description: "This YPOP semester is closed. Proof can no longer be submitted.",
         variant: "destructive",
       });
       return;
@@ -864,7 +887,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           onChange={handleFileUpload}
           className="hidden"
           multiple
-          accept="image/*,.pdf,.doc,.docx,.xlsx"
+          accept=".pdf,.docx,.xlsx"
         />
 
         {/* Canonical Single Upload Surface: ONLY when isEditable (draft or needs_revision) */}

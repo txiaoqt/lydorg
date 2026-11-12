@@ -408,6 +408,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
         }}
         onFileCreated={onFileCreated}
         onFileDeleted={onFileDeleted}
+        semesterClosed={period.status === "closed"}
       />
     </div>
   );
