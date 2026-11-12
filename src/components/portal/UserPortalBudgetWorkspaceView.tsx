@@ -854,15 +854,31 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                   Upload your orgs detailed project budget proposal for administrative review
                 </p>
                 {proposalTemplates.map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    onClick={() => onDownloadTemplate?.(template)}
-                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    Download template: {template.name}
-                  </button>
+                  <div key={template.id} className="mt-3 flex flex-wrap items-center gap-2">
+                    {openPreview && template.templateFileUrl ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openPreview(template.templateFileUrl, template.templateFileName || template.name)}
+                        className="h-8 rounded-xl border-border text-xs font-medium hover:bg-accent cursor-pointer justify-center transition-colors"
+                      >
+                        <Eye aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                        View Template
+                      </Button>
+                    ) : null}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDownloadTemplate?.(template)}
+                      aria-label={`Download template: ${template.name}`}
+                      className="h-8 rounded-xl border-border text-xs font-medium hover:bg-accent cursor-pointer justify-center transition-colors"
+                    >
+                      <Download aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                      Download Template
+                    </Button>
+                  </div>
                 ))}
               </div>
 
