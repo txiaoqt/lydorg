@@ -17,5 +17,7 @@ export function useOrganizationIdentityCheck(name: string, barangay = "", urn = 
     }, 650);
     return () => { active = false; clearTimeout(timer); controller.abort(); };
   }, [input]);
-  return result?.input === input ? result.outcome : null;
+  // Keep the last outcome while the next check is pending so the notice doesn't blink on every keystroke.
+  const checkable = normalizeOrganizationName(name).length >= 3 && name.length <= 100;
+  return checkable ? result?.outcome ?? null : null;
 }

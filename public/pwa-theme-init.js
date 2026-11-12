@@ -2,7 +2,6 @@
   try {
     var isPwa =
       window.matchMedia("(display-mode: standalone)").matches ||
-      window.matchMedia("(display-mode: fullscreen)").matches ||
       window.navigator.standalone === true ||
       sessionStorage.getItem("ytrace-pwa-preview") === "1";
     if (!isPwa) return;

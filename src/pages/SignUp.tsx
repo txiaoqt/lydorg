@@ -517,7 +517,8 @@ const SignUp = () => {
         </div>
       ) : (
         // The PCYDO YDC building, washed in Y-TRACE blue so the card stays the focus.
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        // fixed: pinned to the viewport so the image doesn't rescale when the form grows.
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
           <img src="/auth/ydc-building.jpg" alt="" className="h-full w-full scale-105 object-cover blur-[2px]" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0E2F66]/85 via-[#16468A]/82 to-[#1A5CA8]/85" />
         </div>

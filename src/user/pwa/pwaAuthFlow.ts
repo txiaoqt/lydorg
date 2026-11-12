@@ -32,7 +32,6 @@ export const isPwaAuthFlow = (search = "") => {
     typeof window !== "undefined" &&
     Boolean(
       window.matchMedia?.("(display-mode: standalone)").matches ||
-        window.matchMedia?.("(display-mode: fullscreen)").matches ||
         (window.navigator as { standalone?: boolean })?.standalone === true,
     );
   return activeSession || isStandalone;

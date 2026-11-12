@@ -9,7 +9,7 @@ it('debounces keystrokes and checks supporting barangay details without polling'
  const {result,rerender}=renderHook(({name,area})=>useOrganizationIdentityCheck(name,area),{initialProps:{name:'Pal',area:''}});
  rerender({name:'Palatiw Youth Org.',area:''});expect(check).not.toHaveBeenCalled();
  await act(async()=>{await vi.advanceTimersByTimeAsync(650);});expect(check).toHaveBeenCalledTimes(1);expect(result.current).toBe('NO_MATCH');
- rerender({name:'Palatiw Youth Org.',area:'Palatiw'});expect(result.current).toBeNull();
+ rerender({name:'Palatiw Youth Org.',area:'Palatiw'});expect(result.current).toBe('NO_MATCH'); // last outcome stays while the next check is pending
  await act(async()=>{await vi.advanceTimersByTimeAsync(650);});expect(check).toHaveBeenLastCalledWith('Palatiw Youth Org.','Palatiw','',expect.any(AbortSignal));
  await act(async()=>{await vi.advanceTimersByTimeAsync(10000);});expect(check).toHaveBeenCalledTimes(2);
 });
