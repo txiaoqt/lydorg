@@ -65,8 +65,14 @@ import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewM
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 import { PortalAttachedFileRow } from "@/components/portal/PortalAttachedFileRow";
 import { formatAdvocacyLabel } from "@/lib/lydo-connect-data";
-import type { OrganizationProfile } from "@/lib/lydo-connect-data";
+import type { LiquidationReport, OrganizationProfile } from "@/lib/lydo-connect-data";
 import { queryClient } from "@/lib/query-client";
+
+// Liquidation reports keep the admin's revision note in `remarks` (there is no admin_remarks column).
+const getLiquidationAdminFeedback = (report: LiquidationReport): string =>
+  report.remarks?.trim() ||
+  [...(report.revisionHistory ?? [])].reverse().find((entry) => entry.adminRemarks?.trim())?.adminRemarks ||
+  "";
 
 export interface UserPortalLiquidationWorkspaceViewProps {
   organizationId?: string;
@@ -963,9 +969,9 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                             <AlertCircle className={cn("h-4 w-4 shrink-0", isRevisionDeadlineExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
                             <span>{isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
                           </div>
-                          {selectedReport.adminRemarks && (
+                          {getLiquidationAdminFeedback(selectedReport) && (
                             <p className="text-xs leading-relaxed pl-5 font-normal italic">
-                              "{selectedReport.adminRemarks}"
+                              "{getLiquidationAdminFeedback(selectedReport)}"
                             </p>
                           )}
                           {revisionDeadlineFormatted && (
@@ -1405,9 +1411,9 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                             <AlertCircle className={cn("h-4 w-4 shrink-0", isRevisionDeadlineExpired ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")} />
                             <span>{isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Feedback"}</span>
                           </div>
-                          {selectedReport.adminRemarks && (
+                          {getLiquidationAdminFeedback(selectedReport) && (
                             <p className="text-xs leading-relaxed pl-5 font-normal italic">
-                              "{selectedReport.adminRemarks}"
+                              "{getLiquidationAdminFeedback(selectedReport)}"
                             </p>
                           )}
                           {revisionDeadlineFormatted && (

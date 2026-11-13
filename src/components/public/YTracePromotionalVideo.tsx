@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type MouseEvent } from "react";
 import { Maximize2, Pause, Play, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -28,6 +29,8 @@ export default function YTracePromotionalVideo() {
   const [isInView, setIsInView] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(() => document.visibilityState !== "hidden");
   const [isPreviewPaused, setIsPreviewPaused] = useState(false);
+  // real playback state: autoplay can be blocked, so the icon must follow the element, not the intent
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const [previewUnavailable, setPreviewUnavailable] = useState(false);
   const [expandedUnavailable, setExpandedUnavailable] = useState(false);
 
@@ -111,13 +114,15 @@ export default function YTracePromotionalVideo() {
             aria-hidden="true"
             tabIndex={-1}
             onError={() => setPreviewUnavailable(true)}
+            onPlay={() => setIsPreviewPlaying(true)}
+            onPause={() => setIsPreviewPlaying(false)}
             className="pointer-events-none block h-full w-full object-contain"
           />
 
           {/* Play affordance */}
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            className={cn("pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity", isPreviewPlaying && "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100")}
           >
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 shadow-[0_8px_24px_rgba(2,12,32,0.35)] transition-transform duration-200 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:h-16 sm:w-16">
               <Play className="ml-0.5 h-6 w-6 fill-public-text-brand text-public-text-brand sm:h-7 sm:w-7" />
@@ -163,12 +168,19 @@ export default function YTracePromotionalVideo() {
             {!previewUnavailable && (
               <button
                 type="button"
-                aria-label={isPreviewPaused ? "Play video preview" : "Pause video preview"}
-                title={isPreviewPaused ? "Play preview" : "Pause preview"}
-                onClick={() => setIsPreviewPaused((paused) => !paused)}
+                aria-label={isPreviewPlaying ? "Pause video preview" : "Play video preview"}
+                title={isPreviewPlaying ? "Pause preview" : "Play preview"}
+                onClick={() => {
+                  if (isPreviewPlaying) {
+                    setIsPreviewPaused(true);
+                  } else {
+                    setIsPreviewPaused(false);
+                    if (previewRef.current) playVideo(previewRef.current);
+                  }
+                }}
                 className="flex h-11 w-11 items-center justify-center rounded-lg text-public-text-brand transition-colors duration-150 hover:bg-public-bg-brand-subtle active:bg-public-bg-brand-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-2"
               >
-                {isPreviewPaused ? <Play aria-hidden="true" className="h-4 w-4" /> : <Pause aria-hidden="true" className="h-4 w-4" />}
+                {isPreviewPlaying ? <Pause aria-hidden="true" className="h-4 w-4" /> : <Play aria-hidden="true" className="h-4 w-4" />}
               </button>
             )}
           </div>

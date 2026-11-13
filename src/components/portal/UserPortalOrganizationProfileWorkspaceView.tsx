@@ -376,14 +376,6 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 />
                 <p className="text-[11px] text-muted-foreground">Primary mobile number. Manage all contact numbers in Section 5 below.</p>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Organization Type</label>
-                <Input
-                  value={profileDraft.isExistingOrganization ? "Existing Organization" : "Youth Organization"}
-                  className="h-9 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed"
-                  readOnly
-                />
-              </div>
               <div className="space-y-1.5 md:col-span-2">
                 <label className="text-xs font-semibold text-foreground">Unique Registration Number (URN)</label>
                 <Input
@@ -785,26 +777,6 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-foreground">
-                    Barangay <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedProfileBarangay}
-                    onChange={(event) => {
-                      const barangay = event.target.value;
-                      onFieldChange("addressBarangay", barangay);
-                      onFieldChange("barangay", barangay);
-                      onFieldChange("district", getPasigDistrictForBarangay(barangay));
-                    }}
-                    className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    required
-                  >
-                    <option value="">Select barangay</option>
-                    {profileBarangayOptions.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-foreground">
                     District <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -824,6 +796,26 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                     {pasigDistrictOptions.map((district) => <option key={district} value={district}>{district}</option>)}
                   </select>
                   <p className="text-[11px] text-muted-foreground">Choosing a different district clears the barangay so you can select a matching one.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
+                    Barangay <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedProfileBarangay}
+                    onChange={(event) => {
+                      const barangay = event.target.value;
+                      onFieldChange("addressBarangay", barangay);
+                      onFieldChange("barangay", barangay);
+                      onFieldChange("district", getPasigDistrictForBarangay(barangay));
+                    }}
+                    className="h-9 w-full rounded-xl border border-border bg-background px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    required
+                  >
+                    <option value="">Select barangay</option>
+                    {profileBarangayOptions.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
+                  </select>
                 </div>
 
                 <div className="space-y-1">

@@ -967,6 +967,25 @@ export default function UserPortal({ section }: { section: string }) {
     });
   }, [currentProfile?.id, user?.id]);
 
+  // Notifications have no realtime channel (and this portal does not poll): refresh the bell
+  // whenever the user comes back to the tab, so new decisions show without a reload.
+  useEffect(() => {
+    if (!supabase || !user?.id) return;
+    const userId = user.id;
+    const refresh = () => {
+      if (document.visibilityState !== "visible") return;
+      void loadOrganizationNotificationsState(userId)
+        .then((snapshot) => { if (snapshot) mergeRemoteStateRef.current(snapshot); })
+        .catch(() => undefined);
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [user?.id]);
+
   const [budgetPrerequisitesLoad, setBudgetPrerequisitesLoad] = useState<{ organizationId: string; error: boolean } | null>(null);
   const isSharedResourceSection = section === "templates" || section === "news-releases";
   const sharedResourceQuery = useQuery({

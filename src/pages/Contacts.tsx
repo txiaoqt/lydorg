@@ -91,11 +91,11 @@ const Contacts = () => {
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="py-1 text-public-text-neutral-default">Monday–Thursday</td>
-                      <td className="py-1 text-right font-semibold text-public-text-brand">7:00 AM–6:00 PM</td>
+                      <td className="py-1 text-public-text-neutral-default">Monday – Thursday</td>
+                      <td className="py-1 text-right font-semibold text-public-text-brand">7:00 AM – 6:00 PM</td>
                     </tr>
                     <tr>
-                      <td className="py-1 text-public-text-secondary">Friday–Sunday</td>
+                      <td className="py-1 text-public-text-secondary">Friday – Sunday</td>
                       <td className="py-1 text-right text-public-text-secondary">Closed</td>
                     </tr>
                   </tbody>

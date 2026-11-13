@@ -11,10 +11,12 @@ beforeEach(() => {
   paused = [];
   vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function (this: HTMLMediaElement) {
     played.push(this);
+    this.dispatchEvent(new Event("play"));   // like a browser: the element reports it is playing
     return Promise.resolve();
   });
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(function (this: HTMLMediaElement) {
     paused.push(this);
+    this.dispatchEvent(new Event("pause"));
   });
   vi.stubGlobal("IntersectionObserver", class {
     constructor(callback: IntersectionObserverCallback) { notifyIntersection = callback; }
@@ -74,16 +76,24 @@ describe("Y-TRACE promotional video", () => {
     showPreview();
     expect(preview).toHaveAttribute("src");
     expect(played.at(-1)).toBe(preview);
-    showPreview(false);
-    expect(paused.at(-1)).toBe(preview);
 
     fireEvent.click(screen.getByRole("button", { name: "Pause video preview" }));
+    expect(paused.at(-1)).toBe(preview);
+    showPreview(false);
     const playCount = played.length;
     showPreview();
     expect(played).toHaveLength(playCount);
     fireEvent.click(screen.getByRole("button", { name: "Play video preview" }));
     expect(played.at(-1)).toBe(preview);
     expect(played.length).toBeGreaterThan(playCount);
+  });
+
+  it("shows the play icon when the browser blocks autoplay", () => {
+    vi.mocked(HTMLMediaElement.prototype.play).mockImplementation(() => Promise.reject(new Error("NotAllowedError")));
+    render(<YTracePromotionalVideo />);
+    showPreview();
+    expect(screen.getByRole("button", { name: "Play video preview" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pause video preview" })).not.toBeInTheDocument();
   });
 
   it("lets the user retry a failed expanded video without changing preview progress", () => {

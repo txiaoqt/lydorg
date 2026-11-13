@@ -788,9 +788,9 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               {isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Requested"}
             </p>
             {currentParticipation?.adminRemarks && (
-              <div className="p-2.5 rounded-lg bg-background/80 border border-amber-500/20 text-foreground font-medium italic break-words">
+              <p className="text-xs leading-relaxed font-normal italic break-words">
                 "{currentParticipation.adminRemarks}"
-              </div>
+              </p>
             )}
             {revisionDeadlineFormatted && (
               <p className="text-xs font-semibold">

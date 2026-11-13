@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Plus,
   Edit3,
+  Lock,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
   onFileCreated,
   onFileDeleted,
 }) => {
+  const semesterClosed = period.status === "closed";
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [activeActivity, setActiveActivity] = useState<YPOPCityActivity | null>(null);
@@ -344,19 +346,27 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                       <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:py-3.5 md:px-5 md:text-center align-middle whitespace-nowrap order-6">
                         <Button
                           type="button"
-                          variant={isNeedsRevision || (participation && hasSavedProof) ? "outline" : "default"}
+                          variant={semesterClosed || isNeedsRevision || (participation && hasSavedProof) ? "outline" : "default"}
                           size="sm"
+                          // closed semester: only rows that already have proof can still be opened (read-only)
+                          disabled={semesterClosed && !(participation && hasSavedProof)}
                           onClick={() => handleOpenDrawer(act)}
                           className={cn(
                             "w-full md:w-auto h-8 px-3 rounded-lg text-xs gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98] inline-flex items-center justify-center",
-                            isNeedsRevision
+                            semesterClosed
+                              ? "border border-border/80 bg-background hover:bg-muted text-foreground font-medium disabled:cursor-not-allowed"
+                              : isNeedsRevision
                               ? "border border-amber-500/40 dark:border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 dark:hover:bg-amber-500/25 hover:border-amber-500/60 dark:hover:border-amber-500/50 hover:text-amber-900 dark:hover:text-amber-100 font-semibold shadow-2xs focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-2"
                             : participation && hasSavedProof
                                 ? "border border-border/80 bg-background hover:bg-muted text-foreground font-medium"
                                 : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs font-medium"
                           )}
                         >
-                          {isNeedsRevision ? (
+                          {semesterClosed && !(participation && hasSavedProof) ? (
+                            <Lock className="h-3.5 w-3.5 shrink-0" />
+                          ) : semesterClosed ? (
+                            <FileText className="h-3.5 w-3.5 shrink-0" />
+                          ) : isNeedsRevision ? (
                             <Edit3 className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-300" />
                           ) : participation && hasSavedProof ? (
                             <FileText className="h-3.5 w-3.5 shrink-0" />
@@ -364,7 +374,9 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
                             <Plus className="h-3.5 w-3.5 shrink-0" />
                           )}
                           <span>
-                            {isNeedsRevision
+                            {semesterClosed
+                              ? participation && hasSavedProof ? "View Proof & Details" : "Semester Closed"
+                              : isNeedsRevision
                               ? "Resolve Revision"
                               : participation && hasSavedProof
                                 ? "View Proof & Details"
@@ -408,7 +420,7 @@ export const YpopCityLedTab: React.FC<YpopCityLedTabProps> = ({
         }}
         onFileCreated={onFileCreated}
         onFileDeleted={onFileDeleted}
-        semesterClosed={period.status === "closed"}
+        semesterClosed={semesterClosed}
       />
     </div>
   );

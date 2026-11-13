@@ -2,6 +2,7 @@ import { useOrganizationIdentityCheck } from "@/hooks/use-organization-identity-
 import { OrganizationIdentityNotice } from "@/components/portal/OrganizationIdentityNotice";
 import { sanitizeZipCode, validateZipCode } from "@/lib/organization-profile-domain";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AlertCircle,
@@ -226,6 +227,8 @@ const GoogleOnboarding = () => {
   const { upsertOrganizationProfile } = useLydoConnect();
 
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  // Account first made with email + password: name and contact number were already given there, so they are read-only here.
+  const [signupDetailsLocked, setSignupDetailsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [urnAvailability, setUrnAvailability] = useState<"idle" | "checking" | "available" | "registered" | "error">("idle");
@@ -253,6 +256,17 @@ const GoogleOnboarding = () => {
         return;
       }
 
+      let signupMeta: Record<string, unknown> = {};
+      try {
+        signupMeta = ((await supabase?.auth.getUser())?.data?.user?.user_metadata ?? {}) as Record<string, unknown>;
+      } catch {
+        // no account details available: fields stay editable
+      }
+      const signupName = typeof signupMeta.organization_name === "string" ? signupMeta.organization_name.trim() : "";
+      const signupContact = typeof signupMeta.contact_number === "string" ? signupMeta.contact_number.trim() : "";
+      if (!active) return;
+      setSignupDetailsLocked(Boolean(signupName));
+
       try {
         const existing = await fetchOrganizationProfileInSupabase(user.id);
         if (!active) return;
@@ -270,8 +284,8 @@ const GoogleOnboarding = () => {
 
         const draft = createOrganizationProfileDraft(user.id, existing, {
           organizationEmail: authenticatedEmail,
-          organizationName: localDraft?.organizationName || existing?.organizationName || prefill?.organizationName || "",
-          contactNumber: localDraft?.contactNumber || existing?.contactNumber || "",
+          organizationName: signupName || localDraft?.organizationName || existing?.organizationName || prefill?.organizationName || "",
+          contactNumber: signupContact || localDraft?.contactNumber || existing?.contactNumber || "",
           district: localDraft?.district || existing?.district || "",
           barangay: localDraft?.barangay || existing?.barangay || "",
           isExistingOrganization: localDraft?.isExistingOrganization ?? existing?.isExistingOrganization ?? prefill?.isExistingOrganization ?? false,
@@ -362,8 +376,8 @@ const GoogleOnboarding = () => {
         const authenticatedEmail = user.email?.trim().toLowerCase() || "";
         const draft = createOrganizationProfileDraft(user.id, null, {
           organizationEmail: authenticatedEmail,
-          organizationName: localDraft?.organizationName || prefill?.organizationName || "",
-          contactNumber: localDraft?.contactNumber || "",
+          organizationName: signupName || localDraft?.organizationName || prefill?.organizationName || "",
+          contactNumber: signupContact || localDraft?.contactNumber || "",
           district: localDraft?.district || "",
           barangay: localDraft?.barangay || "",
           isExistingOrganization: localDraft?.isExistingOrganization ?? prefill?.isExistingOrganization ?? false,
@@ -882,13 +896,21 @@ const GoogleOnboarding = () => {
                   value={profileDraft.organizationName || ""}
                   maxLength={100}
                   onChange={(e) => handleFieldChange("organizationName", e.target.value)}
+                  readOnly={signupDetailsLocked}
+                  aria-readonly={signupDetailsLocked || undefined}
                   autoComplete="organization"
-                  className="h-10 text-sm"
+                  className={signupDetailsLocked ? "h-10 text-sm bg-muted/50 cursor-not-allowed" : "h-10 text-sm"}
                   required
                 />
               </div>
 
-              <OrganizationIdentityNotice outcome={identityOutcome} />
+              {signupDetailsLocked ? (
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  The organization name and contact number come from your account registration and cannot be changed here.
+                </p>
+              ) : (
+                <OrganizationIdentityNotice outcome={identityOutcome} />
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Organization Email — Immutable from Google Account */}
                 <div className="space-y-1.5">
@@ -928,8 +950,10 @@ const GoogleOnboarding = () => {
                     placeholder="09171234567"
                     value={profileDraft.contactNumber || ""}
                     onChange={(e) => handleFieldChange("contactNumber", sanitizeContactNumber(e.target.value))}
+                    readOnly={signupDetailsLocked}
+                    aria-readonly={signupDetailsLocked || undefined}
                     autoComplete="tel"
-                    className="h-10 text-sm"
+                    className={signupDetailsLocked ? "h-10 text-sm bg-muted/50 cursor-not-allowed" : "h-10 text-sm"}
                     required
                   />
                 </div>

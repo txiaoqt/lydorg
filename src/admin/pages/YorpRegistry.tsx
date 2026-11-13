@@ -541,7 +541,7 @@ export function YorpRegistryPage({ generatedBy }: { generatedBy?: string } = {})
                   {deletingOrganization ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />Deleting organization account…</>
                   ) : (
-                    <><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Permanently Delete Account</>
+                    <><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Permanently Delete Registration</>
                   )}
                 </Button>
               </AlertDialogFooter>

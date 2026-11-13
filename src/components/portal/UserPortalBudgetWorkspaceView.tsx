@@ -1036,7 +1036,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                       Browse PDF File
                     </Button>
                     <span className="text-[11px] text-muted-foreground font-mono">
-                      PDF format only (Max 25MB)
+                      PDF format only (Max 10MB)
                     </span>
                   </div>
                 </div>

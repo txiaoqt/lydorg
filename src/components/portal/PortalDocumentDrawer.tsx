@@ -99,8 +99,10 @@ const formatFileBytes = (bytes?: number | null) => {
 
 const formatTemplateDisplayName = (rawTitle?: string) => {
   if (!rawTitle) return "Official Template";
-  let clean = rawTitle.replace(/^\d+[-_]/, "");
-  clean = clean.replace(/\.pdf$/i, "");
+  // storage names can carry a UUID or timestamp prefix: "3eb1e5f7-25e6-...-c399f682696c-Name.docx"
+  let clean = rawTitle.replace(/^[0-9a-f]{8}(?:[-_ ][0-9a-f]{4}){3}[-_ ][0-9a-f]{12}[-_ ]*/i, "");
+  clean = clean.replace(/^\d+[-_]/, "");
+  clean = clean.replace(/\.(pdf|docx?|xlsx?)$/i, "");
   clean = clean.replace(/_/g, " ");
   clean = clean.replace(/-and-/gi, " and ");
   clean = clean.replace(/(\w)-(\w)/g, (match, p1, p2) => {
@@ -112,6 +114,13 @@ const formatTemplateDisplayName = (rawTitle?: string) => {
   clean = clean.replace(/\bby\s+laws\b/gi, "By-Laws");
   clean = clean.replace(/\s+/g, " ").trim();
   return clean || rawTitle;
+};
+
+const getTemplateFileTypeLabel = (fileName?: string) => {
+  const ext = /\.([a-z0-9]+)(?:[?#].*)?$/i.exec(fileName ?? "")?.[1]?.toLowerCase();
+  if (ext === "doc" || ext === "docx") return "Word Document";
+  if (ext === "xls" || ext === "xlsx") return "Excel Workbook";
+  return "PDF Document";
 };
 
 export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
@@ -467,7 +476,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
               {isTemplate ? (
                 <>
-                  <span>PDF Document</span>
+                  <span>{getTemplateFileTypeLabel(templateFileName || previewTitle || templateTitle)}</span>
                   <span>•</span>
                   <span>Reference Guide</span>
                 </>
@@ -724,7 +733,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
               {isTemplate ? (
                 <>
                   <span className="text-muted-foreground/40">•</span>
-                  <span>PDF Document</span>
+                  <span>{getTemplateFileTypeLabel(templateFileName || previewTitle || templateTitle)}</span>
                   <span className="text-muted-foreground/40 hidden xs:inline">•</span>
                   <span className="hidden xs:inline">Reference Guide</span>
                 </>

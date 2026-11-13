@@ -101,6 +101,8 @@ export interface YpopPpaModalProps {
   onActivityDeleted?: (activityId: string) => void;
   onFileCreated: (file: YPOPOrgActivityFile) => void;
   onFileDeleted: (fileId: string) => void;
+  /** Closed semester: everything is view-only. */
+  semesterClosed?: boolean;
 }
 
 export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
@@ -116,6 +118,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
   onActivityDeleted,
   onFileCreated,
   onFileDeleted,
+  semesterClosed = false,
 }) => {
   const [currentActivity, setCurrentActivity] = useState<YPOPOrgActivity | null>(activity);
   const [loadedOrgActivityFiles, setLoadedOrgActivityFiles] = useState<YPOPOrgActivityFile[] | null>(null);
@@ -175,7 +178,7 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
     (isSubmissionRevisionLocked(currentActivity));
   const revisionDeadlineFormatted = isNeedsRevision ? formatRevisionDeadline(currentActivity?.revisionDueAt) : "";
   const revisionTimeRemaining = isNeedsRevision ? getRevisionTimeRemaining(currentActivity?.revisionDueAt) : null;
-  const isReadOnly = isUnderReview || isApproved || isRejected || isRevisionDeadlineExpired;
+  const isReadOnly = semesterClosed || isUnderReview || isApproved || isRejected || isRevisionDeadlineExpired;
 
   // Safe delete eligibility: organization-owned records in non-approved states
   const canDelete = Boolean(
@@ -797,9 +800,9 @@ export const YpopPpaModal: React.FC<YpopPpaModalProps> = ({
               {isRevisionDeadlineExpired ? "Revision Deadline Expired (Locked)" : "Admin Revision Requested"}
             </p>
             {currentActivity?.adminRemarks && (
-              <div className="p-2.5 rounded-lg bg-background/80 border border-amber-500/20 text-foreground font-medium italic break-words">
-                &ldquo;{currentActivity.adminRemarks}&rdquo;
-              </div>
+              <p className="text-xs leading-relaxed font-normal italic break-words">
+                "{currentActivity.adminRemarks}"
+              </p>
             )}
             {revisionDeadlineFormatted && (
               <p className="text-xs font-semibold">

@@ -1,4 +1,6 @@
 import { Info } from "lucide-react";
+
+const IN_REVIEW = new Set(["submitted", "under_review", "under_admin_review", "ready_for_review"]);
 import { getBudgetRequestStatusLabel } from "@/lib/lydo-connect-data";
 
 type StatusMessage = { title: string; description: string };
@@ -16,12 +18,47 @@ export function PortalWorkflowStatusHelper({ workflow, status }: {
         title: "Awaiting fund release",
         description: "Your budget request is approved and is awaiting fund release. Wait until the status changes to Budget Released before visiting the Accounting Office to claim your funds.",
       };
+    } else if (IN_REVIEW.has(status)) {
+      message = {
+        title: "Awaiting Admin Review",
+        description: "Your budget proposal has been submitted and is currently under PCYDO review.",
+      };
+    } else if (status === "draft") {
+      message = {
+        title: "Draft saved",
+        description: "This request has not been sent yet. Open it and click Submit Proposal when it is ready.",
+      };
+    } else if (status === "rejected_red") {
+      message = {
+        title: "Request not approved",
+        description: "PCYDO did not approve this request. Read the admin remarks for the reason.",
+      };
     } else if (label === "Budget Released") {
       message = {
         title: "Next step: Claim your funds onsite",
         description: "Your funds are ready to claim. Please visit the Accounting Office onsite to collect your released funds.",
       };
     }
+  } else if (IN_REVIEW.has(status)) {
+    message = {
+      title: "Awaiting Admin Review",
+      description: "Your liquidation report has been submitted and is currently under PCYDO review.",
+    };
+  } else if (status === "not_started" || status === "draft") {
+    message = {
+      title: status === "draft" ? "Draft saved" : "Next step: Submit your liquidation report",
+      description: "Upload your signed liquidation report and click Submit for Review before the deadline.",
+    };
+  } else if (status === "hard_copy_submitted") {
+    message = {
+      title: "Hard copy received",
+      description: "PCYDO received your signed hard copy and will finalize your liquidation.",
+    };
+  } else if (status === "overdue") {
+    message = {
+      title: "Report overdue",
+      description: "The liquidation deadline has passed. Submit your report now and contact PCYDO.",
+    };
   } else if (status === "approved_for_ftf_green") {
     message = {
       title: "Next step: Submit the signed hard copy",

@@ -54,8 +54,8 @@ type RegistrationsTableProps = {
 
 const STATUS_TABS: { value: RegistrationStatusFilter; label: string }[] = [
   { value: "all", label: "All Status" },
-  { value: "verified", label: "Verified" },
   { value: "pending_review", label: "Pending Review" },
+  { value: "verified", label: "Verified" },
   { value: "suspended_inactive", label: "Suspended" },
 ];
 
@@ -510,7 +510,7 @@ export const RegistrationsTable = ({
                       className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-3 font-inter text-public-fs-body-sm font-semibold text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-public-bg-brand focus-visible:ring-offset-1"
                     >
                       <Eye className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
-                      Review
+                      {org.profileStatus === "verified" ? "View" : "Review"}
                     </button>
                     {isDeletableRegistrationStatus(org.profileStatus, isSuperAdmin) && onDelete ? (
                       <button

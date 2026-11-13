@@ -320,7 +320,7 @@ describe("Registration Review Detail Review Summary Visibility", () => {
     expect(orgRow).toBeDefined();
 
     // Click the "Review" button within this row
-    const reviewButton = within(orgRow as HTMLElement).getByRole("button", { name: /^Review$/i });
+    const reviewButton = within(orgRow as HTMLElement).getByRole("button", { name: /^(Review|View)$/i });
     fireEvent.click(reviewButton);
   };
 
@@ -329,7 +329,7 @@ describe("Registration Review Detail Review Summary Visibility", () => {
 
     // Header and top-level indicators must be present
     expect(await screen.findByText("Back to Registrations Queue")).toBeInTheDocument();
-    expect(screen.getByText("Pasig Youth Council Verified")).toBeInTheDocument();
+    expect(screen.getAllByText("Pasig Youth Council Verified").length).toBeGreaterThanOrEqual(1); // header + breadcrumb
     expect(screen.getByText("Verified")).toBeInTheDocument();
     expect(screen.getByText("URN URN-2026-0001")).toBeInTheDocument();
     // Registration details (including document counts) load only after the
@@ -350,7 +350,7 @@ describe("Registration Review Detail Review Summary Visibility", () => {
     await renderPortalAndOpenReview("Pasig Youth Council Pending");
 
     expect(await screen.findByText("Back to Registrations Queue")).toBeInTheDocument();
-    expect(screen.getByText("Pasig Youth Council Pending")).toBeInTheDocument();
+    expect(screen.getAllByText("Pasig Youth Council Pending").length).toBeGreaterThanOrEqual(1); // header + breadcrumb
 
     // Review Summary card must be visible
     expect(screen.getByText("Review Summary")).toBeInTheDocument();
@@ -367,7 +367,7 @@ describe("Registration Review Detail Review Summary Visibility", () => {
     await renderPortalAndOpenReview("Pasig Youth Council Needs Update");
 
     expect(await screen.findByText("Back to Registrations Queue")).toBeInTheDocument();
-    expect(screen.getByText("Pasig Youth Council Needs Update")).toBeInTheDocument();
+    expect(screen.getAllByText("Pasig Youth Council Needs Update").length).toBeGreaterThanOrEqual(1); // header + breadcrumb
 
     // Review Summary card must be visible
     expect(screen.getByText("Review Summary")).toBeInTheDocument();
@@ -380,7 +380,7 @@ describe("Registration Review Detail Review Summary Visibility", () => {
     await renderPortalAndOpenReview("Pasig Youth Council Suspended");
 
     expect(await screen.findByText("Back to Registrations Queue")).toBeInTheDocument();
-    expect(screen.getByText("Pasig Youth Council Suspended")).toBeInTheDocument();
+    expect(screen.getAllByText("Pasig Youth Council Suspended").length).toBeGreaterThanOrEqual(1); // header + breadcrumb
 
     // Review actions must be disabled and warning notice displayed
     expect(

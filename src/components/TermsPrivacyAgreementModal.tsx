@@ -77,7 +77,7 @@ export const TermsPrivacyAgreementModal = ({
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-            <Tabs defaultValue="terms" className="w-full">
+            <Tabs defaultValue="privacy" className="w-full">
               <TabsList className="grid w-full grid-cols-2 h-11 p-1 rounded-xl border border-border bg-muted/50 gap-1">
                 <TabsTrigger
                   value="privacy"

@@ -70,7 +70,7 @@ describe("UserPortalBudgetWorkspaceView - Budget Request Document Upload Area", 
     expect(screen.getByText("PDF Only")).toBeDefined();
     expect(screen.getByTestId("budget-file-dropzone")).toBeDefined();
     expect(screen.getByTestId("browse-budget-file-button")).toBeDefined();
-    expect(screen.getByText(/PDF format only \(Max 25MB\)/i)).toBeDefined();
+    expect(screen.getByText(/PDF format only \(Max 10MB\)/i)).toBeDefined();
   });
 
   it("2. browse button triggers file input click", () => {

@@ -1041,6 +1041,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const [entryReviewTab, setEntryReviewTab] = useState<"city_led" | "org_led">("city_led");
   const [collapsedEntryReviewGroups, setCollapsedEntryReviewGroups] = useState<string[]>([]);
   const [selectedEntryReviewGroupIds, setSelectedEntryReviewGroupIds] = useState<string[]>([]);
+  const [orgActivityDetailsCollapsed, setOrgActivityDetailsCollapsed] = useState(false);
   const [activeEntryReviewGroupId, setActiveEntryReviewGroupId] = useState<string | null>(null);
   const [activeEntryReviewFileId, setActiveEntryReviewFileId] = useState<string | null>(null);
   const [entryReviewPreviewUrl, setEntryReviewPreviewUrl] = useState("");
@@ -1202,6 +1203,10 @@ function AdminPortalContent({ section }: { section: string }) {
     queryKey: ["admin", "notifications", "recent"],
     queryFn: fetchAdminRecentNotifications,
     enabled: Boolean(supabase && readAdminSession()?.sessionToken),
+    // no realtime channel for admin notifications, so poll while the tab is visible
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
   const adminYpopPeriodsQuery = useQuery({
     queryKey: ["admin", "ypop", "periods"],
@@ -1779,6 +1784,19 @@ function AdminPortalContent({ section }: { section: string }) {
       setLiquidationLifecycleStage(selectedLiquidationReport.status);
     }
   }, [selectedLiquidationReport?.id, selectedLiquidationReport?.status]);
+  // Breadcrumb ends with the open record, e.g. Organizations > Registrations > Bayanihan Youth Guild
+  const adminBreadcrumbDetail = (() => {
+    if (section === "registrations" && selectedRegistrationId) return selectedRegistrationProfile?.organizationName;
+    if (section === "renewals" && selectedRenewalId) {
+      const renewal = adminRenewals.find((item) => item.id === selectedRenewalId);
+      return state.organizationProfiles.find((profile) => profile.id === renewal?.organizationId)?.organizationName;
+    }
+    if (section === "budget-utilization" && selectedBudgetRequestId) return selectedBudgetRequest?.activityTitle;
+    if (section === "liquidation-monitoring" && selectedLiquidationReportId) {
+      return state.budgetRequests.find((item) => item.id === selectedLiquidationReport?.budgetRequestId)?.activityTitle;
+    }
+    return undefined;
+  })();
   const selectedLiquidationReportFiles = useMemo(
     () =>
       selectedLiquidationReport && !adminLiquidationDetailQuery.isError && !["draft", "not_started", "pending_activity_completion"].includes(selectedLiquidationReport.status)
@@ -8738,9 +8756,9 @@ function AdminPortalContent({ section }: { section: string }) {
             .filter(
               (log) =>
                 (log.organizationId === selectedOrg.id || log.relatedId === selectedRenewalRecord.id) &&
-                (log.relatedType === "document_submission_file" ||
-                  log.relatedType === "organization_renewal" ||
-                  log.relatedType === "document_submission") &&
+                // file decisions only for this renewal's files (not the original registration's)
+                ((log.relatedType === "document_submission_file" && effectiveRenewalFiles.some((file) => file.id === log.relatedId)) ||
+                  log.relatedType === "organization_renewal") &&
                 log.action !== "Submitted batch document review",
             )
             .slice()
@@ -13557,9 +13575,21 @@ function AdminPortalContent({ section }: { section: string }) {
                                 {activeOrgActivity.activityName || "Untitled Activity"}
                               </h2>
                             </div>
-                            <YpopDocumentStatusPill status={activeOrgActivity.status} isAwaiting={activeGroup?.isAwaiting} />
+                            <div className="flex shrink-0 items-center gap-2">
+                              <YpopDocumentStatusPill status={activeOrgActivity.status} isAwaiting={activeGroup?.isAwaiting} />
+                              <button
+                                type="button"
+                                aria-expanded={!orgActivityDetailsCollapsed}
+                                onClick={() => setOrgActivityDetailsCollapsed((current) => !current)}
+                                className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 font-inter text-[13px] font-semibold text-text-default transition-colors hover:bg-slate-50"
+                              >
+                                {orgActivityDetailsCollapsed ? "Expand Details" : "Collapse Details"}
+                                <ChevronDown className={cn("h-4 w-4 transition-transform", !orgActivityDetailsCollapsed && "rotate-180")} strokeWidth={1.6} />
+                              </button>
+                            </div>
                           </div>
 
+                          {!orgActivityDetailsCollapsed ? (<>
                           {/* Details Grid: Date & Venue */}
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="flex items-start gap-2.5 rounded-md border border-slate-200/80 dark:border-slate-800 bg-bg-panel-subtle p-3">
@@ -13677,6 +13707,7 @@ function AdminPortalContent({ section }: { section: string }) {
                               </div>
                             </div>
                           </div>
+                          </>) : null}
                         </div>
                       ) : null}
 
@@ -14417,8 +14448,9 @@ function AdminPortalContent({ section }: { section: string }) {
                   try {
                     const saved = await adminUpdateYpopPeriodInSupabase(editingPeriodId, patch);
                     updateYPOPPeriod(saved.id, saved);
-                  } catch {
-                    updateYPOPPeriod(editingPeriodId, patch);
+                  } catch (error) {
+                    toast({ title: "Semester not saved", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+                    return;
                   }
                   toast({ title: "Semester updated", description: `${generatedSemesterLabel} has been saved.` });
                 }
@@ -14440,17 +14472,14 @@ function AdminPortalContent({ section }: { section: string }) {
                     try {
                       const savedAct = await adminCreateYpopCityActivityInSupabase({ semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category) });
                       createYPOPCityActivity({ ...savedAct });
-                    } catch {
-                      createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: saved.semesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
+                    } catch (error) {
+                      toast({ title: `Activity "${act.name}" was not saved`, description: error instanceof Error ? error.message : "Add it again from the semester.", variant: "destructive" });
                     }
                   }
-                } catch {
-                  const newId = `ypop-period-${Date.now()}`;
-                  createYPOPPeriod({ id: newId, ...periodData, createdAt: now, updatedAt: now });
-                  createPeriodActivities.forEach((act, i) => {
-                    createYPOPCityActivity({ id: `ypop-act-${Date.now()}-${i}`, semesterKey: generatedSemesterKey, name: act.name, date: act.startDate, startDate: act.startDate, endDate: act.endDate || act.startDate, venue: act.venue, category: act.category, points: getYpopCityLedPoints(act.category), createdAt: now });
-                  });
-                  savedPeriodId = newId;
+                } catch (error) {
+                  // never fake a local semester: its temporary id breaks every later query
+                  toast({ title: "Semester not created", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+                  return;
                 }
                 toast({ title: "Semester created", description: `${generatedSemesterLabel} is ready.` });
                 setSelectedYpopPeriodId(savedPeriodId);
@@ -14542,8 +14571,9 @@ function AdminPortalContent({ section }: { section: string }) {
               try {
                 const saved = await adminCreateYpopCityActivityInSupabase(actData);
                 createYPOPCityActivity({ ...saved });
-              } catch {
-                createYPOPCityActivity({ id: `ypop-act-${Date.now()}`, ...actData, createdAt: new Date().toISOString() });
+              } catch (error) {
+                toast({ title: "Activity not saved", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+                return;
               }
             } else {
               setCreatePeriodActivities((prev) => [
@@ -15101,7 +15131,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex items-center gap-2.5">
                     <button
                       type="button"
-                      disabled={submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
+                      disabled={!canSubmit || submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
                       onClick={() => void submitPeriod("draft")}
                       className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
                     >
@@ -15423,6 +15453,7 @@ function AdminPortalContent({ section }: { section: string }) {
         subtitle="PCYDO Admin"
         groups={sidebarGroups}
         activeId={section}
+        breadcrumbDetail={adminBreadcrumbDetail}
         onNavigate={handleAdminSectionNavigate}
         onSignOut={() => setSignOutConfirmOpen(true)}
         userProfile={{ name: user?.displayName ?? "Administrator", role: "Administrator", email: user?.email ?? "" }}
@@ -16051,7 +16082,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   {registrationDeleteLoading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />Deleting registration account…</>
                   ) : (
-                    <><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Permanently Delete Account</>
+                    <><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Permanently Delete Registration</>
                   )}
                 </Button>
               </AlertDialogFooter>

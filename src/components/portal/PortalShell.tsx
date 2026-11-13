@@ -27,6 +27,8 @@ type PortalShellProps = {
   subtitle: string;
   groups: PortalNavGroup[];
   activeId: string;
+  /** Last breadcrumb for an open record (admin only). */
+  breadcrumbDetail?: string;
   onNavigate: (id: string) => void;
   onSignOut: () => void;
   children: React.ReactNode;
@@ -174,6 +176,7 @@ export const PortalShell = ({
   title,
   subtitle,
   groups,
+  breadcrumbDetail,
   activeId,
   onNavigate,
   onSignOut,
@@ -457,7 +460,7 @@ export const PortalShell = ({
                 </div>
               </div>
             </header>
-            <AdminBreadcrumb groups={groups} activeId={activeId} />
+            <AdminBreadcrumb groups={groups} activeId={activeId} detailLabel={breadcrumbDetail} />
             <div className="px-4 py-3 sm:py-6 lg:py-8">{children}</div>
           </div>
         </main>

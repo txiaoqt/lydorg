@@ -267,7 +267,7 @@ describe("Public Contact Information & Dynamic System Settings", () => {
     expect(screen.getByText("Office Hours")).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Day" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Operating Hours" })).toBeInTheDocument();
-    expect(screen.getByText("Monday–Thursday")).toBeInTheDocument();
-    expect(screen.getByText("7:00 AM–6:00 PM")).toBeInTheDocument();
+    expect(screen.getByText("Monday – Thursday")).toBeInTheDocument();
+    expect(screen.getByText("7:00 AM – 6:00 PM")).toBeInTheDocument();
   });
 });

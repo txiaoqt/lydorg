@@ -892,21 +892,6 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                   <EditorField label="Unit / Room / Building / House / Lot"><Input value={draft.addressUnitBuilding || ""} onChange={(event) => setField("addressUnitBuilding", event.target.value)} placeholder="e.g. Room 201, Block 5 Lot 2" /></EditorField>
                   <EditorField label="Street Address" required><Input value={draft.addressStreet || ""} onChange={(event) => setField("addressStreet", event.target.value)} placeholder="e.g. 101 Test Center Way" /></EditorField>
                   <EditorField label="Subdivision / Village (Optional)"><Input value={draft.addressSubdivision || ""} onChange={(event) => setField("addressSubdivision", event.target.value)} placeholder="e.g. Kapitolyo Heights" /></EditorField>
-                  <EditorField label="Barangay" required>
-                    <select
-                      value={selectedBarangay}
-                      onChange={(event) => {
-                        const barangay = event.target.value;
-                        setField("addressBarangay", barangay);
-                        setField("barangay", barangay);
-                        setField("district", getPasigDistrictForBarangay(barangay));
-                      }}
-                      required
-                    >
-                      <option value="">Select Barangay</option>
-                      {barangayOptions.map((barangay) => <option key={barangay.id} value={barangay.name}>{barangay.name}</option>)}
-                    </select>
-                  </EditorField>
                   <EditorField label="District" required>
                     <select
                       value={selectedDistrict}
@@ -922,6 +907,21 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
                     >
                       <option value="">Select District</option>
                       {pasigDistrictOptions.map((district) => <option key={district} value={district}>{district}</option>)}
+                    </select>
+                  </EditorField>
+                  <EditorField label="Barangay" required>
+                    <select
+                      value={selectedBarangay}
+                      onChange={(event) => {
+                        const barangay = event.target.value;
+                        setField("addressBarangay", barangay);
+                        setField("barangay", barangay);
+                        setField("district", getPasigDistrictForBarangay(barangay));
+                      }}
+                      required
+                    >
+                      <option value="">Select Barangay</option>
+                      {barangayOptions.map((barangay) => <option key={barangay.id} value={barangay.name}>{barangay.name}</option>)}
                     </select>
                   </EditorField>
                   <EditorField label="City / Municipality"><Input value={draft.addressCity || "Pasig City"} onChange={(event) => setField("addressCity", event.target.value)} /></EditorField>

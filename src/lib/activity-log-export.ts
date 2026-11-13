@@ -14,6 +14,17 @@ export type ExportActivityRow = {
   organization: string;
 };
 
+// Document-review logs are written with the organization's notification text; reword them for admins.
+const reviewOutcomeLabels: Record<string, string> = {
+  approved: "Approved", green: "Approved", "needs revision": "Needs Revision", rejected: "Rejected", red: "Rejected",
+};
+export const getAdminAuditDescription = (log: Pick<ActivityLog, "description">): string => {
+  const match = /^Your document submission has been marked (.+?)\.?$/i.exec(log.description ?? "");
+  if (!match) return log.description;
+  const outcome = reviewOutcomeLabels[match[1].toLowerCase()] ?? match[1];
+  return `Marked the organization's document submission as ${outcome}.`;
+};
+
 const actionLabels: Record<string, string> = {
   reviewed_budget: "Reviewed budget request",
   review_budget_request: "Reviewed budget request",
@@ -85,7 +96,7 @@ export const mapAuditLogToExportRow = (
     time,
     action: getFriendlyAuditAction(log.action),
     category: getFriendlyAuditCategory(log.relatedType),
-    description: log.description,
+    description: getAdminAuditDescription(log),
     affectedRecord: log.relatedId,
     actor: context?.actor ?? "",
     organization: context?.organization ?? "",

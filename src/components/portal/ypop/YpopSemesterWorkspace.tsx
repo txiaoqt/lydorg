@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Info,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -284,6 +285,26 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
             </div>
           ) : null}
         </div>
+
+        {period.status === "closed" ? (
+          <section
+            aria-label="Semester closed"
+            className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5"
+            data-testid="user-ypop-semester-closed-notice"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+              <div className="min-w-0 space-y-1">
+                <h2 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                  {period.semesterLabel} is closed
+                </h2>
+                <p className="text-xs leading-relaxed text-amber-900/85 dark:text-amber-100/85">
+                  You can no longer submit proof for city-led activities or log organization-initiated activities for this semester. Proof you already submitted can still be viewed.
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {/* Qualification Summary Card */}
         <div

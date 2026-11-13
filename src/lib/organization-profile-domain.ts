@@ -16,7 +16,10 @@ export const sanitizeZipCode = (value: string): string => value.replace(/\D/g, "
 export const validateZipCode = (value?: string | null): string | null => {
   const trimmed = value?.trim() ?? "";
   if (!trimmed) return "ZIP code is required.";
-  return /^[0-9]{4}$/.test(trimmed) ? null : "ZIP code must contain exactly 4 digits.";
+  if (!/^[0-9]{4}$/.test(trimmed)) return "ZIP code must contain exactly 4 digits.";
+  // Organizations are Pasig-based; Pasig City ZIP codes run from 1600 to 1612.
+  const zip = Number(trimmed);
+  return zip >= 1600 && zip <= 1612 ? null : "Enter a Pasig City ZIP code (1600 to 1612).";
 };
 
 export const validateOrganizationName = (name: string): string | null => {

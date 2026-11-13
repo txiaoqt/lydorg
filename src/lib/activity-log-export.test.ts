@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   activityLogExportConfig,
+  getAdminAuditDescription,
   getFriendlyAuditAction,
   getFriendlyAuditCategory,
   mapAuditLogToExportRow,
@@ -57,5 +58,16 @@ describe("activity log export normalization", () => {
 
     expect(csv).toContain("\"'=Approved \"\"Constitution\"\"\nfor review.\"");
     expect(csv).toContain('"Constitution, By-Laws.pdf"');
+  });
+});
+
+describe("getAdminAuditDescription", () => {
+  it("rewords organization-facing review text for admins", () => {
+    expect(getAdminAuditDescription({ description: "Your document submission has been marked needs revision." }))
+      .toBe("Marked the organization's document submission as Needs Revision.");
+    expect(getAdminAuditDescription({ description: "Your document submission has been marked green." }))
+      .toBe("Marked the organization's document submission as Approved.");
+    expect(getAdminAuditDescription({ description: "Administrator signed in: Super Admin" }))
+      .toBe("Administrator signed in: Super Admin");
   });
 });

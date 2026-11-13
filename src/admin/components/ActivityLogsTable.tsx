@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ActivityLog } from "@/lib/lydo-connect-data";
-import { getFriendlyAuditAction, getFriendlyAuditCategory } from "@/lib/activity-log-export";
+import { getAdminAuditDescription, getFriendlyAuditAction, getFriendlyAuditCategory } from "@/lib/activity-log-export";
 
 export type ActivityDateFilter = "all" | "7d" | "30d" | "90d";
 export type ActivityCategoryFilter = "all" | string;
@@ -217,7 +217,7 @@ export const ActivityLogsTable = ({
 
                 <div className="flex min-w-0 flex-1 items-center">
                   <p className="line-clamp-2 font-inter text-sm font-normal leading-[140%] text-slate-500">
-                    {log.description}
+                    {getAdminAuditDescription(log)}
                   </p>
                 </div>
               </div>

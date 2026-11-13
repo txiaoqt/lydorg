@@ -2850,9 +2850,11 @@ export const fetchAdminRenewalReviewContext = async (renewalId: string): Promise
     organization?: OrganizationProfileRow; accreditation?: OrganizationAccreditationRow | null;
     renewal?: OrganizationRenewalRow;
     submission?: DocumentSubmissionRow | null; files?: DocumentSubmissionFileRow[];
+    activity?: ActivityLogRow[];
   };
   const fileRows = await hydrateDocumentTypeIdentityNames(payload.files ?? []);
   return {
+    ...(Array.isArray(payload.activity) ? { activityLogs: payload.activity.map(mapActivityLog) } : {}),
     ...(payload.organization?.id ? { organizationProfiles: [mapOrganizationProfile(payload.organization)] } : {}),
     ...(payload.accreditation?.id ? { organizationAccreditations: [mapOrganizationAccreditation(payload.accreditation)] } : {}),
     ...(payload.renewal?.id ? { organizationRenewals: [mapOrganizationRenewal(payload.renewal)] } : {}),
@@ -5372,6 +5374,7 @@ export const createInquiryInSupabase = async (params: {
 };
 
 const replaceBudgetRequestFileInSupabase = async (budgetRequestId: string, file: File) => {
+  await assertPdfUpload(file, "Budget proposal", ORGANIZATION_DOCUMENT_MAX_BYTES);
   const { organizationProfile } = await getAuthenticatedOrganizationContext();
   const { data: request, error: requestError } = await supabase!
     .from("budget_requests")

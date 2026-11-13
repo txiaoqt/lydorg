@@ -435,7 +435,7 @@ const Faqs = () => {
                                   {faq.answerLink.before}
                                   <Link
                                     to={faq.answerLink.to}
-                                    className="font-semibold text-public-text-brand underline underline-offset-2 transition-opacity hover:opacity-80"
+                                    className="text-public-text-brand-secondary underline underline-offset-[3px] transition-colors hover:text-public-text-brand"
                                   >
                                     {faq.answerLink.label}
                                   </Link>

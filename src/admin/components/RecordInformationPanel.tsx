@@ -33,12 +33,18 @@ const Row = ({ label, value, last }: { label: string; value: ReactNode; last?: b
   </div>
 );
 
+// "+1 more" pill; hovering lists the other emails or numbers
+const MorePill = ({ items }: { items: string[] }) =>
+  items.length ? (
+    <span title={items.join(", ")} className="ml-1.5 inline-flex rounded-full border border-slate-300 bg-slate-50 px-1.5 py-0.5 align-middle font-inter text-[11px] font-semibold text-slate-600">
+      +{items.length} more
+    </span>
+  ) : null;
+
 /** Collapsible "… Information" panel shared by the Budget Request and Liquidation Report review pages. */
 export function RecordInformationPanel({ title, code, financial, projectName, purposeDescription, activityRows, organization }: Props) {
   const [collapsed, setCollapsed] = useState(true);
   const urn = organization?.urn || organization?.organizationIdentifierNumber;
-  const extraEmails = organization?.additionalEmails?.length ?? 0;
-  const extraPhones = organization?.additionalContactNumbers?.length ?? 0;
 
   return (
     <section className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface" aria-label={title}>
@@ -75,7 +81,7 @@ export function RecordInformationPanel({ title, code, financial, projectName, pu
           </div>
 
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-            <div className="rounded-md border border-slate-300 px-4 py-3">
+            <div className="flex flex-col rounded-md border border-slate-300 px-4 py-3">
               <p className={sectionLabel}>Activity Details</p>
               <p className="mt-3 font-inter text-xs text-slate-500">Project name</p>
               <p className="font-inter text-base font-bold text-public-text-brand">{projectName}</p>
@@ -85,20 +91,20 @@ export function RecordInformationPanel({ title, code, financial, projectName, pu
                   <p className="whitespace-pre-wrap font-inter text-[13px] text-text-default">{purposeDescription}</p>
                 </>
               ) : null}
-              <div className="mt-3">
+              <div className="mt-auto pt-3">
                 {activityRows.map(([label, value], index) => <Row key={label} label={label} value={value} last={index === activityRows.length - 1} />)}
               </div>
             </div>
 
-            <div className="rounded-md border border-slate-300 px-4 py-3">
+            <div className="flex flex-col rounded-md border border-slate-300 px-4 py-3">
               <p className={sectionLabel}>Submitted By</p>
               <p className="mt-3 font-inter text-xs text-slate-500">Organization name</p>
               <p className="font-inter text-base font-bold text-public-text-brand">{organization?.organizationName ?? "Unknown organization"}</p>
               {urn ? <UrnChip urn={urn} className="mt-2" /> : null}
-              <div className="mt-3">
+              <div className="mt-auto pt-3">
                 <Row label="Head of organization" value={organization ? getRepresentativeDisplayName(organization, "") || missing : missing} />
-                <Row label="Contact" value={organization?.contactNumber ? `${organization.contactNumber}${extraPhones ? ` (+${extraPhones})` : ""}` : missing} />
-                <Row label="Email" value={organization?.organizationEmail ? `${organization.organizationEmail}${extraEmails ? ` (+${extraEmails})` : ""}` : missing} last />
+                <Row label="Contact" value={organization?.contactNumber ? <>{organization.contactNumber}<MorePill items={(organization.additionalContactNumbers ?? []).map(String)} /></> : missing} />
+                <Row label="Email" value={organization?.organizationEmail ? <>{organization.organizationEmail}<MorePill items={(organization.additionalEmails ?? []).map(String)} /></> : missing} last />
               </div>
             </div>
           </div>

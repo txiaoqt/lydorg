@@ -12,6 +12,7 @@ import {
   Trash2,
   Search,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
   onFileCreated,
   onFileDeleted,
 }) => {
+  const semesterClosed = period.status === "closed";
   const [modalOpen, setModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<YPOPOrgActivity | null>(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState<YPOPOrgActivity | null>(null);
@@ -232,6 +234,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
             <Button
               type="button"
               onClick={handleOpenNew}
+              disabled={semesterClosed}
               className="h-8.5 px-3.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold shadow-xs gap-1.5 cursor-pointer whitespace-nowrap transition-all active:scale-[0.98]"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -271,6 +274,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                       <Button
                         type="button"
                         onClick={handleOpenNew}
+              disabled={semesterClosed}
                         className="h-8.5 px-3.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer gap-1.5 transition-all active:scale-[0.98]"
                       >
                         <Plus className="h-3.5 w-3.5" /> Log First Activity
@@ -335,7 +339,19 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
 
                       {/* Column 6: Action */}
                       <td className="col-span-2 md:col-auto md:table-cell p-0 pt-1 md:py-3.5 md:px-5 md:text-center align-middle whitespace-nowrap order-5">
-                        {isNeedsRevision && (
+                        {semesterClosed && isDraft && (
+                          <Button type="button" variant="outline" size="sm" disabled className="w-full md:w-auto h-8 px-3 text-xs font-medium rounded-lg gap-1.5 whitespace-nowrap">
+                            <Lock className="h-3.5 w-3.5 shrink-0" />
+                            <span>Semester Closed</span>
+                          </Button>
+                        )}
+                        {semesterClosed && isNeedsRevision && (
+                          <Button type="button" variant="outline" size="sm" onClick={() => handleOpenEdit(act)} className="w-full md:w-auto h-8 px-3 text-xs font-medium rounded-lg gap-1.5 whitespace-nowrap">
+                            <FileText className="h-3.5 w-3.5 shrink-0" />
+                            <span>View Remarks & Files</span>
+                          </Button>
+                        )}
+                        {!semesterClosed && isNeedsRevision && (
                           <Button
                             type="button"
                             variant="outline"
@@ -347,7 +363,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
                             <span>Resolve Revision</span>
                           </Button>
                         )}
-                        {isDraft && (
+                        {!semesterClosed && isDraft && (
                           <div className="flex items-center justify-between md:justify-end gap-1.5 w-full md:w-auto">
                             <Button
                               type="button"
@@ -446,6 +462,7 @@ export const YpopOrgLedTab: React.FC<YpopOrgLedTabProps> = ({
       <YpopPpaModal
         open={modalOpen}
         onOpenChange={setModalOpen}
+        semesterClosed={semesterClosed}
         entry={entry}
         activity={editingActivity}
         orgActivityFiles={orgActivityFiles}

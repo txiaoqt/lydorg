@@ -132,8 +132,7 @@ const Navbar = () => {
       {/* Desktop nav row — always rendered at xl so page offsets (xl:pt-32) stay fixed */}
       <div className="hidden h-12 border-t border-slate-100 xl:block">
         <div className="mx-auto flex h-full w-full max-w-[1440px] items-stretch gap-8 px-20">
-          {!isAuthenticated
-            ? navItems.map((item) => (
+          {navItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
@@ -145,8 +144,7 @@ const Navbar = () => {
                 >
                   {item.label}
                 </Link>
-              ))
-            : null}
+              ))}
         </div>
       </div>
 
