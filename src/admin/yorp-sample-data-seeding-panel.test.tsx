@@ -67,7 +67,7 @@ describe("YorpSampleDataSeedingPanel", () => {
 
     expect(screen.getByText(/PUP CCIS_Pasig City YORP Data 2024–2026/i)).toBeInTheDocument();
     expect(screen.getByText(/TEST DATA ONLY — THIS OPERATION IS DISABLED IN PRODUCTION/i)).toBeInTheDocument();
-    expect(screen.getByText(/Renewal Test Organization is explicitly excluded/i)).toBeInTheDocument();
+    expect(screen.getByText(/Seeding also creates the Renewal Test Organization, and cleanup removes it/i)).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("84 / 84 Complete")).toBeInTheDocument();
@@ -248,7 +248,7 @@ describe("YorpSampleDataSeedingPanel", () => {
 
     expect(screen.getByText(/Remove generated PCYDO YORP sample data\?/i)).toBeInTheDocument();
     expect(screen.getByText(/Historical audit and notification history is not restored/i)).toBeInTheDocument();
-    expect(screen.getByText(/8170959f-2bb8-40ea-8ce8-31deb514de17/i)).toBeInTheDocument();
+    expect(screen.getByText(/It also removes the Renewal Test Organization and its test login/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Remove seeded records/i }));
 

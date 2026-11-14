@@ -1,4 +1,3 @@
-import { BudgetDeletionPausedError } from "@/lib/admin-budget-deletion-pause";
 import { validateZipCode } from "@/lib/organization-profile-domain";
 import type {
   ActivityLog,
@@ -9515,11 +9514,22 @@ export interface AdminBudgetRequestsDeleteResult {
   deletedRequestIds?: string[];
 }
 
-// Keep this API for existing callers; never contact the server or Storage while paused.
+// shortcut: the RPC deletes the database rows only (it returns no file paths), so uploaded files stay in Storage; add cleanup if storage use matters.
 export const deleteAdminBudgetRequestsInSupabase = async (
-  _requestIds: string[]
+  requestIds: string[]
 ): Promise<AdminBudgetRequestsDeleteResult> => {
-  throw new BudgetDeletionPausedError();
+  if (!requestIds.length) return { deletedCount: 0 };
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const session = readAdminSession();
+  if (!session?.sessionToken) throw new Error("Admin session is invalid or expired. Please sign in again.");
+  const { data, error } = await supabase.rpc("admin_bulk_delete_budget_requests", {
+    _session_token: session.sessionToken,
+    _request_ids: requestIds,
+  });
+  if (error) throw new Error(error.message || "Failed to delete budget requests.");
+  const payload = (data ?? {}) as { success?: boolean; error?: string; deleted_count?: number; deleted_ids?: string[] };
+  if (payload.success === false) throw new Error(payload.error || "Failed to delete budget requests.");
+  return { deletedCount: Number(payload.deleted_count ?? 0), deletedRequestIds: payload.deleted_ids ?? [] };
 };
 
 /**

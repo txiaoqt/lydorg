@@ -129,7 +129,7 @@ import {
   RELEASED_BUDGET_STATUSES,
 } from "@/lib/budget-monitoring-filters";
 import { ConfigureAnnualBudgetModal } from "@/admin/components/ConfigureAnnualBudgetModal";
-import { adminGetAnnualBudgetAllocationsFromSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase, fetchRegistrationRequiredDocumentTypesInSupabase, fetchRenewalRequiredDocumentTypesInSupabase } from "@/lib/lydo-connect-supabase";
+import { adminGetAnnualBudgetAllocationsFromSupabase, deleteAdminBudgetRequestsInSupabase, createNewsCategoryInSupabase, deleteNewsCategoryInSupabase, deleteInquiryInSupabase, fetchRegistrationRequiredDocumentTypesInSupabase, fetchRenewalRequiredDocumentTypesInSupabase } from "@/lib/lydo-connect-supabase";
 import {
   LiquidationReportsTable,
   LiquidationStatusLabel,
@@ -998,6 +998,8 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [budgetRequestsSemesterFilter, section]);
 
   const [selectedBudgetRequestIds, setSelectedBudgetRequestIds] = useState<Set<string>>(new Set());
+  const [isDeleteBudgetRequestsModalOpen, setIsDeleteBudgetRequestsModalOpen] = useState(false);
+  const [isDeletingBudgetRequests, setIsDeletingBudgetRequests] = useState(false);
   const [liquidationReportsSearch, setLiquidationReportsSearch] = useState("");
   const [liquidationReviewPage, setLiquidationReviewPage] = useState(0);
   const [debouncedLiquidationReviewSearch, setDebouncedLiquidationReviewSearch] = useState("");
@@ -4517,6 +4519,23 @@ function AdminPortalContent({ section }: { section: string }) {
   }, [administrators, administratorRoleFilter, administratorUnitFilter, administratorStatusFilter, administratorSearch]);
 
   const editingAdministrator = administrators.find((administrator) => administrator.id === editingAdministratorId) ?? null;
+
+  const handleConfirmBudgetRequestsDelete = async () => {
+    const idsToDelete = Array.from(selectedBudgetRequestIds);
+    if (!idsToDelete.length) return;
+    setIsDeletingBudgetRequests(true);
+    try {
+      const result = await deleteAdminBudgetRequestsInSupabase(idsToDelete);
+      setSelectedBudgetRequestIds(new Set());
+      await refreshAdminState();
+      toast({ title: "Budget Requests Deleted", description: `Deleted ${result.deletedCount} budget request(s).` });
+    } catch (error) {
+      toast({ title: "Deletion Failed", description: error instanceof Error ? error.message : "Failed to delete the selected budget requests.", variant: "destructive" });
+    } finally {
+      setIsDeletingBudgetRequests(false);
+      setIsDeleteBudgetRequestsModalOpen(false);
+    }
+  };
 
   const appendAuditLog = async (
     action: string,
@@ -10628,7 +10647,44 @@ function AdminPortalContent({ section }: { section: string }) {
               allRequests={filteredAdminBudgetRequests}
               selectedRequestIds={selectedBudgetRequestIds}
               onSelectedRequestIdsChange={setSelectedBudgetRequestIds}
+              onDeleteSelected={() => setIsDeleteBudgetRequestsModalOpen(true)}
+              isDeleting={isDeletingBudgetRequests}
             />
+            {(() => {
+              const selectedRequests = filteredAdminBudgetRequests.filter((request) => selectedBudgetRequestIds.has(request.id));
+              const hasReleased = selectedRequests.some((request) => request.status === "budget_released" || String(request.status) === "completed");
+              const count = selectedBudgetRequestIds.size;
+              return (
+                <DangerConfirmDialog
+                  open={isDeleteBudgetRequestsModalOpen}
+                  onOpenChange={(open) => { if (!isDeletingBudgetRequests) setIsDeleteBudgetRequestsModalOpen(open); }}
+                  icon={Trash2}
+                  variant="danger"
+                  warningTone={hasReleased ? "danger" : "caution"}
+                  title={count === 1 ? "Delete Budget Request?" : `Delete ${count} Budget Requests?`}
+                  description={<span>You are about to permanently delete <strong>{count} {count === 1 ? "budget request" : "budget requests"}</strong>, including their liquidation reports and related notifications.</span>}
+                  content={selectedRequests.length ? (
+                    <ul className="flex max-h-48 flex-col gap-2 overflow-y-auto rounded-md border border-slate-200 bg-slate-50/70 p-3 font-inter text-xs text-slate-700">
+                      {selectedRequests.map((request) => (
+                        <li key={request.id} className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 last:border-b-0 last:pb-0">
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-slate-900">{request.activityTitle}</span>
+                            <span className="block truncate text-[11px] text-slate-500">{budgetOrganizationsById[request.organizationId]?.organizationName ?? "Organization"}</span>
+                          </span>
+                          <span className="shrink-0 font-mono font-semibold text-slate-800">₱{Math.round(Number(request.releasedAmount || request.approvedAmount || request.requestedAmount || 0)).toLocaleString()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  warning={hasReleased
+                    ? <span><strong>Financial record warning:</strong> One or more selected requests were already released. Deleting them also removes their liquidation records. An audit log entry is kept.</span>
+                    : "This action is permanent and cannot be undone. An audit log entry is kept."}
+                  confirmLabel={isDeletingBudgetRequests ? "Deleting..." : count === 1 ? "Delete Budget Request" : `Delete ${count} Budget Requests`}
+                  confirmDisabled={isDeletingBudgetRequests}
+                  onConfirm={() => void handleConfirmBudgetRequestsDelete()}
+                />
+              );
+            })()}
 
           </div>
         );

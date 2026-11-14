@@ -127,7 +127,7 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
       const result: CleanupYorpSampleDatasetResult = await adminCleanupYorpSampleDatasetInSupabase();
       toast({
         title: "Test Sample Data Cleaned Up",
-        description: `Removed ${result.deleted_organizations} organizations, ${result.deleted_budget_requests} budgets, and ${result.deleted_users} test identities. Reusable Storage assets were kept; the Renewal Test Organization was excluded.`,
+        description: `Removed ${result.deleted_organizations} organizations, ${result.deleted_budget_requests} budgets, and ${result.deleted_users} test identities. Reusable Storage assets were kept. The Renewal Test Organization was removed too; seeding recreates it.`,
       });
       setShowCleanupConfirm(false);
       await fetchStatus();
@@ -242,7 +242,7 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
             <span className="block text-[11px] font-bold uppercase tracking-wide">
               TEST DATA ONLY — THIS OPERATION IS DISABLED IN PRODUCTION.
             </span>
-            Reconstructs and repairs only the designated sample dataset through server-side RPCs. The Renewal Test Organization is explicitly excluded. Seeded test accounts use synthetic identities; never use this reset against live data.
+            Reconstructs and repairs only the designated sample dataset through server-side RPCs. Seeding also creates the Renewal Test Organization, and cleanup removes it. Seeded test accounts use synthetic identities; never use this reset against live data.
           </div>
         </div>
 
@@ -433,7 +433,7 @@ export const YorpSampleDataSeedingPanel: React.FC<YorpSampleDataSeedingPanelProp
                 This test-only cleanup removes the organizations in batch PCYDO-YORP-2024-2026 and their generated registration packets, document records, accreditations, budgets, liquidations, notifications, and test Auth identities.
               </span>
               <span className="block font-medium text-foreground">
-                It explicitly excludes the Renewal Test Organization ({"8170959f-2bb8-40ea-8ce8-31deb514de17"}) and every organization marked as a renewal test account.
+                It also removes the Renewal Test Organization and its test login. Seeding the dataset again recreates it, ready for renewal test scenarios.
               </span>
               <span className="block">
                 Cleanup stops if it finds YPOP, renewal, inquiry, or compliance records outside the generated fixture, so those records are not lost through deletion cascades.
