@@ -895,7 +895,7 @@ describe("YpopProofDrawer - Liquidation-Aligned Redesign & Multi-File UX", () =>
 
       // Exactly ONE upload dropzone exists
       expect(screen.getByText(/Click to browse file/i)).toBeInTheDocument();
-      expect(screen.getByText(/Supports PDF, DOCX, and XLSX documents up to 10 MB/i)).toBeInTheDocument();
+      expect(screen.getByText(/Supports PDF, DOCX, XLSX, JPG, JPEG, and PNG files up to 10 MB/i)).toBeInTheDocument();
 
       // ABSOLUTELY NO redundant empty-state upload surfaces
       expect(screen.queryByText(/No proof files attached yet/i)).not.toBeInTheDocument();

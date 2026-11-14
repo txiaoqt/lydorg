@@ -349,11 +349,11 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
 
-    const wrongType = selectedFiles.filter((f) => !/\.(pdf|docx|xlsx)$/i.test(f.name));
+    const wrongType = selectedFiles.filter((f) => !/\.(pdf|docx|xlsx|png|jpe?g)$/i.test(f.name));
     if (wrongType.length > 0) {
       toast({
         title: "Unsupported file type",
-        description: "Only PDF, DOCX, and XLSX documents can be attached.",
+        description: "Only PDF, DOCX, XLSX, JPG, JPEG, and PNG files can be attached.",
         variant: "destructive",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -887,7 +887,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
           onChange={handleFileUpload}
           className="hidden"
           multiple
-          accept=".pdf,.docx,.xlsx"
+          accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg"
         />
 
         {/* Canonical Single Upload Surface: ONLY when isEditable (draft or needs_revision) */}
@@ -916,7 +916,7 @@ export const YpopProofDrawer: React.FC<YpopProofDrawerProps> = ({
               {uploading ? "Uploading files..." : "Click to browse file"}
             </p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground">
-              Supports PDF, DOCX, and XLSX documents up to 10 MB
+              Supports PDF, DOCX, XLSX, JPG, JPEG, and PNG files up to 10 MB
             </p>
           </div>
         )}
