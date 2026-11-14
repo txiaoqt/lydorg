@@ -11,6 +11,8 @@ import {
   createBlankOrganizationProfile,
   validateAdditionalEmails,
   validateAdditionalContactNumbers,
+  validateZipCode,
+  mapOrganizationProfileError,
 } from "./organization-profile-domain";
 import { formatAddress, formatPersonName, getAllOrganizationEmails, getAllOrganizationContactNumbers } from "./lydo-connect-data";
 
@@ -303,3 +305,11 @@ describe("organization-profile-domain validations", () => {
   });
 });
 
+describe("Pasig ZIP code errors", () => {
+  it("keeps the ZIP range message instead of the generic save failure", () => {
+    const zipError = validateZipCode("1700");
+    expect(zipError).toBe("Enter a Pasig City ZIP code (1600 to 1612).");
+    expect(mapOrganizationProfileError(new Error(zipError!), "The organization profile could not be saved.")).toBe(zipError);
+    expect(mapOrganizationProfileError(new Error("network down"), "The organization profile could not be saved.")).toBe("The organization profile could not be saved.");
+  });
+});

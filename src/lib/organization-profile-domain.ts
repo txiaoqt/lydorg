@@ -408,6 +408,11 @@ export const mapOrganizationProfileError = (
   const hint = String(errObj.hint || "");
   const combined = `${code} ${errMessage} ${details} ${hint}`;
 
+  // Field validation messages (e.g. the Pasig ZIP range) are already user-facing.
+  if (/^ZIP code /i.test(errMessage) || /Pasig City ZIP code/i.test(errMessage)) {
+    return errMessage;
+  }
+
   if (/Headquarters Barangay changes must be made through the administrative location update process/i.test(combined)) {
     return "The database is still blocking Barangay changes. Apply the latest organization profile location migration, then try again.";
   }

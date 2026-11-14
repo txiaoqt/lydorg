@@ -1,3 +1,4 @@
+import { ZipCodeHint } from "@/components/portal/ZipCodeHint";
 import { useOrganizationIdentityCheck } from "@/hooks/use-organization-identity-check";
 import { OrganizationIdentityNotice } from "@/components/portal/OrganizationIdentityNotice";
 import { sanitizeZipCode, validateZipCode } from "@/lib/organization-profile-domain";
@@ -1420,6 +1421,7 @@ const GoogleOnboarding = () => {
                       pattern="[0-9]{4}"
                       required
                     />
+                    <ZipCodeHint value={profileDraft.addressZipCode} />
                   </div>
                 </div>
               </div>

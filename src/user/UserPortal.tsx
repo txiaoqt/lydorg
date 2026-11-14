@@ -2919,7 +2919,7 @@ export default function UserPortal({ section }: { section: string }) {
     } catch (error) {
       const userFacingError = mapOrganizationProfileError(error, "The organization profile could not be saved.");
       toast({
-        title: /urn/i.test(userFacingError) ? "URN already registered" : "Save failed",
+        title: /urn/i.test(userFacingError) ? "URN already registered" : /ZIP code/i.test(userFacingError) ? "Invalid ZIP code" : "Save failed",
         description: userFacingError,
         variant: "destructive",
       });

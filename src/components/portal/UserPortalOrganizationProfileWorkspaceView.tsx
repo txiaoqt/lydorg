@@ -1,3 +1,4 @@
+import { ZipCodeHint } from "@/components/portal/ZipCodeHint";
 import { sanitizeZipCode } from "@/lib/organization-profile-domain";
 import React, { useState } from "react";
 import {
@@ -854,6 +855,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                     pattern="[0-9]{4}"
                     required
                   />
+                  <ZipCodeHint value={profileDraft.addressZipCode} />
                 </div>
               </div>
             </div>
