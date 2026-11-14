@@ -874,6 +874,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const [isRegistrationDecisionConfirmOpen, setIsRegistrationDecisionConfirmOpen] = useState(false);
   const [registrationRejectAcknowledged, setRegistrationRejectAcknowledged] = useState(false);
   const [registrationReviewSubmitting, setRegistrationReviewSubmitting] = useState(false);
+  const [identityClearedOrgId, setIdentityClearedOrgId] = useState<string | null>(null);
   const [selectedRenewalReviewFileIds, setSelectedRenewalReviewFileIds] = useState<string[]>([]);
   const [activeRenewalReviewFileId, setActiveRenewalReviewFileId] = useState<string | null>(null);
   const [renewalBulkDecision, setRenewalBulkDecision] = useState<RegistrationReviewDecision>("approve");
@@ -4536,6 +4537,12 @@ function AdminPortalContent({ section }: { section: string }) {
       description,
       category,
     });
+    // Actions log after their page refresh, so refetch the open detail for its Recent Activity panel.
+    void queryClient.invalidateQueries({
+      predicate: (query) =>
+        query.queryKey[0] === "admin" &&
+        ["registration", "renewal-context", "budget-detail", "liquidation-detail"].includes(String(query.queryKey[1])),
+    });
   };
 
   const handleSaveInquiryStatus = async (overrideStatus?: InquiryRecord["status"]) => {
@@ -4851,6 +4858,15 @@ function AdminPortalContent({ section }: { section: string }) {
       toast({
         title: "Organization Suspended",
         description: "Review actions are unavailable because this organization account is permanently suspended.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (identityClearedOrgId !== selectedRegistrationProfile.id) {
+      toast({
+        title: "Identity review required",
+        description: "Clear the Organization Identity Review before deciding on this registration's documents.",
         variant: "destructive",
       });
       return;
@@ -7814,8 +7830,10 @@ function AdminPortalContent({ section }: { section: string }) {
         const missingDocumentCount = Math.max(templateDocuments.length - submittedDocumentCount, 0);
         const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
         const decisionRequiresRemark = registrationDecisionRequiresRemark(registrationBulkDecision);
+        const identityReviewPending = identityClearedOrgId !== selectedOrg?.id;
         const isRegistrationDecisionConfirmDisabled =
           isOrgSuspended ||
+          identityReviewPending ||
           selectedBulkFiles.length === 0 ||
           registrationReviewSubmitting ||
           (registrationBulkDecision === "approve" && hasUnrevisedSelectedFiles) ||
@@ -7825,9 +7843,10 @@ function AdminPortalContent({ section }: { section: string }) {
           if (selectedOrg.registrationType === "existing_urn") {
             return (
               <div className="space-y-4">
-              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
+              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} onClearedChange={(cleared) => setIdentityClearedOrgId(cleared ? selectedOrg.id : null)} />
               <UrnReviewPanel
                 profile={selectedOrg}
+                decisionsLocked={identityClearedOrgId !== selectedOrg.id}
                 onBack={() => handleRegistrationSelectionChange(null)}
                 onReviewed={(updated) => updateOrganizationProfile(updated.id, updated)}
                 onDelete={() => void openRegistrationDeleteDialog(selectedOrg)}
@@ -8064,7 +8083,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 </div>
               </div>
 
-              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} />
+              <OrganizationIdentityReviewPanel key={selectedOrg.id} organizationId={selectedOrg.id} onClearedChange={(cleared) => setIdentityClearedOrgId(cleared ? selectedOrg.id : null)} />
 
               <OrganizationDetailsPanel
                 key={`details-${selectedOrg.id}`}
@@ -8395,7 +8414,14 @@ function AdminPortalContent({ section }: { section: string }) {
                         </div>
                       ) : (
                         <>
-                          {selectedBulkFiles.length === 0 ? (
+                          {identityReviewPending ? (
+                            <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={1.6} />
+                              <p className="font-inter text-[13px] leading-[120%] text-amber-700">
+                                Identity review required: clear the Organization Identity Review above before deciding on any document.
+                              </p>
+                            </div>
+                          ) : selectedBulkFiles.length === 0 ? (
                             <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                               <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />
                               <p className="font-inter text-[13px] leading-[120%] text-neutral-tertiary">No documents selected.</p>
@@ -8424,7 +8450,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 setRegistrationBulkDecision(value as RegistrationReviewDecision);
                                 setRegistrationRejectAcknowledged(false);
                               }}
-                              disabled={selectedBulkFiles.length === 0}
+                              disabled={selectedBulkFiles.length === 0 || identityReviewPending}
                             >
                               <SelectTrigger className="h-8 border-slate-300 text-[13px]">
                                 <SelectValue />

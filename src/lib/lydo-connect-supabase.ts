@@ -2872,9 +2872,13 @@ export const fetchAdminBudgetRequestDetail = async (requestId: string): Promise<
   if (!session?.sessionToken) throw new Error("Admin session is unavailable.");
   const { data, error } = await supabase.rpc("admin_get_budget_request_detail", { _session_token: session.sessionToken, _request_id: requestId });
   if (error) throw new Error(error.message || "Unable to load budget request details.");
-  const payload = data as { request?: BudgetRequestRow; files?: BudgetRequestFileRow[] } | null;
+  const payload = data as { request?: BudgetRequestRow; files?: BudgetRequestFileRow[]; activity?: ActivityLogRow[] } | null;
   if (!payload?.request) throw new Error("Budget request detail response was invalid.");
-  return { budgetRequests: [mapBudgetRequest(payload.request)], budgetRequestFiles: (payload.files ?? []).map(mapBudgetRequestFile) };
+  return {
+    budgetRequests: [mapBudgetRequest(payload.request)],
+    budgetRequestFiles: (payload.files ?? []).map(mapBudgetRequestFile),
+    ...(Array.isArray(payload.activity) ? { activityLogs: payload.activity.map(mapActivityLog) } : {}),
+  };
 };
 
 export const fetchAdminLiquidationReportDetail = async (reportId: string): Promise<Partial<LydoSeedState>> => {
@@ -2883,7 +2887,7 @@ export const fetchAdminLiquidationReportDetail = async (reportId: string): Promi
   if (!session?.sessionToken) throw new Error("Admin session is unavailable.");
   const { data, error } = await supabase.rpc("admin_get_liquidation_report_detail", { _session_token: session.sessionToken, _report_id: reportId });
   if (error) throw new Error(error.message || "Unable to load liquidation details.");
-  const payload = data as { report?: LiquidationReportRow; budget_request?: BudgetRequestRow; files?: LiquidationReportFileRow[] } | null;
+  const payload = data as { report?: LiquidationReportRow; budget_request?: BudgetRequestRow; files?: LiquidationReportFileRow[]; activity?: ActivityLogRow[] } | null;
   if (!payload?.report) throw new Error("Liquidation detail response was invalid.");
   if (payload.report.status === "draft") throw new Error("This liquidation report has not been submitted for review.");
   return {
@@ -2891,6 +2895,7 @@ export const fetchAdminLiquidationReportDetail = async (reportId: string): Promi
     ...(payload.budget_request ? { budgetRequests: [mapBudgetRequest(payload.budget_request)] } : {}),
     liquidationReportFiles: ["not_started", "pending_activity_completion"].includes(payload.report.status)
       ? [] : (payload.files ?? []).map(mapLiquidationReportFile),
+    ...(Array.isArray(payload.activity) ? { activityLogs: payload.activity.map(mapActivityLog) } : {}),
   };
 };
 

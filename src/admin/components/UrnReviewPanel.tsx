@@ -21,8 +21,10 @@ const urnStatusToneClasses: Record<UrnReviewStatus, string> = {
 
 type Decision = "verified" | "needs_correction" | "rejected";
 
-export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
+export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete, decisionsLocked = false }: {
   profile: OrganizationProfile;
+  /** True while the Organization Identity Review is not cleared. */
+  decisionsLocked?: boolean;
   onBack: () => void;
   onReviewed: (profile: OrganizationProfile) => void;
   onDelete?: () => void;
@@ -91,9 +93,10 @@ export function UrnReviewPanel({ profile, onBack, onReviewed, onDelete }: {
           </div>
         ) : profile.urnReviewStatus !== "verified" ? (
           <div className="mt-6 grid gap-2 sm:grid-cols-3">
-            <Button onClick={() => setDecision("verified")}><CheckCircle2 className="mr-2 h-4 w-4" />Verify URN</Button>
-            <Button variant="outline" onClick={() => setDecision("needs_correction")}>Needs Correction</Button>
-            <Button variant="destructive" onClick={() => setDecision("rejected")}>Reject URN</Button>
+            {decisionsLocked ? <p className="font-inter text-[13px] text-amber-700 sm:col-span-3">Identity review required: clear the Organization Identity Review above before deciding on this URN.</p> : null}
+            <Button disabled={decisionsLocked} onClick={() => setDecision("verified")}><CheckCircle2 className="mr-2 h-4 w-4" />Verify URN</Button>
+            <Button variant="outline" disabled={decisionsLocked} onClick={() => setDecision("needs_correction")}>Needs Correction</Button>
+            <Button variant="destructive" disabled={decisionsLocked} onClick={() => setDecision("rejected")}>Reject URN</Button>
           </div>
         ) : null}
       </section>

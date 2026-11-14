@@ -8,17 +8,20 @@ const packet={outcome:'POSSIBLE_MATCH',version:3,canonicalOrganizationId:null,ca
  candidates:[{id:'original',name:'Existing Organization',urn:'17-26-010',barangay:'Palatiw',district:'District I',status:'verified',verifiedAt:null,
  hasRetainedHistory:true,separateDecision:false,signals:{normalizedName:true,sameBarangay:true,sameDistrict:true,exactUrn:false}}]};
 beforeEach(()=>{vi.resetAllMocks();mocks.user={id:'reviewer',roleCode:'admin',permissionCodes:['registrations_management']};mocks.fetch.mockResolvedValue(packet);mocks.review.mockResolvedValue({...packet,outcome:'VERIFIED_SEPARATE'});});
-it('checks the selected registration on open and requires evidence plus explicit confirmation',async()=>{
- render(<OrganizationIdentityReviewPanel organizationId="pending"/>);
+it('checks the selected registration on open and records a decision with remarks only',async()=>{
+ const onClearedChange=vi.fn();
+ render(<OrganizationIdentityReviewPanel organizationId="pending" onClearedChange={onClearedChange}/>);
  expect(await screen.findByText('Possible match found')).toBeInTheDocument();expect(mocks.fetch).toHaveBeenCalledWith('pending');
+ expect(onClearedChange).toHaveBeenLastCalledWith(false);
  fireEvent.click(screen.getByRole('button',{name:/Check Organization Identity/}));await screen.findByText('Existing Organization');
+ expect(screen.queryByText(/Same as existing organization/)).not.toBeInTheDocument();
  const save=screen.getByRole('button',{name:'Record Identity Decision'});expect(save).toBeDisabled();
  fireEvent.click(screen.getByLabelText(/Clear identity/));
  fireEvent.change(screen.getByLabelText(/Reason \/ Remarks/),{target:{value:'Different official registration confirmed'}});
- fireEvent.change(screen.getByLabelText(/Official Evidence Reference/),{target:{value:'Official registry ref 123'}});
- expect(save).toBeDisabled();fireEvent.click(screen.getByRole('checkbox'));fireEvent.click(save);
- await waitFor(()=>expect(mocks.review).toHaveBeenCalledWith('pending','original','confirmed_different','Different official registration confirmed','Official registry ref 123',3));
+ fireEvent.click(save);
+ await waitFor(()=>expect(mocks.review).toHaveBeenCalledWith('pending','original','confirmed_different','Different official registration confirmed','Y-TRACE admin identity review',3));
  expect(await screen.findByText(/Identity check cleared/)).toBeInTheDocument();
+ expect(onClearedChange).toHaveBeenLastCalledWith(true);
  expect(screen.queryByRole('button',{name:'Record Identity Decision'})).not.toBeInTheDocument();
 });
 it('shows Not required and no decision form when no other organization matches',async()=>{

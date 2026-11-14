@@ -14,10 +14,11 @@ const decisions: Record<IdentityDecision, string> = {
 };
 const decisionOptions: Array<{ value: IdentityDecision; title: string; description: string }> = [
   { value: "confirmed_different", title: "Clear identity", description: "The official evidence shows this is a different organization." },
-  { value: "confirmed_existing", title: "Same as existing organization", description: "The official evidence shows this is the selected existing organization." },
   { value: "more_information", title: "Request more information", description: "Ask the organization for additional evidence before deciding." },
   { value: "rejected", title: "Reject identity", description: "The evidence does not establish this organization's identity." },
 ];
+// The database still requires an evidence reference; the admin's remarks carry the actual explanation.
+const EVIDENCE_REFERENCE = "Y-TRACE admin identity review";
 const labelClass = "font-inter text-[13px] font-semibold normal-case tracking-normal text-text-default";
 
 function StatusChip({ tone, children }: { tone: "success" | "warning" | "neutral"; children: React.ReactNode }) {
@@ -27,7 +28,7 @@ function StatusChip({ tone, children }: { tone: "success" | "warning" | "neutral
     tone === "neutral" && "border-slate-300 bg-slate-50 text-slate-600")}>{children}</span>;
 }
 
-export function OrganizationIdentityReviewPanel({ organizationId }: { organizationId: string }) {
+export function OrganizationIdentityReviewPanel({ organizationId, onClearedChange }: { organizationId: string; onClearedChange?: (cleared: boolean) => void }) {
   const { user } = useAuth();
   const scope = `${organizationId}|${user?.id}|${user?.roleCode}|${[...(user?.permissionCodes || [])].sort().join(",")}`;
   const currentScope = useRef(scope); currentScope.current = scope;
@@ -39,10 +40,8 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
   const [candidateId, setCandidateId] = useState("");
   const [decision, setDecision] = useState<IdentityDecision>("more_information");
   const [reason, setReason] = useState("");
-  const [evidence, setEvidence] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
   const inFlight = useRef(false);
-  const resetForm = () => { setDecision("more_information"); setReason(""); setEvidence(""); setConfirmed(false); };
+  const resetForm = () => { setDecision("more_information"); setReason(""); };
   useEffect(() => () => { currentScope.current = "unmounted"; }, []);
   async function load() {
     if (inFlight.current) return;
@@ -51,7 +50,7 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
     try {
       const next = await fetchOrganizationIdentityReview(organizationId);
       if (currentScope.current === requestedScope) {
-        setResult({ scope: requestedScope, packet: next }); setConfirmed(false);
+        setResult({ scope: requestedScope, packet: next });
         setCandidateId(next.candidates.length === 1 ? next.candidates[0].id : "");
       }
     } catch (failure) { if (currentScope.current === requestedScope) setError(failure instanceof Error ? failure.message : "Identity review is unavailable."); }
@@ -60,11 +59,11 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
   // The header must say up front whether a review is needed, so the check runs when the registration opens.
   useEffect(() => { setError(""); setCandidateId(""); setOpen(false); resetForm(); void load(); }, [scope]); // eslint-disable-line react-hooks/exhaustive-deps
   async function save() {
-    if (inFlight.current || !packet || !confirmed) return;
+    if (inFlight.current || !packet) return;
     inFlight.current = true; setBusy(true); setError("");
     const requestedScope = scope;
     try {
-      const next = await reviewOrganizationIdentity(organizationId, candidateId || null, decision, reason, evidence, packet.version);
+      const next = await reviewOrganizationIdentity(organizationId, candidateId || null, decision, reason, EVIDENCE_REFERENCE, packet.version);
       if (currentScope.current === requestedScope) { setResult({ scope: requestedScope, packet: next }); resetForm(); }
     } catch (failure) { if (currentScope.current === requestedScope) setError(failure instanceof Error ? failure.message : "Unable to save identity decision. Reload if the registration changed."); }
     finally { inFlight.current = false; setBusy(false); }
@@ -72,6 +71,8 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
 
   const clear = Boolean(packet && ["NO_MATCH", "VERIFIED_SEPARATE"].includes(packet.outcome));
   const confirmedExisting = Boolean(packet?.canonicalOrganizationId);
+  // Document decisions stay locked until this check is cleared (or was never needed).
+  useEffect(() => { onClearedChange?.(clear); }, [clear]); // eslint-disable-line react-hooks/exhaustive-deps
   const needsReview = Boolean(packet && !clear && !confirmedExisting);
   const chip = !packet ? (busy ? <StatusChip tone="neutral">Checking…</StatusChip> : null)
     : packet.outcome === "NO_MATCH" ? <StatusChip tone="success"><Check className="h-3 w-3" strokeWidth={2.4} />Not required</StatusChip>
@@ -84,7 +85,7 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
         : confirmedExisting ? "Confirmed existing organization. Original records and obligations remain with the canonical organization; this account has not received ownership or access. Follow the authorized account recovery process."
           : "Compare official evidence before completing registration verification.";
   const needsCandidate = decision === "confirmed_existing" || (decision === "confirmed_different" && Boolean(packet?.candidates.length));
-  const canSave = !busy && confirmed && reason.trim().length >= 10 && evidence.trim().length >= 5 && !(needsCandidate && !candidateId);
+  const canSave = !busy && reason.trim().length >= 10 && !(needsCandidate && !candidateId);
   const showBody = Boolean(packet) && (open || !needsReview);
 
   return <section className="overflow-hidden rounded-md border border-slate-300 bg-admin-surface" aria-label="Organization identity review">
@@ -118,7 +119,7 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
           {packet.candidates.map(candidate => <label key={candidate.id} className={cn("flex items-center gap-3 rounded-md border p-3",
             candidateId === candidate.id ? "border-amber-300 bg-amber-50/60" : "border-slate-200")}>
             <input type="radio" name={`identity-candidate-${organizationId}`} value={candidate.id} checked={candidateId === candidate.id} className="sr-only"
-              disabled={busy || !needsReview} onChange={() => { setCandidateId(candidate.id); setConfirmed(false); }} />
+              disabled={busy || !needsReview} onChange={() => setCandidateId(candidate.id)} />
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100"><Search className="h-4 w-4 text-slate-500" /></span>
             <span className="min-w-0 flex-1 space-y-0.5 font-inter text-[13px]">
               <span className="block font-semibold text-text-default">{candidate.name}</span>
@@ -144,24 +145,16 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
             {decisionOptions.map(option => <label key={option.value} className={cn("flex cursor-pointer items-start gap-3 rounded-md border p-3",
               decision === option.value ? "border-public-bg-brand bg-bg-info-tertiary/40" : "border-slate-200")}>
               <input type="radio" name={`identity-decision-${organizationId}`} value={option.value} checked={decision === option.value} disabled={busy}
-                className="mt-1" onChange={() => { setDecision(option.value); setConfirmed(false); }} />
+                className="mt-1" onChange={() => setDecision(option.value)} />
               <span className="font-inter text-[13px] normal-case tracking-normal"><span className="block font-semibold text-text-default">{option.title}</span>
                 <span className="block font-normal text-slate-500">{option.description}</span></span>
             </label>)}
           </fieldset>
           <div className="space-y-1.5">
             <label htmlFor={`identity-reason-${organizationId}`} className={labelClass}>Reason / Remarks <span className="text-destructive">*</span></label>
-            <Textarea id={`identity-reason-${organizationId}`} value={reason} maxLength={3000} disabled={busy} onChange={e => { setReason(e.target.value); setConfirmed(false); }} />
-            <p className="text-xs text-slate-500">Explain what is missing or why you reached this decision.</p>
+            <Textarea id={`identity-reason-${organizationId}`} value={reason} maxLength={3000} disabled={busy} onChange={e => setReason(e.target.value)} />
+            <p className="text-xs text-slate-500">Explain what is missing or why you reached this decision (at least 10 characters).</p>
           </div>
-          <div className="space-y-1.5">
-            <label htmlFor={`identity-evidence-${organizationId}`} className={labelClass}>Official Evidence Reference <span className="text-destructive">*</span></label>
-            <Input id={`identity-evidence-${organizationId}`} maxLength={1000} value={evidence} disabled={busy} onChange={e => { setEvidence(e.target.value); setConfirmed(false); }} />
-            <p className="text-xs text-slate-500">Reference the reviewed official registration record or supporting documents.</p>
-          </div>
-          <label className="flex items-start gap-2 rounded-md border border-slate-200 p-3 font-inter text-[13px] font-normal normal-case tracking-normal text-text-default">
-            <input type="checkbox" className="mt-0.5" checked={confirmed} disabled={busy} onChange={e => setConfirmed(e.target.checked)} />
-            I reviewed the official evidence. Similar names alone do not establish identity. This decision will not merge records or transfer account ownership.</label>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" disabled={busy} onClick={() => { resetForm(); setOpen(false); }}>Cancel</Button>
             <Button type="button" onClick={save} disabled={!canSave}>Record Identity Decision</Button>
@@ -170,7 +163,7 @@ export function OrganizationIdentityReviewPanel({ organizationId }: { organizati
         {packet.history.length > 0 && <details className="border-t border-slate-200 pt-3"><summary className="cursor-pointer text-sm font-semibold">Identity Review History (latest 50)</summary>
           <ol className="mt-3 space-y-3">{packet.history.map(event => <li key={event.id} className="text-sm">
             <p className="font-semibold">{decisions[event.decision]} · {new Date(event.createdAt).toLocaleString("en-PH")}</p>
-            <p>{event.reason}</p><p className="text-slate-500">Evidence: {event.evidenceReference}</p><p className="text-xs text-slate-500">Reviewer: {event.adminId}</p>
+            <p>{event.reason}</p><p className="text-xs text-slate-500">Reviewer: {event.adminId}</p>
           </li>)}</ol>
         </details>}
         {Boolean(packet.relatedRegistrations?.length) && <details className="border-t border-slate-200 pt-3">

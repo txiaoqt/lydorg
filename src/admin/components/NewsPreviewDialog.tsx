@@ -78,7 +78,7 @@ export const NewsPreviewDialog = ({ news, onOpenChange }: NewsPreviewDialogProps
                     href={news.facebookPostUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex h-9 w-[159px] shrink-0 items-center justify-center gap-1.5 rounded-md bg-public-bg-brand px-3 py-2 font-inter text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
+                    className="flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-public-bg-brand px-4 py-2 font-inter text-public-fs-body-sm font-normal leading-[140%] text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover"
                   >
                     View on Facebook
                     <ExternalLink className="h-4 w-4 shrink-0 text-public-text-neutral-on-neutral" strokeWidth={1.6} />
