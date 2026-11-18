@@ -191,7 +191,10 @@ const PublicNewsReleasesGate = () => {
   const { isInitialized, isAuthenticated, role } = useAuth();
   const usePwaUi = useInstalledUserPwa();
 
-  if (!isInitialized) return usePwaUi ? <PwaInitialLoadingScreen /> : <PublicPageLoader />;
+  // The website keeps its public page for everyone, like the other public pages.
+  // Only the installed app sends signed-in users to its own News screen.
+  if (!usePwaUi) return <NewsReleases />;
+  if (!isInitialized) return <PwaInitialLoadingScreen />;
 
   if (isAuthenticated) {
     if (role === "admin") {
