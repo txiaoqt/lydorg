@@ -17,6 +17,7 @@ import {
   isBarangayInDistrict,
   type PasigDistrict,
 } from "@/lib/pasig-districts";
+import { NewActivityBadge } from "./NewActivityBadge";
 import { majorClassificationOptions, type OrganizationRenewalStatus } from "@/lib/lydo-connect-data";
 
 export type RenewalStatusFilter = "all" | "pending_review" | "approved";
@@ -41,6 +42,7 @@ export type AdminRenewalQueueEntry = {
   adminRemarks: string | null;
   revisionDueAt?: string | null;
   revisionLockedAt?: string | null;
+  hasNew?: boolean;
 };
 
 export type RenewalsTableProps = {
@@ -365,9 +367,12 @@ export const RenewalsTable = ({
                   </div>
 
                   <div className="flex w-[18%] min-w-0 flex-col gap-0.5">
-                    <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
-                      {item.organizationName}
-                    </p>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
+                        {item.organizationName}
+                      </p>
+                      <NewActivityBadge show={item.hasNew} />
+                    </div>
                     <p className="truncate font-inter text-xs leading-[140%] text-slate-500">
                       {[item.district, item.barangay].filter(Boolean).join(" · ") || "No location provided"}
                     </p>

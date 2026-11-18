@@ -3,6 +3,16 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronRight, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import BrandLockup from "@/components/BrandLockup";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -25,6 +35,7 @@ const breadcrumbLabels: Record<string, string> = {
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, signOut, role } = useAuth();
@@ -94,7 +105,7 @@ const Navbar = () => {
               </Link>
               <button
                 type="button"
-                onClick={handleSignOut}
+                onClick={() => { setMobileOpen(false); setSignOutConfirmOpen(true); }}
                 className="flex h-[40px] items-center rounded-[2px] bg-public-bg-brand px-[20px] font-inter text-public-fs-body-sm font-medium leading-none text-public-text-on-brand transition-colors hover:bg-public-bg-brand-hover"
               >
                 Sign Out
@@ -218,7 +229,7 @@ const Navbar = () => {
               </Link>
               <button
                 type="button"
-                onClick={handleSignOut}
+                onClick={() => { setMobileOpen(false); setSignOutConfirmOpen(true); }}
                 className="flex h-[42px] items-center justify-center rounded-xl bg-primary font-inter text-sm font-bold text-white hover:bg-primary/90 active:scale-[0.98] transition-all shadow-xs"
               >
                 Sign Out
@@ -228,6 +239,27 @@ const Navbar = () => {
         </div>
       ) : null}
     </nav>
+
+    {/* Same confirmation as the Org Portal before signing out. */}
+    <AlertDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen}>
+      <AlertDialogContent className="max-w-sm rounded-2xl bg-card border-border">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-base font-bold text-foreground">Sign Out</AlertDialogTitle>
+          <AlertDialogDescription className="text-xs text-muted-foreground">
+            Are you sure you want to sign out of your account?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="pt-2">
+          <AlertDialogCancel className="rounded-xl text-xs h-8">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs font-semibold h-8"
+            onClick={handleSignOut}
+          >
+            Sign Out
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     {/* In page flow below the fixed nav; it carries the nav offset that the page hero used to. */}
     {breadcrumbLabel ? (
       <nav aria-label="Breadcrumb" className="mt-14 border-b border-slate-200 bg-white sm:mt-16 lg:mt-20 xl:mt-32">

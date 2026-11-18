@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { NewActivityBadge } from "./NewActivityBadge";
 import { format } from "date-fns";
 import { ChevronDown, ChevronLeft, ChevronRight, Eye, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,8 @@ type RegistrationsTableProps = {
   onReview: (organizationId: string) => void;
   onDelete?: (organization: OrganizationProfile) => void;
   isSuperAdmin?: boolean;
+  /** Organizations with activity this admin has not opened yet. */
+  newActivityOrgIds?: ReadonlySet<string>;
   serverPagination?: { totalCount: number; onPageChange: (page: number) => void };
 };
 
@@ -141,6 +144,7 @@ export const RegistrationsTable = ({
   onReview,
   onDelete,
   isSuperAdmin,
+  newActivityOrgIds,
   documentRequirementsMessage = "Requirements loading",
   serverPagination,
 }: RegistrationsTableProps) => {
@@ -386,9 +390,12 @@ export const RegistrationsTable = ({
                   </div>
 
                   <div className="flex w-[20%] min-w-0 flex-col gap-0.5">
-                    <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
-                      {org.organizationName}
-                    </p>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">
+                        {org.organizationName}
+                      </p>
+                      <NewActivityBadge show={newActivityOrgIds?.has(org.id)} />
+                    </div>
                     <p className="truncate font-inter text-xs leading-[140%] text-slate-500">
                       {[org.district, org.barangay].filter(Boolean).join(" · ") || "No location provided"}
                     </p>

@@ -2644,7 +2644,9 @@ export type AdminPortalListPage<T> = {
   pageSize: number;
   summary: Record<string, number>;
 };
-export type AdminPortalRegistrationListRow = {
+/** Organization activity this admin has not seen yet (set by the admin list functions). */
+export type AdminNewActivity = { hasNew?: boolean; lastActivityAt?: string | null };
+export type AdminPortalRegistrationListRow = AdminNewActivity & {
   profile: OrganizationProfile;
   submittedDocumentCount: number;
 };
@@ -2687,7 +2689,7 @@ export type AdminReviewResourcePage<T> = {
   pageSize: number;
   summary: Record<string, number>;
 };
-export type AdminRenewalQueueRow = {
+export type AdminRenewalQueueRow = AdminNewActivity & {
   renewal: OrganizationRenewalRecord;
   organization: OrganizationProfile;
   accreditation: OrganizationAccreditationRecord | null;
@@ -2717,6 +2719,8 @@ export type AdminYpopSubmissionRow = {
   referenceId: string;
   majorClassification: string;
   status: "pending_evaluation" | "qualified" | "not_qualified";
+  hasNew?: boolean;
+  lastActivityAt?: string | null;
 };
 
 const mapAdminReviewOrganization = (row: Record<string, unknown>): OrganizationProfile => ({
@@ -2842,6 +2846,8 @@ export const fetchAdminRenewalQueuePage = async (filters: {
       accreditation: accreditationRow?.id ? mapOrganizationAccreditation(accreditationRow) : null,
       submittedDocumentCount: Number(item.submitted_document_count ?? 0),
       linkedDocumentSubmissionId: (item.linked_document_submission_id as string | null) ?? null,
+      hasNew: item.has_new === true,
+      lastActivityAt: (item.last_activity_at as string | null) ?? null,
     }];
   });
   return {
@@ -2937,6 +2943,17 @@ export const fetchAdminYpopPeriodCityActivities = async (periodId: string): Prom
   return ((data ?? []) as YpopCityActivityRow[]).map(mapYpopCityActivity);
 };
 
+/** Records that this admin opened an organization, clearing its "New activity" badge for them. */
+export const markAdminOrganizationViewed = async (organizationId: string, scope: "registration" | "renewal" | "ypop", scopeKey = "") => {
+  const session = readAdminSession();
+  if (!supabase || !session?.sessionToken || !organizationId) return;
+  const { error } = await supabase.rpc("admin_mark_org_viewed", {
+    _session_token: session.sessionToken, _organization_id: organizationId, _scope: scope, _scope_key: scopeKey,
+  });
+  // A failed mark only leaves the badge showing; never block opening the review.
+  if (error && import.meta.env.DEV) console.warn("Could not mark the organization as viewed.", error);
+};
+
 export const fetchAdminYpopPeriodSubmissionPage = async (params: {
   periodId: string; page: number; pageSize?: number; search?: string; classification?: string; status?: string;
 }): Promise<AdminPortalListPage<AdminYpopSubmissionRow>> => {
@@ -2958,6 +2975,8 @@ export const fetchAdminYpopPeriodSubmissionPage = async (params: {
       organizationName: String(item.organization_name ?? "Unknown organization"),
       referenceId: String(item.reference_id ?? ""), majorClassification: String(item.major_classification ?? ""),
       status: String(item.qualification_status ?? "pending_evaluation") as AdminYpopSubmissionRow["status"],
+      hasNew: item.has_new === true,
+      lastActivityAt: (item.last_activity_at as string | null) ?? null,
     }];
   });
   return { rows, totalCount: Number(result.totalCount ?? 0), page: Number(result.page ?? params.page), pageSize: Number(result.pageSize ?? params.pageSize ?? 20), summary: Object.fromEntries(Object.entries(result.summary ?? {}).map(([key, value]) => [key, Number(value)])) };
@@ -3537,6 +3556,8 @@ export const fetchAdminPortalListPage = async (
         return [{
           profile: mapOrganizationProfile(profile),
           submittedDocumentCount: Number(row.submitted_document_count ?? 0),
+          hasNew: row.has_new === true,
+          lastActivityAt: (row.last_activity_at as string | null) ?? null,
         }];
       })
     : filters.resource === "inquiries"

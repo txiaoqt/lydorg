@@ -471,6 +471,8 @@ describe("Admin Portal scoped data contracts", () => {
       referenceId: "YORP-001",
       majorClassification: "community_based",
       status: "pending_evaluation",
+      hasNew: false,
+      lastActivityAt: null,
     });
     expect(result.rows[0]).not.toHaveProperty("entry");
   });

@@ -50,3 +50,26 @@ describe("YPOP submission selection and deletion actions", () => {
     expect(screen.getByRole("checkbox", { name: "Select Beta Youth Org" })).toHaveProperty("checked", true);
   });
 });
+
+describe("YPOP new activity", () => {
+  it("marks organizations with unseen activity and offers a New Activity filter", () => {
+    const onStatusFilterChange = vi.fn();
+    render(
+      <YpopSubmissionsTable
+        rows={[{ ...rows[0], hasNew: true }, rows[1]]}
+        searchValue=""
+        onSearchChange={vi.fn()}
+        classificationFilter="all"
+        onClassificationFilterChange={vi.fn()}
+        statusFilter="all"
+        onStatusFilterChange={onStatusFilterChange}
+        onValidate={vi.fn()}
+      />,
+    );
+
+    // Only the Qualified org that logged new activity carries the badge.
+    expect(screen.getAllByText("New activity")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "New Activity" }));
+    expect(onStatusFilterChange).toHaveBeenCalledWith("has_new");
+  });
+});

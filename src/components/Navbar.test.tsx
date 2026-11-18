@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import Navbar from "./Navbar";
@@ -134,7 +134,26 @@ describe("Navbar Component - Restored Mobile Hamburger Navigation", () => {
     expect(portalLinks.length).toBeGreaterThanOrEqual(1);
     expect(signOutButtons.length).toBeGreaterThanOrEqual(1);
 
+    // Sign Out asks first, like the Org Portal.
     fireEvent.click(signOutButtons[0]);
+    expect(mockSignOut).not.toHaveBeenCalled();
+    const dialog = screen.getByRole("alertdialog", { name: "Sign Out" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sign Out" }));
     expect(mockSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the user signed in when the sign-out confirmation is cancelled", () => {
+    const mockSignOut = vi.fn();
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, signOut: mockSignOut, role: "user" });
+    render(
+      <MemoryRouter initialEntries={["/faqs"]}>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Sign Out/i })[0]);
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Cancel" }));
+    expect(mockSignOut).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 });

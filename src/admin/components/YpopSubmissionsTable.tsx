@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { NewActivityBadge } from "./NewActivityBadge";
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -10,7 +11,7 @@ import {
 import { ReferenceCodeChip } from "@/admin/components/InquiriesTable";
 import { majorClassificationOptions, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 
-export type YpopSubmissionStatusFilter = "all" | "pending_evaluation" | "qualified" | "not_qualified";
+export type YpopSubmissionStatusFilter = "all" | "pending_evaluation" | "qualified" | "not_qualified" | "has_new";
 
 export type YpopSubmissionRow = {
   id: string;
@@ -19,6 +20,7 @@ export type YpopSubmissionRow = {
   referenceId: string;
   majorClassification: string;
   status: YpopQualificationStatus;
+  hasNew?: boolean;
 };
 
 type YpopSubmissionsTableProps = {
@@ -42,6 +44,7 @@ const STATUS_TABS: { value: YpopSubmissionStatusFilter; label: string }[] = [
   { value: "pending_evaluation", label: "Pending Evaluation" },
   { value: "qualified", label: "Qualified" },
   { value: "not_qualified", label: "Not Qualified" },
+  { value: "has_new", label: "New Activity" },
 ];
 
 const PAGE_SIZE = 20;
@@ -272,6 +275,7 @@ export const YpopSubmissionsTable = ({
               )}
               <p className="truncate font-inter text-sm font-semibold leading-[140%] text-text-default">{row.organizationName}</p>
               <ReferenceCodeChip code={row.referenceId || "—"} className="rounded" />
+              <NewActivityBadge show={row.hasNew} />
             </div>
 
             <div className="flex shrink-0 items-center gap-4">

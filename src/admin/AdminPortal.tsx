@@ -101,7 +101,7 @@ import { AdministratorsTable, type AdministratorRoleFilter, type AdministratorSt
 import { RegistrationsTable, StatusPill as RegistrationStatusPill, type RegistrationStatusFilter } from "@/admin/components/RegistrationsTable";
 import { RenewalsTable, RenewalStatusPill, type AdminRenewalQueueEntry, type RenewalStatusFilter } from "@/admin/components/RenewalsTable";
 import { AdminRenewalDocumentPreview, preserveOrSelectFirstRenewalReviewFile } from "@/admin/components/AdminRenewalDocumentPreview";
-import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow } from "@/admin/components/YpopSubmissionsTable";
+import { YpopSubmissionsTable, StatusLabel, type YpopSubmissionRow, type YpopSubmissionStatusFilter } from "@/admin/components/YpopSubmissionsTable";
 import { YpopValidationComputationPopover } from "@/admin/components/YpopValidationComputationPopover";
 import { YpopParticipationReportExport } from "@/admin/components/YpopParticipationReportExport";
 import { BudgetRequestsTable, StatusPill as BudgetStatusPill, type BudgetRequestsStatusFilter } from "@/admin/components/BudgetRequestsTable";
@@ -258,6 +258,7 @@ import {
   fetchAdminPortalChangeVersions,
   getChangedAdminPortalResources,
   fetchAdminRenewalQueuePage,
+  markAdminOrganizationViewed,
   fetchAdminRenewalReviewContext,
   fetchAdminYpopValidationPeriods,
   fetchAdminYpopPeriodCityActivities,
@@ -1425,7 +1426,7 @@ function AdminPortalContent({ section }: { section: string }) {
   const [createPeriodActivities, setCreatePeriodActivities] = useState<Array<{ tempId: string; name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory }>>([]);
   const [createFormNewActivity, setCreateFormNewActivity] = useState<{ name: string; startDate: string; endDate: string; venue: string; category: YPOPCityActivityCategory } | null>(null);
   const [createPeriodOrgLedTiers, setCreatePeriodOrgLedTiers] = useState<YPOPOrgLedTier[]>(DEFAULT_ORG_LED_TIERS);
-  const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<"all" | "pending_evaluation" | "qualified" | "not_qualified">("all");
+  const [ypopSubmissionFilter, setYpopSubmissionFilter] = useState<YpopSubmissionStatusFilter>("all");
   const [ypopSubmissionSearch, setYpopSubmissionSearch] = useState("");
   const [debouncedYpopSubmissionSearch, setDebouncedYpopSubmissionSearch] = useState("");
   const [ypopSubmissionPage, setYpopSubmissionPage] = useState(0);
@@ -1711,7 +1712,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
   const adminRenewalsQueue = useMemo<AdminRenewalQueueEntry[]>(() => {
     const requiredCount = renewalRequiredDocuments.length;
-    return (adminRenewalQueueQuery.data?.rows ?? []).map(({ renewal, organization, accreditation, submittedDocumentCount, linkedDocumentSubmissionId }) => ({
+    return (adminRenewalQueueQuery.data?.rows ?? []).map(({ renewal, organization, accreditation, submittedDocumentCount, linkedDocumentSubmissionId, hasNew }) => ({
       renewalId: renewal.id,
       organizationId: renewal.organizationId,
       cycleNumber: renewal.cycleNumber,
@@ -1730,6 +1731,7 @@ function AdminPortalContent({ section }: { section: string }) {
       adminRemarks: renewal.adminRemarks ?? null,
       revisionDueAt: renewal.revisionDueAt ?? null,
       revisionLockedAt: renewal.revisionLockedAt ?? null,
+      hasNew,
     }));
   }, [adminRenewalQueueQuery.data, renewalRequiredDocuments]);
   const newsReleases = useMemo(
@@ -4847,12 +4849,20 @@ function AdminPortalContent({ section }: { section: string }) {
     }
   };
 
+  /** Opening an organization clears its "New activity" badge for this admin. */
+  const markOrganizationViewed = (organizationId: string, scope: "registration" | "renewal" | "ypop", queryKey: string[], scopeKey = "") => {
+    void markAdminOrganizationViewed(organizationId, scope, scopeKey).then(() => queryClient.invalidateQueries({ queryKey }));
+  };
+
   const handleRegistrationSelectionChange = (nextRegistrationId: string | null) => {
     setSelectedRegistrationId(nextRegistrationId);
+    if (nextRegistrationId) markOrganizationViewed(nextRegistrationId, "registration", ["admin", "registrations"]);
   };
 
   const handleRenewalSelectionChange = (nextRenewalId: string | null) => {
     setSelectedRenewalId(nextRenewalId);
+    const openedRenewal = nextRenewalId ? adminRenewalsQueue.find((item) => item.renewalId === nextRenewalId) : null;
+    if (openedRenewal) markOrganizationViewed(openedRenewal.organizationId, "renewal", ["admin", "renewal-queue"]);
     if (!nextRenewalId) {
       if (selectedRenewalId) renewalVerificationAttemptsRef.current.delete(selectedRenewalId);
       setActiveRenewalReviewFileId(null);
@@ -8684,6 +8694,7 @@ function AdminPortalContent({ section }: { section: string }) {
               onReview={(organizationId) => handleRegistrationSelectionChange(organizationId)}
               onDelete={(organization) => void openRegistrationDeleteDialog(organization)}
               isSuperAdmin={isSuperAdmin}
+              newActivityOrgIds={new Set(registrationRows.filter((row) => (row as AdminPortalRegistrationListRow).hasNew).map((row) => row.profile.id))}
               documentRequirementsMessage={registrationRequirementTypesQuery.isError ? "Unavailable" : "Checking"}
               serverPagination={supabase ? {
                 totalCount: adminListResult?.totalCount ?? 0,
@@ -14341,13 +14352,14 @@ function AdminPortalContent({ section }: { section: string }) {
           const serverSubmissionRows = periodSubmissionPage?.rows ?? [];
           const submissionRows: YpopSubmissionRow[] = serverSubmissionRows.map((row) => ({
             id: row.id, organizationId: row.organizationId, organizationName: row.organizationName,
-            referenceId: row.referenceId, majorClassification: row.majorClassification, status: row.status,
+            referenceId: row.referenceId, majorClassification: row.majorClassification, status: row.status, hasNew: row.hasNew,
           }));
           const pendingEvaluationCount = periodSubmissionPage?.summary.pending_evaluation ?? 0;
           const qualifiedCount = periodSubmissionPage?.summary.qualified ?? 0;
           const notQualifiedCount = periodSubmissionPage?.summary.not_qualified ?? 0;
 
           const handleValidateSubmission = async (row: YpopSubmissionRow) => {
+            markOrganizationViewed(row.organizationId, "ypop", ["admin", "ypop", "period-submissions"], period.semesterKey);
             let entry = state.ypopEntries.find((candidate) => candidate.id === row.id);
             if (!entry) {
               entry = {
