@@ -79,6 +79,10 @@ import { cn } from "@/lib/utils";
 import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 import { isLiquidationOverdue, statusLabelMap, getBudgetRequestStatusLabel, formatAdvocacyLabel, type BudgetRequest, type AnnualBudgetAllocation, getRepresentativeDisplayName, getAdviserDisplayName } from "@/lib/lydo-connect-data";
 import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining, isAwaitingResubmission, hasGenuineResubmission } from "@/lib/revision-deadline";
+
+/** Approved files are final, and a file awaiting the organization's corrected upload is the organization's turn. */
+const isRegistrationFileReviewLocked = (file: { adminStatus: string; revisionRequestedAt?: string | null; uploadedAt?: string | null }) =>
+  file.adminStatus === "approved_green" || isAwaitingResubmission(file);
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { UrnReviewPanel } from "@/admin/components/UrnReviewPanel";
 import { StatsCard } from "@/admin/components/StatsCard";
@@ -4892,7 +4896,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
     const decision = registrationBulkDecision;
     const targetFiles = selectedRegistrationFiles.filter(
-      (file) => selectedRegistrationReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+      (file) => selectedRegistrationReviewFileIds.includes(file.id) && !isRegistrationFileReviewLocked(file),
     );
 
     if (!targetFiles.length) {
@@ -5081,7 +5085,7 @@ function AdminPortalContent({ section }: { section: string }) {
 
     const decision = renewalBulkDecision;
     const targetFiles = effectiveRenewalFiles.filter(
-      (file) => selectedRenewalReviewFileIds.includes(file.id) && file.adminStatus !== "approved_green",
+      (file) => selectedRenewalReviewFileIds.includes(file.id) && !isRegistrationFileReviewLocked(file),
     );
 
     if (!targetFiles.length) {
@@ -8185,7 +8189,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     {(() => {
                       const selectableRegistrationFileIds = orderedSubmittedFiles
-                        .filter((entry) => entry.file.adminStatus !== "approved_green")
+                        .filter((entry) => !isRegistrationFileReviewLocked(entry.file))
                         .map((entry) => entry.file.id);
                       const selectedRegistrationCount = selectableRegistrationFileIds.filter((id) =>
                         selectedRegistrationReviewFileIds.includes(id),
@@ -8229,7 +8233,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             </label>
                           </div>
                           <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
-                            Review the organization&rsquo;s submitted documents and select a document to preview.
+                            Click a document to review it. Check several to approve them together.
                           </p>
                         </div>
                       );
@@ -8242,7 +8246,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           const isActive = activeReviewEntry?.file.id === file.id;
                           const uploadedDate = new Date(file.uploadedAt);
                           const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
-                          const isLocked = file.adminStatus === "approved_green";
+                          const isLocked = isRegistrationFileReviewLocked(file);
 
                           return (
                             <div
@@ -8251,13 +8255,13 @@ function AdminPortalContent({ section }: { section: string }) {
                               tabIndex={0}
                               onClick={() => {
                                 setActiveRegistrationReviewFileId(file.id);
-                                if (!isLocked && !isOrgSuspended) setSelectedRegistrationReviewFileIds([file.id]);
+                                if (!isOrgSuspended) setSelectedRegistrationReviewFileIds(isLocked ? [] : [file.id]);
                               }}
                               onKeyDown={(event) => {
                                 if (event.key !== "Enter" && event.key !== " ") return;
                                 event.preventDefault();
                                 setActiveRegistrationReviewFileId(file.id);
-                                if (!isLocked && !isOrgSuspended) setSelectedRegistrationReviewFileIds([file.id]);
+                                if (!isOrgSuspended) setSelectedRegistrationReviewFileIds(isLocked ? [] : [file.id]);
                               }}
                               className={cn(
                                 "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
@@ -8377,6 +8381,14 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2 pt-4">
+                      {activeReviewEntry && !isOrgSuspended && isAwaitingResubmission(activeReviewEntry.file) ? (
+                        <div className="flex items-start gap-2.5 rounded-md border border-slate-300 bg-slate-50 px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.6} />
+                          <p className="font-inter text-[13px] leading-[140%] text-text-default">
+                            Waiting for the organization&rsquo;s corrected file. You can review this document again once they resubmit.
+                          </p>
+                        </div>
+                      ) : null}
                       {isOrgSuspended ? (
                         <div className="flex flex-col gap-3">
                           <div className="flex items-start gap-2.5 rounded-md border border-status-danger-border bg-danger-subtle px-4 py-3">
@@ -9061,7 +9073,7 @@ function AdminPortalContent({ section }: { section: string }) {
                   <div className="flex flex-col rounded-md border border-slate-300 bg-admin-surface p-4 shadow-sm">
                     {(() => {
                       const selectableRenewalFileIds = orderedSubmittedFiles
-                        .filter((entry) => entry.file.adminStatus !== "approved_green")
+                        .filter((entry) => !isRegistrationFileReviewLocked(entry.file))
                         .map((entry) => entry.file.id);
                       const selectedRenewalCount = selectableRenewalFileIds.filter((id) =>
                         selectedRenewalReviewFileIds.includes(id),
@@ -9104,7 +9116,7 @@ function AdminPortalContent({ section }: { section: string }) {
                             </label>
                           </div>
                           <p className="font-inter text-sm font-normal leading-[140%] text-slate-500">
-                            Review the organization&rsquo;s renewal documents and select a document to preview.
+                            Click a document to review it. Check several to approve them together.
                           </p>
                         </div>
                       );
@@ -9117,7 +9129,7 @@ function AdminPortalContent({ section }: { section: string }) {
                           const isActive = activeReviewEntry?.file.id === file.id;
                           const uploadedDate = new Date(file.uploadedAt);
                           const isUploadedDateValid = !Number.isNaN(uploadedDate.getTime());
-                          const isLocked = file.adminStatus === "approved_green";
+                          const isLocked = isRegistrationFileReviewLocked(file);
 
                           return (
                             <div
@@ -9126,13 +9138,13 @@ function AdminPortalContent({ section }: { section: string }) {
                               tabIndex={0}
                               onClick={() => {
                                 setActiveRenewalReviewFileId(file.id);
-                                if (!isLocked) setSelectedRenewalReviewFileIds([file.id]);
+                                setSelectedRenewalReviewFileIds(isLocked ? [] : [file.id]);
                               }}
                               onKeyDown={(event) => {
                                 if (event.key !== "Enter" && event.key !== " ") return;
                                 event.preventDefault();
                                 setActiveRenewalReviewFileId(file.id);
-                                if (!isLocked) setSelectedRenewalReviewFileIds([file.id]);
+                                setSelectedRenewalReviewFileIds(isLocked ? [] : [file.id]);
                               }}
                               className={cn(
                                 "flex w-full cursor-pointer items-start gap-2.5 rounded-md p-4 text-left transition-colors",
@@ -9252,6 +9264,14 @@ function AdminPortalContent({ section }: { section: string }) {
                     </div>
 
                     <div className="flex flex-col gap-2 pt-4">
+                      {activeReviewEntry && isAwaitingResubmission(activeReviewEntry.file) ? (
+                        <div className="flex items-start gap-2.5 rounded-md border border-slate-300 bg-slate-50 px-4 py-3">
+                          <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" strokeWidth={1.6} />
+                          <p className="font-inter text-[13px] leading-[140%] text-text-default">
+                            Waiting for the organization&rsquo;s corrected file. You can review this document again once they resubmit.
+                          </p>
+                        </div>
+                      ) : null}
                       {selectedBulkFiles.length === 0 ? (
                         <div className="flex items-start gap-2 rounded-md border border-border-closed-subtle bg-gray-100 px-4 py-3">
                           <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-tertiary" strokeWidth={1.6} />

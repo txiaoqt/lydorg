@@ -100,7 +100,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
   const statusLabels: Record<"all" | "open" | "closed", string> = {
     all: "All",
     open: "Open",
-    closed: "Ended",
+    closed: "Closed",
   };
   const currentStatusLabel = statusLabels[statusFilter];
 
@@ -235,7 +235,7 @@ export const YpopSemesterList: React.FC<YpopSemesterListProps> = ({
                     statusFilter === "closed" && "bg-primary/10 text-primary font-bold"
                   )}
                 >
-                  <span className="truncate mr-2">Ended</span>
+                  <span className="truncate mr-2">Closed</span>
                   <span className="text-[10px] text-muted-foreground">({endedCount})</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

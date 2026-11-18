@@ -213,7 +213,7 @@ describe("YPOP Semester Workspace - Budget Request Entry Point Matrix", () => {
     fireEvent.click(button);
 
     expect(navigateMock).toHaveBeenCalledTimes(1);
-    expect(navigateMock).toHaveBeenCalledWith(`/budget-request?ypopEntryId=${encodeURIComponent(entry.id)}`);
+    expect(navigateMock).toHaveBeenCalledWith(`/budget-request?ypopEntryId=${encodeURIComponent(entry.id)}&returnTo=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`);
   });
 
   it("10. Budget Request eligibility guard remains intact", () => {

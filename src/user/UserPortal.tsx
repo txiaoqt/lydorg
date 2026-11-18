@@ -223,7 +223,7 @@ import {
   loadOrganizationRecentYpopActivities,
   loadOrganizationActivityPage,
   loadOrganizationDocumentSubmissionState,
-  loadOrganizationActivityState,
+  loadOrganizationRegistrationActivityState,
   loadOrganizationBudgetSubmissionState,
   loadOrganizationBudgetRequestFiles,
   loadOrganizationLiquidationSubmissionState,
@@ -913,9 +913,9 @@ export default function UserPortal({ section }: { section: string }) {
     let refreshInProgress = false;
     let followUpRefresh: ReturnType<typeof setTimeout> | undefined;
     const refreshActivity = async () => {
-      // Recent Activity reads the same 50-entry slice the section loads on open.
+      // Recent Activity reads the same slice the section loads on open.
       try {
-        const activity = await loadOrganizationActivityState(currentProfile.id, 50);
+        const activity = await loadOrganizationRegistrationActivityState(currentProfile.id);
         if (!cancelled) mergeRemoteStateRef.current(activity);
       } catch (error) {
         if (!cancelled && import.meta.env.DEV) console.warn("Could not refresh registration activity.", error);

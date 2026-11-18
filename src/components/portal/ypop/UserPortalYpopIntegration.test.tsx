@@ -442,7 +442,7 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     openStatusDropdown(/Status: All/i);
     expect(screen.getByRole("menuitem", { name: /All Status/i })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: /Open/i })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: /Ended/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Closed/i })).toBeInTheDocument();
 
     // Filter by Open
     fireEvent.click(screen.getByRole("menuitem", { name: /Open/i }));
@@ -450,15 +450,15 @@ describe("UserPortal YPOP Integration - Admin Configuration & Business Rules", (
     expect(screen.getByText("2026 First Semester")).toBeInTheDocument();
     expect(screen.getByText("2026 Second Semester")).toBeInTheDocument();
 
-    // Filter by Ended (both mock periods are open, so none match)
+    // Filter by Closed (both mock periods are open, so none match)
     openStatusDropdown(/Status: Open/i);
-    fireEvent.click(screen.getByRole("menuitem", { name: /Ended/i }));
-    expect(screen.getByRole("button", { name: /Status: Ended/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("menuitem", { name: /Closed/i }));
+    expect(screen.getByRole("button", { name: /Status: Closed/i })).toBeInTheDocument();
     expect(screen.queryByText("2026 First Semester")).not.toBeInTheDocument();
     expect(screen.queryByText("2026 Second Semester")).not.toBeInTheDocument();
 
     // Reset back to All
-    openStatusDropdown(/Status: Ended/i);
+    openStatusDropdown(/Status: Closed/i);
     fireEvent.click(screen.getByRole("menuitem", { name: /All Status/i }));
     expect(screen.getByRole("button", { name: /Status: All/i })).toBeInTheDocument();
     expect(screen.getByText("2026 First Semester")).toBeInTheDocument();

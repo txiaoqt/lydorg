@@ -643,6 +643,11 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                   if (isSubmitting || isSavingDraft) return;
                   setShowBudgetForm(false);
                   startEditingBudgetRequest(null);
+                  // Opened from YPOP Participation: go back there, where the request button lives.
+                  if (searchParams.get("ypopEntryId")) {
+                    const returnTo = searchParams.get("returnTo");
+                    navigate(returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : userRouteMap["ypop"] || "/ypop");
+                  }
                 }}
                 className="w-full sm:w-auto h-10 rounded-xl text-xs font-semibold px-4 text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 data-testid="cancel-budget-form-button"

@@ -636,6 +636,7 @@
   body.admin-theme-active.dark .bg-slate-50\/70,
   body.admin-theme-active.dark .bg-slate-50\/80,
   body.admin-theme-active.dark .bg-slate-50\/90,
+  body.admin-theme-active.dark .bg-slate-50\/95,
   body.admin-theme-active.dark .bg-gray-50\/50 {
     background-color: hsl(var(--muted) / 0.5);
   }
@@ -674,6 +675,10 @@
   }
 
   body.admin-theme-active.dark .bg-slate-100,
+  body.admin-theme-active.dark .bg-slate-200,
+  body.admin-theme-active.dark .bg-slate-200\/60,
+  body.admin-theme-active.dark .bg-slate-200\/70,
+  body.admin-theme-active.dark .bg-slate-200\/80,
   body.admin-theme-active.dark .bg-gray-100,
   body.admin-theme-active.dark .bg-neutral-100 {
     background-color: hsl(var(--muted));

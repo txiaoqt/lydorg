@@ -2288,6 +2288,24 @@ export const loadOrganizationActivityState = async (
   return { activityLogs: rows.map(mapActivityLog) };
 };
 
+/** Recent activity plus the latest registration document entries, which newer budget or YPOP logs would otherwise push out. */
+export const loadOrganizationRegistrationActivityState = async (organizationId: string): Promise<Partial<LydoSeedState>> => {
+  if (!supabase || !organizationId) return { activityLogs: [] };
+  const [recent, registration] = await Promise.all([
+    loadOrganizationActivityState(organizationId, 50),
+    supabase.from("activity_logs")
+      .select("id,actor_user_id,organization_id,action,related_type,related_id,description,created_at")
+      .eq("organization_id", organizationId)
+      .in("related_type", ["document_submission", "document_submission_file"])
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+  if (registration.error) throw toQueryError(registration.error);
+  const byId = new Map((recent.activityLogs ?? []).map((log) => [log.id, log]));
+  for (const row of (registration.data as ActivityLogRow[] | null) ?? []) byId.set(row.id, mapActivityLog(row));
+  return { activityLogs: [...byId.values()].sort((left, right) => right.createdAt.localeCompare(left.createdAt)) };
+};
+
 export const loadOrganizationDashboardState = async (
   userId: string,
   organizationId: string,
@@ -2564,7 +2582,7 @@ export const loadOrganizationPortalSectionState = async (
           const [documents, templates, activity] = await Promise.all([
             loadOrganizationDocumentSubmissionState(userId, organizationId),
             loadOrganizationRequiredDocumentTypesState(),
-            loadOrganizationActivityState(organizationId, 50),
+            loadOrganizationRegistrationActivityState(organizationId),
           ]);
           return { ...(documents ?? {}), ...(templates ?? {}), ...(activity ?? {}) };
         }

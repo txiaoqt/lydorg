@@ -339,4 +339,25 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
       expect(submitButton).not.toBeDisabled();
     });
   });
+  describe("Cancel destination", () => {
+    it("returns to the YPOP page the form was opened from", () => {
+      const navigate = vi.fn();
+      const searchParams = new URLSearchParams({ ypopEntryId: "entry-1", returnTo: "/ypop/2026-1" });
+      render(<UserPortalBudgetWorkspaceView {...defaultBaseProps} navigate={navigate} searchParams={searchParams} />);
+      fireEvent.click(screen.getByTestId("cancel-budget-form-button"));
+      expect(navigate).toHaveBeenCalledWith("/ypop/2026-1");
+    });
+
+    it("ignores an outside returnTo and stays put when not opened from YPOP", () => {
+      const navigate = vi.fn();
+      render(<UserPortalBudgetWorkspaceView {...defaultBaseProps} navigate={navigate} searchParams={new URLSearchParams({ ypopEntryId: "e", returnTo: "//evil.example" })} userRouteMap={{ ypop: "/ypop" }} />);
+      fireEvent.click(screen.getByTestId("cancel-budget-form-button"));
+      expect(navigate).toHaveBeenCalledWith("/ypop");
+
+      navigate.mockClear();
+      render(<UserPortalBudgetWorkspaceView {...defaultBaseProps} navigate={navigate} />);
+      fireEvent.click(screen.getAllByTestId("cancel-budget-form-button")[1]);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+  });
 });

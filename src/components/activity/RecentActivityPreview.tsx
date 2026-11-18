@@ -268,6 +268,12 @@ export const formatDocumentActivityLabel = (
 ) => {
   if (!log) return "Document Action Recorded";
 
+  // Per-document organization uploads name the document only in the description.
+  const uploaded = /^(Submitted|Uploaded a corrected version of) (.+?)(?: for review)?\.$/.exec(log.description ?? "");
+  if (uploaded && (log.action === "Submitted document" || log.action === "Replaced document")) {
+    return `${uploaded[2]} ${uploaded[1] === "Submitted" ? "submitted" : "resubmitted"} for review`;
+  }
+
   let docName = (log.metadata?.documentTypeName || log.metadata?.documentName) as string | undefined;
 
   if (!docName && templateDocuments?.length && log.relatedId) {

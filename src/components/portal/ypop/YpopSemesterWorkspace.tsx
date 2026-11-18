@@ -272,8 +272,10 @@ export const YpopSemesterWorkspace: React.FC<YpopSemesterWorkspaceProps> = ({
                 onClick={() => {
                   const basePath = userRouteMap["budget-request"] || "/budget-request";
                   const separator = basePath.includes("?") ? "&" : "?";
+                  // returnTo lets Cancel on the budget form come back to this YPOP page.
+                  const returnTo = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
                   const targetUrl = entry?.id
-                    ? `${basePath}${separator}ypopEntryId=${encodeURIComponent(entry.id)}`
+                    ? `${basePath}${separator}ypopEntryId=${encodeURIComponent(entry.id)}&returnTo=${returnTo}`
                     : basePath;
                   navigate(targetUrl);
                 }}

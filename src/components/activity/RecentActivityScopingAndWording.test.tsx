@@ -82,6 +82,13 @@ describe("Recent Activity Scoping and User-Facing Copy Suite", () => {
       ).toBe("Constitution and By-Laws rejected");
     });
 
+    it("names the document for each individual upload and correction", () => {
+      expect(formatDocumentActivityLabel({ action: "Submitted document", description: "Submitted YORP Constitution and By-Laws for review." }))
+        .toBe("YORP Constitution and By-Laws submitted for review");
+      expect(formatDocumentActivityLabel({ action: "Replaced document", description: "Uploaded a corrected version of NYC YORP Registration Form (Form B)." }))
+        .toBe("NYC YORP Registration Form (Form B) resubmitted for review");
+    });
+
     it("formats batch documents and generic document actions cleanly", () => {
       expect(formatActivityActionLabel("submitted_batch_document_review")).toBe(
         "Batch Documents Submitted"
