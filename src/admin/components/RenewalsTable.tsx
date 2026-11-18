@@ -327,9 +327,6 @@ export const RenewalsTable = ({
         <div className="min-w-[840px]">
           {/* Column headers */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-            <span className="w-6 shrink-0">
-              <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
-            </span>
             <span className="w-[14%]">Reference ID</span>
             <span className="w-[7%]">Cycle</span>
             <span className="w-[18%]">Organization</span>
@@ -356,10 +353,6 @@ export const RenewalsTable = ({
                   key={item.renewalId || item.id || `renewal-${index}`}
                   className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
                 >
-                  <span className="w-6 shrink-0">
-                    <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" aria-hidden="true" />
-                  </span>
-
                   <div className="flex w-[14%] flex-col justify-center gap-1">
                     <ReferenceCodeChip code={item.referenceIdentifier || "—"} />
                     {item.urn ? <UrnChip urn={item.urn} /> : null}

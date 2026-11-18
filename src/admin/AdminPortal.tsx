@@ -739,7 +739,6 @@ function AdminPortalContent({ section }: { section: string }) {
     mergeRemoteStateRef.current = mergeRemoteState;
   }, [mergeRemoteState]);
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
-  const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<Set<string>>(new Set());
   const [registrationDeleteTarget, setRegistrationDeleteTarget] = useState<OrganizationProfile | null>(null);
   const [registrationDeleteConfirmation, setRegistrationDeleteConfirmation] = useState("");
   const [registrationDeleteLoading, setRegistrationDeleteLoading] = useState(false);
@@ -4816,11 +4815,6 @@ function AdminPortalContent({ section }: { section: string }) {
       );
       removeOrganizationAccountFromCache(registrationDeleteTarget.id);
       setSelectedRegistrationId(null);
-      setSelectedRegistrationIds((prev) => {
-        const next = new Set(prev);
-        next.delete(registrationDeleteTarget.id);
-        return next;
-      });
       const wasSuspended = registrationDeleteTarget.profileStatus === "suspended_inactive";
       const targetName = registrationDeleteTarget.organizationName;
       setRegistrationDeleteTarget(null);
@@ -8689,8 +8683,6 @@ function AdminPortalContent({ section }: { section: string }) {
               onClassificationFilterChange={setRegistrationClassificationFilter}
               onReview={(organizationId) => handleRegistrationSelectionChange(organizationId)}
               onDelete={(organization) => void openRegistrationDeleteDialog(organization)}
-              selectedOrgIds={selectedRegistrationIds}
-              onSelectedOrgIdsChange={setSelectedRegistrationIds}
               isSuperAdmin={isSuperAdmin}
               documentRequirementsMessage={registrationRequirementTypesQuery.isError ? "Unavailable" : "Checking"}
               serverPagination={supabase ? {
@@ -14424,7 +14416,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 action={
                   <YpopParticipationReportExport key={`${period.id}-qualification`} reportKind="points-qualification" periodId={period.id} semesterLabel={period.semesterLabel}
                     classification={ypopSubmissionClassificationFilter} status={ypopSubmissionFilter} search={ypopSubmissionSearch}
-                    generatedBy={user?.displayName || "Administrator"} />
+                    generatedBy={user?.displayName || "Administrator"} selectedOrganizationIds={selectedYpopOrganizationIds} />
                 }
               />
 

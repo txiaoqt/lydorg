@@ -41,7 +41,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
-import { getAllPasigBarangayOptions, getPasigDistrictForBarangay } from "@/lib/pasig-districts";
+import { getBarangayOptionsForDistrict, getPasigDistrictForBarangay, normalizePasigDistrict, pasigDistrictOptions, type PasigDistrict } from "@/lib/pasig-districts";
 import {
   advocacyOptions,
   formatAddress,
@@ -449,7 +449,6 @@ const GoogleOnboarding = () => {
     saveGoogleOnboardingDraft(user.id, profileDraft);
   }, [profileDraft, user?.id]);
 
-  const barangayOptions = useMemo(() => getAllPasigBarangayOptions(), []);
 
   const urnError = useMemo(() => {
     if (!profileDraft?.isExistingOrganization) return null;
@@ -481,6 +480,19 @@ const GoogleOnboarding = () => {
     setProfileDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
     setFormError(null);
 
+  };
+
+  const selectedDistrict = getPasigDistrictForBarangay(profileDraft?.addressBarangay || profileDraft?.barangay) || normalizePasigDistrict(profileDraft?.district);
+
+  // District comes first; choosing another district clears a barangay that is not in it.
+  const handleDistrictChange = (district: PasigDistrict) => {
+    setProfileDraft((prev) => {
+      if (!prev) return prev;
+      const barangay = prev.addressBarangay || prev.barangay || "";
+      const keep = barangay && getPasigDistrictForBarangay(barangay) === district;
+      return { ...prev, district, ...(keep ? {} : { barangay: "", addressBarangay: "" }) };
+    });
+    setFormError(null);
   };
 
   const handleBarangayChange = (barangay: string) => {
@@ -1353,33 +1365,39 @@ const GoogleOnboarding = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <Label htmlFor="address-barangay" className="text-xs font-semibold">
-                      Barangay <span className="text-destructive">*</span>
+                    <Label htmlFor="address-district" className="text-xs font-semibold">
+                      District <span className="text-destructive">*</span>
                     </Label>
-                    <Select
-                      value={profileDraft.addressBarangay || profileDraft.barangay || ""}
-                      onValueChange={handleBarangayChange}
-                    >
-                      <SelectTrigger id="address-barangay" className="h-9 text-xs">
-                        <SelectValue placeholder="Select headquarters Barangay" />
+                    <Select value={selectedDistrict} onValueChange={(value) => handleDistrictChange(value as PasigDistrict)}>
+                      <SelectTrigger id="address-district" className="h-9 text-xs">
+                        <SelectValue placeholder="Select district" />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[280px]">
-                        {barangayOptions.map((barangay) => (
-                          <SelectItem key={barangay.id} value={barangay.name}>{barangay.name}</SelectItem>
+                      <SelectContent hideScrollButtons>
+                        {pasigDistrictOptions.map((district) => (
+                          <SelectItem key={district} value={district}>{district}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-1">
-                    <Label htmlFor="address-district" className="text-xs font-semibold text-muted-foreground">District</Label>
-                    <Input
-                      id="address-district"
-                      value={getPasigDistrictForBarangay(profileDraft.addressBarangay || profileDraft.barangay) || ""}
-                      readOnly
-                      aria-readonly="true"
-                      className="h-9 text-xs bg-muted/30 text-muted-foreground"
-                    />
+                    <Label htmlFor="address-barangay" className="text-xs font-semibold">
+                      Barangay <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={profileDraft.addressBarangay || profileDraft.barangay || ""}
+                      onValueChange={handleBarangayChange}
+                      disabled={!selectedDistrict}
+                    >
+                      <SelectTrigger id="address-barangay" className="h-9 text-xs">
+                        <SelectValue placeholder={selectedDistrict ? "Select headquarters Barangay" : "Select a district first"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[280px]" hideScrollButtons>
+                        {getBarangayOptionsForDistrict(selectedDistrict || "all").map((barangay) => (
+                          <SelectItem key={barangay.id} value={barangay.name}>{barangay.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-1">

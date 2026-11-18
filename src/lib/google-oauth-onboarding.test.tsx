@@ -509,7 +509,7 @@ describe("Google OAuth Onboarding & Auth Callback Flow", () => {
     };
   });
 
-  it("collects headquarters Barangay in Section 5 and derives a read-only District there", async () => {
+  it("asks for the headquarters District first, then a Barangay from that district", async () => {
     mockFetchProfile.mockResolvedValue(null);
     render(
       <MemoryRouter initialEntries={["/google-onboarding"]}>
@@ -522,8 +522,11 @@ describe("Google OAuth Onboarding & Auth Callback Flow", () => {
     await waitFor(() => expect(screen.getByText("5. Leadership & Organization Officials")).toBeInTheDocument());
     expect(document.getElementById("org-district")).toBeNull();
     expect(document.getElementById("org-barangay")).toBeNull();
-    expect(document.getElementById("address-barangay")).toBeInTheDocument();
-    expect(document.getElementById("address-district")).toHaveAttribute("readonly");
+    const district = document.getElementById("address-district")!;
+    const barangay = document.getElementById("address-barangay")!;
+    // District is chosen before Barangay, and Barangay waits for it.
+    expect(district.compareDocumentPosition(barangay) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(barangay).toBeDisabled();
   });
 
   // TEST 10 — Google callback code does not enter recovery

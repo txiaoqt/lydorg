@@ -10,7 +10,8 @@ import {
 import type { YpopParticipationFilters, YpopParticipationSource } from "./ypop-participation-report";
 
 /** An explicit export reads every page; it never materializes virtual entries or fetches document bodies. */
-export async function loadYpopParticipationReport(periodId: string, filters: YpopParticipationFilters) {
+/** `organizationIds` limits the report to those organizations (the admin's table selection). */
+export async function loadYpopParticipationReport(periodId: string, filters: YpopParticipationFilters, organizationIds?: ReadonlySet<string>) {
   const token = readAdminSession()?.sessionToken;
   if (!token) throw new Error("Please sign in to export the participation report.");
   const assertSession = () => {
@@ -47,11 +48,12 @@ export async function loadYpopParticipationReport(periodId: string, filters: Ypo
     if (submissions.length === expectedCount) break;
   }
 
+  const reported = organizationIds?.size ? submissions.filter(row => organizationIds.has(row.organizationId)) : submissions;
   const sources: YpopParticipationSource[] = [];
   // Keep concurrent requests bounded and independent of the currently visible table page.
-  for (let offset = 0; offset < submissions.length; offset += 4) {
+  for (let offset = 0; offset < reported.length; offset += 4) {
     assertSession();
-    const batch = await Promise.all(submissions.slice(offset, offset + 4).map(async row => {
+    const batch = await Promise.all(reported.slice(offset, offset + 4).map(async row => {
       const virtual = row.id.startsWith("virtual-");
       const detail = virtual
         ? await fetchAdminYorpRegistryYpopDetail(row.organizationId, period.semesterKey)

@@ -18,9 +18,11 @@ type Props = {
   search: string;
   generatedBy?: string;
   reportKind?: "participation" | "points-qualification";
+  /** When set and non-empty, only these organizations are exported. */
+  selectedOrganizationIds?: ReadonlySet<string>;
 };
 
-export function YpopParticipationReportExport({ periodId, semesterLabel, classification, status, search, generatedBy, reportKind = "participation" }: Props) {
+export function YpopParticipationReportExport({ periodId, semesterLabel, classification, status, search, generatedBy, reportKind = "participation", selectedOrganizationIds }: Props) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [period, setPeriod] = useState<AdminReportPeriod>(getCurrentAdminReportPeriod);
@@ -32,12 +34,14 @@ export function YpopParticipationReportExport({ periodId, semesterLabel, classif
   const pointsReport = reportKind === "points-qualification";
   const reportTitle = pointsReport ? "YPOP Points and Qualification Report" : "YPOP Participation Report";
   const currentYear = getCurrentAdminReportPeriod().year;
+  const selectedCount = selectedOrganizationIds?.size ?? 0;
   const selectClass = "h-10 w-full rounded-md border border-slate-300 bg-admin-surface pl-3 font-inter text-sm text-text-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-public-bg-brand disabled:opacity-50";
   return <>
     <button type="button" onClick={() => { setQualification(status); setOpen(true); }}
       className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-public-bg-brand px-4 py-3 font-inter text-public-fs-body-sm text-public-text-neutral-on-neutral transition-colors hover:bg-bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-public-bg-brand sm:w-fit sm:shrink-0 sm:whitespace-nowrap">
       <Download className="h-4 w-4 shrink-0" strokeWidth={1.6} aria-hidden="true" />
       {pointsReport ? "Export Qualification Report" : "Export Participation Report"}
+      {selectedCount ? ` (${selectedCount} selected)` : ""}
     </button>
     <AdminExportDialog open={open} onOpenChange={setOpen} reportTitle={reportTitle}
       description={`Export ${semesterLabel}. ${pointsReport ? "Category and activity dates" : "Activity dates"} select rows; points and qualification reflect the complete semester.`}
@@ -75,11 +79,12 @@ export function YpopParticipationReportExport({ periodId, semesterLabel, classif
         <p className="text-xs text-text-secondary">Classification: {classification === "all" ? "All" : classification}
           {!pointsReport && ` · Status: ${status === "all" ? "All" : YPOP_PARTICIPATION_STATUS_LABELS[status as keyof typeof YPOP_PARTICIPATION_STATUS_LABELS]}`}
           {search.trim() ? ` · Search: ${search.trim()}` : ""}. Uses the current submission {pointsReport ? "classification and search" : "filters"}.</p>
+        {selectedCount ? <p className="text-xs font-semibold text-text-default">Only the {selectedCount} selected {selectedCount === 1 ? "organization" : "organizations"} will be exported. Clear the selection to export all.</p> : null}
       </div>}
       onExport={async (format, pageConfig) => {
         try {
           const filters = { period, district, barangay, advocacy, classification, status: pointsReport ? qualification : status, search };
-          const data = await loadYpopParticipationReport(periodId, filters);
+          const data = await loadYpopParticipationReport(periodId, filters, selectedOrganizationIds);
           const options = pointsReport
             ? buildYpopPointsQualificationReportOptions(data.sources, data.period, { ...filters, category }, generatedBy)
             : buildYpopParticipationReportOptions(data.sources, data.period, filters, generatedBy);

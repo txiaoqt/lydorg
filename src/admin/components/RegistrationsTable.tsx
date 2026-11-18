@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ChevronDown, ChevronLeft, ChevronRight, Eye, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,8 +46,6 @@ type RegistrationsTableProps = {
   onClassificationFilterChange: (value: string) => void;
   onReview: (organizationId: string) => void;
   onDelete?: (organization: OrganizationProfile) => void;
-  selectedOrgIds?: Set<string>;
-  onSelectedOrgIdsChange?: (selectedIds: Set<string>) => void;
   isSuperAdmin?: boolean;
   serverPagination?: { totalCount: number; onPageChange: (page: number) => void };
 };
@@ -142,40 +140,11 @@ export const RegistrationsTable = ({
   onClassificationFilterChange,
   onReview,
   onDelete,
-  selectedOrgIds,
-  onSelectedOrgIdsChange,
   isSuperAdmin,
   documentRequirementsMessage = "Requirements loading",
   serverPagination,
 }: RegistrationsTableProps) => {
   const [page, setPage] = useState(0);
-  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
-  const selectedIds = selectedOrgIds ?? internalSelectedIds;
-  const setSelectedIds = onSelectedOrgIdsChange ?? setInternalSelectedIds;
-
-  // Prune stale IDs that no longer exist in the registrations dataset
-  useEffect(() => {
-    if (selectedIds.size === 0) return;
-    const validIds = new Set(registrations.map((r) => r.id));
-    const staleIds = Array.from(selectedIds).filter((id) => !validIds.has(id));
-    if (staleIds.length > 0) {
-      const next = new Set(selectedIds);
-      staleIds.forEach((id) => next.delete(id));
-      setSelectedIds(next);
-    }
-  }, [registrations, selectedIds, setSelectedIds]);
-
-  // Keyboard accessibility: Escape to clear selection
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectedIds.size > 0) {
-        setSelectedIds(new Set());
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedIds, setSelectedIds]);
-
   const barangayOptions = useMemo(
     () => getBarangayOptionsForDistrict(districtFilter),
     [districtFilter],
@@ -196,40 +165,6 @@ export const RegistrationsTable = ({
     () => serverPagination ? registrations : registrations.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE),
     [registrations, clampedPage, serverPagination],
   );
-
-  const visibleRowIds = useMemo(() => pageItems.map((org) => org.id), [pageItems]);
-  const pageSelectedCount = useMemo(
-    () => pageItems.filter((org) => selectedIds.has(org.id)).length,
-    [pageItems, selectedIds],
-  );
-  const isAllPageSelected = pageItems.length > 0 && pageSelectedCount === pageItems.length;
-  const isIndeterminate = pageSelectedCount > 0 && pageSelectedCount < pageItems.length;
-
-  const handleToggleSelectAll = () => {
-    if (isAllPageSelected) {
-      const next = new Set(selectedIds);
-      for (const id of visibleRowIds) {
-        next.delete(id);
-      }
-      setSelectedIds(next);
-    } else {
-      const next = new Set(selectedIds);
-      for (const id of visibleRowIds) {
-        next.add(id);
-      }
-      setSelectedIds(next);
-    }
-  };
-
-  const handleToggleRow = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setSelectedIds(next);
-  };
 
   const changePage = (next: number) => {
     const safePage = Math.max(0, Math.min(next, totalPages - 1));
@@ -419,18 +354,6 @@ export const RegistrationsTable = ({
         <div className="min-w-[920px]">
           {/* Column headers */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-300 bg-bg-neutral-subtle px-4 py-3 font-inter text-xs font-semibold uppercase leading-[140%] text-text-neutral-tertiary">
-            <span className="w-6 shrink-0 flex items-center justify-center">
-              <input
-                type="checkbox"
-                ref={(el) => {
-                  if (el) el.indeterminate = isIndeterminate;
-                }}
-                checked={isAllPageSelected}
-                onChange={handleToggleSelectAll}
-                className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer"
-                aria-label="Select all visible registrations on current page"
-              />
-            </span>
             <span className="w-[14%]">Reference ID</span>
             <span className="w-[20%]">Organization</span>
             <span className="w-[16%]">Major Classification</span>
@@ -451,26 +374,12 @@ export const RegistrationsTable = ({
               const counts = documentCountsByOrgId[org.id] ?? { submitted: 0, required: null };
               const submittedDate = new Date(org.createdAt);
               const isValidDate = !Number.isNaN(submittedDate.getTime());
-              const isSelected = selectedIds.has(org.id);
 
               return (
                 <div
                   key={org.id}
-                  className={cn(
-                    "flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50",
-                    isSelected && "bg-blue-50/40 border-l-2 border-l-public-bg-brand",
-                  )}
+                  className="flex items-center justify-between gap-2 border-b border-slate-300 p-4 transition-colors last:border-b-0 hover:bg-slate-50"
                 >
-                  <span className="w-6 shrink-0 flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleToggleRow(org.id)}
-                      className="h-4 w-4 rounded border-slate-300 text-public-bg-brand focus:ring-public-bg-brand cursor-pointer"
-                      aria-label={`Select ${org.organizationName}`}
-                    />
-                  </span>
-
                   <div className="flex w-[14%] flex-col justify-center gap-1">
                     <ReferenceCodeChip code={org.referenceId || "—"} />
                     {org.urn ? <UrnChip urn={org.urn} /> : null}
@@ -536,11 +445,6 @@ export const RegistrationsTable = ({
         <p className="font-inter text-[13px] text-text-neutral-tertiary">
           Showing <span className="text-text-default">{pageItems.length}</span> of{" "}
           <span className="text-text-default">{serverPagination?.totalCount ?? registrations.length}</span> submissions
-          {selectedIds.size > 0 && (
-            <span className="ml-2 font-medium text-public-text-brand">
-              ({selectedIds.size} selected)
-            </span>
-          )}
         </p>
         <div className="flex items-center gap-2">
           <button
