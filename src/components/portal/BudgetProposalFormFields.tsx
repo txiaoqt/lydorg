@@ -16,6 +16,8 @@ import {
 
 const peso = (value: number) => `₱${value.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const inputClass = "h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40";
+// Organization details come from the profile and are edited there, not per proposal.
+const lockedClass = "h-10 text-xs rounded-xl bg-muted/40 border-border text-muted-foreground cursor-not-allowed";
 const areaClass = "text-xs rounded-xl bg-background border-border/80 resize-y min-h-[96px] focus-visible:ring-1 focus-visible:ring-primary/40";
 
 function Field({ label, hint, required = true, children, className }: { label: string; hint?: string; required?: boolean; children: ReactNode; className?: string }) {
@@ -66,14 +68,14 @@ export function BudgetProposalFormFields({
 
   return (
     <div className="space-y-6">
-      <Section step={1} title="Organization Details" description="Pre-filled from your organization profile. Update them if anything changed.">
+      <Section step={1} title="Organization Details" description="Name, barangay, contact number and e-mail come from your organization profile. To change them, update your Organization Profile.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Name of Organization"><Input className={inputClass} {...text("organizationName")} /></Field>
-          <Field label="Barangay"><Input className={inputClass} {...text("barangay")} /></Field>
+          <Field label="Name of Organization"><Input className={lockedClass} value={value.organizationName} readOnly /></Field>
+          <Field label="Barangay"><Input className={lockedClass} value={value.barangay} readOnly /></Field>
           <div className="sm:col-span-2">{centerOfParticipationField}</div>
           <Field label="Project Head" className="sm:col-span-2"><Input className={inputClass} {...text("projectHead")} /></Field>
-          <Field label="Contact Number"><Input className={inputClass} inputMode="tel" {...text("contactNumber")} /></Field>
-          <Field label="E-mail Address"><Input className={inputClass} type="email" {...text("email")} /></Field>
+          <Field label="Contact Number"><Input className={lockedClass} value={value.contactNumber} readOnly /></Field>
+          <Field label="E-mail Address"><Input className={lockedClass} value={value.email} readOnly /></Field>
         </div>
 
         <div className="space-y-2">
@@ -138,15 +140,17 @@ export function BudgetProposalFormFields({
         </Field>
       </Section>
 
-      <Section step={3} title="Course Content and Session Flow" description="Programme: time, topic/activity and person assigned.">
+      <Section step={3} title="Course Content and Session Flow" description="Programme: start and end time, topic/activity and person assigned.">
         <div className="space-y-3">
           {value.programme.map((row, index) => (
-            <div key={index} className="grid grid-cols-1 sm:grid-cols-[150px_1fr_180px_auto] gap-2 items-start rounded-xl border border-border/50 p-3 sm:border-0 sm:p-0">
-              <Input aria-label={`Programme row ${index + 1} time`} placeholder="Time (e.g. 8:00-9:00 AM)" className={inputClass} value={row.time}
-                onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, time: event.target.value } : r))} />
-              <Input aria-label={`Programme row ${index + 1} topic or activity`} placeholder="Topic/Activity" className={inputClass} value={row.activity}
+            <div key={index} className="grid grid-cols-2 sm:grid-cols-[120px_120px_1fr_180px_auto] gap-2 items-start rounded-xl border border-border/50 p-3 sm:border-0 sm:p-0">
+              <Input aria-label={`Programme row ${index + 1} start time`} title="Start time" type="time" className={inputClass} value={row.startTime ?? ""}
+                onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, startTime: event.target.value, time: undefined } : r))} />
+              <Input aria-label={`Programme row ${index + 1} end time`} title="End time" type="time" className={inputClass} value={row.endTime ?? ""}
+                onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, endTime: event.target.value, time: undefined } : r))} />
+              <Input aria-label={`Programme row ${index + 1} topic or activity`} placeholder="Topic/Activity" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={row.activity}
                 onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, activity: event.target.value } : r))} />
-              <Input aria-label={`Programme row ${index + 1} person assigned`} placeholder="Person Assigned" className={inputClass} value={row.personAssigned}
+              <Input aria-label={`Programme row ${index + 1} person assigned`} placeholder="Person Assigned" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={row.personAssigned}
                 onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, personAssigned: event.target.value } : r))} />
               <Button type="button" variant="ghost" size="sm" aria-label={`Remove programme row ${index + 1}`} disabled={value.programme.length === 1}
                 onClick={() => set("programme", value.programme.filter((_, i) => i !== index))} className="h-10 text-muted-foreground hover:text-destructive">

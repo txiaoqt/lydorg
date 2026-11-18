@@ -12,6 +12,7 @@ import {
   budgetItemTotal,
   compactProposalForm,
   formatImplementationTimeline,
+  programmeRowTime,
   proposalBudgetTotal,
   PROPOSAL_TEAM_SIZE,
   type BudgetProposalForm,
@@ -185,8 +186,8 @@ export async function generateBudgetProposalPdf({ form: rawForm, centerOfPartici
   centered("COURSE CONTENT AND SESSION FLOW", 10.5);
   centered("PROGRAMME", 10.5);
   table(
-    form.programme.map(row => [answer(row.time), answer(row.activity), answer(row.personAssigned)]),
-    { 0: { cellWidth: 100 }, 2: { cellWidth: 120 } },
+    form.programme.map(row => [answer(programmeRowTime(row)), answer(row.activity), answer(row.personAssigned)]),
+    { 0: { cellWidth: 125 }, 2: { cellWidth: 120 } },
     [[blueHead("TIME"), blueHead("TOPIC/ACTIVITY"), blueHead("PERSON ASSIGNED")]],
   );
 

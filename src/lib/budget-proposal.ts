@@ -4,7 +4,8 @@ export const PROPOSAL_MAX_TOTAL = 50000;
 export const PROPOSAL_TEAM_SIZE = 10;
 
 export type ProposalTeamMember = { name: string; role: string };
-export type ProposalProgrammeRow = { time: string; activity: string; personAssigned: string };
+/** Start/end come from time pickers; `time` is free text kept for answers saved before the pickers. */
+export type ProposalProgrammeRow = { startTime?: string; endTime?: string; time?: string; activity: string; personAssigned: string };
 export type ProposalBudgetItem = { description: string; quantity: number; units: string; unitCost: number };
 
 export type BudgetProposalForm = {
@@ -31,7 +32,7 @@ export type BudgetProposalForm = {
   notedBy: string;
 };
 
-export const emptyProgrammeRow = (): ProposalProgrammeRow => ({ time: "", activity: "", personAssigned: "" });
+export const emptyProgrammeRow = (): ProposalProgrammeRow => ({ startTime: "", endTime: "", activity: "", personAssigned: "" });
 export const emptyBudgetItem = (): ProposalBudgetItem => ({ description: "", quantity: 0, units: "", unitCost: 0 });
 
 export const createEmptyProposalForm = (profile?: {
@@ -63,14 +64,19 @@ export const createEmptyProposalForm = (profile?: {
   notedBy: "",
 });
 
+/** Profile-owned details: read-only in the form and always taken from the current profile. */
+const PROFILE_FIELDS = ["organizationName", "barangay", "contactNumber", "email"] as const;
+
 /** Fill any missing keys so answers saved by an older form version still open. */
 export const normalizeProposalForm = (value: unknown, fallback: BudgetProposalForm): BudgetProposalForm => {
   if (!value || typeof value !== "object") return fallback;
   const saved = value as Partial<BudgetProposalForm>;
   const team = Array.isArray(saved.teamMembers) ? saved.teamMembers : [];
+  const fromProfile = Object.fromEntries(PROFILE_FIELDS.filter(key => fallback[key]).map(key => [key, fallback[key]]));
   return {
     ...fallback,
     ...saved,
+    ...fromProfile,
     teamMembers: Array.from({ length: PROPOSAL_TEAM_SIZE }, (_, i) => ({ name: team[i]?.name ?? "", role: team[i]?.role ?? "" })),
     programme: Array.isArray(saved.programme) && saved.programme.length ? saved.programme : fallback.programme,
     budgetItems: Array.isArray(saved.budgetItems) && saved.budgetItems.length
@@ -90,7 +96,7 @@ const filled = (value: string) => value.trim().length > 0;
 /** Only rows the org actually filled are stored, printed and counted. */
 export const compactProposalForm = (form: BudgetProposalForm): BudgetProposalForm => ({
   ...form,
-  programme: form.programme.filter(row => filled(row.time) || filled(row.activity) || filled(row.personAssigned)),
+  programme: form.programme.filter(row => filled(row.startTime ?? "") || filled(row.endTime ?? "") || filled(row.time ?? "") || filled(row.activity) || filled(row.personAssigned)),
   budgetItems: form.budgetItems.filter(item => filled(item.description) || filled(item.units) || item.quantity > 0 || item.unitCost > 0),
 });
 
@@ -100,6 +106,10 @@ const formatTime = (value: string) => {
   const hours = Number(match[1]);
   return `${hours % 12 || 12}:${match[2]} ${hours < 12 ? "AM" : "PM"}`;
 };
+
+/** "8:00 AM – 9:00 AM" for picked times, or the older free-text time. */
+export const programmeRowTime = (row: ProposalProgrammeRow) =>
+  row.startTime || row.endTime ? [row.startTime, row.endTime].filter(Boolean).map(value => formatTime(value!)).join(" – ") : (row.time ?? "");
 
 /** "18 December 2026, 8:00 AM – 5:00 PM", the template's single "Date and Time of Implementation" line. */
 export const formatImplementationTimeline = (form: Pick<BudgetProposalForm, "implementationDate" | "startTime" | "endTime">) => {
@@ -117,12 +127,17 @@ export const validateProposalForm = (form: BudgetProposalForm, mode: "draft" | "
   if (total > PROPOSAL_MAX_TOTAL) return "The budget TOTAL cannot exceed ₱50,000.00.";
   if (mode === "draft") return null;
 
-  const required: Array<[string, string]> = [
+  const fromProfile: Array<[string, string]> = [
     ["Name of Organization", form.organizationName],
     ["Barangay", form.barangay],
-    ["Project Head", form.projectHead],
     ["Contact Number", form.contactNumber],
     ["E-mail Address", form.email],
+  ];
+  const missingProfile = fromProfile.find(([, value]) => !filled(value));
+  if (missingProfile) return `${missingProfile[0]} is missing from your organization profile. Update your Organization Profile first.`;
+
+  const required: Array<[string, string]> = [
+    ["Project Head", form.projectHead],
     ["About the Organization", form.aboutOrganization],
     ["Implementation date", form.implementationDate],
     ["Start time", form.startTime],
@@ -145,8 +160,10 @@ export const validateProposalForm = (form: BudgetProposalForm, mode: "draft" | "
 
   const programme = compactProposalForm(form).programme;
   if (!programme.length) return "Add at least one programme row.";
-  if (programme.some(row => !filled(row.time) || !filled(row.activity) || !filled(row.personAssigned))) {
-    return "Each programme row needs a time, a topic/activity and a person assigned.";
+  if (programme.some(row => !(row.startTime && row.endTime) && !filled(row.time ?? ""))) return "Each programme row needs a start and end time.";
+  if (programme.some(row => row.startTime && row.endTime && row.endTime <= row.startTime)) return "Each programme row's end time must be later than its start time.";
+  if (programme.some(row => !filled(row.activity) || !filled(row.personAssigned))) {
+    return "Each programme row needs a topic/activity and a person assigned.";
   }
 
   const items = compactProposalForm(form).budgetItems;

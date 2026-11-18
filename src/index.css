@@ -1376,3 +1376,9 @@
 @media (min-width: 640px) { .public-page-hero-body { min-height: 264px; } }
 @media (min-width: 768px) { .public-page-hero-body { min-height: 238px; } }
 @media (min-width: 1280px) { .public-page-hero-body { min-height: 213px; } }
+
+/* Profile edit: after a blocked save, outline every required field that is still empty. */
+[data-show-required-errors="true"] :is(input, select):invalid {
+  border-color: rgb(239 68 68);
+  box-shadow: 0 0 0 2px rgb(239 68 68 / 0.2);
+}

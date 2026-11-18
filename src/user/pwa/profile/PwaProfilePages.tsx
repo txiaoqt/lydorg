@@ -615,6 +615,37 @@ export function PwaProfileEdit({ data }: { data: PortalData }) {
 
   const save = async () => {
     if (!data.user) return;
+    // Every field marked * must be filled; open its section and focus the first empty one.
+    const requiredFields: Array<[section: string, label: string, value: unknown]> = [
+      ["basic", "Primary Contact Number", draft.contactNumber],
+      ["location", "Major Classification", draft.majorClassification],
+      ["location", "Sub-classification", draft.subClassification],
+      ["contact", "Head First Name", draft.representativeFirstName],
+      ["contact", "Head Last Name", draft.representativeLastName],
+      ["contact", "Adviser First Name", draft.adviserFirstName],
+      ["contact", "Adviser Last Name", draft.adviserLastName],
+      ["contact", "Street Address", draft.addressStreet],
+      ["contact", "Barangay", draft.addressBarangay || draft.barangay],
+      ["contact", "ZIP Code", draft.addressZipCode],
+    ];
+    const missing = requiredFields.filter(([, , value]) => !String(value ?? "").trim());
+    if (missing.length) {
+      const [section, label] = missing[0];
+      setOpenSection(section);
+      toast({
+        title: `Complete ${missing.length} required field${missing.length === 1 ? "" : "s"} before saving`,
+        description: missing.map(([, fieldLabel]) => fieldLabel).join(", "),
+        variant: "destructive",
+      });
+      window.setTimeout(() => {
+        const field = Array.from(document.querySelectorAll<HTMLLabelElement>(".pwa-profile-editor-field"))
+          .find((item) => item.querySelector("span")?.textContent?.replace(" *", "") === label)
+          ?.querySelector<HTMLInputElement | HTMLSelectElement>("input, select");
+        field?.scrollIntoView({ behavior: "smooth", block: "center" });
+        field?.focus({ preventScroll: true });
+      }, 250);
+      return;
+    }
     const isAlreadyVerified = data.profile?.profileStatus === "verified" || draft.profileStatus === "verified";
     const nextProfileStatus: OrganizationProfile["profileStatus"] = isAlreadyVerified
       ? "verified"

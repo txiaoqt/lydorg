@@ -5,6 +5,7 @@ import {
   createEmptyProposalForm,
   formatImplementationTimeline,
   normalizeProposalForm,
+  programmeRowTime,
   proposalBudgetTotal,
   validateProposalForm,
   type BudgetProposalForm,
@@ -43,7 +44,7 @@ const completeForm = (): BudgetProposalForm => ({
   methodology: "Plan, run, evaluate.",
   objectives: "Learn three crafts.",
   expectedOutput: "Thirty finished crafts.",
-  programme: [{ time: "8:00-9:00 AM", activity: "Registration", personAssigned: "Secretariat" }],
+  programme: [{ startTime: "08:00", endTime: "09:00", activity: "Registration", personAssigned: "Secretariat" }],
   budgetItems: [
     { description: "Snacks", quantity: 30, units: "packs", unitCost: 85.5 },
     { description: "Materials", quantity: 3, units: "sets", unitCost: 1000.333 },
@@ -70,7 +71,10 @@ describe("budget proposal answers", () => {
     expect(validateProposalForm(draft, "submit")).not.toBeNull();
     expect(validateProposalForm(completeForm(), "submit")).toBeNull();
     expect(validateProposalForm({ ...completeForm(), endTime: "07:00" }, "submit")).toMatch("End time");
-    expect(validateProposalForm({ ...completeForm(), programme: [{ time: "", activity: "", personAssigned: "" }] }, "submit")).toMatch("programme");
+    expect(validateProposalForm({ ...completeForm(), programme: [{ startTime: "", endTime: "", activity: "", personAssigned: "" }] }, "submit")).toMatch("programme");
+    expect(validateProposalForm({ ...completeForm(), programme: [{ startTime: "09:00", endTime: "08:00", activity: "A", personAssigned: "B" }] }, "submit")).toMatch("end time");
+    // Answers saved before the pickers still pass with their free-text time.
+    expect(validateProposalForm({ ...completeForm(), programme: [{ time: "8:00-9:00 AM", activity: "A", personAssigned: "B" }] }, "submit")).toBeNull();
   });
 
   it("drops blank rows and reopens saved answers with all 10 team slots", () => {
@@ -79,7 +83,21 @@ describe("budget proposal answers", () => {
     const reopened = normalizeProposalForm({ projectTitle: "Saved", teamMembers: [{ name: "A", role: "B" }] }, createEmptyProposalForm());
     expect(reopened.teamMembers).toHaveLength(10);
     expect(reopened.projectTitle).toBe("Saved");
+    expect(programmeRowTime(completeForm().programme[0])).toBe("8:00 AM – 9:00 AM");
     expect(formatImplementationTimeline(completeForm())).toBe("December 18, 2026, 8:00 AM – 5:00 PM");
+  });
+});
+
+describe("profile-owned organization details", () => {
+  it("reopens saved answers with the current profile details, not stale ones", () => {
+    const current = createEmptyProposalForm({ organizationName: "New Name", barangay: "Kapitolyo", contactNumber: "0917", email: "new@example.test" });
+    const reopened = normalizeProposalForm({ ...completeForm(), organizationName: "Old Name", barangay: "Palatiw" }, current);
+    expect(reopened).toMatchObject({ organizationName: "New Name", barangay: "Kapitolyo", contactNumber: "0917", email: "new@example.test" });
+    expect(reopened.projectTitle).toBe("Palatiw Artisan Seminar");
+  });
+
+  it("points to the profile when a read-only detail is empty", () => {
+    expect(validateProposalForm({ ...completeForm(), contactNumber: "" }, "submit")).toMatch("missing from your organization profile");
   });
 });
 
@@ -108,7 +126,7 @@ describe("proposal PDF", () => {
       "Objectives", "Expected Output", "COURSE CONTENT AND SESSION FLOW", "PROGRAMME", "PERSON ASSIGNED",
       "BUDGETARY REQUIREMENTS: (MAXIMUM OF PHP 50,000.00)", "UNIT COST", "TOTAL:", "PREPARED BY:", "NOTED BY:", "REVIEWED BY:", "APPROVED BY:",
     ]) expect(text).toContain(heading);
-    for (const answer of ["Palatiw Artisans", "Education", "Ana Reyes", "December 18, 2026, 8:00 AM – 5:00 PM", "Thirty finished crafts.", "Registration", "5,566.00", "Maria Santos", "Secretary", "President"]) {
+    for (const answer of ["Palatiw Artisans", "Education", "Ana Reyes", "December 18, 2026, 8:00 AM – 5:00 PM", "Thirty finished crafts.", "Registration", "8:00 AM – 9:00 AM", "5,566.00", "Maria Santos", "Secretary", "President"]) {
       expect(text).toContain(answer);
     }
     for (const signatory of ["REVIEWER ONE", "REVIEWER TWO", "APPROVER NAME", "Officer-in-Charge"]) expect(text).toContain(signatory);

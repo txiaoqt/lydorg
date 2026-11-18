@@ -1,6 +1,6 @@
 import { ZipCodeHint } from "@/components/portal/ZipCodeHint";
 import { sanitizeZipCode } from "@/lib/organization-profile-domain";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Building2,
   User,
@@ -84,6 +84,14 @@ export interface UserPortalOrganizationProfileWorkspaceViewProps {
   budgetEligibility?: BudgetEligibility;
   orgInitiatedActivities?: YPOPOrgActivity[];
 }
+
+/** "Official Adviser — First Name": the field's own label, prefixed by its group when one is marked. */
+const describeRequiredField = (field: HTMLElement) => {
+  const wrapper = field.closest("div.space-y-1, div.space-y-1\\.5");
+  const label = (wrapper?.querySelector("label, span.font-semibold")?.textContent ?? field.getAttribute("placeholder") ?? "Field").replace("*", "").trim();
+  const group = field.closest<HTMLElement>("[data-field-group]")?.dataset.fieldGroup;
+  return group ? `${group} — ${label}` : label;
+};
 
 export const UserPortalOrganizationProfileWorkspaceView: React.FC<
   UserPortalOrganizationProfileWorkspaceViewProps
@@ -193,7 +201,27 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
     setIsFormDirty(true);
   };
 
+  const editFormRef = useRef<HTMLDivElement | null>(null);
+  const [showRequiredErrors, setShowRequiredErrors] = useState(false);
+
   const handleSave = async () => {
+    // Every asterisked field carries `required`; block the save and point at what is still empty.
+    const fields = Array.from(editFormRef.current?.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input[required], select[required]") ?? []);
+    const missing = fields.filter((field) => !field.disabled && !field.checkValidity());
+    if (missing.length) {
+      setShowRequiredErrors(true);
+      const names = missing.map(describeRequiredField);
+      toast({
+        title: `Complete ${missing.length} required field${missing.length === 1 ? "" : "s"} before saving`,
+        description: names.join(", "),
+        variant: "destructive",
+      });
+      missing[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      missing[0].focus({ preventScroll: true });
+      missing[0].reportValidity();
+      return;
+    }
+    setShowRequiredErrors(false);
     await saveOrganizationProfile();
     setIsFormDirty(false);
   };
@@ -312,7 +340,11 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
 
       {/* 3. EDIT PROFILE MODE */}
       {showProfileEditSection ? (
-        <Card className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-6 relative pb-28 transition-all duration-200">
+        <Card
+          ref={editFormRef}
+          data-show-required-errors={showRequiredErrors ? "true" : undefined}
+          className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 shadow-xs space-y-6 relative pb-28 transition-all duration-200"
+        >
           <div className="flex items-center justify-between border-b border-border/60 pb-4">
             <div className="space-y-0.5">
               <h2 className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
@@ -399,6 +431,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <label htmlFor="profile-major-classification" className="text-xs font-semibold text-foreground">Major Classification <span className="text-red-500">*</span></label>
                 <select
                   id="profile-major-classification"
+                  required
                   value={profileDraft.majorClassification || ""}
                   onChange={(e) => onFieldChange("majorClassification", e.target.value)}
                   className="h-9 w-full rounded-xl bg-background border border-border px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
@@ -413,6 +446,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
                 <label htmlFor="profile-sub-classification" className="text-xs font-semibold text-foreground">Sub Classification <span className="text-red-500">*</span></label>
                 <select
                   id="profile-sub-classification"
+                  required
                   value={profileDraft.subClassification || ""}
                   onChange={(e) => onFieldChange("subClassification", e.target.value)}
                   className="h-9 w-full rounded-xl bg-background border border-border px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
@@ -478,7 +512,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
 
             {/* Head of Organization */}
-            <div className="space-y-2.5">
+            <div className="space-y-2.5" data-field-group="Head of Organization">
               <div className="border-b border-border/40 pb-1">
                 <h4 className="text-xs font-semibold text-foreground">Head of Organization</h4>
                 <p className="text-[11px] text-muted-foreground">Authorized youth leader heading the organization.</p>
@@ -538,7 +572,7 @@ export const UserPortalOrganizationProfileWorkspaceView: React.FC<
             </div>
 
             {/* Official Adviser */}
-            <div className="space-y-2.5 pt-2">
+            <div className="space-y-2.5 pt-2" data-field-group="Official Adviser">
               <div className="border-b border-border/40 pb-1">
                 <h4 className="text-xs font-semibold text-foreground">Official Adviser</h4>
                 <p className="text-[11px] text-muted-foreground">Faculty, community leader, or designated adult adviser.</p>
