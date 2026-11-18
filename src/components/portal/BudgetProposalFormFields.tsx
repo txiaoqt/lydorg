@@ -81,7 +81,8 @@ export function BudgetProposalFormFields({
         <div className="space-y-2">
           <p className="text-xs font-bold text-foreground">Team Members <span className="text-red-500">*</span></p>
           <p className="text-[11px] text-muted-foreground">Up to 10 members. Fill in at least one.</p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
+          {/* Column-first so 1–5 run down the left and 6–10 down the right. */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-flow-col lg:grid-rows-5 gap-x-4 gap-y-2">
             {value.teamMembers.map((member, index) => (
               <div key={index} className="flex items-center gap-2">
                 <span className="w-5 shrink-0 text-right text-xs font-bold text-muted-foreground">{index + 1}</span>
@@ -142,15 +143,21 @@ export function BudgetProposalFormFields({
 
       <Section step={3} title="Course Content and Session Flow" description="Programme: start and end time, topic/activity and person assigned.">
         <div className="space-y-3">
+          <div aria-hidden="true" className="hidden sm:grid grid-cols-[120px_120px_1fr_180px_auto] gap-2 text-[11px] font-bold text-foreground">
+            <span>Start <span className="text-red-500">*</span></span>
+            <span>End <span className="text-red-500">*</span></span>
+            <span>Topic/Activity <span className="text-red-500">*</span></span>
+            <span>Person Assigned <span className="text-red-500">*</span></span>
+          </div>
           {value.programme.map((row, index) => (
             <div key={index} className="grid grid-cols-2 sm:grid-cols-[120px_120px_1fr_180px_auto] gap-2 items-start rounded-xl border border-border/50 p-3 sm:border-0 sm:p-0">
               <Input aria-label={`Programme row ${index + 1} start time`} title="Start time" type="time" className={inputClass} value={row.startTime ?? ""}
                 onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, startTime: event.target.value, time: undefined } : r))} />
               <Input aria-label={`Programme row ${index + 1} end time`} title="End time" type="time" className={inputClass} value={row.endTime ?? ""}
                 onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, endTime: event.target.value, time: undefined } : r))} />
-              <Input aria-label={`Programme row ${index + 1} topic or activity`} placeholder="Topic/Activity" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={row.activity}
+              <Input aria-label={`Programme row ${index + 1} topic or activity`} placeholder="Topic/Activity *" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={row.activity}
                 onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, activity: event.target.value } : r))} />
-              <Input aria-label={`Programme row ${index + 1} person assigned`} placeholder="Person Assigned" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={row.personAssigned}
+              <Input aria-label={`Programme row ${index + 1} person assigned`} placeholder="Person Assigned *" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={row.personAssigned}
                 onChange={(event) => set("programme", value.programme.map((r, i) => i === index ? { ...r, personAssigned: event.target.value } : r))} />
               <Button type="button" variant="ghost" size="sm" aria-label={`Remove programme row ${index + 1}`} disabled={value.programme.length === 1}
                 onClick={() => set("programme", value.programme.filter((_, i) => i !== index))} className="h-10 text-muted-foreground hover:text-destructive">
@@ -166,15 +173,22 @@ export function BudgetProposalFormFields({
 
       <Section step={4} title="Budgetary Requirements" description="Maximum of PHP 50,000.00. Each row's total and the TOTAL are computed for you.">
         <div className="space-y-3">
+          <div aria-hidden="true" className="hidden sm:grid grid-cols-[1fr_90px_90px_120px_120px_auto] gap-2 text-[11px] font-bold text-foreground">
+            <span>Details/Description <span className="text-red-500">*</span></span>
+            <span>Quantity <span className="text-red-500">*</span></span>
+            <span>Units <span className="text-red-500">*</span></span>
+            <span>Unit Cost <span className="text-red-500">*</span></span>
+            <span>Total</span>
+          </div>
           {value.budgetItems.map((item, index) => (
             <div key={index} className="grid grid-cols-2 sm:grid-cols-[1fr_90px_90px_120px_120px_auto] gap-2 items-center rounded-xl border border-border/50 p-3 sm:border-0 sm:p-0">
-              <Input aria-label={`Budget row ${index + 1} details or description`} placeholder="Details/Description" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={item.description}
+              <Input aria-label={`Budget row ${index + 1} details or description`} placeholder="Details/Description *" className={cn(inputClass, "col-span-2 sm:col-span-1")} value={item.description}
                 onChange={(event) => set("budgetItems", value.budgetItems.map((r, i) => i === index ? { ...r, description: event.target.value } : r))} />
-              <Input aria-label={`Budget row ${index + 1} quantity`} placeholder="Quantity" type="number" min="0" step="any" className={inputClass} value={item.quantity || ""}
+              <Input aria-label={`Budget row ${index + 1} quantity`} placeholder="Quantity *" type="number" min="0" step="any" className={inputClass} value={item.quantity || ""}
                 onChange={(event) => set("budgetItems", value.budgetItems.map((r, i) => i === index ? { ...r, quantity: Number(event.target.value) || 0 } : r))} />
-              <Input aria-label={`Budget row ${index + 1} units`} placeholder="Units" className={inputClass} value={item.units}
+              <Input aria-label={`Budget row ${index + 1} units`} placeholder="Units *" className={inputClass} value={item.units}
                 onChange={(event) => set("budgetItems", value.budgetItems.map((r, i) => i === index ? { ...r, units: event.target.value } : r))} />
-              <Input aria-label={`Budget row ${index + 1} unit cost`} placeholder="Unit Cost" type="number" min="0" step="0.01" className={cn(inputClass, "font-mono")} value={item.unitCost || ""}
+              <Input aria-label={`Budget row ${index + 1} unit cost`} placeholder="Unit Cost *" type="number" min="0" step="0.01" className={cn(inputClass, "font-mono")} value={item.unitCost || ""}
                 onChange={(event) => set("budgetItems", value.budgetItems.map((r, i) => i === index ? { ...r, unitCost: Number(event.target.value) || 0 } : r))} />
               <span className="text-xs font-mono font-bold text-foreground text-right sm:text-left" aria-label={`Budget row ${index + 1} total`}>{peso(budgetItemTotal(item))}</span>
               <Button type="button" variant="ghost" size="sm" aria-label={`Remove budget row ${index + 1}`} disabled={value.budgetItems.length === 1}
