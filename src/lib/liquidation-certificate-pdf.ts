@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import { PCYDO_A4_TEMPLATE_DATA_URL } from "./report-letterhead-assets";
 import { ensurePdfFonts } from "./report-export";
 import type { LiquidationCertificate } from "./liquidation-certificate";
+import { getOfficialSignatories } from "./admin-system-settings";
 
 const dateFormatter = new Intl.DateTimeFormat("en-PH", {
   timeZone: "Asia/Manila", month: "long", day: "numeric", year: "numeric",
@@ -62,15 +63,20 @@ export async function generateLiquidationCertificatePdf(certificate: Liquidation
     y += lines.length * layout.fontSize * 1.45 + 12;
   }
 
-  const signatureCenter = width - 173;
-  doc.setFont("SegoeUIBold", "bold");
-  doc.setFontSize(11);
-  doc.text("Alyssa Marie Dela Cruz", signatureCenter, 640, { align: "center" });
-  doc.setFont("SegoeUI", "normal");
-  doc.setFontSize(10);
-  doc.text("Head of PCYDO", signatureCenter, 657, { align: "center" });
-  doc.setFontSize(9);
-  doc.text("Pasig City Youth Development Office", signatureCenter, 674, { align: "center" });
+  // All three PCYDO signatories from General settings, side by side above the reference lines.
+  const { reviewers, approver } = getOfficialSignatories();
+  const columnWidth = bodyWidth / 3;
+  [...reviewers, approver].forEach((signatory, index) => {
+    const center = left + columnWidth * (index + 0.5);
+    doc.setFont("SegoeUIBold", "bold");
+    doc.setFontSize(9.5);
+    doc.text(doc.splitTextToSize(signatory.name, columnWidth - 8), center, 640, { align: "center" });
+    doc.setFont("SegoeUI", "normal");
+    doc.setFontSize(8.5);
+    doc.text(doc.splitTextToSize(signatory.position, columnWidth - 8), center, 668, { align: "center" });
+    doc.setFontSize(8);
+    doc.text("Pasig City Youth Development Office", center, 692, { align: "center", maxWidth: columnWidth - 4 });
+  });
 
   doc.setFontSize(8.5);
   doc.text(`Document Reference No.: ${certificate.certificateReference}`, left, 735, { maxWidth: bodyWidth });

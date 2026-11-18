@@ -9,6 +9,7 @@ import {
   type PdfPageConfig,
   type PdfReportHeading,
 } from "./report-export";
+import { getOfficialSignatories } from "./admin-system-settings";
 
 // Layout and styling follow the PCYDO 2025 letterhead report references (A4 portrait, 1" margins).
 type Rgb = [number, number, number];
@@ -291,23 +292,24 @@ export const drawBullets = (r: OfficialReport, items: Array<{ lead: string; text
   r.y += 12;
 };
 
-export const OFFICIAL_SIGNATORIES = [
-  { heading: "Prepared by", position: "Youth Development Officer I" },
-  { heading: "Certified True and Correct", position: "Youth Development Officer II" },
-  { heading: "Noted by", position: "Officer-in-Charge" },
-];
+/** Sign-off headings in order; names and positions come from the Signatories in General settings. */
+export const OFFICIAL_SIGNATORY_HEADINGS = ["Prepared by", "Certified True and Correct", "Noted by"];
 
 /** Three-column sign-off block with blank signature space for wet signatures. */
 export const drawSignatories = (r: OfficialReport) => {
   r.y += 14;
   const center = { halign: "center" as const };
+  const { reviewers, approver } = getOfficialSignatories();
+  const signatories = [...reviewers, approver];
   drawOfficialTable(r, {
-    head: OFFICIAL_SIGNATORIES.map(item => ({ content: item.heading, styles: { ...boldStyle(r), ...center, fillColor: OFFICIAL_REPORT_COLORS.lightBlue } })),
+    head: OFFICIAL_SIGNATORY_HEADINGS.map(heading => ({ content: heading, styles: { ...boldStyle(r), ...center, fillColor: OFFICIAL_REPORT_COLORS.lightBlue } })),
     body: [
-      OFFICIAL_SIGNATORIES.map(() => ({ content: "", styles: { minCellHeight: 46 } })),
-      OFFICIAL_SIGNATORIES.map(item => ({
-        content: `${item.position}\nPasig City Youth Development Office`,
-        styles: { ...center, cellPadding: { top: 5, bottom: 5, left: 2, right: 2 } },
+      signatories.map(() => ({ content: "", styles: { minCellHeight: 30 } })),
+      signatories.map(item => ({ content: item.name, styles: { ...boldStyle(r), ...center, cellPadding: { top: 5, bottom: 1, left: 2, right: 2 }, lineWidth: { top: 0.75, right: 0.75, bottom: 0, left: 0.75 } } })),
+      signatories.map(item => ({
+        content: `${item.position}
+Pasig City Youth Development Office`,
+        styles: { ...center, cellPadding: { top: 1, bottom: 5, left: 2, right: 2 }, lineWidth: { top: 0, right: 0.75, bottom: 0.75, left: 0.75 } },
       })),
     ],
     columnStyles: { 0: { cellWidth: r.width / 3 }, 1: { cellWidth: r.width / 3 }, 2: { cellWidth: r.width / 3 } },

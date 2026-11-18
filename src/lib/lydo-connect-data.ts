@@ -1285,7 +1285,8 @@ export type BudgetRequest = {
   activityTitle: string;
   activityDescription: string;
   activityDate: string;
-  venue: string;
+  /** Saved answers of the YPOP Project Proposal template (see budget-proposal.ts). */
+  proposalForm?: unknown;
   requestedAmount: number;
   approvedAmount: number;
   releasedAmount: number;
@@ -2435,7 +2436,6 @@ export const seedState: LydoSeedState = {
       activityTitle: "Youth Leadership Summit 2026",
       activityDescription: "A two-day leadership summit for youth leaders across all barangays.",
       activityDate: "2026-04-25T00:00:00.000Z",
-      venue: "Pasig City Hall Function Room",
       requestedAmount: 25000,
       approvedAmount: 20000,
       releasedAmount: 20000,
@@ -2462,7 +2462,6 @@ export const seedState: LydoSeedState = {
       activityTitle: "Community Sports Festival",
       activityDescription: "A day-long sports event open to all youth members in the barangay to promote health and camaraderie.",
       activityDate: "2026-07-12T00:00:00.000Z",
-      venue: "Pasig City Sports Complex",
       requestedAmount: 15000,
       approvedAmount: 0,
       releasedAmount: 0,
@@ -2484,7 +2483,6 @@ export const seedState: LydoSeedState = {
       activityTitle: "Youth Skills Training Workshop",
       activityDescription: "A two-day skills training covering digital literacy, communication, and basic entrepreneurship for youth aged 15–24.",
       activityDate: "2026-08-05T00:00:00.000Z",
-      venue: "PCYDO Training Hall",
       requestedAmount: 18000,
       approvedAmount: 0,
       releasedAmount: 0,
@@ -2509,7 +2507,6 @@ export const seedState: LydoSeedState = {
       activityTitle: "Youth Sports Development Program",
       activityDescription: "A series of sports clinics and tournaments promoting health and teamwork among youth members. This activity is funded through the YPOP Project Grant incentive.",
       activityDate: "2026-08-20T00:00:00.000Z",
-      venue: "Pasig City Sports Complex",
       requestedAmount: 25000,
       approvedAmount: 0,
       releasedAmount: 0,
@@ -2533,7 +2530,6 @@ export const seedState: LydoSeedState = {
       activityTitle: "Environmental Awareness Clean-Up Drive",
       activityDescription: "Community clean-up drive along the Pasig riverbanks.",
       activityDate: "2026-05-10T00:00:00.000Z",
-      venue: "Malanday Riverbank Area",
       requestedAmount: 12000,
       approvedAmount: 12000,
       releasedAmount: 0,

@@ -79,6 +79,8 @@ import { FeatureGate } from "./FeatureGate";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 import { formatFileSize } from "./UserPortalTemplatesWorkspaceView";
+import { BudgetProposalFormFields } from "./BudgetProposalFormFields";
+import type { BudgetProposalForm } from "@/lib/budget-proposal";
 import { queryClient } from "@/lib/query-client";
 
 const useIsDesktop = () => {
@@ -113,10 +115,6 @@ export interface UserPortalBudgetWorkspaceViewProps {
   budgetFilesByRequestId: Map<string, any>;
   budgetNotesByRequestId: Record<string, string>;
   submittingBudgetId: string | null;
-  budgetFileInputRef?: React.RefObject<HTMLInputElement> | null;
-  budgetFileDraft?: File | null;
-  handleBudgetFileDraftChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onClearBudgetFileDraft?: () => void;
   showBudgetForm: boolean;
   setShowBudgetForm: (show: boolean) => void;
   editingBudgetRequest: any | null;
@@ -133,24 +131,16 @@ export interface UserPortalBudgetWorkspaceViewProps {
   formatDateTimeLabel: (dateStr: string) => string;
   formatStatusLabel: (status: string) => string;
   // Form submission props
-  newActivityTitle: string;
-  setNewActivityTitle: (val: string) => void;
-  newActivityDescription: string;
-  setNewActivityDescription: (val: string) => void;
   newPurposeCategory: string;
   setNewPurposeCategory: (val: string) => void;
-  newActivityDate: string;
-  setNewActivityDate: (val: string) => void;
-  newVenue: string;
-  setNewVenue: (val: string) => void;
-  newRequestedAmount: string;
-  setNewRequestedAmount: (val: string) => void;
   newRemarks?: string;
   setNewRemarks?: (val: string) => void;
   organizationAdvocacies?: string[];
+  /** Answers of the official YPOP Project Proposal template. */
+  proposalForm: BudgetProposalForm;
+  onProposalFormChange: (next: BudgetProposalForm) => void;
   /** hasExistingFile: this view already has the saved proposal file, which the portal state may not have loaded. */
   handleCreateOrUpdateBudgetRequest: (event: React.FormEvent, isDraft?: boolean, hasExistingFile?: boolean) => Promise<void>;
-  onReplaceBudgetFile?: (budgetRequestId: string, file: File) => Promise<void>;
   onResubmitBudgetRequest?: (budgetRequestId: string) => Promise<void>;
 }
 
@@ -164,10 +154,6 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
   budgetFilesByRequestId,
   budgetNotesByRequestId,
   submittingBudgetId,
-  budgetFileInputRef,
-  budgetFileDraft,
-  handleBudgetFileDraftChange,
-  onClearBudgetFileDraft,
   showBudgetForm,
   setShowBudgetForm,
   editingBudgetRequest,
@@ -183,23 +169,14 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
   formatShortPortalDate,
   formatDateTimeLabel,
   formatStatusLabel,
-  newActivityTitle,
-  setNewActivityTitle,
-  newActivityDescription,
-  setNewActivityDescription,
   newPurposeCategory,
   setNewPurposeCategory,
-  newActivityDate,
-  setNewActivityDate,
-  newVenue,
-  setNewVenue,
-  newRequestedAmount,
-  setNewRequestedAmount,
   newRemarks = "",
   setNewRemarks,
   organizationAdvocacies = [],
+  proposalForm,
+  onProposalFormChange,
   handleCreateOrUpdateBudgetRequest,
-  onReplaceBudgetFile,
   onResubmitBudgetRequest,
 }) => {
   const isDesktop = useIsDesktop();
@@ -275,27 +252,13 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
   );
   const activeDashboardSummary = organizationDashboardSummary ?? dashboardSummaryQuery.data;
 
-  const internalFileInputRef = React.useRef<HTMLInputElement | null>(null);
-  const replaceFileInputRef = React.useRef<HTMLInputElement | null>(null);
-  const [isReplacingBudgetFile, setIsReplacingBudgetFile] = useState<boolean>(false);
-
+  // A revision is made by editing the saved proposal answers; the PDF is rebuilt on save.
+  const isReplacingBudgetFile = false;
   const handleTriggerReplaceBudgetFile = () => {
-    replaceFileInputRef.current?.click();
-  };
-
-  const handleReplaceFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedRequest || !onReplaceBudgetFile) return;
-    try {
-      setIsReplacingBudgetFile(true);
-      await onReplaceBudgetFile(selectedRequest.id, file);
-      await Promise.all([selectedBudgetFilesQuery.refetch(), budgetPageFilesQuery.refetch()]);
-    } catch (err) {
-      console.error("Failed to replace budget proposal file:", err);
-    } finally {
-      setIsReplacingBudgetFile(false);
-      if (e.target) e.target.value = "";
-    }
+    if (!selectedRequest) return;
+    startEditingBudgetRequest(selectedRequest);
+    closeBudgetDetail();
+    setShowBudgetForm(true);
   };
 
   const availableCategories = useMemo(() => {
@@ -309,40 +272,6 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
     }
     return list;
   }, [organizationAdvocacies, editingBudgetRequest?.purposeCategory]);
-  const fileInputRef = budgetFileInputRef || internalFileInputRef;
-  const [internalDraftFile, setInternalDraftFile] = useState<File | null>(null);
-  const activeBudgetFileDraft = budgetFileDraft !== undefined ? budgetFileDraft : internalDraftFile;
-
-  const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (handleBudgetFileDraftChange) {
-      handleBudgetFileDraftChange(e);
-    } else {
-      const file = e.target.files?.[0] ?? null;
-      if (file) {
-        const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-        if (isPdf) {
-          setInternalDraftFile(file);
-        } else {
-          e.target.value = "";
-          setInternalDraftFile(null);
-        }
-      } else {
-        setInternalDraftFile(null);
-      }
-    }
-  };
-
-  const handleClearDraft = () => {
-    if (onClearBudgetFileDraft) {
-      onClearBudgetFileDraft();
-    } else {
-      setInternalDraftFile(null);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
   const existingBudgetFileRaw = editingBudgetRequest ? visibleBudgetFilesByRequestId.get(editingBudgetRequest.id) : null;
   const existingBudgetFile = Array.isArray(existingBudgetFileRaw) ? existingBudgetFileRaw[0] : (existingBudgetFileRaw ?? null);
 
@@ -635,36 +564,14 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
 
           {/* Form Container */}
           <form onSubmit={handleSubmitProposal} className="space-y-6 pb-20">
-            {/* Section 1: Activity Details */}
-            <Card className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 space-y-4 shadow-xs">
-              <div className="border-b border-border/40 pb-3 mb-1">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-md bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
-                    1
-                  </span>
-                  Activity Details
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Title, description, and purpose of your planned activity.</p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Activity Title <span className="text-red-500">*</span></label>
-                  <Input
-                    type="text"
-                    required
-                    placeholder="e.g. Youth Leadership Seminar 2026"
-                    value={newActivityTitle}
-                    onChange={(e) => setNewActivityTitle(e.target.value)}
-                    className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <BudgetProposalFormFields
+              value={proposalForm}
+              onChange={onProposalFormChange}
+              centerOfParticipationField={
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between min-h-[20px]">
                       <label className="text-xs font-bold text-foreground">
-                        Purpose &amp; Category <span className="text-red-500">*</span>
+                        Center of Participation <span className="text-red-500">*</span>
                       </label>
                     </div>
 
@@ -723,325 +630,8 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                       </div>
                     )}
                   </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between min-h-[20px]">
-                      <label className="text-xs font-bold text-foreground">
-                        Requested Budget Amount (₱) <span className="text-red-500">*</span>
-                      </label>
-                      <span className="text-[11px] text-muted-foreground font-normal">
-                        Max: ₱100,000
-                      </span>
-                    </div>
-                    <Input
-                      type="number"
-                      required
-                      min="0.01"
-                      max="100000"
-                      step="any"
-                      placeholder="e.g. 50000"
-                      value={newRequestedAmount}
-                      onFocus={(e) => {
-                        if (e.target.value === "0") {
-                          e.target.select();
-                        }
-                      }}
-                      onClick={(e) => {
-                        if ((e.target as HTMLInputElement).value === "0") {
-                          (e.target as HTMLInputElement).select();
-                        }
-                      }}
-                      onChange={(e) => {
-                        let val = e.target.value;
-                        if (/^0[0-9]+(\.[0-9]*)?$/.test(val)) {
-                          val = val.replace(/^0+/, "");
-                          if (val === "" || val.startsWith(".")) {
-                            val = "0" + val;
-                          }
-                        }
-                        setNewRequestedAmount(val);
-                      }}
-                      className={cn(
-                        "h-10 text-xs rounded-xl bg-background border-border/80 font-mono font-bold focus-visible:ring-1 focus-visible:ring-primary/40",
-                        Number(newRequestedAmount) > 100000 && "border-destructive focus-visible:ring-destructive/40 text-destructive font-bold"
-                      )}
-                    />
-                    {Number(newRequestedAmount) > 100000 ? (
-                      <p className="text-[11px] font-medium text-destructive flex items-center gap-1">
-                        Requested budget amount cannot exceed ₱100,000.
-                      </p>
-                    ) : (
-                      <p className="text-[11px] text-muted-foreground">
-                        Maximum request: ₱100,000
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Purpose Description <span className="text-red-500">*</span></label>
-                  <Textarea
-                    rows={3}
-                    required
-                    placeholder="Briefly describe the purpose, objectives, expected outcomes, and target participants..."
-                    value={newActivityDescription}
-                    onChange={(e) => setNewActivityDescription(e.target.value)}
-                    className="text-xs rounded-xl bg-background border-border/80 resize-y min-h-[76px] focus-visible:ring-1 focus-visible:ring-primary/40"
-                  />
-                </div>
-              </div>
-            </Card>
-
-            {/* Section 2: Schedule & Venue */}
-            <Card className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 space-y-4 shadow-xs">
-              <div className="border-b border-border/40 pb-3 mb-1">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-md bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
-                    2
-                  </span>
-                  Schedule & Location
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Target execution date and location details.</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between min-h-[20px]">
-                    <label className="text-xs font-bold text-foreground">
-                      Target Activity Date <span className="text-red-500">*</span>
-                    </label>
-                  </div>
-                  <Input
-                    type="date"
-                    required
-                    value={newActivityDate}
-                    onChange={(e) => setNewActivityDate(e.target.value)}
-                    className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between min-h-[20px]">
-                    <label className="text-xs font-bold text-foreground">
-                      Venue / Location <span className="text-red-500">*</span>
-                    </label>
-                  </div>
-                  <Input
-                    type="text"
-                    required
-                    placeholder="e.g. Pasig City Youth Center, Oranbo"
-                    value={newVenue}
-                    onChange={(e) => setNewVenue(e.target.value)}
-                    className="h-10 text-xs rounded-xl bg-background border-border/80 focus-visible:ring-1 focus-visible:ring-primary/40"
-                  />
-                </div>
-              </div>
-            </Card>
-
-            {/* Section 3: Detailed Project Proposal */}
-            <Card className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 space-y-4 shadow-xs">
-              <div className="border-b border-border/40 pb-3.5 mb-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-md bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
-                      3
-                    </span>
-                    Detailed Project Proposal <span className="text-red-500">*</span>
-                  </h3>
-                  <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/40">
-                    PDF Only
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload your orgs detailed project budget proposal for administrative review
-                </p>
-                {proposalTemplates.map((template) => (
-                  <div key={template.id} className="mt-3 flex flex-wrap items-center gap-2">
-                    {openPreview && template.templateFileUrl ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openPreview(template.templateFileUrl, template.templateFileName || template.name)}
-                        className="h-8 rounded-xl border-border text-xs font-medium hover:bg-accent cursor-pointer justify-center transition-colors"
-                      >
-                        <Eye aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                        View Template
-                      </Button>
-                    ) : null}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDownloadTemplate?.(template)}
-                      aria-label={`Download template: ${template.name}`}
-                      className="h-8 rounded-xl border-border text-xs font-medium hover:bg-accent cursor-pointer justify-center transition-colors"
-                    >
-                      <Download aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                      Download Template
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Hidden Native File Input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf,.pdf"
-                onChange={onFileInputChange}
-                className="hidden"
-                data-testid="budget-file-input"
-              />
-
-              {/* State A: A new draft file is selected */}
-              {activeBudgetFileDraft ? (
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 transition-all" data-testid="budget-file-draft-card">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-start sm:items-center gap-3 min-w-0">
-                      <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div className="space-y-0.5 min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-xs font-bold text-foreground truncate max-w-[200px] xs:max-w-[260px] sm:max-w-[340px] md:max-w-[420px]" title={activeBudgetFileDraft.name} data-testid="budget-file-draft-name">
-                            {activeBudgetFileDraft.name}
-                          </p>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 shrink-0">
-                            <CheckCircle2 className="h-3 w-3" />
-                            {editingBudgetRequest && existingBudgetFile ? "Replacement Ready" : "Ready"}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground font-mono" data-testid="budget-file-draft-size">
-                          {formatFileSize(activeBudgetFileDraft.size)} • PDF Document
-                        </p>
-                        {editingBudgetRequest && existingBudgetFile && (
-                          <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 pt-0.5">
-                            Replaces: <span className="font-semibold">{existingBudgetFile.fileName}</span> on save.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-1 sm:pt-0">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer active:scale-[0.98] transition-all"
-                        data-testid="replace-budget-file-button"
-                      >
-                        <FileUp className="h-3.5 w-3.5 mr-1" />
-                        Replace
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleClearDraft}
-                        className="h-8 text-xs font-semibold px-2.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer active:scale-[0.98] transition-all"
-                        data-testid="remove-budget-file-button"
-                        title="Remove selected file"
-                      >
-                        <X className="h-3.5 w-3.5 mr-1" />
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : editingBudgetRequest && existingBudgetFile ? (
-                /* State B: In Edit Mode with an existing file and no new draft replacement */
-                <div className="rounded-xl border border-border/70 bg-card p-4 transition-all" data-testid="budget-existing-file-card">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-start sm:items-center gap-3 min-w-0">
-                      <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div className="space-y-0.5 min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-xs font-bold text-foreground truncate max-w-[200px] xs:max-w-[260px] sm:max-w-[340px] md:max-w-[420px]" title={existingBudgetFile.fileName} data-testid="budget-existing-file-name">
-                            {existingBudgetFile.fileName}
-                          </p>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 shrink-0">
-                            Current Attached Document
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground font-mono" data-testid="budget-existing-file-size">
-                          {formatFileSize(existingBudgetFile.fileSize)} • Uploaded {formatShortPortalDate(existingBudgetFile.uploadedAt || existingBudgetFile.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-1 sm:pt-0">
-                      {existingBudgetFile.fileUrl && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (openPreview) {
-                              openPreview(existingBudgetFile.fileUrl, existingBudgetFile.fileName);
-                            } else {
-                              openFile(existingBudgetFile.fileUrl, existingBudgetFile.fileName);
-                            }
-                          }}
-                          className="h-8 text-xs font-semibold px-3 rounded-lg text-primary hover:bg-primary/10 cursor-pointer active:scale-[0.98] transition-all"
-                          data-testid="view-existing-budget-file-button"
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1" />
-                          View
-                        </Button>
-                      )}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="h-8 text-xs font-semibold px-3 rounded-lg border-border hover:bg-accent cursor-pointer active:scale-[0.98] transition-all"
-                        data-testid="replace-existing-budget-file-button"
-                      >
-                        <FileUp className="h-3.5 w-3.5 mr-1" />
-                        Replace Document
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* State C: Empty State (Create mode or Edit mode without existing file) */
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-2xl border-2 border-dashed border-border/80 hover:border-primary/60 bg-muted/20 hover:bg-muted/30 p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
-                  data-testid="budget-file-dropzone"
-                >
-                  <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform duration-200 border border-primary/20 shadow-2xs">
-                    <FileUp className="h-5 w-5" />
-                  </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-foreground mb-1">
-                    Select Detailed Project Proposal
-                  </h4>
-                  <p className="text-[11px] sm:text-xs text-muted-foreground max-w-sm mb-4 leading-relaxed">
-                    Click to browse your device. Attach the itemized line-item budget table for this activity.
-                  </p>
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        fileInputRef.current?.click();
-                      }}
-                      className="h-9 px-4 rounded-xl text-xs font-semibold border-border/80 shadow-2xs group-hover:border-primary/40 cursor-pointer active:scale-[0.98] transition-all"
-                      data-testid="browse-budget-file-button"
-                    >
-                      Browse PDF File
-                    </Button>
-                    <span className="text-[11px] text-muted-foreground font-mono">
-                      PDF format only (Max 10MB)
-                    </span>
-                  </div>
-                </div>
-              )}
-            </Card>
+              }
+            />
 
             {/* Form Actions Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-border/40">
@@ -1394,7 +984,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                 <Search className="absolute left-2.5 top-2.5 sm:top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <Input
                   type="text"
-                  placeholder="Search activity, category, venue..."
+                  placeholder="Search activity or category..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-9 sm:h-8 pl-8 text-xs rounded-xl bg-background border-border/80 w-full focus-visible:ring-1 focus-visible:ring-primary"
@@ -1522,7 +1112,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                       <th className="py-3 px-5">Activity Proposal</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4">Requested / Approved Amount</th>
-                      <th className="py-3 px-4">Schedule & Venue</th>
+                      <th className="py-3 px-4">Schedule</th>
                       <th className="py-3 px-4">Attachment</th>
                       <th className="py-3 px-4">Last Activity</th>
                       <th className="py-3 px-5 text-right">Action</th>
@@ -1597,14 +1187,11 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                               </div>
                             </td>
 
-                            {/* Column 4: Schedule & Venue */}
+                            {/* Column 4: Schedule */}
                             <td className="py-3.5 px-4">
                               <div className="space-y-0.5 text-xs">
                                 <p className="font-semibold text-foreground">
                                   {req.activityDate ? formatShortPortalDate(req.activityDate) : "Not set"}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground truncate max-w-[140px]" title={req.venue}>
-                                  {req.venue || "Pasig City"}
                                 </p>
                               </div>
                             </td>
@@ -1748,7 +1335,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                             <span>{isExpired ? "Revision Deadline Expired (Locked)" : selectedRequest.status === "needs_revision" ? "Admin Revision Feedback" : "Admin Remarks"}</span>
                           </div>
                           <p className="text-xs leading-relaxed pl-5 font-normal italic">
-                            "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
+                            "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and edit your proposal."}"
                           </p>
                           {deadlineText && (
                             <p className="text-xs font-semibold pl-5">
@@ -1759,7 +1346,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                           )}
                           {selectedRequest.status === "needs_revision" && (
                             <div className="pt-1.5 pl-5 flex flex-wrap items-center gap-2">
-                              {onReplaceBudgetFile && (
+                              {(
                                 <Button
                                   type="button"
                                   size="sm"
@@ -1783,7 +1370,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                                   ) : (
                                     <>
                                       <FileUp className="h-3.5 w-3.5" />
-                                      <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
+                                      <span>{isExpired ? "Revision Expired (Locked)" : "Edit Proposal"}</span>
                                     </>
                                   )}
                                 </Button>
@@ -1894,12 +1481,6 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                           <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Target Date</span>
                           <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
                             {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Venue / Location</span>
-                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedRequest.venue}>
-                            {selectedRequest.venue || "Pasig City"}
                           </span>
                         </div>
                       </div>
@@ -2072,7 +1653,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                             <span>{isExpired ? "Revision Deadline Expired (Locked)" : selectedRequest.status === "needs_revision" ? "Admin Revision Feedback" : "Admin Remarks"}</span>
                           </div>
                           <p className="text-xs leading-relaxed pl-5 font-normal italic">
-                            "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and upload an updated document."}"
+                            "{selectedRequest.adminRemarks?.trim() || primaryFile?.adminRemarks?.trim() || "This proposal requires revision according to administrative guidance. Please review the requirements and edit your proposal."}"
                           </p>
                           {deadlineText && (
                             <p className="text-xs font-semibold pl-5">
@@ -2083,7 +1664,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                           )}
                           {selectedRequest.status === "needs_revision" && (
                             <div className="pt-1.5 pl-5 flex flex-wrap items-center gap-2">
-                              {onReplaceBudgetFile && (
+                              {(
                                 <Button
                                   type="button"
                                   size="sm"
@@ -2107,7 +1688,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                                   ) : (
                                     <>
                                       <FileUp className="h-3.5 w-3.5" />
-                                      <span>{isExpired ? "Revision Expired (Locked)" : "Upload Revised Proposal"}</span>
+                                      <span>{isExpired ? "Revision Expired (Locked)" : "Edit Proposal"}</span>
                                     </>
                                   )}
                                 </Button>
@@ -2222,12 +1803,6 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
                             {selectedRequest.activityDate ? formatShortPortalDate(selectedRequest.activityDate) : "Not set"}
                           </span>
                         </div>
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Venue / Location</span>
-                          <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedRequest.venue}>
-                            {selectedRequest.venue || "Pasig City"}
-                          </span>
-                        </div>
                       </div>
                     </div>
 
@@ -2315,15 +1890,6 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
         </Dialog>
       )}
 
-      {/* Hidden File Input for Budget Proposal Replacement */}
-      <input
-        ref={replaceFileInputRef}
-        type="file"
-        accept=".pdf,application/pdf"
-        className="hidden"
-        data-testid="replace-budget-file-input"
-        onChange={handleReplaceFileInputChange}
-      />
     </div>
     </FeatureGate>
   );

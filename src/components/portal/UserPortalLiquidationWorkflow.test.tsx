@@ -364,8 +364,8 @@ describe("UserPortal Liquidation Upload & Submission Workflow (TEST A - TEST J)"
     // 3. Schedule & Location
     expect(screen.getByText("Schedule & Location")).toBeInTheDocument();
     expect(screen.getByText("Target Date")).toBeInTheDocument();
-    expect(screen.getByText("Venue / Location")).toBeInTheDocument();
-    expect(screen.getAllByText("Pasig City Sports Complex").length).toBeGreaterThanOrEqual(1);
+    // Venue was removed from budget requests (the proposal template has no venue).
+    expect(screen.queryByText("Venue / Location")).not.toBeInTheDocument();
 
     // 4. Activity Timeline
     expect(screen.getByText("Activity Timeline")).toBeInTheDocument();

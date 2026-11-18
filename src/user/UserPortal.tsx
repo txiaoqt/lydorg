@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -216,6 +216,7 @@ import {
   getRepresentativeDisplayName,
   getAdviserDisplayName,
   getOrganizationAddressDisplay,
+  formatAdvocacyLabel,
 } from "@/lib/lydo-connect-data";
 import {
   loadOrganizationPortalSectionState,
@@ -270,6 +271,16 @@ import {
   subscribeToOrganizationStatusChangesInSupabase,
   userStartOrGetRenewalDraftInSupabase,
 } from "@/lib/lydo-connect-supabase";
+import {
+  compactProposalForm,
+  createEmptyProposalForm,
+  normalizeProposalForm,
+  proposalBudgetTotal,
+  validateProposalForm,
+  type BudgetProposalForm,
+} from "@/lib/budget-proposal";
+import { buildBudgetProposalFile } from "@/lib/budget-proposal-pdf";
+import { fetchPublicSystemSettings, getOfficialSignatories } from "@/lib/admin-system-settings";
 
 const getReadiness = (filled: number, total: number) => (total === 0 ? 0 : Math.round((filled / total) * 100));
 const normalizeText = (value?: string | null) => value?.trim() ?? "";
@@ -477,7 +488,6 @@ const createBlankBudgetRequest = (
   activityTitle: "",
   activityDescription: "",
   activityDate: "",
-  venue: "",
   requestedAmount: 0,
   approvedAmount: 0,
   releasedAmount: 0,
@@ -726,7 +736,6 @@ export default function UserPortal({ section }: { section: string }) {
   const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
   const [savingBudgetRequest, setSavingBudgetRequest] = useState(false);
   const [submittingRevisedBudgetId, setSubmittingRevisedBudgetId] = useState<string | null>(null);
-  const [budgetFileDraft, setBudgetFileDraft] = useState<File | null>(null);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [notifFilter, setNotifFilter] = useState<"all" | "unread" | "read">("all");
   const [verifiedBannerDismissed, setVerifiedBannerDismissed] = useState(false);
@@ -747,6 +756,7 @@ export default function UserPortal({ section }: { section: string }) {
   const [budgetForm, setBudgetForm] = useState<BudgetRequest>(() =>
     createBlankBudgetRequest(user?.id ?? "", user?.id ?? ""),
   );
+  const [proposalForm, setProposalForm] = useState<BudgetProposalForm>(() => createEmptyProposalForm());
   const [inquiryForm, setInquiryForm] = useState({
     submitterName: "",
     organizationName: "",
@@ -766,7 +776,6 @@ export default function UserPortal({ section }: { section: string }) {
   const [previewCanInline, setPreviewCanInline] = useState(false);
   const attachedDocumentInputRef = useRef<HTMLInputElement | null>(null);
   const liquidationFileInputRef = useRef<HTMLInputElement | null>(null);
-  const budgetFileInputRef = useRef<HTMLInputElement | null>(null);
   const [pendingDocumentScan, setPendingDocumentScan] = useState<{
     documentTypeId: string;
     documentTypeName: string;
@@ -1169,7 +1178,7 @@ export default function UserPortal({ section }: { section: string }) {
         initializedYpopBudgetIdRef.current = ypopEntryId;
         const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "");
         setBudgetForm({ ...blank, budgetRequestType: "ypop_incentive", ypopEntryId: qualifiedYpopEntry.id });
-        setBudgetFileDraft(null);
+        setProposalForm(blankProposalForm());
         setShowBudgetForm(true);
       }
     } else {
@@ -1237,28 +1246,6 @@ export default function UserPortal({ section }: { section: string }) {
     setVerifiedBannerDismissed(true);
   };
 
-  const handleBudgetFileDraftChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-
-    if (!file) {
-      setBudgetFileDraft(null);
-      return;
-    }
-
-    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-    if (!isPdf) {
-      event.target.value = "";
-      setBudgetFileDraft(null);
-      toast({
-        title: "PDF only",
-        description: "Please upload a PDF file for the budget request document.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setBudgetFileDraft(file);
-  };
 
   const [profileDraft, setProfileDraft] = useState<OrganizationProfile>(
     createOrganizationProfileDraft(currentProfile?.userId ?? user?.id ?? "", currentProfile, {
@@ -2943,6 +2930,14 @@ export default function UserPortal({ section }: { section: string }) {
     }
   };
 
+  // Template org details come pre-filled from the organization profile.
+  const blankProposalForm = () => createEmptyProposalForm({
+    organizationName: currentProfile?.organizationName,
+    barangay: currentProfile?.barangay,
+    contactNumber: currentProfile?.contactNumber,
+    email: currentProfile?.organizationEmail,
+  });
+
   const resetBudgetForm = () => {
     const defaultCat = currentProfile?.advocacies?.[0] || "";
     const blank = createBlankBudgetRequest(currentProfile?.id ?? "", user?.id ?? "", defaultCat);
@@ -2955,7 +2950,7 @@ export default function UserPortal({ section }: { section: string }) {
     } else {
       setBudgetForm(blank);
     }
-    setBudgetFileDraft(null);
+    setProposalForm(blankProposalForm());
   };
 
   const startEditingBudgetRequest = (request: BudgetRequest | null) => {
@@ -2974,7 +2969,7 @@ export default function UserPortal({ section }: { section: string }) {
     }
 
     setBudgetForm({ ...request });
-    setBudgetFileDraft(null);
+    setProposalForm(normalizeProposalForm(request.proposalForm, blankProposalForm()));
   };
 
   const saveBudgetRequest = async (status: BudgetRequest["status"] = budgetForm.status, hasExistingFile = false) => {
@@ -3032,16 +3027,32 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
+    if (!budgetForm.purposeCategory.trim()) {
+      toast({
+        title: "Center of Participation is required",
+        description: "Please select a Center of Youth Participation for this activity.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const proposal = compactProposalForm(proposalForm);
+    const proposalError = validateProposalForm(proposalForm, status === "draft" ? "draft" : "submit");
+    if (proposalError) {
+      toast({ title: "Complete the project proposal", description: proposalError, variant: "destructive" });
+      return;
+    }
+
+    // The template answers are the source of truth; the request's summary fields are derived from them.
     const nextBudgetRequest: BudgetRequest = {
       ...budgetForm,
       organizationId: currentProfile.id,
       submittedBy: user.id,
       fiscalYear: budgetForm.fiscalYear || new Date().getFullYear(),
-      activityTitle: budgetForm.activityTitle.trim(),
-      activityDescription: budgetForm.activityDescription.trim(),
-      activityDate: budgetForm.activityDate,
-      venue: budgetForm.venue.trim(),
-      requestedAmount: Number(budgetForm.requestedAmount || 0),
+      activityTitle: proposal.projectTitle.trim(),
+      activityDescription: proposal.projectOverview.trim(),
+      activityDate: proposal.implementationDate,
+      requestedAmount: proposalBudgetTotal(proposal),
+      proposalForm: proposal,
       approvedAmount: Number(budgetForm.approvedAmount || 0),
       releasedAmount: Number(budgetForm.releasedAmount || 0),
       releaseDate: budgetForm.releaseDate,
@@ -3053,54 +3064,6 @@ export default function UserPortal({ section }: { section: string }) {
       updatedAt: new Date().toISOString(),
       createdAt: budgetForm.createdAt || new Date().toISOString(),
     };
-
-    if (
-      !nextBudgetRequest.activityTitle ||
-      !nextBudgetRequest.activityDescription ||
-      !nextBudgetRequest.activityDate ||
-      !nextBudgetRequest.venue ||
-      nextBudgetRequest.requestedAmount <= 0 ||
-      !nextBudgetRequest.purposeCategory
-    ) {
-      if (!nextBudgetRequest.activityTitle) {
-        toast({
-          title: "Activity Title is required",
-          description: "Please provide an activity title before saving.",
-          variant: "destructive",
-        });
-      } else if (!nextBudgetRequest.purposeCategory) {
-        toast({
-          title: "Purpose & Category is required",
-          description: "Please select a Center of Youth Participation for this activity.",
-          variant: "destructive",
-        });
-      } else if (nextBudgetRequest.requestedAmount <= 0) {
-        toast({
-          title: "Requested Budget Amount is required",
-          description: "Please specify a requested budget amount greater than zero.",
-          variant: "destructive",
-        });
-      } else if (!nextBudgetRequest.activityDescription) {
-        toast({
-          title: "Purpose Description is required",
-          description: "Please provide a purpose description for the planned activity.",
-          variant: "destructive",
-        });
-      } else if (!nextBudgetRequest.activityDate) {
-        toast({
-          title: "Target Activity Date is required",
-          description: "Please specify the target date for the activity.",
-          variant: "destructive",
-        });
-      } else if (!nextBudgetRequest.venue) {
-        toast({
-          title: "Venue / Location is required",
-          description: "Please provide the planned venue or location.",
-          variant: "destructive",
-        });
-      }
-      return;
-    }
 
     const isCategoryValid = userAdvocacies.some(
       (adv) => adv.trim().toLowerCase() === nextBudgetRequest.purposeCategory.trim().toLowerCase()
@@ -3118,38 +3081,16 @@ export default function UserPortal({ section }: { section: string }) {
       return;
     }
 
-    if (nextBudgetRequest.requestedAmount > 100000) {
-      toast({
-        title: "Requested budget amount cannot exceed ₱100,000",
-        description: "The maximum allowable requested budget amount is ₱100,000.00.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const existingBudgetFile = budgetRequestFilesByBudgetId.get(nextBudgetRequest.id);
-    if (!budgetFileDraft && !existingBudgetFile && !hasExistingFile) {
-      toast({
-        title: "Attach the required document",
-        description: "Please upload the detailed project proposal before saving the request.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (budgetFileDraft && budgetFileDraft.type !== "application/pdf" && !/\.pdf$/i.test(budgetFileDraft.name)) {
-      toast({
-        title: "PDF only",
-        description: "Please upload a PDF file for the budget request document.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSavingBudgetRequest(true);
     try {
       const isExisting = budgetRequests.some((request) => request.id === nextBudgetRequest.id);
-      const file = budgetFileDraft;
+      // Every save rebuilds the official proposal PDF from the answers; admin reviews this file.
+      await fetchPublicSystemSettings();
+      const file = await buildBudgetProposalFile({
+        form: proposal,
+        centerOfParticipation: formatAdvocacyLabel(nextBudgetRequest.purposeCategory),
+        ...getOfficialSignatories(),
+      });
 
       if (isExisting) {
         // The resubmission guard must see the persisted replacement PDF.
@@ -3186,42 +3127,6 @@ export default function UserPortal({ section }: { section: string }) {
       });
     } finally {
       setSavingBudgetRequest(false);
-    }
-  };
-
-  const handleReplaceBudgetFile = async (budgetRequestId: string, file: File) => {
-    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
-      toast({
-        title: "PDF only",
-        description: "Please upload a PDF file for the revised budget proposal.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // 1. Upload/replace proposal file in Supabase storage & budget_request_files table
-      await uploadBudgetRequestFileToSupabase(budgetRequestId, file);
-
-      // 2. Refresh and merge remote state without mutating status or admin remarks
-      const remoteSnapshot = await loadOrganizationBudgetSubmissionState(undefined, currentProfile?.id || profile.id);
-      if (remoteSnapshot) {
-        mergeRemoteState(remoteSnapshot);
-      }
-
-      // 3. Success toast informing user the replacement succeeded
-      toast({
-        title: "Revised proposal uploaded",
-        description: "Your proposal file has been replaced. Review your changes and submit for review when ready.",
-      });
-    } catch (error) {
-      console.error("Failed to replace budget request proposal file:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload revised proposal. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
     }
   };
 
@@ -4427,33 +4332,15 @@ export default function UserPortal({ section }: { section: string }) {
             formatShortPortalDate={formatShortPortalDate}
             formatDateTimeLabel={formatDateTimeLabel}
             formatStatusLabel={formatStatusLabel}
-            newActivityTitle={budgetForm.activityTitle}
-            setNewActivityTitle={(val) => setBudgetForm((c) => ({ ...c, activityTitle: val }))}
-            newActivityDescription={budgetForm.activityDescription}
-            setNewActivityDescription={(val) => setBudgetForm((c) => ({ ...c, activityDescription: val }))}
             newPurposeCategory={budgetForm.purposeCategory}
             setNewPurposeCategory={(val) => setBudgetForm((c) => ({ ...c, purposeCategory: val }))}
-            newActivityDate={budgetForm.activityDate}
-            setNewActivityDate={(val) => setBudgetForm((c) => ({ ...c, activityDate: val }))}
-            newVenue={budgetForm.venue}
-            setNewVenue={(val) => setBudgetForm((c) => ({ ...c, venue: val }))}
-            newRequestedAmount={budgetForm.requestedAmount}
-            setNewRequestedAmount={(val) => setBudgetForm((c) => ({ ...c, requestedAmount: val }))}
             organizationAdvocacies={currentProfile?.advocacies || []}
-            budgetFileInputRef={budgetFileInputRef}
-            budgetFileDraft={budgetFileDraft}
-            handleBudgetFileDraftChange={handleBudgetFileDraftChange}
-            onClearBudgetFileDraft={() => {
-              setBudgetFileDraft(null);
-              if (budgetFileInputRef.current) {
-                budgetFileInputRef.current.value = "";
-              }
-            }}
+            proposalForm={proposalForm}
+            onProposalFormChange={setProposalForm}
             handleCreateOrUpdateBudgetRequest={async (e, isDraft, hasExistingFile) => {
               e.preventDefault();
               await saveBudgetRequest(isDraft ? "draft" : "submitted", hasExistingFile);
             }}
-            onReplaceBudgetFile={handleReplaceBudgetFile}
             onResubmitBudgetRequest={handleResubmitBudgetRequest}
           />
         );
@@ -4600,7 +4487,7 @@ export default function UserPortal({ section }: { section: string }) {
     }
   }, [
     approvedBudgetStatuses,
-    budgetFileDraft,
+    proposalForm,
     budgetForm,
     budgetRequestFilesByBudgetId,
     budgetRequests,

@@ -2,7 +2,7 @@ import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowSt
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Check, ChevronRight, Circle, Download, FileText, Loader2, Pencil, Plus, Upload, WalletCards,
+  Check, ChevronRight, Circle, FileText, Loader2, Pencil, Plus, WalletCards,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { StatusBadge } from "@/components/portal/StatusBadge";
@@ -18,14 +18,16 @@ import {
   uploadBudgetRequestFileToSupabase,
 } from "@/lib/lydo-connect-supabase";
 import { PwaBackButton } from "../PwaBackButton";
-import { downloadTemplate } from "../templates/PwaTemplatePages";
-import { isProjectProposalTemplate } from "@/lib/user-workflow-eligibility";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
 import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRoutes";
 import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
-import { isSubmissionRevisionLocked, isAwaitingResubmission } from "@/lib/revision-deadline";
+import { isSubmissionRevisionLocked } from "@/lib/revision-deadline";
+import { BudgetProposalFormFields } from "@/components/portal/BudgetProposalFormFields";
+import { compactProposalForm, createEmptyProposalForm, normalizeProposalForm, proposalBudgetTotal, validateProposalForm, type BudgetProposalForm } from "@/lib/budget-proposal";
+import { buildBudgetProposalFile } from "@/lib/budget-proposal-pdf";
+import { fetchPublicSystemSettings, getOfficialSignatories } from "@/lib/admin-system-settings";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
 type Filter = "all" | "draft" | "review" | "revision" | "approved";
@@ -106,7 +108,7 @@ export function PwaBudgetList({ data }: { data: PortalData }) {
             <span className="pwa-transaction-amount">{money.format(request.requestedAmount)}</span>
             <span className="pwa-transaction-date">{dateLabel(request.activityDate)}</span>
             <span className="pwa-transaction-meta">
-              <span><small>Venue</small><strong>{request.venue || "Not set"}</strong></span>
+              <span><small>Category</small><strong>{formatAdvocacyLabel(request.purposeCategory) || "Not set"}</strong></span>
               <span><small>Updated</small><strong>{dateLabel(request.updatedAt)}</strong></span>
             </span>
             <span className="pwa-view-row">View Details <ChevronRight aria-hidden="true" /></span>
@@ -151,17 +153,16 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
         <strong className="pwa-detail-amount">{money.format(request.requestedAmount)}</strong>
         <dl>
           <div><dt>Proposed date</dt><dd>{dateLabel(request.activityDate)}</dd></div>
-          <div><dt>Venue</dt><dd>{request.venue}</dd></div>
           <div><dt>Purpose & Category</dt><dd>{formatAdvocacyLabel(request.purposeCategory)}</dd></div>
           <div><dt>Approved</dt><dd>{money.format(request.approvedAmount)}</dd></div>
           <div><dt>Released</dt><dd>{money.format(request.releasedAmount)}</dd></div>
           <div><dt>Updated</dt><dd>{dateLabel(request.updatedAt)}</dd></div>
         </dl>
-        <div className="pwa-detail-section"><h3>Purpose Description</h3><p>{request.activityDescription}</p></div>
+        <div className="pwa-detail-section"><h3>Project Overview</h3><p>{request.activityDescription}</p></div>
         {request.adminRemarks ? <div className="pwa-admin-note"><strong>Admin remarks</strong><p>{request.adminRemarks}</p></div> : null}
       </section>
       {file ? <section className="pwa-card pwa-liquidation-attachment-editor">
-        <h3>Attached budget PDF</h3>
+        <h3>Project proposal PDF</h3>
         <div className="pwa-selected-liquidation-file"><FileText aria-hidden="true" /><span><strong>{file.fileName || "Budget request attachment.pdf"}</strong></span></div>
         <PortalDocumentViewer previewUrl={file.fileUrl} previewTitle={file.fileName || "Budget request attachment.pdf"} previewCanInline className="pwa-liquidation-selected-preview" />
       </section> : null}
@@ -173,24 +174,6 @@ export function PwaBudgetDetail({ data }: { data: PortalData }) {
   );
 }
 
-type BudgetDraft = {
-  activityTitle: string;
-  activityDescription: string;
-  activityDate: string;
-  venue: string;
-  requestedAmount: string;
-  purposeCategory: string;
-};
-
-const draftFrom = (request?: BudgetRequest, defaultCategory?: string): BudgetDraft => ({
-  activityTitle: request?.activityTitle ?? "",
-  activityDescription: request?.activityDescription ?? "",
-  activityDate: request?.activityDate ?? "",
-  venue: request?.venue ?? "",
-  requestedAmount: request ? String(request.requestedAmount) : "",
-  purposeCategory: request?.purposeCategory || defaultCategory || "",
-});
-
 export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | "edit" }) {
   const { requestId = "" } = useParams();
   const { go } = usePwaNavigation();
@@ -198,14 +181,25 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
   const detailQuery = useQuery({ queryKey: ["user", organizationId, "budget-detail-pwa", requestId], queryFn: () => loadOrganizationBudgetRequestById(organizationId, requestId), enabled: Boolean(mode === "edit" && organizationId && requestId) });
   const filesQuery = useQuery({ queryKey: ["user", organizationId, "budget-files-pwa", requestId], queryFn: () => loadOrganizationBudgetRequestFiles(organizationId, requestId), enabled: Boolean(mode === "edit" && organizationId && requestId) });
   const existing = mode === "edit" ? detailQuery.data ?? data.budgetRequests.find((item) => item.id === requestId) : undefined;
-  const existingFile = filesQuery.data?.[0] ?? (existing ? data.store.state.budgetRequestFiles.find((item) => item.budgetRequestId === existing.id) : undefined);
   const orgAdvocacies = data.profile?.advocacies || [];
   const defaultCategory = orgAdvocacies[0] || "";
-  const [draft, setDraft] = useState(() => draftFrom(existing, defaultCategory));
-  const [file, setFile] = useState<File | null>(null);
+  const profileDefaults = () => createEmptyProposalForm({
+    organizationName: data.profile?.organizationName,
+    barangay: data.profile?.barangay,
+    contactNumber: data.profile?.contactNumber,
+    email: data.profile?.organizationEmail,
+  });
+  const [purposeCategory, setPurposeCategory] = useState(existing?.purposeCategory || defaultCategory);
+  const [proposal, setProposal] = useState<BudgetProposalForm>(() => normalizeProposalForm(existing?.proposalForm, profileDefaults()));
   const [saving, setSaving] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
-  useEffect(() => { setDraft(draftFrom(existing, defaultCategory)); }, [existing, defaultCategory]);
+  // Reload answers only when a different request (or a newer save) arrives, never mid-typing on refetch.
+  const existingKey = existing ? `${existing.id}:${existing.updatedAt}` : "";
+  useEffect(() => {
+    setPurposeCategory(existing?.purposeCategory || defaultCategory);
+    setProposal(normalizeProposalForm(existing?.proposalForm, profileDefaults()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingKey, defaultCategory]);
 
   if (mode === "edit" && (detailQuery.isLoading || filesQuery.isLoading)) return <p role="status" className="pwa-card">Loading budget request…</p>;
   if (mode === "edit" && (detailQuery.isError || filesQuery.isError)) return <section className="pwa-card"><p role="alert">Budget request could not be loaded.</p><button className="pwa-secondary-button" onClick={() => { void detailQuery.refetch(); void filesQuery.refetch(); }}>Try again</button></section>;
@@ -217,14 +211,9 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
     return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><section className="pwa-card pwa-empty-copy">{existing ? "This request is locked. Requests under review cannot be edited; expired revisions require an admin to unlock them." : "Budget request not found."}</section></div>;
   }
 
-  const update = (field: keyof BudgetDraft, value: string) => setDraft((current) => ({ ...current, [field]: value }));
   const save = async (status: "draft" | "submitted", event?: FormEvent, confirmed = false) => {
     event?.preventDefault();
     if (saving || (existing && !canEditBudget(existing))) return;
-    if (status === "submitted" && existing?.status === "needs_revision" && !file && isAwaitingResubmission({ status: existing.status, revisionRequestedAt: existing.revisionRequestedAt, files: filesQuery.data ?? (existingFile ? [existingFile] : []) })) {
-      toast({ title: "Corrected file required", description: "Upload your revised budget PDF before resubmitting.", variant: "destructive" });
-      return;
-    }
     if (orgAdvocacies.length === 0) {
       toast({
         title: "No Centers of Youth Participation",
@@ -233,32 +222,24 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       });
       return;
     }
-    const requestedAmount = Number(draft.requestedAmount);
-    if (!draft.activityTitle.trim() || !draft.activityDescription.trim() || !draft.activityDate || !draft.venue.trim() || !draft.purposeCategory.trim() || requestedAmount <= 0) {
-      toast({ title: "Complete the budget form", description: "All activity, amount, and category fields are required.", variant: "destructive" });
+    if (!purposeCategory.trim()) {
+      toast({ title: "Center of Participation is required", description: "Select a Center of Youth Participation for this activity.", variant: "destructive" });
+      return;
+    }
+    const proposalError = validateProposalForm(proposal, status === "draft" ? "draft" : "submit");
+    if (proposalError) {
+      toast({ title: "Complete the project proposal", description: proposalError, variant: "destructive" });
       return;
     }
     const categoryUnchangedForHistory = Boolean(
-      existing && existing.purposeCategory.trim().toLowerCase() === draft.purposeCategory.trim().toLowerCase()
+      existing && existing.purposeCategory.trim().toLowerCase() === purposeCategory.trim().toLowerCase()
     );
-    if (!orgAdvocacies.some((category) => category.trim().toLowerCase() === draft.purposeCategory.trim().toLowerCase()) && !categoryUnchangedForHistory) {
+    if (!orgAdvocacies.some((category) => category.trim().toLowerCase() === purposeCategory.trim().toLowerCase()) && !categoryUnchangedForHistory) {
       toast({
-        title: "Invalid Purpose & Category",
+        title: "Invalid Center of Participation",
         description: "Selected category must be one of your organization's configured Centers of Youth Participation.",
         variant: "destructive",
       });
-      return;
-    }
-    if (requestedAmount > 100000) {
-      toast({ title: "Requested budget amount cannot exceed ₱100,000", description: "The maximum allowable requested budget amount is ₱100,000.00.", variant: "destructive" });
-      return;
-    }
-    if (!existingFile && !file) {
-      toast({ title: "Attach the required document", description: "Upload the detailed budget PDF.", variant: "destructive" });
-      return;
-    }
-    if (file && file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
-      toast({ title: "PDF only", description: "The budget attachment must be a PDF.", variant: "destructive" });
       return;
     }
 
@@ -266,16 +247,17 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
     setConfirmSubmit(false);
     setSaving(true);
     try {
+      const compact = compactProposalForm(proposal);
       const payload = {
-        activityTitle: draft.activityTitle.trim(),
-        activityDescription: draft.activityDescription.trim(),
-        activityDate: draft.activityDate,
-        venue: draft.venue.trim(),
-        requestedAmount: requestedAmount,
+        activityTitle: compact.projectTitle.trim(),
+        activityDescription: compact.projectOverview.trim(),
+        activityDate: compact.implementationDate,
+        requestedAmount: proposalBudgetTotal(compact),
+        proposalForm: compact,
         approvedAmount: existing?.approvedAmount ?? 0,
         releasedAmount: existing?.releasedAmount ?? 0,
         releaseDate: existing?.releaseDate ?? "",
-        purposeCategory: draft.purposeCategory.trim(),
+        purposeCategory: purposeCategory.trim(),
         status: existing?.status === "needs_revision" && status === "draft" ? "needs_revision" as const : status,
         remarks: "",
         adminRemarks: existing?.adminRemarks ?? "",
@@ -286,6 +268,9 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
         budgetRequestType: "ypop_incentive" as const,
         ypopEntryId: data.budgetEligibility.entry?.id,
       };
+      // Every save rebuilds the official proposal PDF from the answers; admin reviews this file.
+      await fetchPublicSystemSettings();
+      const file = await buildBudgetProposalFile({ form: compact, centerOfParticipation: formatAdvocacyLabel(payload.purposeCategory), ...getOfficialSignatories() });
       let saved: BudgetRequest;
       if (existing) {
         if (file) await uploadBudgetRequestFileToSupabase(existing.id, file);
@@ -308,61 +293,34 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
     <form className="pwa-stack pwa-native-form pwa-budget-editor" onSubmit={(event) => void save("submitted", event)}>
       <PwaBackButton fallback={existing ? pwaBudgetDetailRoute(existing.id) : PWA_ROUTES.budgets} label={existing ? "Budget Details" : "Budget Requests"} />
       <header className="pwa-budget-editor-heading">
-        <h1>{existing ? "Edit budget request" : "New budget request"}</h1>
-        <p>Add your activity details and attach the detailed budget PDF. All fields are required.</p>
-      </header>
-      <section className="pwa-budget-editor-section" aria-labelledby="budget-activity-heading">
-        <h2 id="budget-activity-heading">Activity information</h2>
-        <label>Activity title <input placeholder="Name of your activity" value={draft.activityTitle} onChange={(event) => update("activityTitle", event.target.value)} required /></label>
-        <label>Purpose Description <textarea rows={3} placeholder="Purpose, objectives, expected outcomes, and target participants" value={draft.activityDescription} onChange={(event) => update("activityDescription", event.target.value)} required /></label>
-        <label>Proposed date <input type="date" value={draft.activityDate} onChange={(event) => update("activityDate", event.target.value)} required /></label>
-        <label>Venue <input placeholder="Where will the activity take place?" value={draft.venue} onChange={(event) => update("venue", event.target.value)} required /></label>
-      </section>
-      <section className="pwa-budget-editor-section" aria-labelledby="budget-amount-heading">
-        <h2 id="budget-amount-heading">Budget details</h2>
-        <label>Requested amount <span className="pwa-prefix-input"><span aria-hidden="true">₱</span><input aria-describedby="budget-amount-help" type="number" min="0.01" max="100000" step="any" inputMode="decimal" value={draft.requestedAmount} onFocus={(e) => { if (e.target.value === "0") e.target.select(); }} onClick={(e) => { if ((e.target as HTMLInputElement).value === "0") (e.target as HTMLInputElement).select(); }} onChange={(event) => { let val = event.target.value; if (/^0[0-9]+(\.[0-9]*)?$/.test(val)) { val = val.replace(/^0+/, ""); if (val === "" || val.startsWith(".")) { val = "0" + val; } } update("requestedAmount", val); }} required /></span><small id="budget-amount-help">Maximum request: ₱100,000</small></label>
-        <label>
-          Purpose & Category
-          {orgAdvocacies.length > 0 ? (
-            <select
-              value={draft.purposeCategory}
-              onChange={(event) => update("purposeCategory", event.target.value)}
-              required
-            >
-              {existing && !orgAdvocacies.some((category) => category === existing.purposeCategory) && (
-                <option value={existing.purposeCategory}>
-                  {formatAdvocacyLabel(existing.purposeCategory)}
-                </option>
-              )}
-              {orgAdvocacies.map((cyp) => (
-                <option key={cyp} value={cyp}>
-                  {formatAdvocacyLabel(cyp)}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <p className="pwa-form-helper text-amber-600">
-              No Centers of Youth Participation configured. Please configure them in your Organization Profile.
-            </p>
-          )}
-        </label>
-      </section>
-      <section className="pwa-budget-editor-section" aria-labelledby="budget-file-heading">
-        <h2 id="budget-file-heading">Detailed budget PDF</h2>
+        <h1>{existing ? "Edit project proposal" : "New budget request"}</h1>
+        <p>Fill in the official PCYDO Project Proposal. The proposal PDF is generated from your answers when you save.</p>
         {existing?.revisionDueAt ? <p className="pwa-form-helper">Revision deadline: {dateLabel(existing.revisionDueAt)}</p> : null}
-        {existingFile ? <p className="pwa-form-helper"><FileText /> Current: {existingFile.fileName}</p> : null}
-        {data.templates.filter(isProjectProposalTemplate).map((template) => (
-          <button key={template.id} type="button" className="pwa-text-button" onClick={() => void downloadTemplate(template).catch((error) => toast({ title: "Unable to download template", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" }))}>
-            <Download aria-hidden="true" /> Download template: {template.name}
-          </button>
-        ))}
-        <label className="pwa-budget-upload"><input type="file" aria-label={existingFile ? "Replace detailed budget PDF" : "Attach detailed budget PDF"} accept=".pdf,application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><FileText aria-hidden="true" /><span><strong>{file?.name || (existingFile ? "Replace attached PDF" : "Attach budget PDF")}</strong><small>{file ? "Selected · Tap to choose another file" : "Choose a PDF from your device"}</small></span><Upload aria-hidden="true" /></label>
-      </section>
+      </header>
+      <BudgetProposalFormFields
+        value={proposal}
+        onChange={setProposal}
+        centerOfParticipationField={
+          <label className="block space-y-1.5">
+            <span className="block text-xs font-bold text-foreground">Center of Participation <span className="text-red-500">*</span></span>
+            {orgAdvocacies.length > 0 ? (
+              <select className="h-10 w-full rounded-xl border border-border/80 bg-background px-3 text-xs" value={purposeCategory} onChange={(event) => setPurposeCategory(event.target.value)} required>
+                {existing && !orgAdvocacies.some((category) => category === existing.purposeCategory) && (
+                  <option value={existing.purposeCategory}>{formatAdvocacyLabel(existing.purposeCategory)}</option>
+                )}
+                {orgAdvocacies.map((cyp) => <option key={cyp} value={cyp}>{formatAdvocacyLabel(cyp)}</option>)}
+              </select>
+            ) : (
+              <p className="pwa-form-helper text-amber-600">No Centers of Youth Participation configured. Please configure them in your Organization Profile.</p>
+            )}
+          </label>
+        }
+      />
       <div className="pwa-sticky-actions">
         <button type="button" className="pwa-secondary-button" disabled={saving} onClick={(event) => void save("draft", event)}>{saving ? <Loader2 className="pwa-spin" /> : null} Save Draft</button>
         <button type="submit" className="pwa-primary-button" disabled={saving || orgAdvocacies.length === 0}>{saving ? <Loader2 className="pwa-spin" /> : null} Submit Request</button>
       </div>
-      <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}><DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md"><DialogHeader><DialogTitle>Submit this budget request?</DialogTitle><DialogDescription>PCYDO will review your activity details and detailed budget PDF. Editing is locked while the request is under review.</DialogDescription></DialogHeader><p className="text-sm font-semibold break-words">{draft.activityTitle} · {money.format(Number(draft.requestedAmount))}</p><DialogFooter><button type="button" className="pwa-secondary-button" onClick={() => setConfirmSubmit(false)}>Cancel</button><button type="button" className="pwa-primary-button" disabled={saving} onClick={() => void save("submitted", undefined, true)}>Submit Request</button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}><DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md"><DialogHeader><DialogTitle>Submit this budget request?</DialogTitle><DialogDescription>PCYDO will review your project proposal PDF. Editing is locked while the request is under review.</DialogDescription></DialogHeader><p className="text-sm font-semibold break-words">{proposal.projectTitle} · {money.format(proposalBudgetTotal(proposal))}</p><DialogFooter><button type="button" className="pwa-secondary-button" onClick={() => setConfirmSubmit(false)}>Cancel</button><button type="button" className="pwa-primary-button" disabled={saving} onClick={() => void save("submitted", undefined, true)}>Submit Request</button></DialogFooter></DialogContent></Dialog>
     </form>
   );
 }

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { UserPortalBudgetWorkspaceView, UserPortalBudgetWorkspaceViewProps } from "./UserPortalBudgetWorkspaceView";
+import { createEmptyProposalForm } from "@/lib/budget-proposal";
 
 describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", () => {
   const defaultBaseProps: UserPortalBudgetWorkspaceViewProps = {
@@ -25,18 +26,10 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
     formatShortPortalDate: () => "Sep 17, 2026",
     formatDateTimeLabel: () => "Sep 17, 2026, 5:00 PM",
     formatStatusLabel: (status: string) => status.toUpperCase(),
-    newActivityTitle: "Youth Environmental Summit 2026",
-    setNewActivityTitle: vi.fn(),
-    newActivityDescription: "Community tree planting and environmental leadership workshop",
-    setNewActivityDescription: vi.fn(),
     newPurposeCategory: "Environmental Protection & Climate Action",
     setNewPurposeCategory: vi.fn(),
-    newActivityDate: "2026-10-15",
-    setNewActivityDate: vi.fn(),
-    newVenue: "Pasig Rainforest Park",
-    setNewVenue: vi.fn(),
-    newRequestedAmount: "75000",
-    setNewRequestedAmount: vi.fn(),
+    proposalForm: { ...createEmptyProposalForm(), projectTitle: "Youth Environmental Summit 2026" },
+    onProposalFormChange: vi.fn(),
     newRemarks: "Proposal and estimated supplier costs attached.",
     setNewRemarks: vi.fn(),
     handleCreateOrUpdateBudgetRequest: vi.fn(),
@@ -170,7 +163,7 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
       render(
         <UserPortalBudgetWorkspaceView
           {...defaultBaseProps}
-          newActivityTitle="Resilient Activity"
+          proposalForm={{ ...createEmptyProposalForm(), projectTitle: "Resilient Activity" }}
           handleCreateOrUpdateBudgetRequest={handleSubmitMock}
         />
       );
@@ -193,21 +186,16 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
     });
   });
 
-  describe("D. Copy Changes", () => {
-    it("renders 'Detailed Project Proposal' and does NOT render 'Detailed Budget Document'", () => {
+  describe("D. Proposal template form", () => {
+    it("renders the official template sections and no PDF upload", () => {
       render(<UserPortalBudgetWorkspaceView {...defaultBaseProps} />);
 
-      // Must be present
-      expect(screen.getByText("Detailed Project Proposal")).toBeDefined();
-      expect(
-        screen.getByText("Upload your orgs detailed project budget proposal for administrative review")
-      ).toBeDefined();
-      expect(screen.getByText("PDF Only")).toBeDefined();
-      expect(screen.getByText("Select Detailed Project Proposal")).toBeDefined();
-
-      // Must NOT be present
-      expect(screen.queryByText("Detailed Budget Document")).toBeNull();
-      expect(screen.queryByText("Select Detailed Budget Document")).toBeNull();
+      for (const section of ["Organization Details", "Project Proposal", "Course Content and Session Flow", "Budgetary Requirements", "Prepared and Noted By"]) {
+        expect(screen.getByText(section)).toBeDefined();
+      }
+      expect(screen.getByDisplayValue("Youth Environmental Summit 2026")).toBeDefined();
+      expect(screen.queryByText("Select Detailed Project Proposal")).toBeNull();
+      expect(screen.queryByText(/Venue/)).toBeNull();
     });
   });
 
@@ -349,17 +337,6 @@ describe("UserPortal - Create Budget Request Submit Interaction & UI Polish", ()
 
       expect(submitButton).toHaveTextContent("Update Proposal");
       expect(submitButton).not.toBeDisabled();
-    });
-  });
-
-  describe("Project proposal template", () => {
-    it("offers the admin-uploaded template in the Detailed Project Proposal section", () => {
-      const template = { id: "tpl-pp", name: "Project Proposal Template" } as never;
-      const onDownloadTemplate = vi.fn();
-      render(<UserPortalBudgetWorkspaceView {...defaultBaseProps} proposalTemplates={[template]} onDownloadTemplate={onDownloadTemplate} />);
-
-      fireEvent.click(screen.getByRole("button", { name: /Download template: Project Proposal Template/i }));
-      expect(onDownloadTemplate).toHaveBeenCalledWith(template);
     });
   });
 });

@@ -33,7 +33,7 @@ const money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP
 const dateLabel = (value: string) => value ? new Date(value).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "Pending";
 const submittableStatuses = new Set<LiquidationStatus>(["pending_activity_completion", "not_started", "draft", "needs_revision", "overdue", "rejected_red"]);
 const replacementStatuses = new Set<LiquidationStatus>(["needs_revision", "rejected_red"]);
-type ReportWithBudget = LiquidationReport & { relatedBudget?: Pick<BudgetRequest, "id" | "activityTitle" | "purposeCategory" | "venue" | "releasedAmount" | "approvedAmount"> | null };
+type ReportWithBudget = LiquidationReport & { relatedBudget?: Pick<BudgetRequest, "id" | "activityTitle" | "purposeCategory" | "releasedAmount" | "approvedAmount"> | null };
 
 export function PwaLiquidationEligibilityNotice({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();

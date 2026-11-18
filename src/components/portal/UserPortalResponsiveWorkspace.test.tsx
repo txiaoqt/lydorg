@@ -1764,7 +1764,7 @@ describe("UserPortalBudgetWorkspaceView Mobile Page Polish", () => {
       expect(screen.getByRole("button", { name: "All (2)" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Approved / Released (1)" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Pending Review (1)" })).toBeInTheDocument();
-      expect(screen.getByPlaceholderText("Search activity, category, venue...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Search activity or category...")).toBeInTheDocument();
       expect(screen.getByText(/newest/i)).toBeInTheDocument();
 
       // 4. Mobile Request Cards Verification

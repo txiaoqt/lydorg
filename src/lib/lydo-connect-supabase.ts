@@ -1,4 +1,5 @@
 import { validateZipCode } from "@/lib/organization-profile-domain";
+import { PROPOSAL_MAX_TOTAL } from "@/lib/budget-proposal";
 import type {
   ActivityLog,
   AdminRoleRecord,
@@ -162,7 +163,7 @@ type OrganizationProfileRow = {
 
 const ORGANIZATION_PROFILE_COLUMNS = "id,reference_id,user_id,organization_name,organization_email,additional_emails,contact_number,additional_contact_numbers,district,barangay,is_existing_organization,organization_identifier_number,registration_type,urn,urn_normalized,urn_review_status,urn_admin_remarks,urn_reviewed_by,urn_reviewed_at,verification_method,major_classification,sub_classification,advocacies,representative_first_name,representative_middle_name,representative_last_name,representative_suffix,adviser_first_name,adviser_middle_name,adviser_last_name,adviser_suffix,adviser_name,representative_name,address_unit_building,address_street,address_subdivision,address_barangay,address_city,address_province,address_zip_code,address,facebook_page_url,profile_image_url,directory_visibility,directory_show_representative,directory_show_adviser,profile_status,verified_at,internal_notes,yorp_registered_year,yorp_renewed_year,current_accreditation_id,accreditation_start_date,accreditation_expires_at,is_renewal_test_account,created_at,updated_at";
 const DOCUMENT_SUBMISSION_COLUMNS = "id,organization_id,submitted_by,status,user_confirmed,submitted_at,reviewed_by,reviewed_at,overall_remarks,submission_scope,renewal_id,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,created_at,updated_at";
-const BUDGET_REQUEST_COLUMNS = "id,organization_id,submitted_by,activity_title,activity_description,activity_date,venue,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at";
+const BUDGET_REQUEST_COLUMNS = "id,organization_id,submitted_by,activity_title,activity_description,activity_date,proposal_form,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at";
 const BUDGET_REQUEST_FILE_COLUMNS = "id,budget_request_id,file_url,file_name,file_type,file_size,uploaded_at,created_at,admin_status,admin_remarks";
 const LIQUIDATION_REPORT_COLUMNS = "id,budget_request_id,organization_id,submitted_by,status,remarks,go_signal_at,deadline_at,hard_copy_submitted_at,completed_at,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,created_at,updated_at";
 const YPOP_PERIOD_COLUMNS = "id,semester_key,semester_label,validation_deadline,status,org_led_tiers,created_at,updated_at";
@@ -295,7 +296,7 @@ type BudgetRequestRow = {
   activity_title: string;
   activity_description: string | null;
   activity_date: string;
-  venue: string;
+  proposal_form?: unknown;
   requested_amount: number | string;
   approved_amount: number | string;
   released_amount: number | string;
@@ -892,7 +893,7 @@ const mapBudgetRequest = (row: BudgetRequestRow): BudgetRequest => ({
   activityTitle: row.activity_title,
   activityDescription: row.activity_description ?? "",
   activityDate: formatDateOnly(row.activity_date),
-  venue: row.venue,
+  proposalForm: row.proposal_form ?? null,
   requestedAmount: normalizeNumeric(row.requested_amount),
   approvedAmount: normalizeNumeric(row.approved_amount),
   releasedAmount: normalizeNumeric(row.released_amount),
@@ -1251,7 +1252,7 @@ const fetchLatestSubmission = async (organizationId: string) => {
 const fetchBudgetRequests = async (organizationId: string, limit = 100) => {
   const { data, error } = await supabase!
     .from("budget_requests")
-    .select("id,organization_id,submitted_by,activity_title,activity_description,activity_date,venue,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at")
+    .select("id,organization_id,submitted_by,activity_title,activity_description,activity_date,proposal_form,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at")
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -1380,13 +1381,13 @@ export const loadOrganizationBudgetRequestPage = async (
     queryKey: ["user", organizationId, "budget-page", page, pageSize, options.search?.trim() ?? "", options.statuses ?? [], options.sortBy ?? "created_at", options.sortDirection ?? "desc"],
     staleTime: 30_000,
     queryFn: async () => {
-      let query = supabase!.from("budget_requests").select("id,organization_id,submitted_by,activity_title,activity_description,activity_date,venue,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at", { count: "exact" })
+      let query = supabase!.from("budget_requests").select("id,organization_id,submitted_by,activity_title,activity_description,activity_date,proposal_form,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at", { count: "exact" })
         .eq("organization_id", organizationId);
       if (options.statuses?.length) query = query.in("status", options.statuses);
       const search = options.search?.trim();
       if (search) {
         const term = escapePostgrestSearch(search);
-        query = query.or(`activity_title.ilike.%${term}%,purpose_category.ilike.%${term}%,venue.ilike.%${term}%,id.ilike.%${term}%`);
+        query = query.or(`activity_title.ilike.%${term}%,purpose_category.ilike.%${term}%,id.ilike.%${term}%`);
       }
       const sortColumn = options.sortBy === "requested_amount" ? "requested_amount" : options.sortBy === "updated_at" ? "updated_at" : "created_at";
       const { data, error, count } = await query.order(sortColumn, { ascending: options.sortDirection === "asc" })
@@ -1441,7 +1442,7 @@ export const loadOrganizationBudgetRequestById = async (organizationId: string, 
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase!.from("budget_requests")
-        .select("id,organization_id,submitted_by,activity_title,activity_description,activity_date,venue,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at")
+        .select("id,organization_id,submitted_by,activity_title,activity_description,activity_date,proposal_form,requested_amount,approved_amount,released_amount,release_date,purpose_category,fiscal_year,status,remarks,admin_remarks,go_signal_at,hard_copy_submitted_at,user_note,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,revision_history,created_at,updated_at")
         .eq("organization_id", organizationId).eq("id", budgetRequestId).maybeSingle();
       if (error) throw toQueryError(error);
       return data ? mapBudgetRequest(data as BudgetRequestRow) : null;
@@ -1460,20 +1461,20 @@ export const loadOrganizationLiquidationReportPage = async (
     staleTime: 30_000,
     queryFn: async () => {
       let query = supabase!.from("liquidation_reports")
-        .select("id,budget_request_id,organization_id,submitted_by,status,remarks,go_signal_at,deadline_at,hard_copy_submitted_at,completed_at,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,created_at,updated_at,budget_requests!inner(id,activity_title,purpose_category,venue,released_amount,approved_amount)", { count: "exact" })
+        .select("id,budget_request_id,organization_id,submitted_by,status,remarks,go_signal_at,deadline_at,hard_copy_submitted_at,completed_at,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,created_at,updated_at,budget_requests!inner(id,activity_title,purpose_category,released_amount,approved_amount)", { count: "exact" })
         .eq("organization_id", organizationId);
       if (options.statuses?.length) query = query.in("status", options.statuses);
       const search = options.search?.trim();
       if (search) {
         const term = escapePostgrestSearch(search);
-        query = query.or(`activity_title.ilike.%${term}%,purpose_category.ilike.%${term}%,venue.ilike.%${term}%`, { referencedTable: "budget_requests" });
+        query = query.or(`activity_title.ilike.%${term}%,purpose_category.ilike.%${term}%`, { referencedTable: "budget_requests" });
       }
       const sortColumn = options.sortBy === "deadline_at" ? "deadline_at" : "created_at";
       const { data, error, count } = await query.order(sortColumn, { ascending: options.sortDirection === "asc" })
         .order("id", { ascending: options.sortDirection === "asc" }).range(offset, offset + pageSize - 1);
       if (error) throw toQueryError(error);
       const totalCount = count ?? 0;
-      const rows = ((data as unknown as (LiquidationReportRow & { budget_requests?: { id: string; activity_title: string | null; purpose_category: string | null; venue: string | null; released_amount: number | string | null; approved_amount: number | string | null } | Array<{ id: string; activity_title: string | null; purpose_category: string | null; venue: string | null; released_amount: number | string | null; approved_amount: number | string | null }> | null })[] | null) ?? [])
+      const rows = ((data as unknown as (LiquidationReportRow & { budget_requests?: { id: string; activity_title: string | null; purpose_category: string | null; released_amount: number | string | null; approved_amount: number | string | null } | Array<{ id: string; activity_title: string | null; purpose_category: string | null; released_amount: number | string | null; approved_amount: number | string | null }> | null })[] | null) ?? [])
         .map((row) => {
           const relation = Array.isArray(row.budget_requests) ? row.budget_requests[0] : row.budget_requests;
           return {
@@ -1482,7 +1483,6 @@ export const loadOrganizationLiquidationReportPage = async (
             id: relation.id,
             activityTitle: relation.activity_title ?? "",
             purposeCategory: relation.purpose_category ?? "",
-            venue: relation.venue ?? "",
             releasedAmount: normalizeNumeric(relation.released_amount),
             approvedAmount: normalizeNumeric(relation.approved_amount),
           } : null,
@@ -1536,11 +1536,11 @@ export const loadOrganizationLiquidationReportById = async (organizationId: stri
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase!.from("liquidation_reports")
-        .select("id,budget_request_id,organization_id,submitted_by,status,remarks,go_signal_at,deadline_at,hard_copy_submitted_at,completed_at,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,created_at,updated_at,budget_requests!inner(id,activity_title,purpose_category,venue,released_amount,approved_amount)")
+        .select("id,budget_request_id,organization_id,submitted_by,status,remarks,go_signal_at,deadline_at,hard_copy_submitted_at,completed_at,revision_requested_at,revision_due_at,revision_locked,revision_locked_at,revision_unlocked_at,revision_unlocked_by,created_at,updated_at,budget_requests!inner(id,activity_title,purpose_category,released_amount,approved_amount)")
         .eq("organization_id", organizationId).eq("id", reportId).maybeSingle();
       if (error) throw toQueryError(error);
       if (!data) return null;
-      const row = data as unknown as LiquidationReportRow & { budget_requests?: { id: string; activity_title: string | null; purpose_category: string | null; venue: string | null; released_amount: number | string | null; approved_amount: number | string | null } | Array<{ id: string; activity_title: string | null; purpose_category: string | null; venue: string | null; released_amount: number | string | null; approved_amount: number | string | null }> | null };
+      const row = data as unknown as LiquidationReportRow & { budget_requests?: { id: string; activity_title: string | null; purpose_category: string | null; released_amount: number | string | null; approved_amount: number | string | null } | Array<{ id: string; activity_title: string | null; purpose_category: string | null; released_amount: number | string | null; approved_amount: number | string | null }> | null };
       const relation = Array.isArray(row.budget_requests) ? row.budget_requests[0] : row.budget_requests;
       return {
         ...mapLiquidationReport(row),
@@ -1548,7 +1548,6 @@ export const loadOrganizationLiquidationReportById = async (organizationId: stri
           id: relation.id,
           activityTitle: relation.activity_title ?? "",
           purposeCategory: relation.purpose_category ?? "",
-          venue: relation.venue ?? "",
           releasedAmount: normalizeNumeric(relation.released_amount),
           approvedAmount: normalizeNumeric(relation.approved_amount),
         } : null,
@@ -2753,7 +2752,7 @@ export const fetchAdminReviewResourcePage = async (
     const mappedBudget = mapBudgetRequest({
       id: String(budget.id), organization_id: String(budget.organization_id ?? report.organization_id),
       submitted_by: "", activity_title: String(budget.activity_title ?? ""), activity_description: "",
-      activity_date: "", venue: "", requested_amount: budget.requested_amount as number | string ?? 0,
+      activity_date: "", requested_amount: budget.requested_amount as number | string ?? 0,
       approved_amount: budget.approved_amount as number | string ?? 0, released_amount: budget.released_amount as number | string ?? 0,
       public_record_code: (budget.public_record_code as string | null | undefined) ?? null,
       release_date: null, purpose_category: "", status: "draft", remarks: null, admin_remarks: null,
@@ -4993,8 +4992,8 @@ export const createBudgetRequestInSupabase = async (params: {
     throw new Error("A qualified YPOP validation in the active period is required before creating a budget request.");
   }
 
-  if (params.budgetRequest.requestedAmount > 100000) {
-    throw new Error("Requested budget amount cannot exceed ₱100,000.");
+  if (params.budgetRequest.requestedAmount > PROPOSAL_MAX_TOTAL) {
+    throw new Error("Requested budget amount cannot exceed ₱50,000.");
   }
 
   const orgAdvocacies = Array.isArray(organizationProfile.advocacies) ? organizationProfile.advocacies : [];
@@ -5011,8 +5010,8 @@ export const createBudgetRequestInSupabase = async (params: {
     submitted_by: session.user.id,
     activity_title: params.budgetRequest.activityTitle.trim(),
     activity_description: params.budgetRequest.activityDescription.trim(),
-    activity_date: params.budgetRequest.activityDate,
-    venue: params.budgetRequest.venue.trim(),
+    activity_date: params.budgetRequest.activityDate || null,
+    proposal_form: params.budgetRequest.proposalForm ?? null,
     requested_amount: params.budgetRequest.requestedAmount,
     approved_amount: params.budgetRequest.approvedAmount,
     released_amount: params.budgetRequest.releasedAmount,
@@ -5189,8 +5188,8 @@ export const updateBudgetRequestInSupabase = async (
     throw new Error("Submission is locked. The revision deadline has expired or the submission has not been unlocked by an administrator.");
   }
 
-  if (patch.requestedAmount !== undefined && patch.requestedAmount > 100000) {
-    throw new Error("Requested budget amount cannot exceed ₱100,000.");
+  if (patch.requestedAmount !== undefined && patch.requestedAmount > PROPOSAL_MAX_TOTAL) {
+    throw new Error("Requested budget amount cannot exceed ₱50,000.");
   }
 
   if (patch.purposeCategory !== undefined) {
@@ -5204,8 +5203,8 @@ export const updateBudgetRequestInSupabase = async (
   const payload: Record<string, unknown> = {};
   if (patch.activityTitle !== undefined) payload.activity_title = patch.activityTitle.trim();
   if (patch.activityDescription !== undefined) payload.activity_description = patch.activityDescription.trim();
-  if (patch.activityDate !== undefined) payload.activity_date = patch.activityDate;
-  if (patch.venue !== undefined) payload.venue = patch.venue.trim();
+  if (patch.activityDate !== undefined) payload.activity_date = patch.activityDate || null;
+  if (patch.proposalForm !== undefined) payload.proposal_form = patch.proposalForm;
   if (patch.requestedAmount !== undefined) payload.requested_amount = patch.requestedAmount;
   if (patch.approvedAmount !== undefined) payload.approved_amount = patch.approvedAmount;
   if (patch.releasedAmount !== undefined) payload.released_amount = patch.releasedAmount;

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { createEmptyProposalForm } from "@/lib/budget-proposal";
 import { UserPortalBudgetWorkspaceView } from "./UserPortalBudgetWorkspaceView";
 import type { BudgetRequest } from "@/lib/lydo-connect-data";
 import { computeBudgetMetrics } from "@/lib/budget-monitoring-authoritative.test";
@@ -101,22 +102,13 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
       formatShortPortalDate: () => "Sep 20, 2026",
       formatDateTimeLabel: () => "Aug 11, 2026 12:00 PM",
       formatStatusLabel: (s: string) => s,
-      newActivityTitle: "",
-      setNewActivityTitle: vi.fn(),
-      newActivityDescription: "",
-      setNewActivityDescription: vi.fn(),
       newPurposeCategory: "",
       setNewPurposeCategory: vi.fn(),
-      newActivityDate: "",
-      setNewActivityDate: vi.fn(),
-      newVenue: "",
-      setNewVenue: vi.fn(),
-      newRequestedAmount: "",
-      setNewRequestedAmount: vi.fn(),
       newRemarks: "",
       setNewRemarks: vi.fn(),
       handleCreateOrUpdateBudgetRequest: vi.fn(),
-      onReplaceBudgetFile: vi.fn().mockResolvedValue(undefined),
+      proposalForm: createEmptyProposalForm(),
+      onProposalFormChange: vi.fn(),
       ...overrides,
     };
   };
@@ -154,28 +146,19 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
   });
 
   // TEST C — File Replacement
-  it("TEST C: user can upload revised proposal PDF when status is needs_revision", async () => {
-    const onReplaceMock = vi.fn().mockResolvedValue(undefined);
-    const props = createBaseProps({ onReplaceBudgetFile: onReplaceMock });
+  it("TEST C: a needs_revision request is revised by editing the proposal form (no file upload)", async () => {
+    const startEditing = vi.fn();
+    const setShowBudgetForm = vi.fn();
+    const props = createBaseProps({ startEditingBudgetRequest: startEditing, setShowBudgetForm });
     render(<UserPortalBudgetWorkspaceView {...props} />);
 
-    // Upload Revised Proposal button must be visible in drawer
-    const replaceButtons = screen.getAllByRole("button", { name: /upload revised proposal/i });
-    expect(replaceButtons.length).toBeGreaterThan(0);
+    const editButtons = screen.getAllByRole("button", { name: /edit proposal/i });
+    expect(editButtons.length).toBeGreaterThan(0);
+    expect(screen.queryByTestId("replace-budget-file-input")).not.toBeInTheDocument();
 
-    // Trigger file change on the hidden replace file input
-    const fileInput = screen.getByTestId("replace-budget-file-input") as HTMLInputElement;
-    expect(fileInput).toBeInTheDocument();
-
-    const revisedPdf = new File(["dummy pdf content"], "revised-proposal.pdf", {
-      type: "application/pdf",
-    });
-
-    fireEvent.change(fileInput, { target: { files: [revisedPdf] } });
-
-    await waitFor(() => {
-      expect(onReplaceMock).toHaveBeenCalledWith("br-rev-101", revisedPdf);
-    });
+    fireEvent.click(editButtons[0]);
+    expect(startEditing).toHaveBeenCalledWith(expect.objectContaining({ id: "br-rev-101" }));
+    expect(setShowBudgetForm).toHaveBeenCalledWith(true);
   });
 
   // TEST D — File Replacement Preserves Needs Revision Status (No Auto-Submit)
@@ -385,7 +368,7 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
     expect(screen.getByText("Released Amount")).toBeInTheDocument();
 
     // Mobile dialog must provide Upload Revised Proposal action
-    const replaceButtons = screen.getAllByRole("button", { name: /upload revised proposal/i });
+    const replaceButtons = screen.getAllByRole("button", { name: /edit proposal/i });
     expect(replaceButtons.length).toBeGreaterThan(0);
   });
 
@@ -421,25 +404,13 @@ describe("Y-TRACE Budget Request Verified Fixes Suite (TESTS A - M)", () => {
     expect(screen.queryByRole("button", { name: /submit for review/i })).toBeNull();
   });
 
-  // TEST P — Invariant: File Replacement Does Not Mutate Status
-  it("TEST P: file replacement and resubmission are decoupled — replacing a file does NOT trigger resubmission", async () => {
-    const onReplaceMock = vi.fn().mockResolvedValue(undefined);
+  // TEST P — Invariant: opening the proposal for revision does not resubmit
+  it("TEST P: opening the proposal for revision does NOT trigger resubmission", () => {
     const onResubmitMock = vi.fn().mockResolvedValue(undefined);
-    const props = createBaseProps({
-      onReplaceBudgetFile: onReplaceMock,
-      onResubmitBudgetRequest: onResubmitMock,
-    });
+    const props = createBaseProps({ onResubmitBudgetRequest: onResubmitMock });
     render(<UserPortalBudgetWorkspaceView {...props} />);
 
-    const fileInput = screen.getByTestId("replace-budget-file-input") as HTMLInputElement;
-    const testPdf = new File(["test pdf"], "test.pdf", { type: "application/pdf" });
-    fireEvent.change(fileInput, { target: { files: [testPdf] } });
-
-    await waitFor(() => {
-      expect(onReplaceMock).toHaveBeenCalledWith("br-rev-101", testPdf);
-    });
-
-    // onResubmit must NOT have been called automatically
+    fireEvent.click(screen.getAllByRole("button", { name: /edit proposal/i })[0]);
     expect(onResubmitMock).not.toHaveBeenCalled();
   });
 });

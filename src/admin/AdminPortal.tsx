@@ -2251,7 +2251,6 @@ function AdminPortalContent({ section }: { section: string }) {
         [
           request.activityTitle,
           requestOrganization?.organizationName ?? "",
-          request.venue ?? "",
           buildPublicRecordCode("BR", request, adminBudgetRequests),
         ]
           .join(" ")
@@ -9846,7 +9845,6 @@ function AdminPortalContent({ section }: { section: string }) {
                 activityRows={[
                   ["Purpose and category", formatAdvocacyLabel(selectedBudgetRequest.purposeCategory) || "—"],
                   ["Proposed date", isProposedDateValid ? format(proposedDate, "d MMM yyyy") : "—"],
-                  ["Proposed venue", selectedBudgetRequest.venue || "—"],
                 ]}
                 financial={[
                   { icon: FileText, label: "Total requested", value: `₱${Math.round(selectedBudgetRequest.requestedAmount).toLocaleString()}` },
@@ -11110,7 +11108,6 @@ function AdminPortalContent({ section }: { section: string }) {
                 activityRows={[
                   ["Purpose and category", formatAdvocacyLabel(linkedBudgetRequest?.purposeCategory) || "—"],
                   ["Proposed date", isProposedDateValid && proposedDate ? format(proposedDate, "d MMM yyyy") : "—"],
-                  ["Proposed venue", linkedBudgetRequest?.venue || "—"],
                 ]}
                 financial={[
                   { icon: Send, label: "Released budget", value: formatPesoAmount(releasedBudgetAmount) },

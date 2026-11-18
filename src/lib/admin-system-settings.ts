@@ -24,6 +24,12 @@ export type AdminSystemSettingKey =
   | "general.office_address"
   | "general.user_portal_url"
   | "general.admin_portal_url"
+  | "general.signatory_ydo1_name"
+  | "general.signatory_ydo1_position"
+  | "general.signatory_ydo2_name"
+  | "general.signatory_ydo2_position"
+  | "general.signatory_head_name"
+  | "general.signatory_head_position"
   // Notifications
   | "notifications.new_registration.in_app"
   | "notifications.new_registration.email"
@@ -234,6 +240,60 @@ export const ADMIN_SYSTEM_SETTING_DEFINITIONS: AdminSystemSettingDefinition[] = 
     dataType: "string",
     defaultValue: "https://y-trace-admin.vercel.app",
     helperText: "e.g. https://y-trace-admin.vercel.app",
+  },
+  {
+    key: "general.signatory_ydo1_name",
+    category: "general",
+    label: "Reviewer 1 Name",
+    description: "Printed on budget proposals, liquidation certificates and official reports.",
+    dataType: "string",
+    defaultValue: "ARVIE A. SALOSA",
+    helperText: "e.g. ARVIE A. SALOSA",
+  },
+  {
+    key: "general.signatory_ydo1_position",
+    category: "general",
+    label: "Reviewer 1 Position",
+    description: "Position printed under the reviewer 1 name.",
+    dataType: "string",
+    defaultValue: "Youth Development Officer I",
+    helperText: "e.g. Youth Development Officer I",
+  },
+  {
+    key: "general.signatory_ydo2_name",
+    category: "general",
+    label: "Reviewer 2 Name",
+    description: "Printed on budget proposals, liquidation certificates and official reports.",
+    dataType: "string",
+    defaultValue: "JOHN STEPHEN G. RAOTRAOT",
+    helperText: "e.g. JOHN STEPHEN G. RAOTRAOT",
+  },
+  {
+    key: "general.signatory_ydo2_position",
+    category: "general",
+    label: "Reviewer 2 Position",
+    description: "Position printed under the reviewer 2 name.",
+    dataType: "string",
+    defaultValue: "Youth Development Officer II",
+    helperText: "e.g. Youth Development Officer II",
+  },
+  {
+    key: "general.signatory_head_name",
+    category: "general",
+    label: "Approving Officer Name",
+    description: "Printed on budget proposals, liquidation certificates and official reports.",
+    dataType: "string",
+    defaultValue: "COLLEEN GAIL A. DE GUZMAN",
+    helperText: "e.g. COLLEEN GAIL A. DE GUZMAN",
+  },
+  {
+    key: "general.signatory_head_position",
+    category: "general",
+    label: "Approving Officer Position",
+    description: "Position printed under the approving officer name.",
+    dataType: "string",
+    defaultValue: "Officer-in-Charge",
+    helperText: "e.g. Officer-in-Charge",
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1414,4 +1474,16 @@ export const formatSystemCurrency = (amount: number): string => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+};
+
+export type OfficialSignatory = { name: string; position: string };
+
+/** PCYDO signatories in order: Reviewer 1 (YDO I), Reviewer 2 (YDO II), Approving Officer (Officer-in-Charge). */
+export const getOfficialSignatories = (settings: Record<string, unknown> = getEffectiveSystemSettings() as Record<string, unknown>) => {
+  const read = (key: string) => String(settings[key] ?? ADMIN_SETTING_DEFINITIONS_BY_KEY.get(key as AdminSystemSettingKey)?.defaultValue ?? "").trim();
+  const pick = (id: "ydo1" | "ydo2" | "head"): OfficialSignatory => ({
+    name: read(`general.signatory_${id}_name`),
+    position: read(`general.signatory_${id}_position`),
+  });
+  return { reviewers: [pick("ydo1"), pick("ydo2")], approver: pick("head") };
 };

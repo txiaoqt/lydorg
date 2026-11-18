@@ -635,7 +635,7 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
               <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
-                placeholder="Search activity, code, venue..."
+                placeholder="Search activity or code..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 h-8 text-xs rounded-xl bg-background border-border/80 w-full focus-visible:ring-1 focus-visible:ring-primary"
@@ -803,10 +803,6 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                               <div className="flex items-center gap-2 text-xs">
                                 <span className="font-mono font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded text-[10px]">
                                   {recordCode}
-                                </span>
-                                <span className="text-muted-foreground/50">•</span>
-                                <span className="text-muted-foreground text-[11px] truncate max-w-[140px]">
-                                  {relatedBudget?.venue || "Pasig City"}
                                 </span>
                               </div>
                             </div>
@@ -1052,12 +1048,6 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                             <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Target Date</span>
                             <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
                               {selectedBudget?.activityDate ? formatShortPortalDate(selectedBudget.activityDate) : "Not set"}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Venue / Location</span>
-                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedBudget?.venue}>
-                              {selectedBudget?.venue || "Pasig City"}
                             </span>
                           </div>
                         </div>
@@ -1494,12 +1484,6 @@ const UserPortalLiquidationWorkspaceViewContent: React.FC<UserPortalLiquidationW
                             <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Target Date</span>
                             <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 block">
                               {selectedBudget?.activityDate ? formatShortPortalDate(selectedBudget.activityDate) : "Not set"}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Venue / Location</span>
-                            <span className="font-semibold text-foreground text-xs sm:text-sm mt-0.5 truncate block" title={selectedBudget?.venue}>
-                              {selectedBudget?.venue || "Pasig City"}
                             </span>
                           </div>
                         </div>

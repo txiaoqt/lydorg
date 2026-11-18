@@ -413,6 +413,36 @@ export const AdminSettingsPage: React.FC = () => {
                     onChange={(val) => updateDraft("general.office_address", val)}
                   />
                 </SettingSection>
+
+                <SettingSection
+                  title="Signatories"
+                  description="Names and positions printed on budget proposals (Reviewed by / Approved by), liquidation certificates and official reports."
+                >
+                  {(["ydo1", "ydo2", "head"] as const).map((id) => {
+                    const nameKey = `general.signatory_${id}_name` as const;
+                    const positionKey = `general.signatory_${id}_position` as const;
+                    return (
+                      <div key={id} className="grid gap-3.5 sm:grid-cols-2">
+                        <SettingInputField
+                          settingKey={nameKey}
+                          value={draftSettings[nameKey]}
+                          error={validationErrors[nameKey]}
+                          disabled={!canManageSettings || isSaving}
+                          hideDescription
+                          onChange={(val) => updateDraft(nameKey, val)}
+                        />
+                        <SettingInputField
+                          settingKey={positionKey}
+                          value={draftSettings[positionKey]}
+                          error={validationErrors[positionKey]}
+                          disabled={!canManageSettings || isSaving}
+                          hideDescription
+                          onChange={(val) => updateDraft(positionKey, val)}
+                        />
+                      </div>
+                    );
+                  })}
+                </SettingSection>
               </TabsContent>
 
               {/* ───────────────────────────────────────────────────────────────── */}
