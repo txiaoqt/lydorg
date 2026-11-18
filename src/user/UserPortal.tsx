@@ -222,6 +222,7 @@ import {
   loadOrganizationRecentYpopActivities,
   loadOrganizationActivityPage,
   loadOrganizationDocumentSubmissionState,
+  loadOrganizationActivityState,
   loadOrganizationBudgetSubmissionState,
   loadOrganizationBudgetRequestFiles,
   loadOrganizationLiquidationSubmissionState,
@@ -900,13 +901,27 @@ export default function UserPortal({ section }: { section: string }) {
     if (!["document-submission", "budget-request"].includes(section) || !currentProfile?.id || !user?.id) return;
     let cancelled = false;
     let refreshInProgress = false;
+    let followUpRefresh: ReturnType<typeof setTimeout> | undefined;
+    const refreshActivity = async () => {
+      // Recent Activity reads the same 50-entry slice the section loads on open.
+      try {
+        const activity = await loadOrganizationActivityState(currentProfile.id, 50);
+        if (!cancelled) mergeRemoteStateRef.current(activity);
+      } catch (error) {
+        if (!cancelled && import.meta.env.DEV) console.warn("Could not refresh registration activity.", error);
+      }
+    };
     const refreshDocuments = async () => {
       if (cancelled || refreshInProgress) return;
       refreshInProgress = true;
+      // Admin review pages write their per-document log entries just after the review is saved.
+      clearTimeout(followUpRefresh);
+      followUpRefresh = setTimeout(() => void refreshActivity(), 3000);
       try {
         const [result, refreshedProfile] = await Promise.all([
           loadOrganizationDocumentSubmissionState(user.id, currentProfile.id),
           fetchOrganizationProfileInSupabase(user.id),
+          refreshActivity(),
         ]);
         if (!cancelled) mergeRemoteStateRef.current({
           ...(result ?? {}),
@@ -928,7 +943,7 @@ export default function UserPortal({ section }: { section: string }) {
         else if (import.meta.env.DEV && ["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) console.warn("Organization registration status channel:", status, error ?? "");
       },
     });
-    return () => { cancelled = true; unsubscribe(); };
+    return () => { cancelled = true; clearTimeout(followUpRefresh); unsubscribe(); };
   }, [section, currentProfile?.id, user?.id, userRegistrationSubmission?.id]);
 
   const ypopRegistrationProfileQuery = useQuery({

@@ -382,7 +382,7 @@ export const RenewalsTable = ({
 
                   <div className="flex w-[13%] flex-col gap-0.5">
                     {item.majorClassification ? (
-                      <CategoryChip category={item.majorClassification} />
+                      <CategoryChip category={item.majorClassification} className="shrink whitespace-normal rounded-xl" />
                     ) : (
                       <span className="font-inter text-xs text-slate-500">—</span>
                     )}

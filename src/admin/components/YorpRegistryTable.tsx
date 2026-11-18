@@ -467,7 +467,7 @@ export const YorpRegistryTable = ({
 
                   <div className="flex w-[15%] items-center">
                     {org.majorClassification ? (
-                      <CategoryChip category={org.majorClassification} />
+                      <CategoryChip category={org.majorClassification} className="shrink whitespace-normal rounded-xl" />
                     ) : (
                       <span className="font-inter text-xs text-slate-500">—</span>
                     )}

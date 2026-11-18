@@ -522,7 +522,7 @@ export default function PublicBudgetOverview({
                 </p>
               )}
 
-              <div className="rounded-[4px] border border-[#C9D8EE] bg-[#EEF4FC] p-3 font-inter text-[11px] leading-relaxed text-public-text-neutral-default">
+              <div className="rounded-[4px] border border-brand-info-border bg-brand-info-subtle p-3 font-inter text-[11px] leading-relaxed text-public-text-neutral-default">
                 <p className="font-semibold text-public-text-brand">Public Privacy Standard</p>
                 <p className="mt-0.5">
                   Organization identities and individual grant applications are kept confidential in accordance with applicable data privacy laws and public disclosure requirements.

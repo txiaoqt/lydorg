@@ -7524,6 +7524,7 @@ function AdminPortalContent({ section }: { section: string }) {
           budget: "budgetRequests",
           liquidation: "liquidations",
           inquiry: "inquiries",
+          ypop: "ypop",
         } as const;
         const attentionPermissionByHref = new Map<string, string>([
           [routeMap.registrations, "registrations"],
@@ -7625,12 +7626,14 @@ function AdminPortalContent({ section }: { section: string }) {
                 budget: Wallet,
                 liquidation: Clipboard,
                 inquiry: Inbox,
+                ypop: Award,
               };
               const routeByKind: Record<string, string> = {
                 registration: routeMap.registrations,
                 budget: routeMap["budget-utilization"],
                 liquidation: routeMap["liquidation-monitoring"],
                 inquiry: routeMap.inquiries,
+                ypop: routeMap["ypop-validation"],
               };
               return {
                 id: item.id,

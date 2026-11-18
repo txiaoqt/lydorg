@@ -486,7 +486,7 @@ export const RegistrationsTable = ({
                   </div>
 
                   <div className="flex w-[16%] items-center">
-                    {org.majorClassification ? <CategoryChip category={org.majorClassification} /> : <span className="font-inter text-xs text-slate-500">—</span>}
+                    {org.majorClassification ? <CategoryChip category={org.majorClassification} className="shrink whitespace-normal rounded-xl" /> : <span className="font-inter text-xs text-slate-500">—</span>}
                   </div>
 
                   <div className="flex w-[13%] items-center">

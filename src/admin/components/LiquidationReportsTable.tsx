@@ -141,12 +141,14 @@ export const LiquidationStatusLabel = ({
   revisionDueAt,
   revisionLockedAt,
   revisionUnlockedAt,
+  className,
 }: {
   status: LiquidationReport["status"];
   deadlineAt?: string | null;
   revisionDueAt?: string | null;
   revisionLockedAt?: string | null;
   revisionUnlockedAt?: string | null;
+  className?: string;
 }) => {
   const overdueIndicatorsEnabled = useSystemSetting("workflow.overdue_indicators_enabled");
 
@@ -154,7 +156,7 @@ export const LiquidationStatusLabel = ({
     const isExpired = !revisionUnlockedAt && (isRevisionExpired(revisionDueAt) || Boolean(revisionLockedAt));
     if (isExpired) {
       return (
-        <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%] whitespace-nowrap border-status-danger-border bg-danger-subtle text-icon-danger-secondary">
+        <span className={cn("inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%] whitespace-nowrap border-status-danger-border bg-danger-subtle text-icon-danger-secondary", className)}>
           Revision Expired (Locked)
         </span>
       );
@@ -169,6 +171,7 @@ export const LiquidationStatusLabel = ({
       className={cn(
         "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 font-inter text-xs font-semibold leading-[140%] whitespace-nowrap",
         config.className,
+        className,
       )}
     >
       {config.label}
@@ -473,6 +476,7 @@ export const LiquidationReportsTable = ({
                       revisionDueAt={report.revisionDueAt}
                       revisionLockedAt={report.revisionLockedAt}
                       revisionUnlockedAt={report.revisionUnlockedAt}
+                      className="shrink whitespace-normal rounded-xl"
                     />
                   </div>
 
