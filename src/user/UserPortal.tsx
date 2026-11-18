@@ -280,6 +280,7 @@ import {
   type BudgetProposalForm,
 } from "@/lib/budget-proposal";
 import { buildBudgetProposalFile } from "@/lib/budget-proposal-pdf";
+import { clearProposalDraft, readProposalDraft, writeProposalDraft } from "@/lib/budget-proposal-draft-storage";
 import { fetchPublicSystemSettings, getOfficialSignatories } from "@/lib/admin-system-settings";
 
 const getReadiness = (filled: number, total: number) => (total === 0 ? 0 : Math.round((filled / total) * 100));
@@ -1185,6 +1186,32 @@ export default function UserPortal({ section }: { section: string }) {
       initializedYpopBudgetIdRef.current = null;
     }
   }, [budgetEligibility, currentProfile?.id, section, searchParams, state.ypopEntries, user?.id]);
+
+  // Reload-proof form: mirror the open budget form into this browser and restore it after a reload.
+  const proposalDraftScope = currentProfile?.id ? `desktop:${currentProfile.id}` : "";
+  const proposalDraftRestoredRef = useRef(false);
+  const budgetFormWasOpenRef = useRef(false);
+  useEffect(() => {
+    if (!proposalDraftScope || proposalDraftRestoredRef.current || section !== "budget-request") return;
+    proposalDraftRestoredRef.current = true;
+    const saved = readProposalDraft<{ budgetForm: BudgetRequest; proposalForm: unknown }>(proposalDraftScope);
+    if (!saved?.budgetForm || showBudgetForm) return;
+    setBudgetForm(saved.budgetForm);
+    setProposalForm(normalizeProposalForm(saved.proposalForm, blankProposalForm()));
+    setShowBudgetForm(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposalDraftScope, section]);
+  useEffect(() => {
+    if (!proposalDraftScope) return;
+    if (showBudgetForm) {
+      budgetFormWasOpenRef.current = true;
+      writeProposalDraft(proposalDraftScope, { budgetForm, proposalForm });
+    } else if (budgetFormWasOpenRef.current) {
+      // Closed by save or cancel: the browser copy is no longer needed.
+      budgetFormWasOpenRef.current = false;
+      clearProposalDraft(proposalDraftScope);
+    }
+  }, [proposalDraftScope, showBudgetForm, budgetForm, proposalForm]);
 
   useEffect(() => {
     setBudgetPage(1);

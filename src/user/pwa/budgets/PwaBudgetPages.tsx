@@ -1,5 +1,5 @@
 import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowStatusHelper";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Check, ChevronRight, Circle, FileText, Loader2, Pencil, Plus, WalletCards,
@@ -27,6 +27,7 @@ import { isSubmissionRevisionLocked } from "@/lib/revision-deadline";
 import { BudgetProposalFormFields } from "@/components/portal/BudgetProposalFormFields";
 import { compactProposalForm, createEmptyProposalForm, normalizeProposalForm, proposalBudgetTotal, validateProposalForm, type BudgetProposalForm } from "@/lib/budget-proposal";
 import { buildBudgetProposalFile } from "@/lib/budget-proposal-pdf";
+import { clearProposalDraft, readProposalDraft, writeProposalDraft } from "@/lib/budget-proposal-draft-storage";
 import { fetchPublicSystemSettings, getOfficialSignatories } from "@/lib/admin-system-settings";
 
 type PortalData = ReturnType<typeof usePwaPortalData>;
@@ -189,17 +190,27 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
     contactNumber: data.profile?.contactNumber,
     email: data.profile?.organizationEmail,
   });
-  const [purposeCategory, setPurposeCategory] = useState(existing?.purposeCategory || defaultCategory);
-  const [proposal, setProposal] = useState<BudgetProposalForm>(() => normalizeProposalForm(existing?.proposalForm, profileDefaults()));
+  // Unsaved answers survive a reload; cleared after a successful save.
+  const draftScope = `pwa:${organizationId}:${mode === "new" ? "new" : requestId}`;
+  type StoredDraft = { purposeCategory: string; proposal: unknown };
+  const [purposeCategory, setPurposeCategory] = useState(() => readProposalDraft<StoredDraft>(draftScope)?.purposeCategory || existing?.purposeCategory || defaultCategory);
+  const [proposal, setProposal] = useState<BudgetProposalForm>(() => normalizeProposalForm(readProposalDraft<StoredDraft>(draftScope)?.proposal ?? existing?.proposalForm, profileDefaults()));
   const [saving, setSaving] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   // Reload answers only when a different request (or a newer save) arrives, never mid-typing on refetch.
   const existingKey = existing ? `${existing.id}:${existing.updatedAt}` : "";
   useEffect(() => {
-    setPurposeCategory(existing?.purposeCategory || defaultCategory);
-    setProposal(normalizeProposalForm(existing?.proposalForm, profileDefaults()));
+    const stored = readProposalDraft<StoredDraft>(draftScope);
+    setPurposeCategory(stored?.purposeCategory || existing?.purposeCategory || defaultCategory);
+    setProposal(normalizeProposalForm(stored?.proposal ?? existing?.proposalForm, profileDefaults()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingKey, defaultCategory]);
+  // Only an edit by the org is stored, so loading a saved request never overwrites it with blanks.
+  const editedRef = useRef(false);
+  const editProposal = (next: BudgetProposalForm) => { editedRef.current = true; setProposal(next); };
+  useEffect(() => {
+    if (organizationId && editedRef.current) writeProposalDraft(draftScope, { purposeCategory, proposal });
+  }, [draftScope, organizationId, purposeCategory, proposal]);
 
   if (mode === "edit" && (detailQuery.isLoading || filesQuery.isLoading)) return <p role="status" className="pwa-card">Loading budget request…</p>;
   if (mode === "edit" && (detailQuery.isError || filesQuery.isError)) return <section className="pwa-card"><p role="alert">Budget request could not be loaded.</p><button className="pwa-secondary-button" onClick={() => { void detailQuery.refetch(); void filesQuery.refetch(); }}>Try again</button></section>;
@@ -279,6 +290,7 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       } else {
         saved = await createBudgetRequestInSupabase({ budgetRequest: payload, file });
       }
+      clearProposalDraft(draftScope);
       await data.refreshBudgets();
       toast({ title: status === "draft" ? "Budget draft saved" : "Budget request submitted" });
       go(pwaBudgetDetailRoute(saved.id), { replace: true });
@@ -299,12 +311,12 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
       </header>
       <BudgetProposalFormFields
         value={proposal}
-        onChange={setProposal}
+        onChange={editProposal}
         centerOfParticipationField={
           <label className="block space-y-1.5">
             <span className="block text-xs font-bold text-foreground">Center of Participation <span className="text-red-500">*</span></span>
             {orgAdvocacies.length > 0 ? (
-              <select className="h-10 w-full rounded-xl border border-border/80 bg-background px-3 text-xs" value={purposeCategory} onChange={(event) => setPurposeCategory(event.target.value)} required>
+              <select className="h-10 w-full rounded-xl border border-border/80 bg-background px-3 text-xs" value={purposeCategory} onChange={(event) => { editedRef.current = true; setPurposeCategory(event.target.value); }} required>
                 {existing && !orgAdvocacies.some((category) => category === existing.purposeCategory) && (
                   <option value={existing.purposeCategory}>{formatAdvocacyLabel(existing.purposeCategory)}</option>
                 )}
