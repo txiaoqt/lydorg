@@ -7680,6 +7680,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 icon={UserPlus}
                 trend="up"
                 trendLabel={`${overviewStats.pendingProfiles} awaiting review`}
+                pendingCount={overviewStats.pendingProfiles}
                 description="YORP accreditation submissions"
                 onClick={() => navigate(routeMap.registrations)}
               /> : null}
@@ -7689,6 +7690,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 icon={Award}
                 trend="up"
                 trendLabel={`${pendingYpop} awaiting review`}
+                pendingCount={pendingYpop}
                 description="YPOP eligibility evaluations"
                 onClick={() => navigate(routeMap["ypop-validation"])}
               /> : null}
@@ -7698,6 +7700,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 icon={Wallet}
                 trend="up"
                 trendLabel={`${overviewStats.pendingBudget} awaiting review`}
+                pendingCount={overviewStats.pendingBudget}
                 description="Funding requests for approved projects"
                 onClick={() => navigate(routeMap["budget-utilization"])}
               /> : null}
@@ -7707,6 +7710,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 icon={Clipboard}
                 trend="up"
                 trendLabel={`${overviewStats.overdueLiquidation + overviewStats.pendingLiquidation} awaiting review`}
+                pendingCount={overviewStats.overdueLiquidation + overviewStats.pendingLiquidation}
                 description="Financial accountability reports"
                 onClick={() => navigate(routeMap["liquidation-monitoring"])}
               /> : null}
@@ -7716,6 +7720,7 @@ function AdminPortalContent({ section }: { section: string }) {
                 icon={Inbox}
                 trend="up"
                 trendLabel={`${overviewStats.pendingInquiries} awaiting review`}
+                pendingCount={overviewStats.pendingInquiries}
                 description="Questions from organization users"
                 onClick={() => navigate(routeMap.inquiries)}
               /> : null}

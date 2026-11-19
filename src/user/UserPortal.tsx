@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { withIndividualDocumentSubmissions } from "@/components/activity/registration-submission-activity";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -1777,44 +1778,7 @@ export default function UserPortal({ section }: { section: string }) {
             registrationRelatedIds.has(log.relatedId || ""),
         )
         .slice();
-      const submittedAt = submission?.submittedAt?.trim();
-      const hasValidSubmissionTimestamp = Boolean(
-        submittedAt && !Number.isNaN(new Date(submittedAt).getTime()),
-      );
-      const hasCanonicalSubmissionEvent = logs.some((log) => {
-        const action = log.action?.toLowerCase() || "";
-        const description = log.description?.toLowerCase() || "";
-        return (
-          log.relatedId === submission?.id &&
-          log.relatedType === "document_submission" &&
-          !action.includes("review") &&
-          !description.includes("review decision") &&
-          (action.includes("batch_submitted") ||
-            action.includes("submitted batch") ||
-            action.includes("batch document submission"))
-        );
-      });
-
-      if (
-        submission &&
-        submission.status !== "draft" &&
-        submittedAt &&
-        hasValidSubmissionTimestamp &&
-        !hasCanonicalSubmissionEvent
-      ) {
-        logs.push({
-          id: `document-submission-${submission.id}`,
-          actorUserId: submission.submittedBy || "",
-          organizationId: currentProfile?.id || submission.organizationId,
-          action: "batch_submitted",
-          relatedType: "document_submission",
-          relatedId: submission.id,
-          description: "Organization submitted registration documents for review.",
-          createdAt: submittedAt,
-        });
-      }
-
-      return logs.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+      return withIndividualDocumentSubmissions(logs, state.documentSubmissionFiles, submission).sort((left, right) => right.createdAt.localeCompare(left.createdAt));
     },
     [currentProfile?.id, state.activityLogs, state.documentSubmissionFiles, submission],
   );

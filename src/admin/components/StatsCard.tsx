@@ -7,13 +7,16 @@ type StatsCardProps = {
   icon: LucideIcon;
   trend?: "up" | "down";
   trendLabel?: string;
+  /** Items awaiting review; above 0 the pill turns amber in dark mode. */
+  pendingCount?: number;
   description: string;
   onClick?: () => void;
 };
 
-export const StatsCard = ({ title, value, icon: Icon, trend, trendLabel, description, onClick }: StatsCardProps) => {
+export const StatsCard = ({ title, value, icon: Icon, trend, trendLabel, pendingCount = 0, description, onClick }: StatsCardProps) => {
   const TrendIcon = trend === "down" ? TrendingDown : TrendingUp;
   const showTrend = Boolean(trendLabel);
+  const pending = pendingCount > 0;
 
   return (
     <div
@@ -51,8 +54,13 @@ export const StatsCard = ({ title, value, icon: Icon, trend, trendLabel, descrip
             {value}
           </p>
           {showTrend ? (
-            <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 font-inter text-[10px] font-medium leading-[140%] text-muted-foreground">
-              <TrendIcon className="h-2.5 w-2.5 shrink-0 text-muted-foreground" strokeWidth={1.6} />
+            <span
+              className={cn(
+                "inline-flex w-fit shrink-0 items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 font-inter text-[10px] font-medium leading-[140%] text-muted-foreground",
+                pending && "dark:border-[var(--yt-warning-border)] dark:bg-[var(--yt-warning-bg)] dark:text-[var(--yt-warning-text)]",
+              )}
+            >
+              <TrendIcon className={cn("h-2.5 w-2.5 shrink-0 text-muted-foreground", pending && "dark:text-[var(--yt-warning-text)]")} strokeWidth={1.6} />
               {trendLabel}
             </span>
           ) : null}

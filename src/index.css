@@ -607,6 +607,149 @@
     --yt-neutral-border: #26344a;
   }
 
+  /* Admin dark palette. The block above is shared with the org portal and public site, so admin values live here. */
+  html.dark body.admin-theme-active.dark {
+    --background: 225 50% 8%;           /* #0A0F1E */
+    --foreground: 226 100% 97%;          /* #EEF2FF */
+    --card: 223 48% 13%;                 /* #111A30 */
+    --card-foreground: 226 100% 97%;
+    --popover: 223 48% 13%;
+    --popover-foreground: 226 100% 97%;
+
+    --primary: 222 100% 68%;             /* #5B8CFF */
+    --primary-hover: 222 100% 74%;
+    --primary-active: 222 84% 61%;
+    --primary-strong: 222 100% 74%;
+    --primary-soft: 223 52% 15%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 223 47% 16%;            /* #16213D */
+    --secondary-foreground: 226 100% 97%;
+    --muted: 223 47% 16%;
+    --muted-foreground: 225 29% 63%;     /* #8593BC */
+    --accent: 223 47% 18%;
+    --accent-foreground: 226 100% 97%;
+
+    --destructive: 0 91% 71%;            /* #F87171 */
+    --border: 224 42% 19%;               /* #1C2847 */
+    --input: 224 42% 21%;
+    --ring: 222 100% 68%;
+
+    --success: 158 64% 52%;              /* #34D399 */
+    --warning: 40 96% 64%;               /* #FBBF4A */
+    --info: 222 100% 68%;
+
+    --sidebar-background: 224 49% 10%;   /* #0D1426 */
+    --sidebar-foreground: 226 100% 97%;
+    --sidebar-primary: 222 100% 68%;
+    --sidebar-accent: 223 52% 17%;
+    --sidebar-accent-foreground: 226 100% 97%;
+    --sidebar-border: 224 42% 16%;
+    --sidebar-ring: 222 100% 68%;
+
+    --semantic-success: 158 64% 52%;
+    --semantic-warning: 40 96% 64%;
+    --semantic-danger: 0 91% 71%;
+    --semantic-info-admin: 222 100% 68%;
+    --semantic-placeholder: 225 29% 63%;
+
+    --text-default: 226 100% 97%;
+    --text-warning-secondary: 40 96% 64%;
+    --icon-danger-secondary: 0 91% 71%;
+    --icon-info-secondary: 222 100% 74%;
+    --text-info-strong: 222 100% 74%;
+    --text-positive-strong: 158 64% 52%;
+    --positive-secondary: 158 64% 58%;
+    --text-danger-strong: 0 91% 71%;
+    --text-neutral-tertiary: 225 29% 63%;
+    --text-neutral-secondary: 223 35% 73%;
+    --text-reference: 225 29% 63%;
+    --border-default: 224 40% 24%;
+    --bg-info-secondary: 223 52% 19%;
+    --bg-info-tertiary: 223 47% 16%;
+    --bg-neutral-subtle: 223 40% 18%;
+    --bg-panel-subtle: 223 48% 11.5%;
+    --info-panel-subtle: 223 48% 11.5%;
+    --border-panel-subtle: 224 42% 17%;
+    --brand-info-subtle: 223 47% 16%;
+    --brand-info-border: 224 42% 19%;
+    --bg-reference-chip: 223 47% 16%;
+    --border-reference-chip: 224 42% 19%;
+    --neutral-hover-subtle: 223 45% 18%;
+    --segmented-control-bg: 223 47% 16%;
+    --segmented-control-border: 224 40% 24%;
+    --segmented-control-inactive-text: 225 29% 68%;
+    --bg-progress-track: 223 40% 20%;
+    --gray-100: 224 49% 10%;
+    --bg-success-subtle: 158 45% 13%;
+    --border-success-subtle: 158 45% 22%;
+    --bg-warning-subtle: 40 45% 13%;
+    --border-warning-subtle: 40 50% 24%;
+
+    --admin-page-bg: 225 50% 8%;
+    --admin-surface: 223 48% 13%;
+    --admin-surface-subtle: 223 47% 16%;
+    --admin-border: 224 42% 19%;
+    --admin-border-strong: 224 40% 24%;
+    --admin-nav-dark: 224 49% 10%;
+    --admin-heading: 226 100% 97%;
+    --admin-link: 222 100% 72%;
+    --admin-body: 226 100% 97%;
+    --admin-meta: 223 35% 73%;
+    --admin-active-on-dark: 222 100% 68%;
+
+    --yt-bg: #0a0f1e;
+    --yt-surface: #111a30;
+    --yt-surface-subtle: #16213d;
+    --yt-surface-hover: #1a2747;
+    --yt-border: #1c2847;
+    --yt-border-strong: #2a3a62;
+    --yt-primary: #5b8cff;
+    --yt-primary-hover: #7aa2ff;
+    --yt-primary-active: #4a7bef;
+    --yt-primary-strong: #7aa2ff;
+    --yt-primary-soft: #121d38;
+    --yt-text: #eef2ff;
+    --yt-text-secondary: #a3b1d4;
+    --yt-text-muted: #8593bc;
+    --yt-text-subtle: #6b7aa3;
+    --yt-focus: #5b8cff;
+    --yt-focus-ring: rgb(91 140 255 / 28%);
+    --yt-shadow-sm: 0 1px 2px rgb(0 0 0 / 35%);
+    --yt-shadow-md: 0 6px 18px rgb(0 0 0 / 40%);
+    --yt-success-bg: rgba(52, 211, 153, 0.12);
+    --yt-success-text: #34d399;
+    --yt-success-border: rgba(52, 211, 153, 0.28);
+    --yt-info-bg: rgba(91, 140, 255, 0.12);
+    --yt-info-text: #7aa2ff;
+    --yt-info-border: rgba(91, 140, 255, 0.28);
+    --yt-progress-bg: rgba(91, 140, 255, 0.12);
+    --yt-progress-text: #7aa2ff;
+    --yt-progress-border: rgba(91, 140, 255, 0.28);
+    --yt-warning-bg: rgba(251, 191, 74, 0.12);
+    --yt-warning-text: #fbbf4a;
+    --yt-warning-border: rgba(251, 191, 74, 0.28);
+    --yt-revision-bg: rgba(251, 191, 74, 0.12);
+    --yt-revision-text: #fbbf4a;
+    --yt-revision-border: rgba(251, 191, 74, 0.28);
+    --yt-danger-bg: rgba(248, 113, 113, 0.12);
+    --yt-danger-text: #f87171;
+    --yt-danger-border: rgba(248, 113, 113, 0.28);
+    --yt-neutral-bg: #121d38;
+    --yt-neutral-text: #a3b1d4;
+    --yt-neutral-border: #1c2847;
+
+    --public-nav-bg: #0d1426;
+    --public-text-brand: #7aa2ff;
+    --public-border-brand: #5b8cff;
+    --public-bg-brand: #5b8cff;
+    --public-bg-brand-subtle: #16213d;
+    --public-text-secondary: #a3b1d4;
+    --public-bg-section: #0a0f1e;
+    --public-border-default: #1c2847;
+    --public-border-neutral-tertiary: #1c2847;
+  }
+
   /* Admin dark mode utility bridges for legacy slate/gray and status class patterns */
   body.admin-theme-active.dark .bg-white,
   body.admin-theme-active.dark .bg-white\/95,
@@ -741,7 +884,7 @@
   body.admin-theme-active.dark .bg-amber-100,
   body.admin-theme-active.dark .hover\:bg-amber-50:hover,
   body.admin-theme-active.dark .hover\:bg-amber-100:hover {
-    background-color: rgba(217, 154, 61, 0.12);
+    background-color: rgba(251, 191, 74, 0.1);
   }
 
   body.admin-theme-active.dark .border-amber-100,
@@ -755,7 +898,7 @@
   body.admin-theme-active.dark .border-amber-900\/40,
   body.admin-theme-active.dark .border-amber-900\/50,
   body.admin-theme-active.dark .border-amber-900\/60 {
-    border-color: rgba(217, 154, 61, 0.25);
+    border-color: rgba(251, 191, 74, 0.28);
   }
 
   body.admin-theme-active.dark .text-amber-700,
@@ -765,20 +908,22 @@
   body.admin-theme-active.dark .text-amber-600,
   body.admin-theme-active.dark .text-amber-950,
   body.admin-theme-active.dark .text-amber-950\/80 {
-    color: #d99a3d;
+    color: #fbbf4a;
   }
 
   body.admin-theme-active.dark .bg-emerald-50,
+  body.admin-theme-active.dark .bg-cyan-50,
   body.admin-theme-active.dark .bg-emerald-50\/40,
   body.admin-theme-active.dark .bg-emerald-50\/50,
   body.admin-theme-active.dark .bg-emerald-50\/70,
   body.admin-theme-active.dark .bg-emerald-100,
   body.admin-theme-active.dark .bg-green-50,
   body.admin-theme-active.dark .hover\:bg-emerald-100:hover {
-    background-color: rgba(45, 186, 138, 0.12);
+    background-color: rgba(52, 211, 153, 0.12);
   }
 
   body.admin-theme-active.dark .border-emerald-100,
+  body.admin-theme-active.dark .border-cyan-200,
   body.admin-theme-active.dark .border-emerald-200,
   body.admin-theme-active.dark .border-emerald-200\/60,
   body.admin-theme-active.dark .border-emerald-200\/80,
@@ -786,15 +931,16 @@
   body.admin-theme-active.dark .border-emerald-800,
   body.admin-theme-active.dark .border-emerald-800\/40,
   body.admin-theme-active.dark .border-emerald-900\/50 {
-    border-color: rgba(45, 186, 138, 0.25);
+    border-color: rgba(52, 211, 153, 0.32);
   }
 
   body.admin-theme-active.dark .text-emerald-700,
+  body.admin-theme-active.dark .text-cyan-700,
   body.admin-theme-active.dark .text-emerald-800,
   body.admin-theme-active.dark .text-emerald-900,
   body.admin-theme-active.dark .text-emerald-600,
   body.admin-theme-active.dark .text-emerald-950\/80 {
-    color: #2dba8a;
+    color: #34d399;
   }
 
   body.admin-theme-active.dark .bg-red-50,
@@ -810,7 +956,7 @@
   body.admin-theme-active.dark .hover\:bg-red-50:hover,
   body.admin-theme-active.dark .hover\:bg-red-100:hover,
   body.admin-theme-active.dark .hover\:bg-rose-50:hover {
-    background-color: rgba(217, 107, 114, 0.12);
+    background-color: rgba(248, 113, 113, 0.1);
   }
 
   body.admin-theme-active.dark .border-red-100,
@@ -823,7 +969,7 @@
   body.admin-theme-active.dark .border-rose-300,
   body.admin-theme-active.dark .border-rose-500,
   body.admin-theme-active.dark .border-rose-800 {
-    border-color: rgba(217, 107, 114, 0.25);
+    border-color: rgba(248, 113, 113, 0.28);
   }
 
   body.admin-theme-active.dark .text-red-700,
@@ -835,7 +981,7 @@
   body.admin-theme-active.dark .text-rose-800,
   body.admin-theme-active.dark .text-rose-900,
   body.admin-theme-active.dark .text-red-500 {
-    color: #d96b72;
+    color: #f87171;
   }
 
   body.admin-theme-active.dark .bg-blue-50,
@@ -850,7 +996,7 @@
   body.admin-theme-active.dark .bg-indigo-50\/50,
   body.admin-theme-active.dark .bg-indigo-100,
   body.admin-theme-active.dark .hover\:bg-sky-50:hover {
-    background-color: rgba(59, 130, 208, 0.12);
+    background-color: rgba(91, 140, 255, 0.12);
   }
 
   body.admin-theme-active.dark .border-blue-200,
@@ -860,7 +1006,7 @@
   body.admin-theme-active.dark .border-blue-800\/80,
   body.admin-theme-active.dark .border-blue-900\/50,
   body.admin-theme-active.dark .border-blue-900\/60 {
-    border-color: rgba(59, 130, 208, 0.25);
+    border-color: rgba(91, 140, 255, 0.32);
   }
 
   body.admin-theme-active.dark .text-blue-700,
@@ -871,7 +1017,7 @@
   body.admin-theme-active.dark .text-sky-600,
   body.admin-theme-active.dark .text-sky-700,
   body.admin-theme-active.dark .text-sky-800 {
-    color: #38bdf8;
+    color: #7aa2ff;
   }
 
   body.admin-theme-active.dark .bg-purple-50,
@@ -888,6 +1034,20 @@
   body.admin-theme-active.dark .text-purple-600,
   body.admin-theme-active.dark .text-indigo-500 {
     color: #c4b5fd;
+  }
+
+  /* Overview stat card icon chips */
+  body.admin-theme-active.dark .group .h-8.w-8.rounded-md.bg-muted\/70 {
+    background-color: rgba(91, 140, 255, 0.14);
+    border-color: rgba(91, 140, 255, 0.22);
+    color: #7aa2ff;
+  }
+
+  /* Sidebar pending counts: solid amber so pending work stands out */
+  body.admin-theme-active.dark aside .rounded-full.bg-amber-500\/15 {
+    background-color: #fbbf4a;
+    border-color: #fbbf4a;
+    color: #1a1200;
   }
 
   body.admin-theme-active.dark .hover\:bg-slate-100:hover,
