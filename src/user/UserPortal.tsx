@@ -1019,6 +1019,10 @@ export default function UserPortal({ section }: { section: string }) {
     error: boolean;
     submissionBlocker: BudgetSubmissionBlocker | null;
   } | null>(null);
+  const budgetSubmissionBlocker =
+    budgetPrerequisitesLoad?.organizationId === currentProfile?.id
+      ? budgetPrerequisitesLoad.submissionBlocker
+      : null;
   const isSharedResourceSection = section === "templates" || section === "news-releases";
   const sharedResourceQuery = useQuery({
     queryKey: ["user", user?.id, "shared-resources", section],
@@ -4318,7 +4322,7 @@ export default function UserPortal({ section }: { section: string }) {
             organizationId={currentProfile?.id ?? ""}
             organizationDashboardSummary={state.organizationDashboardSummary}
             budgetWorkflowEligibility={budgetWorkflowEligibility}
-            budgetSubmissionBlocker={budgetPrerequisitesLoad?.organizationId === currentProfile?.id ? budgetPrerequisitesLoad.submissionBlocker : null}
+            budgetSubmissionBlocker={budgetSubmissionBlocker}
             proposalTemplates={proposalTemplates}
             onDownloadTemplate={(template) => void handleDownloadTemplate(template)}
             budgetRequests={budgetRequests}
