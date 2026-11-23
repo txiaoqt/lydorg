@@ -1,11 +1,13 @@
 import { validateZipCode } from "@/lib/organization-profile-domain";
 import { PROPOSAL_MAX_TOTAL } from "@/lib/budget-proposal";
+import { getBudgetSubmissionBlockerCopy } from "@/lib/budget-submission-blocker";
 import type {
   ActivityLog,
   AdminRoleRecord,
   AdministratorRecord,
   BudgetRequest,
   BudgetRequestFile,
+  BudgetSubmissionBlocker,
   ComplianceRemark,
   DocumentSubmission,
   LiquidationReport,
@@ -5026,6 +5028,11 @@ export const createBudgetRequestInSupabase = async (params: {
   file?: File | null;
 }) => {
   const { session, organizationProfile } = await getAuthenticatedOrganizationContext();
+  const blocker = await loadOrganizationBudgetSubmissionBlocker(organizationProfile.id);
+  if (blocker) {
+    throw new Error(getBudgetSubmissionBlockerCopy(blocker).description);
+  }
+
   const eligibility = await getAuthenticatedBudgetEligibilityInSupabase();
   if (!eligibility.eligible) {
     throw new Error("A qualified YPOP validation in the active period is required before creating a budget request.");
@@ -5092,6 +5099,36 @@ export const createBudgetRequestInSupabase = async (params: {
   }
 
   return createdBudget;
+};
+
+export const loadOrganizationBudgetSubmissionBlocker = async (
+  organizationId: string,
+): Promise<BudgetSubmissionBlocker | null> => {
+  if (!supabase || !organizationId) return null;
+  const { data, error } = await supabase.rpc("get_organization_budget_submission_blocker", {
+    _organization_id: organizationId,
+  });
+  if (error) throw toQueryError(error);
+  if (!data || typeof data !== "object") return null;
+
+  const row = data as Record<string, unknown>;
+  if (
+    typeof row.budget_request_id !== "string" ||
+    typeof row.kind !== "string" ||
+    typeof row.budget_status !== "string"
+  ) return null;
+
+  const kind = row.kind;
+  if (kind !== "draft" && kind !== "ongoing_budget_request" && kind !== "pending_liquidation") return null;
+
+  return {
+    kind,
+    budgetRequestId: row.budget_request_id,
+    activityTitle: typeof row.activity_title === "string" ? row.activity_title : "",
+    budgetStatus: row.budget_status,
+    liquidationReportId: typeof row.liquidation_report_id === "string" ? row.liquidation_report_id : null,
+    liquidationStatus: typeof row.liquidation_status === "string" ? row.liquidation_status : null,
+  };
 };
 
 export const updateBudgetRequestInSupabase = async (

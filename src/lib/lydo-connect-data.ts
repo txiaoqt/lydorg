@@ -33,6 +33,15 @@ export type BudgetRequestStatus =
   | "rejected_red"
   | "budget_released";
 
+export type BudgetSubmissionBlocker = {
+  kind: "draft" | "ongoing_budget_request" | "pending_liquidation";
+  budgetRequestId: string;
+  activityTitle: string;
+  budgetStatus: string;
+  liquidationReportId: string | null;
+  liquidationStatus: string | null;
+};
+
 /** Read-only labels for historical Budget Request statuses normalized by the database on write. */
 export function getBudgetRequestStatusLabel(status: string): string | undefined {
   if (status === "completed" || status === "budget_released") return "Budget Released";

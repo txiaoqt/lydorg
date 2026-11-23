@@ -81,6 +81,8 @@ import { PortalDrawerDocumentSection } from "./PortalDrawerDocumentSection";
 import { formatFileSize } from "./UserPortalTemplatesWorkspaceView";
 import { BudgetProposalFormFields } from "./BudgetProposalFormFields";
 import type { BudgetProposalForm } from "@/lib/budget-proposal";
+import { BudgetSubmissionBlockerDialog } from "@/components/portal/BudgetSubmissionBlockerDialog";
+import type { BudgetSubmissionBlocker } from "@/lib/budget-submission-blocker";
 import { queryClient } from "@/lib/query-client";
 
 const useIsDesktop = () => {
@@ -109,6 +111,7 @@ export interface UserPortalBudgetWorkspaceViewProps {
   organizationId?: string;
   organizationDashboardSummary?: any;
   budgetWorkflowEligibility?: any;
+  budgetSubmissionBlocker?: BudgetSubmissionBlocker | null;
   proposalTemplates?: TemplateRecord[];
   onDownloadTemplate?: (template: TemplateRecord) => void;
   budgetRequests: Array<any>;
@@ -148,6 +151,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
   organizationId = "",
   organizationDashboardSummary,
   budgetWorkflowEligibility,
+  budgetSubmissionBlocker = null,
   proposalTemplates = [],
   onDownloadTemplate,
   budgetRequests,
@@ -310,6 +314,36 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
   };
 
   const budgetRoutePath = userRouteMap["budget-request"] || userRouteMap["financial-grant"] || "/financial-grant";
+  const newBudgetRequestBlocked = showBudgetForm && !editingBudgetRequest && Boolean(budgetSubmissionBlocker);
+  const showBudgetEditor = showBudgetForm && !newBudgetRequestBlocked;
+
+  const openSubmissionBlocker = async () => {
+    if (!budgetSubmissionBlocker) return;
+    const blocker = budgetSubmissionBlocker;
+    if (blocker.kind === "draft") {
+      try {
+        const draft = budgetRequests.find((request) => request.id === blocker.budgetRequestId)
+          ?? await loadOrganizationBudgetRequestById(organizationId, blocker.budgetRequestId);
+        if (draft) {
+          startEditingBudgetRequest(draft);
+          setShowBudgetForm(true);
+          return;
+        }
+      } catch {
+        // Fall through to the saved request detail so the organization can continue from there.
+      }
+    }
+
+    setShowBudgetForm(false);
+    if (blocker.kind === "pending_liquidation") {
+      const route = userRouteMap["liquidation-reporting"] || "/liquidation-reporting";
+      navigate(blocker.liquidationReportId ? `${route}?reportId=${encodeURIComponent(blocker.liquidationReportId)}` : route);
+      return;
+    }
+    const params = new URLSearchParams(searchParams);
+    params.set("budgetRequestId", blocker.budgetRequestId);
+    navigate(`${budgetRoutePath}?${params.toString()}`);
+  };
   const selectedRequestId = searchParams.get("budgetRequestId") || searchParams.get("requestId");
   const pageSelectedRequest = selectedRequestId
     ? pageBudgetRequests.find((r) => r.id === selectedRequestId) ?? budgetRequests.find((r) => r.id === selectedRequestId) ?? null
@@ -545,7 +579,7 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
       {/* ------------------------------------------------------------- */}
       {/* MODE A: SECTIONED FORM VIEW (If showBudgetForm is true)       */}
       {/* ------------------------------------------------------------- */}
-      {showBudgetForm ? (
+      {showBudgetEditor ? (
         <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
           {/* Form Hero Banner */}
           <div className="bg-gradient-to-r from-card via-indigo-50/10 to-slate-50/40 dark:from-card dark:via-indigo-950/10 dark:to-slate-900/40 p-4 sm:p-6 rounded-2xl border border-border/60 shadow-xs space-y-1">
@@ -1894,6 +1928,18 @@ const UserPortalBudgetWorkspaceViewContent: React.FC<UserPortalBudgetWorkspaceVi
           </DialogContent>
         </Dialog>
       )}
+
+      <BudgetSubmissionBlockerDialog
+        open={newBudgetRequestBlocked}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowBudgetForm(false);
+            startEditingBudgetRequest(null);
+          }
+        }}
+        blocker={budgetSubmissionBlocker}
+        onAction={() => void openSubmissionBlocker()}
+      />
 
     </div>
     </FeatureGate>

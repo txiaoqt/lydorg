@@ -226,6 +226,7 @@ import {
   loadOrganizationDocumentSubmissionState,
   loadOrganizationRegistrationActivityState,
   loadOrganizationBudgetSubmissionState,
+  loadOrganizationBudgetSubmissionBlocker,
   loadOrganizationBudgetRequestFiles,
   loadOrganizationLiquidationSubmissionState,
   loadOrganizationLiquidationReportFiles,
@@ -272,6 +273,7 @@ import {
   subscribeToOrganizationStatusChangesInSupabase,
   userStartOrGetRenewalDraftInSupabase,
 } from "@/lib/lydo-connect-supabase";
+import type { BudgetSubmissionBlocker } from "@/lib/budget-submission-blocker";
 import {
   compactProposalForm,
   createEmptyProposalForm,
@@ -1012,7 +1014,11 @@ export default function UserPortal({ section }: { section: string }) {
     };
   }, [user?.id]);
 
-  const [budgetPrerequisitesLoad, setBudgetPrerequisitesLoad] = useState<{ organizationId: string; error: boolean } | null>(null);
+  const [budgetPrerequisitesLoad, setBudgetPrerequisitesLoad] = useState<{
+    organizationId: string;
+    error: boolean;
+    submissionBlocker: BudgetSubmissionBlocker | null;
+  } | null>(null);
   const isSharedResourceSection = section === "templates" || section === "news-releases";
   const sharedResourceQuery = useQuery({
     queryKey: ["user", user?.id, "shared-resources", section],
@@ -1031,17 +1037,27 @@ export default function UserPortal({ section }: { section: string }) {
     if (section === "templates" || section === "news-releases" || !currentProfile?.id || !user?.id) return;
     let cancelled = false;
     setBudgetPrerequisitesLoad(null);
-    void loadOrganizationPortalSectionState(section, user.id, currentProfile.id)
-      .then((remoteSnapshot) => {
-        if (!cancelled && remoteSnapshot) {
-          mergeRemoteStateRef.current(remoteSnapshot);
-          if (section === "budget-request") setBudgetPrerequisitesLoad({ organizationId: currentProfile.id, error: false });
+    const blockerRequest = section === "budget-request"
+      ? loadOrganizationBudgetSubmissionBlocker(currentProfile.id)
+      : Promise.resolve(null);
+    void Promise.all([
+      loadOrganizationPortalSectionState(section, user.id, currentProfile.id),
+      blockerRequest,
+    ])
+      .then(([remoteSnapshot, submissionBlocker]) => {
+        if (!cancelled) {
+          if (remoteSnapshot) mergeRemoteStateRef.current(remoteSnapshot);
+          if (section === "budget-request") {
+            setBudgetPrerequisitesLoad({ organizationId: currentProfile.id, error: false, submissionBlocker });
+          }
         }
       })
       .catch((error) => {
         if (!cancelled) {
           console.error(`Failed to load ${section} portal data:`, error);
-          if (section === "budget-request") setBudgetPrerequisitesLoad({ organizationId: currentProfile.id, error: true });
+          if (section === "budget-request") {
+            setBudgetPrerequisitesLoad({ organizationId: currentProfile.id, error: true, submissionBlocker: null });
+          }
         }
       });
     return () => { cancelled = true; };
@@ -4302,6 +4318,7 @@ export default function UserPortal({ section }: { section: string }) {
             organizationId={currentProfile?.id ?? ""}
             organizationDashboardSummary={state.organizationDashboardSummary}
             budgetWorkflowEligibility={budgetWorkflowEligibility}
+            budgetSubmissionBlocker={budgetPrerequisitesLoad?.organizationId === currentProfile?.id ? budgetPrerequisitesLoad.submissionBlocker : null}
             proposalTemplates={proposalTemplates}
             onDownloadTemplate={(template) => void handleDownloadTemplate(template)}
             budgetRequests={budgetRequests}
@@ -4310,7 +4327,10 @@ export default function UserPortal({ section }: { section: string }) {
             submittingBudgetId={savingBudgetRequest ? budgetForm.id : submittingRevisedBudgetId}
             showBudgetForm={showBudgetForm}
             setShowBudgetForm={setShowBudgetForm}
-            editingBudgetRequest={budgetRequests.find((r) => r.id === budgetForm.id) || null}
+            editingBudgetRequest={
+              budgetRequests.find((r) => r.id === budgetForm.id) ||
+              (budgetSubmissionBlocker && budgetForm.id === budgetSubmissionBlocker.budgetRequestId ? budgetForm : null)
+            }
             startEditingBudgetRequest={startEditingBudgetRequest}
             handleDeleteBudgetRequest={handleDeleteBudgetRequest}
             openPreview={openPreview}

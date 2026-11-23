@@ -1,4 +1,5 @@
 import { PortalWorkflowStatusHelper } from "@/components/portal/PortalWorkflowStatusHelper";
+import { BudgetSubmissionBlockerDialog } from "@/components/portal/BudgetSubmissionBlockerDialog";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -9,11 +10,13 @@ import { StatusBadge } from "@/components/portal/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { formatAdvocacyLabel, getBudgetRequestStatusLabel, type BudgetRequest } from "@/lib/lydo-connect-data";
+import type { BudgetSubmissionBlocker } from "@/lib/budget-submission-blocker";
 import {
   createBudgetRequestInSupabase,
   loadOrganizationBudgetRequestById,
   loadOrganizationBudgetRequestFiles,
   loadOrganizationBudgetRequestPage,
+  loadOrganizationBudgetSubmissionBlocker,
   updateBudgetRequestInSupabase,
   uploadBudgetRequestFileToSupabase,
 } from "@/lib/lydo-connect-supabase";
@@ -21,7 +24,7 @@ import { PwaBackButton } from "../PwaBackButton";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { usePwaNavigation } from "../hooks/usePwaNavigation";
 import type { usePwaPortalData } from "../hooks/usePwaPortalData";
-import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute } from "../pwaRoutes";
+import { PWA_ROUTES, pwaBudgetDetailRoute, pwaBudgetEditRoute, pwaLiquidationDetailRoute } from "../pwaRoutes";
 import { OrganizationHistoryPagination } from "@/components/portal/OrganizationHistoryPagination";
 import { isSubmissionRevisionLocked } from "@/lib/revision-deadline";
 import { BudgetProposalFormFields } from "@/components/portal/BudgetProposalFormFields";
@@ -79,6 +82,9 @@ export function PwaBudgetList({ data }: { data: PortalData }) {
   const { go } = usePwaNavigation();
   const [filter, setFilter] = useState<Filter>("all");
   const [page, setPage] = useState(1);
+  const [checkingNewRequest, setCheckingNewRequest] = useState(false);
+  const [blockerDialogOpen, setBlockerDialogOpen] = useState(false);
+  const [submissionBlocker, setSubmissionBlocker] = useState<BudgetSubmissionBlocker | null>(null);
   const organizationId = data.profile?.id ?? "";
   const statuses = filter === "draft" ? ["draft"]
     : filter === "review" ? [...reviewStatuses]
@@ -93,6 +99,42 @@ export function PwaBudgetList({ data }: { data: PortalData }) {
   const visible = pageQuery.data?.rows ?? data.budgetRequests;
   const totalCount = pageQuery.data?.totalCount ?? data.budgetRequests.length;
   useEffect(() => setPage(1), [filter]);
+
+  const handleNewBudgetRequest = async () => {
+    if (checkingNewRequest) return;
+    setCheckingNewRequest(true);
+    try {
+      const blocker = await loadOrganizationBudgetSubmissionBlocker(organizationId);
+      if (blocker) {
+        setSubmissionBlocker(blocker);
+        setBlockerDialogOpen(true);
+      } else {
+        go(PWA_ROUTES.budgetNew);
+      }
+    } catch (error) {
+      toast({
+        title: "Unable to check current budget requests",
+        description: error instanceof Error ? error.message : "Please try again before creating a new request.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckingNewRequest(false);
+    }
+  };
+
+  const openCurrentBlocker = () => {
+    if (!submissionBlocker) return;
+    setBlockerDialogOpen(false);
+    if (submissionBlocker.kind === "draft") {
+      go(pwaBudgetEditRoute(submissionBlocker.budgetRequestId));
+    } else if (submissionBlocker.kind === "pending_liquidation") {
+      go(submissionBlocker.liquidationReportId
+        ? pwaLiquidationDetailRoute(submissionBlocker.liquidationReportId)
+        : PWA_ROUTES.liquidations);
+    } else {
+      go(pwaBudgetDetailRoute(submissionBlocker.budgetRequestId));
+    }
+  };
 
   return (
     <div className="pwa-stack pwa-budget-list-page">
@@ -119,8 +161,16 @@ export function PwaBudgetList({ data }: { data: PortalData }) {
       </section>
       <OrganizationHistoryPagination page={page} totalPages={pageQuery.data?.totalPages ?? 1} totalCount={totalCount} pageSize={25} loading={pageQuery.isFetching} onPageChange={setPage} />
       {data.budgetWorkflowEligibility.eligible ? (
-        <button type="button" className="pwa-primary-button" onClick={() => go(PWA_ROUTES.budgetNew)}><Plus /> New Budget Request</button>
+        <button type="button" className="pwa-primary-button" onClick={() => void handleNewBudgetRequest()} disabled={checkingNewRequest}>
+          {checkingNewRequest ? <Loader2 className="pwa-spin" /> : <Plus />} New Budget Request
+        </button>
       ) : null}
+      <BudgetSubmissionBlockerDialog
+        open={blockerDialogOpen}
+        onOpenChange={setBlockerDialogOpen}
+        blocker={submissionBlocker}
+        onAction={openCurrentBlocker}
+      />
     </div>
   );
 }
@@ -179,6 +229,12 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
   const { requestId = "" } = useParams();
   const { go } = usePwaNavigation();
   const organizationId = data.profile?.id ?? "";
+  const submissionBlockerQuery = useQuery({
+    queryKey: ["user", organizationId, "budget-submission-blocker"],
+    queryFn: () => loadOrganizationBudgetSubmissionBlocker(organizationId),
+    enabled: Boolean(mode === "new" && organizationId),
+    staleTime: 0,
+  });
   const detailQuery = useQuery({ queryKey: ["user", organizationId, "budget-detail-pwa", requestId], queryFn: () => loadOrganizationBudgetRequestById(organizationId, requestId), enabled: Boolean(mode === "edit" && organizationId && requestId) });
   const filesQuery = useQuery({ queryKey: ["user", organizationId, "budget-files-pwa", requestId], queryFn: () => loadOrganizationBudgetRequestFiles(organizationId, requestId), enabled: Boolean(mode === "edit" && organizationId && requestId) });
   const existing = mode === "edit" ? detailQuery.data ?? data.budgetRequests.find((item) => item.id === requestId) : undefined;
@@ -214,6 +270,22 @@ export function PwaBudgetForm({ data, mode }: { data: PortalData; mode: "new" | 
 
   if (mode === "edit" && (detailQuery.isLoading || filesQuery.isLoading)) return <p role="status" className="pwa-card">Loading budget request…</p>;
   if (mode === "edit" && (detailQuery.isError || filesQuery.isError)) return <section className="pwa-card"><p role="alert">Budget request could not be loaded.</p><button className="pwa-secondary-button" onClick={() => { void detailQuery.refetch(); void filesQuery.refetch(); }}>Try again</button></section>;
+
+  if (mode === "new" && (submissionBlockerQuery.isLoading || submissionBlockerQuery.isFetching)) {
+    return <p role="status" className="pwa-card">Checking for an unfinished budget request or liquidation…</p>;
+  }
+  if (mode === "new" && submissionBlockerQuery.isError) {
+    return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><section className="pwa-card"><p role="alert">We couldn’t check whether your organization has an unfinished budget request or liquidation. Please return to Budget Requests and try again.</p><button type="button" className="pwa-secondary-button" onClick={() => void submissionBlockerQuery.refetch()}>Try again</button></section></div>;
+  }
+  if (mode === "new" && submissionBlockerQuery.data) {
+    const blocker = submissionBlockerQuery.data;
+    const openBlocker = () => {
+      if (blocker.kind === "draft") go(pwaBudgetEditRoute(blocker.budgetRequestId));
+      else if (blocker.kind === "pending_liquidation") go(blocker.liquidationReportId ? pwaLiquidationDetailRoute(blocker.liquidationReportId) : PWA_ROUTES.liquidations);
+      else go(pwaBudgetDetailRoute(blocker.budgetRequestId));
+    };
+    return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><BudgetSubmissionBlockerDialog open onOpenChange={(open) => { if (!open) go(PWA_ROUTES.budgets); }} blocker={blocker} onAction={openBlocker} /></div>;
+  }
 
   if (mode === "new" && !data.budgetWorkflowEligibility.eligible) {
     return <div className="pwa-stack"><PwaBackButton fallback={PWA_ROUTES.budgets} label="Budget Requests" /><PwaEligibilityNotice data={data} /></div>;
