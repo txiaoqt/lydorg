@@ -10,6 +10,7 @@ import { UserPortalTemplatesWorkspaceView } from "@/components/portal/UserPortal
 import { PortalDocumentDrawer } from "@/components/portal/PortalDocumentDrawer";
 import { loadOrganizationRequiredDocumentTypesState, resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { toast } from "@/hooks/use-toast";
+import { openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 
 export type PublicTemplatesCatalogProps = {
   compactHeader?: boolean;
@@ -204,11 +205,7 @@ export default function PublicTemplatesCatalog({
         publicStyle
         downloading={isDownloading}
         onDownloadFile={handleDownloadFile}
-        onOpenInNewTab={(url) => {
-          if (url) {
-            window.open(url, "_blank", "noopener,noreferrer");
-          }
-        }}
+        onOpenInNewTab={(url, fileName) => void openStorageDocumentInNewTab(url, fileName)}
       />
     </>
   );

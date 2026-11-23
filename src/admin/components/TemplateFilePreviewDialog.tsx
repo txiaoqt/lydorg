@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Download, ExternalLink, FileText, Megaphone, X } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { type TemplateRecord, resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
+import { openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 import { resolveSupabaseFileUrl } from "@/lib/lydo-connect-supabase";
 import { getTemplateFileFormat, formatFileSize } from "@/components/portal/UserPortalTemplatesWorkspaceView";
 
@@ -44,6 +45,10 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
   const fileFormat = getTemplateFileFormat(rawUrl, template.templateFileName || template.name);
   const canInline = Boolean(rawUrl) && canInlinePreviewFormat(fileFormat);
   const updatedDate = template.templateUploadedAt ? format(new Date(template.templateUploadedAt), "d MMM yyyy") : "—";
+  const cleanFileName = resolveCleanTemplateDownloadFileName(
+    template.name,
+    rawUrl || template.templateFileName || resolvedUrl,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,15 +100,14 @@ export const TemplateFilePreviewDialog = ({ open, onOpenChange, template }: Temp
                     Preview not available in the browser
                   </p>
                   <div className="flex items-center gap-2">
-                    <a
-                      href={resolvedUrl || undefined}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => void openStorageDocumentInNewTab(resolvedUrl, cleanFileName)}
                       className="flex h-9 items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50"
                     >
                       <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                       Open File
-                    </a>
+                    </button>
                     <a
                       href={resolvedUrl || undefined}
                       download={resolveCleanTemplateDownloadFileName(template.name, template.templateFileName || rawUrl || resolvedUrl)}

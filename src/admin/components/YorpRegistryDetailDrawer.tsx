@@ -39,6 +39,7 @@ import {
 } from "@/lib/lydo-connect-data";
 import { useLydoConnect } from "@/lib/lydo-connect-store";
 import { resolveSupabaseFileUrl, fetchAdminYorpRegistrationDocuments, fetchAdminYorpRegistryYpopDetail } from "@/lib/lydo-connect-supabase";
+import { openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 import { ReferenceCodeChip } from "@/admin/components/InquiriesTable";
 import { PortalDocumentPreviewModal } from "@/components/portal/PortalDocumentPreviewModal";
 import type { YorpRegistryEntry } from "@/admin/components/YorpRegistryTable";
@@ -461,7 +462,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
         document.body.removeChild(link);
         URL.revokeObjectURL(blobUrl);
       } catch {
-        window.open(resolvedUrl, "_blank");
+        void openStorageDocumentInNewTab(resolvedUrl, fileName);
       }
     } catch (error) {
       toast({
@@ -1178,6 +1179,7 @@ export const YorpRegistryDetailDrawer = ({ entry, onOpenChange }: YorpRegistryDe
           }}
           previewUrl={previewModalState.url}
           previewTitle={previewModalState.title}
+          previewFileName={previewModalState.fileName}
           previewCanInline={true}
           fileSize={previewModalState.fileSize}
           updatedAt={previewModalState.updatedAt}

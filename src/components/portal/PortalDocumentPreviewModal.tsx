@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 
 if (typeof window !== "undefined" && pdfjsLib.GlobalWorkerOptions) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
@@ -152,6 +153,7 @@ export interface PortalDocumentViewerProps {
   previewFile?: File | Blob | null;
   previewData?: ArrayBuffer | Uint8Array | null;
   previewTitle?: string;
+  previewFileName?: string;
   previewCanInline?: boolean;
   previewEmptyMessage?: string;
   onDownloadFile?: (url: string, title: string) => Promise<void>;
@@ -163,6 +165,7 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
   previewFile = null,
   previewData = null,
   previewTitle,
+  previewFileName,
   previewCanInline = true,
   previewEmptyMessage,
   onDownloadFile,
@@ -325,9 +328,12 @@ export const PortalDocumentViewer: React.FC<PortalDocumentViewerProps> = ({
       setTimeout(() => URL.revokeObjectURL(tempUrl), 60000);
       return;
     }
-    const targetUrl = effectiveUrl || (previewUrl && !previewUrl.startsWith("storage://") ? previewUrl : "");
+    const targetUrl = effectiveUrl || previewUrl;
     if (targetUrl) {
-      window.open(targetUrl, "_blank", "noopener,noreferrer");
+      void openStorageDocumentInNewTab(
+        targetUrl,
+        previewFileName || (previewFile instanceof File ? previewFile.name : "") || previewTitle || "document.pdf",
+      );
     }
   };
 
@@ -488,6 +494,7 @@ export interface PortalDocumentPreviewModalProps {
   previewFile?: File | Blob | null;
   previewData?: ArrayBuffer | Uint8Array | null;
   previewTitle: string;
+  previewFileName?: string;
   previewCanInline: boolean;
   previewEmptyMessage?: string;
   fileSize?: string;
@@ -510,6 +517,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
   previewFile = null,
   previewData = null,
   previewTitle,
+  previewFileName,
   previewCanInline,
   previewEmptyMessage,
   fileSize,
@@ -571,7 +579,10 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
       return;
     }
     if (previewUrl) {
-      window.open(previewUrl, "_blank", "noopener,noreferrer");
+      void openStorageDocumentInNewTab(
+        previewUrl,
+        previewFileName || (previewFile instanceof File ? previewFile.name : "") || previewTitle || "document.pdf",
+      );
     }
   };
 
@@ -784,6 +795,7 @@ export const PortalDocumentPreviewModal: React.FC<PortalDocumentPreviewModalProp
           previewFile={previewFile}
           previewData={previewData}
           previewTitle={previewTitle}
+          previewFileName={previewFileName}
           previewCanInline={previewCanInline}
           previewEmptyMessage={previewEmptyMessage}
           onDownloadFile={onDownloadFile}

@@ -219,6 +219,7 @@ import {
   getOrganizationAddressDisplay,
   formatAdvocacyLabel,
 } from "@/lib/lydo-connect-data";
+import { getStorageObjectDisplayFileName, openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 import {
   loadOrganizationPortalSectionState,
   loadOrganizationRecentYpopActivities,
@@ -1857,7 +1858,7 @@ export default function UserPortal({ section }: { section: string }) {
         return;
       }
 
-      window.open(resolvedUrl, "_blank", "noopener,noreferrer");
+      void openStorageDocumentInNewTab(resolvedUrl, getStorageObjectDisplayFileName(resolvedUrl));
     } catch (error) {
       toast({
         title: "Unable to open file",
@@ -4700,11 +4701,7 @@ export default function UserPortal({ section }: { section: string }) {
         onDownloadFile={async (url, name) => {
           await downloadResolvedFile(url, resolveCleanTemplateDownloadFileName(name, url));
         }}
-        onOpenInNewTab={(url) => {
-          if (url) {
-            window.open(url, "_blank", "noopener,noreferrer");
-          }
-        }}
+        onOpenInNewTab={(url, fileName) => void openStorageDocumentInNewTab(url, fileName)}
       />
       <Dialog
         open={batchUploadOpen}
@@ -5207,13 +5204,12 @@ export default function UserPortal({ section }: { section: string }) {
         downloading={downloadingAttachedFile}
         formatDateTimeLabel={formatDateTimeLabel}
         formatShortPortalDate={formatShortPortalDate}
-        onOpenInNewTab={() => {
-          if (attachedDocumentPreviewUrl) {
-            window.open(attachedDocumentPreviewUrl, "_blank", "noopener,noreferrer");
-          } else if (attachedDocumentEditor?.file?.fileUrl) {
-            void openFile(attachedDocumentEditor.file.fileUrl);
-          }
-        }}
+        onOpenInNewTab={(url, fileName) =>
+          void openStorageDocumentInNewTab(
+            url || attachedDocumentPreviewUrl || attachedDocumentEditor?.file?.fileUrl || "",
+            fileName,
+          )
+        }
         onDownloadFile={async () => {
           if (!attachedDocumentEditor?.file?.fileUrl || downloadingAttachedFile) return;
           setDownloadingAttachedFile(true);

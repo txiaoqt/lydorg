@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { PortalDocumentViewer } from "@/components/portal/PortalDocumentPreviewModal";
 import { isApprovedRegistrationDocument } from "@/lib/document-file-access";
 import { type SubmissionFile, resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
+import { openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 import {
   calculateRevisionDeadline,
   formatRevisionDeadline,
@@ -59,7 +60,7 @@ export interface PortalDocumentDrawerProps {
   formatDateTimeLabel?: (dateStr: string | Date) => string;
   formatShortPortalDate?: (dateStr: string | Date) => string;
   onDownloadFile?: (url: string, fileName: string) => Promise<void> | void;
-  onOpenInNewTab?: (url: string) => void;
+  onOpenInNewTab?: (url: string, fileName: string) => void;
   onSubmitForReview?: () => Promise<void> | void;
   onReplaceFile?: () => void;
   onDeleteDraft?: () => Promise<void> | void;
@@ -224,12 +225,21 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
   const resolvedDocumentTitle = isTemplate
     ? resolvedTemplateTitle
     : documentTypeName || file?.fileName || "Attached Document";
+  const resolvedNewTabFileName = isTemplate
+    ? resolveCleanTemplateDownloadFileName(
+        resolvedTemplateTitle || templateTitle || previewTitle || documentTypeName || "Official Template",
+        previewUrl || file?.fileUrl || rawTemplateFileName,
+      )
+    : file?.fileName || `${resolvedDocumentTitle}.pdf`;
 
   const handleOpenNewTab = () => {
+    const sourceUrl = previewUrl || file?.fileUrl || "";
+
+    if (!sourceUrl) return;
     if (onOpenInNewTab) {
-      onOpenInNewTab(previewUrl || file?.fileUrl || "");
-    } else if (previewUrl || file?.fileUrl) {
-      window.open(previewUrl || file?.fileUrl, "_blank", "noopener,noreferrer");
+      onOpenInNewTab(sourceUrl, resolvedNewTabFileName);
+    } else {
+      void openStorageDocumentInNewTab(sourceUrl, resolvedNewTabFileName);
     }
   };
 
@@ -991,6 +1001,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
         <PortalDocumentViewer
           previewUrl={previewUrl}
           previewTitle={isTemplate ? rawTemplateFileName : file?.fileName || resolvedDocumentTitle}
+          previewFileName={resolvedNewTabFileName}
           previewCanInline={previewCanInline}
           previewEmptyMessage={previewEmptyMessage}
           onDownloadFile={async (url, name) => {
@@ -1010,6 +1021,7 @@ export const PortalDocumentDrawer: React.FC<PortalDocumentDrawerProps> = ({
       <PortalDocumentViewer
         previewUrl={previewUrl}
         previewTitle={isTemplate ? rawTemplateFileName : file?.fileName || resolvedDocumentTitle}
+        previewFileName={resolvedNewTabFileName}
         previewCanInline={previewCanInline}
         previewEmptyMessage={previewEmptyMessage}
         onDownloadFile={async (url, name) => {

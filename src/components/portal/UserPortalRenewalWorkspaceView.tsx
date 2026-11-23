@@ -47,6 +47,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatFullActivityTimestamp } from "@/components/activity/RecentActivityPreview";
 import { resolveCleanTemplateDownloadFileName, type OrganizationProfile, type OrganizationRenewalRecord, type SubmissionFile, type TemplateRecord } from "@/lib/lydo-connect-data";
+import { openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 import type { UserFacingRenewalState } from "@/lib/organization-renewal";
 import {
   formatRevisionDeadline,
@@ -80,7 +81,7 @@ export interface UserPortalRenewalWorkspaceViewProps {
   userRouteMap: Record<string, string>;
   openPreview?: (fileUrl: string, title: string) => void | Promise<void>;
   openFile?: (fileUrl: string, downloadName?: string) => void;
-  openInNewTab?: (fileUrl: string) => void | Promise<void>;
+  openInNewTab?: (fileUrl: string, fileName: string) => void | Promise<void>;
   onRenewalUpdated?: (renewal: OrganizationRenewalRecord) => void;
 }
 
@@ -1829,10 +1830,9 @@ export const UserPortalRenewalWorkspaceView: React.FC<UserPortalRenewalWorkspace
                 setDownloadingRenewalAttachment(false);
               }
             }}
-            onOpenInNewTab={(url) => {
-              if (openInNewTab) void openInNewTab(url);
-              else if (openFile) void openFile(url);
-              else if (url) window.open(url, "_blank", "noopener,noreferrer");
+            onOpenInNewTab={(url, fileName) => {
+              if (openInNewTab) void openInNewTab(url, fileName);
+              else void openStorageDocumentInNewTab(url, fileName);
             }}
             onReplaceFile={
               attachedRenewalPreview?.file.adminStatus === "needs_revision" && canCorrectFlaggedFiles

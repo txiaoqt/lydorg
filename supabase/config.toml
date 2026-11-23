@@ -26,3 +26,9 @@ verify_jwt = false
 [functions.admin-storage-access]
 # Requires authoritative custom Admin-token authorization inside the function.
 verify_jwt = false
+
+[functions.open-storage-document]
+# The POST body carries either a public Storage URL or a short-lived URL already
+# authorized by existing organization RLS or the custom Admin storage gateway;
+# Storage revalidates signed URLs before returning file bytes.
+verify_jwt = false

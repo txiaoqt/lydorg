@@ -76,6 +76,8 @@ import { type DownloadableFile } from "@/lib/document-compression";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { resolveCleanTemplateDownloadFileName } from "@/lib/lydo-connect-data";
+import { getStorageObjectDisplayFileName, openStorageDocumentInNewTab } from "@/lib/inline-storage-document";
 import { adminNavigationGroups as baseAdminNavigationGroups, buildAdminTemplateCategoryOptions, buildAdminNewsCategoryOptions, type NewsCategoryRecord, buildPublicRecordCode, getInquiryReferenceCode, buildVerifiedYpopAttendance, computeYpopScore, DEFAULT_ORG_LED_TIERS, deriveNewsCategories, deriveTemplateCategory, deriveYpopQualificationStatus, formatCanonicalCategoryLabel, getApprovedYpopOrgActivityCount, getTemplateCategoryUsage, getYpopCityLedPoints, isSystemTemplateCategory, normalizeInquiryStatus, normalizeTemplateCategoryKey, normalizeYpopCityLedPoints, resolveYpopCityLedCategory, orderTemplateCategories, validateFacebookPostUrl, YPOP_BASE_TOTAL_POINTS, formatActivityDateRange, YPOP_CITY_LED_CATEGORY_LABELS, YPOP_CITY_LED_CATEGORY_POINTS, YPOP_CITY_LED_MAX_POINTS, YPOP_SCORE_THRESHOLD, type ActivityLog, type BudgetRequestFileAdminStatus, type InquiryRecord, type NewsRelease, type PortalNavGroup, type PortalNavItem, type TemplateRecord, type TransparencyPost, type YPOPCityActivity, type YPOPCityActivityCategory, type YPOPEntry, type YPOPEventFile, type YPOPEventParticipation, type YPOPEventParticipationStatus, type YPOPFile, type YPOPOrgActivity, type YPOPOrgActivityFile, type YPOPOrgActivityStatus, type YPOPOrgLedTier, type YPOPPeriod, type YPOPPeriodStatus, type YPOPStatus, type YpopQualificationStatus } from "@/lib/lydo-connect-data";
 import { isLiquidationOverdue, statusLabelMap, getBudgetRequestStatusLabel, formatAdvocacyLabel, type BudgetRequest, type AnnualBudgetAllocation, getRepresentativeDisplayName, getAdviserDisplayName } from "@/lib/lydo-connect-data";
 import { calculateRevisionDeadline, formatRevisionDeadline, isRevisionExpired, isSubmissionRevisionLocked, getRevisionTimeRemaining, isAwaitingResubmission, hasGenuineResubmission } from "@/lib/revision-deadline";
@@ -7242,7 +7244,7 @@ function AdminPortalContent({ section }: { section: string }) {
         return;
       }
 
-      window.open(resolvedUrl, "_blank", "noopener,noreferrer");
+      void openStorageDocumentInNewTab(resolvedUrl, getStorageObjectDisplayFileName(resolvedUrl));
     } catch (error) {
       toast({
         title: "Unable to open file",
@@ -7864,6 +7866,10 @@ function AdminPortalContent({ section }: { section: string }) {
         const missingDocumentCount = Math.max(templateDocuments.length - submittedDocumentCount, 0);
         const activeDocumentPreviewUrl = activeReviewEntry ? documentPreviewUrls[activeReviewEntry.file.id] : null;
         const decisionRequiresRemark = registrationDecisionRequiresRemark(registrationBulkDecision);
+        const showRegistrationDecisionRemark = selectedBulkFiles.length === 1 && decisionRequiresRemark;
+        const registrationDecisionRemarkText = showRegistrationDecisionRemark
+          ? registrationBulkRemark.trim() || "—"
+          : null;
         const identityReviewPending = identityClearedOrgId !== selectedOrg?.id;
         const isRegistrationDecisionConfirmDisabled =
           isOrgSuspended ||
@@ -8559,34 +8565,49 @@ function AdminPortalContent({ section }: { section: string }) {
                     title={registrationBulkDecision === "reject" ? "Confirm Account Suspension" : "Confirm Review Decision"}
                     description={registrationBulkDecision === "reject"
                       ? "You are about to reject a registration document. This will permanently suspend the organization account. Review the selected document and rejection remark carefully before continuing."
-                      : "Review your decisions and remarks before submitting. These will be applied to the files below and shown to the organization in their portal."}
+                      : showRegistrationDecisionRemark
+                        ? "Review your decision and remark before submitting. These will be applied to the file below and shown to the organization in their portal."
+                        : "Review your decisions before submitting. These will be applied to the files below and shown to the organization in their portal."}
                     content={
-                      <div className="rounded-md border border-slate-300 bg-admin-surface p-6">
-                        <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 border-b border-slate-300 pb-2">
-                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Document</p>
-                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Decision</p>
-                          <p className="font-inter text-[11px] font-semibold uppercase leading-none text-slate-500">Remarks</p>
-                        </div>
-                        <div className="flex flex-col gap-2 pt-2">
-                          {selectedBulkFiles.map((entry) => {
-                            const remarkText = selectedBulkFiles.length === 1 && decisionRequiresRemark
-                              ? registrationBulkRemark.trim() || "—"
-                              : "—";
-                            return (
-                              <div key={entry.file.id} className="grid grid-cols-[minmax(0,1.3fr)_minmax(84px,auto)_minmax(0,1fr)] gap-2.5 items-start">
-                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
-                                  {entry.documentType.name}
-                                </p>
-                                <p className="font-inter text-[11px] font-semibold capitalize leading-[140%] text-text-default min-w-0 break-words">
-                                  {registrationReviewDecisionLabel[registrationBulkDecision]}
-                                </p>
-                                <p className="font-inter text-[11px] font-semibold leading-[140%] text-text-default min-w-0 break-words [overflow-wrap:anywhere]" title={remarkText !== "—" ? remarkText : undefined}>
-                                  {remarkText}
-                                </p>
-                              </div>
-                            );
-                          })}
-                        </div>
+                      <div className="rounded-md border border-slate-300 bg-admin-surface p-3">
+                        <table className="w-full table-fixed border-collapse">
+                          <colgroup>
+                            <col style={{ width: showRegistrationDecisionRemark ? "36%" : "62%" }} />
+                            <col style={{ width: showRegistrationDecisionRemark ? "25%" : "38%" }} />
+                            {showRegistrationDecisionRemark ? <col style={{ width: "39%" }} /> : null}
+                          </colgroup>
+                          <thead>
+                            <tr className="border-b border-slate-300">
+                              <th scope="col" className="pb-2 pr-2 text-left font-inter text-[11px] font-semibold uppercase leading-tight text-slate-500">Document</th>
+                              <th scope="col" className="pb-2 pr-2 text-left font-inter text-[11px] font-semibold uppercase leading-tight text-slate-500">Decision</th>
+                              {showRegistrationDecisionRemark ? (
+                                <th scope="col" className="pb-2 text-left font-inter text-[11px] font-semibold uppercase leading-tight text-slate-500">Remarks</th>
+                              ) : null}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedBulkFiles.map((entry) => {
+                              return (
+                                <tr key={entry.file.id} className="border-b border-slate-200 last:border-b-0">
+                                  <td className="align-top py-2 pr-2 font-inter text-[11px] font-semibold leading-[140%] text-text-default break-words [overflow-wrap:anywhere]" title={entry.documentType.name}>
+                                    {entry.documentType.name}
+                                  </td>
+                                  <td className="align-top py-2 pr-2 font-inter text-[11px] font-semibold capitalize leading-[140%] text-text-default break-words [overflow-wrap:anywhere]">
+                                    {registrationReviewDecisionLabel[registrationBulkDecision]}
+                                  </td>
+                                  {showRegistrationDecisionRemark ? (
+                                    <td
+                                      className="align-top py-2 font-inter text-[11px] font-semibold leading-[140%] text-text-default break-words [overflow-wrap:anywhere]"
+                                      title={registrationDecisionRemarkText && registrationDecisionRemarkText !== "—" ? registrationDecisionRemarkText : undefined}
+                                    >
+                                      {registrationDecisionRemarkText}
+                                    </td>
+                                  ) : null}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                     }
                     warning={registrationBulkDecision === "reject" ? (
@@ -10055,7 +10076,10 @@ function AdminPortalContent({ section }: { section: string }) {
                           <p>This file cannot be previewed inline.</p>
                           <button
                             type="button"
-                            onClick={() => window.open(budgetPreviewUrl, "_blank", "noopener,noreferrer")}
+                            onClick={() => void openStorageDocumentInNewTab(
+                              budgetPreviewUrl,
+                              selectedBudgetRequestFile.fileName || budgetPreviewTitle || getStorageObjectDisplayFileName(budgetPreviewUrl),
+                            )}
                             className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-[13px] text-text-default transition-colors hover:bg-slate-50"
                           >
                             <Eye className="h-4 w-4" strokeWidth={1.6} />
@@ -11310,7 +11334,10 @@ function AdminPortalContent({ section }: { section: string }) {
                           <p>This file cannot be previewed inline.</p>
                           <button
                             type="button"
-                            onClick={() => window.open(liquidationPreviewUrl, "_blank", "noopener,noreferrer")}
+                            onClick={() => void openStorageDocumentInNewTab(
+                              liquidationPreviewUrl,
+                              selectedLiquidationReportFile.fileName || liquidationPreviewTitle || getStorageObjectDisplayFileName(liquidationPreviewUrl),
+                            )}
                             className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-[13px] text-text-default transition-colors hover:bg-slate-50"
                           >
                             <Eye className="h-4 w-4" strokeWidth={1.6} />
@@ -12356,7 +12383,14 @@ function AdminPortalContent({ section }: { section: string }) {
                             </p>
                           </div>
                           <div className="flex flex-col gap-2 sm:flex-row">
-                            <Button type="button" variant="outline" onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => void openStorageDocumentInNewTab(
+                                previewUrl,
+                                resolveCleanTemplateDownloadFileName(previewTitle || "Uploaded file", previewUrl),
+                              )}
+                            >
                               <Eye className="mr-2 h-4 w-4" />
                               Open File
                             </Button>
@@ -13867,7 +13901,7 @@ function AdminPortalContent({ section }: { section: string }) {
                                 <p>This file cannot be previewed inline.</p>
                                 <button
                                   type="button"
-                                  onClick={() => window.open(entryReviewPreviewUrl, "_blank", "noopener,noreferrer")}
+                                  onClick={() => void openStorageDocumentInNewTab(entryReviewPreviewUrl, activeReviewFile.fileName)}
                                   className="flex items-center gap-2 rounded-md border border-slate-300 bg-admin-surface px-3 py-2 font-inter text-[13px] text-text-default transition-colors hover:bg-slate-50"
                                 >
                                   <Eye className="h-4 w-4" strokeWidth={1.6} />
@@ -15240,15 +15274,6 @@ function AdminPortalContent({ section }: { section: string }) {
                     Cancel
                   </button>
                   <div className="flex items-center gap-2.5">
-                    <button
-                      type="button"
-                      disabled={!canSubmit || submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
-                      onClick={() => void submitPeriod("draft")}
-                      className="flex h-11 w-fit shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-slate-300 bg-admin-surface px-4 py-3 font-inter text-public-fs-body-sm text-text-default transition-colors hover:bg-slate-50 disabled:opacity-50"
-                    >
-                      {submittingPeriodStatus === "draft" ? <Loader className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.6} /> : null}
-                      Save as Draft
-                    </button>
                     <button
                       type="button"
                       disabled={!canSubmit || submittingPeriodStatus !== null || (isEditMode && adminYpopPeriodCityActivitiesQuery.isLoading)}
